@@ -1,15 +1,15 @@
 import { Routes } from '@angular/router';
-import { LoginComponent } from './authComponents/login/login.component';
-import { HomeComponent } from './common/components/home/home.component';
+import { HomeComponentComponent } from './shared/components/home-component/home-component.component';
 
 export const routes: Routes = [
-  // Rutas públicas
-  { path: 'login', component: LoginComponent },
-  { path: 'home', component: HomeComponent },
-
 
   // Ruta principal
   { path: '', redirectTo: '/home', pathMatch: 'full' },
+  { path: 'home', component: HomeComponentComponent },
+  // Rutas públicas
+  //{ path: 'login', component: LoginComponent },
+  //{ path: 'home', component: HomeComponent },
+
 
   // Ruta de página no encontrada
   { path: '**', redirectTo: '/home' }
