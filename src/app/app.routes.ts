@@ -1,15 +1,15 @@
 import { Routes } from '@angular/router';
-import { LoginComponent } from './authComponents/login/login.component';
-import { HomeComponent } from './common/components/home/home.component';
+import { DeviajeMainLayoutComponent } from './shared/components/deviaje-main-layout/deviaje-main-layout.component';
 
 export const routes: Routes = [
-  // Rutas públicas
-  { path: 'login', component: LoginComponent },
-  { path: 'home', component: HomeComponent },
-
 
   // Ruta principal
   { path: '', redirectTo: '/home', pathMatch: 'full' },
+  { path: 'home', component: DeviajeMainLayoutComponent },
+  // Rutas públicas
+  //{ path: 'login', component: LoginComponent },
+  //{ path: 'home', component: HomeComponent },
+
 
   // Ruta de página no encontrada
   { path: '**', redirectTo: '/home' }

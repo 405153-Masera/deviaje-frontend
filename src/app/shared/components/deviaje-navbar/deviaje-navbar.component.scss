@@ -1,0 +1,120 @@
+@import '../../../../assets/styles/variables';
+
+// :host se refiere al componente mismo
+// display: block para que el componente ocupe todo el espacio disponible (se comportará como un bloque)
+:host {
+  display: block;
+}
+
+*{
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+nav {
+  z-index: 200; // Asegura que el navbar esté por encima de otros elementos
+  width: 100%; // Ocupa todo el ancho de la pantalla
+  @include flex-between;
+  padding: 0.45rem 2rem 0.45rem 1.27rem;
+  border-bottom: 1px solid $border-color;
+  position: fixed; // Fija el navbar en la parte superior de la pantalla al hacer scroll
+  background-color: $background-color;
+  top: 0;
+  left: 0;
+}
+
+// Parte izquierda del navbar
+.left {
+  @include flex-center;
+  gap: 1.4rem; // Espacio entre los elementos
+}
+
+// Menu
+.menu-container {
+  height: 100%;
+  display: flex;
+  align-items: center;
+  cursor: pointer;
+}
+
+.menu {
+  width: 1.5rem;
+  height: 37%;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  
+  div {
+    width: 100%;
+    margin: 0.15rem;
+    height: 0.15rem;
+    background-color: $menu-color;
+    transition: all 0.2s ease;
+  }
+  
+  &.menu-toggle {
+    div {
+      &:first-child {
+        width: 40%;
+        transform: rotate(-35deg) translate(-30%, 175%);
+      }
+      
+      &:last-child {
+        width: 40%;
+        transform: rotate(35deg) translate(-30%, -160%);
+      }
+    }
+  }
+}
+
+// Brand
+.brand {
+  @include flex-center;
+  gap: 0.6rem;
+  
+  .logo {
+    width: 1.7rem;
+  }
+  
+  .name {
+    font-size: 1.5rem;
+    font-weight: 900;
+    color: $text-title-color;
+  }
+}
+
+// Parte derecha del navbar
+.right {
+  @include flex-center;
+  gap: 1.6rem;
+  
+  a {
+    @include flex-center;
+    border-radius: 0.5rem;
+    transition: background-color 0.2s ease;
+    
+    &:hover {
+      background-color: $background-hover;
+    }
+  }
+  
+  img {
+    width: 1.5rem;
+    margin: 0.5rem;
+  }
+  
+  .user {
+    width: 2.1rem;
+    border-radius: 50%;
+  }
+}
+
+// Moviles
+@include mobile {
+  .right {
+    .icons-header {
+      display: none;
+    }
+  }
+}

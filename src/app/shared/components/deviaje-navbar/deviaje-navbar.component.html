@@ -1,0 +1,54 @@
+<nav class="shadow-sm">
+
+  <div class="left">
+    <div class="menu-container">
+      <div class="menu" [class.menu-toggle]="isSidebarOpen" (click)="onToggleSidebar()">
+        <div></div>
+        <div></div>
+        <div></div>
+      </div>
+    </div>
+
+    <div class="brand">
+      <img src="" alt="DeViaje Logo" class="logo">
+      <span class="name">DeViaje</span>
+    </div>
+  </div>
+
+  <div class="right">
+    <a href="#" class="icons-header">
+      <img src="../../../../assets/icons/question.svg" alt="question">
+    </a>
+    <a href="#" class="icons-header">
+      <img src="../../../../assets/icons/notification.svg" alt="notification">
+    </a>
+    <img src="" alt="img-user" class="user">
+  </div>
+</nav>
+
+<!-- Visible si el usuario esta autenticado
+ @if(!isAutenticated){
+
+  <li class="nav-item">
+    <a class="nav-link btn btn-success" routerLink="/login">
+      <i class="bi bi-box-arrow-in-right me-1"></i>Ingresar
+    </a>
+  </li>
+  }
+
+ Solo visible cuando esta autenticado  
+  @if(isAutenticated){
+  <li class="nav-item dropdown">
+    <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown">
+      <i class="bi bi-person-circle me-1"></i>Mi Cuenta
+    </a>
+    <ul class="dropdown-menu dropdown-menu-end">
+      <li><a class="dropdown-item" routerLink="/profile">Perfil</a></li>
+      <li><a class="dropdown-item" routerLink="/my-bookings">Mis Reservas</a></li>
+      <li>
+        <hr class="dropdown-divider">
+      </li>
+      <li><a class="dropdown-item" href="#">Cerrar Sesión</a></li>
+    </ul>
+  </li>
+  } -->

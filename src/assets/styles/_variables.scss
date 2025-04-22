@@ -1,0 +1,56 @@
+// Variabes permiten gardar valores que se pueden reutilizar en todo el proyecto
+// son las que empiezan con $
+// Colors
+$background-color: white;
+$text-title-color: #053D4E;
+$text-color: #32363B;
+$icon-color: #32363B;
+$icon-menu-color: #707780;
+$menu-color: #707780;
+
+$text-selected-color: #355CC0;
+$background-selected: #EBF0FF;
+$background-hover: #F7F9FA;
+
+$border-color: #E6E9ED;
+
+// Font
+$font-family: 'Nunito Sans', sans-serif;
+
+// Breakpoints
+$mobile-breakpoint: 500px;
+$tablet-breakpoint: 768px;
+
+// Sidebar
+$sidebar-width: 4rem;
+$sidebar-expanded-width: 18.75rem;
+
+// Navbar
+$navbar-height: 4rem;
+
+// Los mixins te permiten agrupar estilos CSS que se pueden reutilizar en todo el proyecto
+// se invocan con @include y se definen con @mixin
+// Mixins
+@mixin flex-center {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+@mixin flex-between {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+@mixin mobile {
+  @media (max-width: #{$mobile-breakpoint}) {
+    @content;
+  }
+}
+
+@mixin tablet {
+  @media (max-width: #{$tablet-breakpoint}) {
+    @content;
+  }
+}
