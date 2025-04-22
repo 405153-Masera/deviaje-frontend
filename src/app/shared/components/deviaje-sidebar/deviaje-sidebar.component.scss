@@ -1,0 +1,75 @@
+@import '../../../../assets/styles/variables';
+
+:host {
+  position: absolute;
+  left: 0;
+}
+
+*{
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+// Sidebar
+.sidebar {
+  margin-top: $navbar-height;
+  width: $sidebar-width;
+  height: 100%;
+  position: fixed;
+  top: 0;
+  left: 0 !important;
+  z-index: 100;
+  padding: 1.1rem 0;
+  border-right: 1px solid $border-color;
+  overflow-y: auto;
+  background-color: $background-color;
+  transition: width 0.5s ease;
+  
+  &.menu-toggle {
+    width: $sidebar-expanded-width;
+  }
+  
+  li {
+    list-style: none;
+  }
+  
+  a {
+    display: flex;
+    align-items: center;
+    gap: 1.3rem;
+    padding: 0.9rem 0.7rem;
+    text-decoration: none;
+    margin: 0 0.5rem;
+    border-radius: 0.5rem;
+    white-space: nowrap;
+    overflow: hidden;
+    color: $text-color;
+    
+    &:hover {
+      background-color: $background-hover;
+    }
+    
+    &.selected {
+      color: $text-selected-color;
+      background-color: $background-selected;
+    }
+    
+    &.search {
+      padding: 1rem 0.7rem;
+      border-bottom: 1px solid $border-color;
+      margin-bottom: 0.2rem;
+    }
+  }
+  
+  img {
+    width: 1.6rem;
+  }
+}
+
+// Moviles
+@include mobile {
+  .sidebar {
+    width: 0;
+  }
+}

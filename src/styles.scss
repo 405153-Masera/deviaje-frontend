@@ -1,0 +1,29 @@
+/* En este archivo se definen los estilos globales de la aplicación. Se importan fuentes, variables y estilos base. */
+
+// Importamos la fuente de Google Fonts
+@import url('https://fonts.googleapis.com/css2?family=Nunito+Sans:ital,opsz,wght@0,6..12,200..1000;1,6..12,200..1000&display=swap');
+
+// Importar las variables de  nuesto archivo de variables
+@import '../src/assets/styles/variables';
+
+// Estilos globales
+// este se aplica a todos los elementos de la aplicación
+
+* {
+  font-family: $font-family;
+}
+
+// Variables CSS al nivel de root para que puedan ser utilizadas en todo el proyecto
+// se crean a partir de las variables definidas en el archivo de variables
+:root {
+  --background-color: #{$background-color};
+  --text-title-color: #{$text-title-color};
+  --text-color: #{$text-color};
+  --icon-color: #{$icon-color};
+  --icon-menu-color: #{$icon-menu-color};
+  --menu-color: #{$menu-color};
+  --text-selected-color: #{$text-selected-color};
+  --background-selected: #{$background-selected};
+  --background-hover: #{$background-hover};
+  --border-color: #{$border-color};
+}

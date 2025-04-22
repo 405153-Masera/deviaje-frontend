@@ -6,7 +6,7 @@ import { DeviajeNavbarComponent } from "../deviaje-navbar/deviaje-navbar.compone
   standalone: true,
   imports: [DeviajeNavbarComponent],
   templateUrl: './home-component.component.html',
-  styleUrl: './home-component.component.css'
+  styleUrl: './home-component.component.scss'
 })
 export class HomeComponentComponent {
 

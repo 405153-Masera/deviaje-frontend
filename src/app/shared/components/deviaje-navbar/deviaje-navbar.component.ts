@@ -1,16 +1,21 @@
-import { Component } from '@angular/core';
+import { Component, EventEmitter, Output } from '@angular/core';
 
 @Component({
   selector: 'app-deviaje-navbar',
   standalone: true,
   imports: [],
   templateUrl: './deviaje-navbar.component.html',
-  styleUrl: './deviaje-navbar.component.css',
+  styleUrl: './deviaje-navbar.component.scss',
 })
 export class DeviajeNavbarComponent {
-  toggleSidebar() {
-    throw new Error('Method not implemented.');
+  
+  @Output() toggleSidebar = new EventEmitter<void>();
+  isAutenticated: boolean = false;
+  isSidebarOpen: boolean = false;
+
+  onToggleSidebar() {
+    this.isSidebarOpen = !this.isSidebarOpen;
+    this.toggleSidebar.emit();
   }
 
-  isAutenticated: boolean = false;
 }
