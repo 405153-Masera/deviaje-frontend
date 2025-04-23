@@ -21,9 +21,9 @@
   left: 0 !important;
   z-index: 100;
   padding: 1.1rem 0;
-  border-right: 1px solid $border-color;
+  border-right: 1px solid #22262e;
   overflow-y: auto;
-  background-color: $background-color;
+  background-color: #151922;
   transition: width 0.5s ease;
   
   &.menu-toggle {

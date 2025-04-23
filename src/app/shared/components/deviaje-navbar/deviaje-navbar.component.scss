@@ -16,10 +16,9 @@ nav {
   z-index: 200; // Asegura que el navbar esté por encima de otros elementos
   width: 100%; // Ocupa todo el ancho de la pantalla
   @include flex-between;
-  padding: 0.45rem 2rem 0.45rem 1.27rem;
+  padding: 1.2rem 2rem 1.2rem 1.27rem;
   border-bottom: 1px solid $border-color;
   position: fixed; // Fija el navbar en la parte superior de la pantalla al hacer scroll
-  background-color: $background-color;
   top: 0;
   left: 0;
 }

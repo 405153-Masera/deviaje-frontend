@@ -1,11 +1,11 @@
-<div class="sidebar" [class.menu-toggle]="isOpen">
+<div class="sidebar bg-primary shadow-sm" [class.menu-toggle]="isOpen">
   <nav>
     <ul>
       @for (item of menuItems; track $index) {
         <li>
           <a [routerLink]="item.route" [class.selected]="item.isSelected" [class.search]="item.icon === 'search'"
             (click)="selectMenuItem(item)">
-            <img src="../../../../assets/icons/{{ item.icon }}.svg" alt="{{ item.label }}">
+            <img src="../../../../assets/icons/{{ item.icon }}.png" alt="{{ item.label }}">
             <span>{{ item.label }}</span>
           </a>
         </li>
