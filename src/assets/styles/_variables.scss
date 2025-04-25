@@ -1,32 +1,78 @@
 // Variabes permiten gardar valores que se pueden reutilizar en todo el proyecto
 // son las que empiezan con $
-// Colors
-$background-color: #212529;
-$text-title-color:#f8f9fa;
-$text-color:  #bfc9d4;
-$icon-color: #ced4da;
-$icon-menu-color: #f8f9fa;
-$menu-color: #adb5bd;
 
-$text-selected-color: #ffffff;
-$background-selected: #1673cf;
-$background-hover: rgba(255, 255, 255, 0.05);
+// Colores generales
+$background-color: #f5f7fa;
+$text-title-color: #053D4E;
+$text-color: #32363B;
+$icon-color: #32363B;
+$icon-menu-color: #707780;
+$menu-color: #707780;
 
-$border-color: #495057;
+$text-selected-color: #355CC0;
+$background-selected: #EBF0FF;
+$background-hover: #F7F9FA;
+
+$border-color: #E6E9ED;
+
+// Paleta de colores personalizada
+$primary-color: #8B5CF6; // Violeta vibrante
+$primary-light: #A78BFA; // Violeta claro para hover
+$secondary-color: #10B981; // Verde esmeralda para acentos
+$tertiary-color: #F43F5E; // Rosa coral para elementos destacados
+$white: #FFFFFF;
+$black: #333333;
+$gray-100: #F8F9FA;
+$gray-200: #E9ECEF;
+$gray-300: #DEE2E6;
+$gray-400: #CED4DA;
+$gray-500: #ADB5BD;
+$gray-600: #6C757D;
+$gray-700: #495057;
+$gray-800: #343A40;
+
+// Sombras y efectos
+$box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+$hover-shadow: 0 6px 25px rgba(0, 0, 0, 0.12);
+$dropdown-shadow: 0 8px 30px rgba(0, 0, 0, 0.15);
+
+// Bordes y esquinas
+$border-radius-sm: 6px;
+$border-radius: 10px;
+$border-radius-lg: 16px;
+$border-radius-xl: 24px;
+
+// Transiciones
+$transition-fast: all 0.2s ease;
+$transition-normal: all 0.3s ease;
+$transition-slow: all 0.5s ease;
 
 // Font
 $font-family: 'Nunito Sans', sans-serif;
 
 // Breakpoints
-$mobile-breakpoint: 500px;
+$mobile-breakpoint: 576px;
 $tablet-breakpoint: 768px;
+$desktop-breakpoint: 992px;
+$large-desktop-breakpoint: 1200px;
+
+
+//####### Navbar #######
+$navbar-height: 5rem;
 
 // Sidebar
 $sidebar-width: 4rem;
 $sidebar-expanded-width: 18.75rem;
 
-// Navbar
-$navbar-height: 5rem;
+// Colores
+$navbar-border-color: #495057;
+$navbar-menu-color: #adb5bd; // color del menu hamburguesa
+$navbar-title-color:#f8f9fa;
+$navbar-text-color:  #bfc9d4;
+$navbar-text-selected-color: #ffffff;
+$navbar-background-selected: #1673cf;
+$navbar-background-hover: rgba(255, 255, 255, 0.05);
+//####### Navbar #######
 
 // Los mixins te permiten agrupar estilos CSS que se pueden reutilizar en todo el proyecto
 // se invocan con @include y se definen con @mixin
@@ -51,6 +97,18 @@ $navbar-height: 5rem;
 
 @mixin tablet {
   @media (max-width: #{$tablet-breakpoint}) {
+    @content;
+  }
+}
+
+@mixin desktop {
+  @media (max-width: #{$desktop-breakpoint}) {
+    @content;
+  }
+}
+
+@mixin large-desktop {
+  @media (max-width: #{$large-desktop-breakpoint}) {
     @content;
   }
 }

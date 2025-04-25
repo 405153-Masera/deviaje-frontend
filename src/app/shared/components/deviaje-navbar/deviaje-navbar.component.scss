@@ -17,7 +17,7 @@ nav {
   width: 100%; // Ocupa todo el ancho de la pantalla
   @include flex-between;
   padding: 1.2rem 2rem 1.2rem 1.27rem;
-  border-bottom: 1px solid $border-color;
+  border-bottom: 1px solid $navbar-border-color;
   position: fixed; // Fija el navbar en la parte superior de la pantalla al hacer scroll
   top: 0;
   left: 0;
@@ -48,7 +48,7 @@ nav {
     width: 100%;
     margin: 0.15rem;
     height: 0.15rem;
-    background-color: $menu-color;
+    background-color: $navbar-menu-color;
     transition: all 0.2s ease;
   }
   
@@ -79,7 +79,7 @@ nav {
   .name {
     font-size: 1.5rem;
     font-weight: 900;
-    color: $text-title-color;
+    color: $navbar-title-color;
   }
 }
 
@@ -94,7 +94,7 @@ nav {
     transition: background-color 0.2s ease;
     
     &:hover {
-      background-color: $background-hover;
+      background-color: $navbar-background-hover;
     }
   }
   

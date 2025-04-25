@@ -1,0 +1,227 @@
+<!-- unique-flight-search.component.html -->
+<section class="search-container">
+    <div class="search-panel">
+        <div class="search-header">
+            <h2 class="search-title">¿A dónde te gustaría volar?</h2>
+
+            <div class="row mb-3">
+                <div class="trip-type-select">
+                    <div class="col-md-auto">
+                        <div class="form-check trip-type-option">
+                            <input type="radio" class="form-check-input" name="tripType" id="roundTrip" checked>
+                            <label for="roundTrip" class="form-check-label">Ida y vuelta</label>
+                        </div>
+                    </div>
+
+                    <div class="col-md-auto">
+                        <div class="form-check trip-type-option">
+                            <input type="radio" class="form-check-input" name="tripType" id="oneWay">
+                            <label for="oneWay" class="form-check-label">Solo ida</label>
+                        </div>
+                    </div>
+
+                    <div class="col-md-auto">
+                        <div class="form-check trip-type-option">
+                            <input type="radio" class="form-check-input" name="tripType" id="multiCity">
+                            <label for="multiCity" class="form-check-label">Multidestino</label>
+                        </div>
+                    </div>
+
+                    <!-- <div class="col-md-auto ms-md-auto">
+                        <div class="add-hotel-option">
+                            <button class="btn-add-hotel">
+                                <i class="bi bi-plus-circle"></i>
+                                Agregar alojamiento
+                            </button>
+                        </div>
+                    </div> -->
+                </div>
+
+            </div>
+        </div>
+
+        <form class="search-form">
+
+            <div class="row mb-3">
+
+                <div class="col-md input-field">
+                    <label>Salgo de</label>
+                    <div class="input-with-icon">
+                        <i class="bi bi-geo-alt"></i>
+                        <input type="text" placeholder="Ciudad o aeropuerto" autocomplete="off">
+                        <div class="city-suggestions">
+                            <!-- Las sugerencias se mostrarán aquí -->
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-auto align-self-end swap-button mb-2">
+                    <button type="button" aria-label="Intercambiar origen y destino">
+                        <i class="bi bi-arrow-left-right"></i>
+                    </button>
+                </div>
+
+                <div class="col-md input-field">
+                    <label>Voy a</label>
+                    <div class="input-with-icon">
+                        <i class="bi bi-geo-alt"></i>
+                        <input type="text" placeholder="Ciudad o aeropuerto" autocomplete="off">
+                        <div class="city-suggestions">
+                            <!-- Las sugerencias se mostrarán aquí -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="row mb-3">
+
+                <div class="col-md input-field">
+                    <label>Fecha de salida</label>
+                    <div class="input-with-icon date-input">
+                        <i class="bi bi-calendar3"></i>
+                        <input type="text" placeholder="dd/mm/aaaa" class="date-picker-trigger" 
+                        [value]="formatDisplayDate(departureDate)"
+                        readonly
+                        (click)="openCalendar('departure')"
+                        >
+                        <!-- El componente del calendario se mostrará aquí -->
+                    </div>
+                </div>
+
+                <div class="col-md input-field" [class.disabled]="tripType === 'oneway'">
+                    <label>Fecha de regreso</label>
+                    <div class="input-with-icon date-input">
+                        <i class="bi bi-calendar3"></i>
+                        <input type="text" placeholder="dd/mm/aaaa" class="date-picker-trigger"
+                        [value]="formatDisplayDate(returnDate)"
+                        readonly
+                        [disabled]="tripType === 'oneway'"
+                        (click)="tripType !== 'oneway' && openCalendar('return')"
+                            >
+                        <!-- El componente del calendario se mostrará aquí -->
+                    </div>
+                </div>
+
+                <div class="col-md input-field passengers-field">
+
+                    <label>Pasajeros</label>
+
+                    <div class="input-with-icon passenger-selector-trigger" (click)="togglePassengerDropdown()">
+
+                        <div class="passenger-summary">
+                            <i class="bi bi-chevron-down"></i>
+                            <i class="bi bi-person"></i>
+                            <span>{{ totalPassengers }}</span>
+                            <span>{{ totalPassengers === 1 ? 'Pasajero' : 'Pasajeros' }}</span>
+                        </div>
+
+
+                        <!-- Dropdown de pasajeros -->
+                        <div class="passenger-dropdown" [class.show]="isPassengerDropdownOpen">
+                            <div class="passenger-type-row">
+                                <div class="passenger-type">
+                                    <div class="passenger-title">Adultos</div>
+                                    <div class="passenger-subtitle">Más de 12 años</div>
+                                </div>
+                                <div class="passenger-counter">
+                                    <button type="button" class="counter-btn" [disabled]="adults <= 1"
+                                        (click)="decrementPassengers('adults')">
+                                        <i class="bi bi-dash"></i>
+                                    </button>
+                                    <span class="counter-value">{{ adults }}</span>
+                                    <button type="button" class="counter-btn" (click)="incrementPassengers('adults')">
+                                        <i class="bi bi-plus"></i>
+                                    </button>
+                                </div>
+                            </div>
+
+                            <div class="passenger-type-row">
+                                <div class="passenger-type">
+                                    <div class="passenger-title">Niños</div>
+                                    <div class="passenger-subtitle">De 2 a 12 años</div>
+                                </div>
+                                <div class="passenger-counter">
+                                    <button type="button" class="counter-btn" [disabled]="children <= 0"
+                                        (click)="decrementPassengers('children')">
+                                        <i class="bi bi-dash"></i>
+                                    </button>
+                                    <span class="counter-value">{{ children }}</span>
+                                    <button type="button" class="counter-btn" (click)="incrementPassengers('children')">
+                                        <i class="bi bi-plus"></i>
+                                    </button>
+                                </div>
+                            </div>
+
+                            <div class="passenger-type-row">
+                                <div class="passenger-type">
+                                    <div class="passenger-title">Bebés</div>
+                                    <div class="passenger-subtitle">Menores de 2 años</div>
+                                </div>
+                                <div class="passenger-counter">
+                                    <button type="button" class="counter-btn" [disabled]="infants <= 0"
+                                        (click)="decrementPassengers('infants')">
+                                        <i class="bi bi-dash"></i>
+                                    </button>
+                                    <span class="counter-value">{{ infants }}</span>
+                                    <button type="button" class="counter-btn" (click)="incrementPassengers('infants')">
+                                        <i class="bi bi-plus"></i>
+                                    </button>
+                                </div>
+                            </div>
+
+                            <div class="dropdown-actions">
+                                <button type="button" class="btn-apply"
+                                    (click)="closePassengerDropdown()">Aplicar</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-md input-field class-field">
+                    <label>Clase</label>
+                    <div class="input-with-icon class-selector">
+                        <i class="bi bi-star"></i>
+                        <select>
+                            <option value="ECONOMY">Turista</option>
+                            <option value="PREMIUM_ECONOMY">Premium Economy</option>
+                            <option value="BUSINESS">Business</option>
+                            <option value="FIRST">Primera</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="col-md input-field currency-field">
+                    <label>Moneda</label>
+                    <div class="input-with-icon currency-selector">
+                        <i class="bi bi-currency-dollar"></i>
+                        <select>
+                            <option value="USD">USD - Dólares</option>
+                            <option value="EUR">EUR - Euros</option>
+                            <option value="ARS">ARS - Pesos Argentinos</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+        </form>
+
+        <div class="search-actions">
+            <button type="button" class="btn-search-flights">
+                <span>Buscar vuelos</span>
+                <i class="bi bi-search"></i>
+            </button>
+        </div>
+    </div>
+</section>
+
+<app-deviaje-calendar
+  [selectionMode]="tripType === 'oneway' ? 'single' : 'range'"
+  [minDate]="minDate"
+  [initialStartDate]="departureDate"
+  [initialEndDate]="returnDate"
+  [showTwoMonths]="true"
+  [showPrices]="false"
+  (dateSelected)="selectSingleDate($event)"
+  (rangeSelected)="selectDateRange($event)"
+  (closed)="closeCalendar()"
+  #dateCalendar
+></app-deviaje-calendar>

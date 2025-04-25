@@ -1,0 +1,443 @@
+@import '../../../../assets/styles/variables';
+
+// Colores para destacar el dia actual
+$today-color: #0B95E5;
+$today-bg: rgba(#0B95E5, 0.1);
+
+// Contenedor del calendario
+.calendar-container {
+  visibility: hidden;
+  opacity: 0; //tanto visibility como opacity ocultan el calendario
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 1000;
+  transition: $transition-normal;
+  
+  &.show {
+    visibility: visible;
+    opacity: 1;
+  }
+}
+
+.calendar-overlay { // Fondo del calendario
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba($black, 0.5); // Color de fondo semitransparente
+  backdrop-filter: blur(3px); // Desenfoque del fondo
+}
+
+.calendar-modal {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background-color: $white;
+  border-radius: $border-radius;
+  box-shadow: $box-shadow;
+  width: 700px;
+  max-width: 95%;
+  max-height: 90vh;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  
+  @include tablet {
+    width: 95%;
+  }
+}
+
+.calendar-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 16px 20px;
+  border-bottom: 1px solid $gray-200;
+  
+  .btn-close {
+    cursor: pointer;
+    color: $gray-600;
+    font-size: 1rem;
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    transition: $transition-fast;
+    
+    &:hover {
+      background-color: $gray-200;
+      color: $black;
+    }
+  }
+}
+
+.calendar-mode-selector {
+  display: flex;
+  padding: 15px 20px;
+  border-bottom: 1px solid $gray-200;
+  
+  .mode-option {
+    flex: 1;
+    padding: 12px 15px;
+    border-radius: $border-radius;
+    cursor: pointer;
+    transition: $transition-fast;
+    border: 1px solid transparent;
+    
+    &:first-child {
+      margin-right: 10px;
+    }
+    
+    &:hover {
+      background-color: $gray-100;
+    }
+    
+    &.active {
+      border-color: $primary-color;
+      background-color: $primary-light;
+    }
+    
+    .mode-label {
+      font-size: 13px;
+      font-weight: 600;
+      color: $gray-700;
+      margin-bottom: 5px;
+    }
+    
+    .mode-value {
+      font-size: 15px;
+      color: $black;
+    }
+  }
+  
+  @include mobile {
+    flex-direction: column;
+    .mode-option {
+      margin-bottom: 10px;
+      
+      &:first-child {
+        margin-right: 0;
+      }
+    }
+  }
+}
+
+.calendar-body {
+  padding: 15px 20px;
+  
+  @include mobile {
+    padding: 10px;
+  }
+}
+
+.calendar-navigation {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 15px;
+  
+  .current-month {
+    font-size: 16px;
+    font-weight: 600;
+    color: $black;
+  }
+
+  .current-second-month{
+    @include tablet {
+      display: none;
+    }
+  }
+  
+  .nav-btn {
+    width: 34px;
+    height: 34px;
+    border-radius: 50%;
+    background: none;
+    border: 1px solid $gray-300;
+    cursor: pointer;
+    transition: $transition-fast;
+    color: $gray-700;
+    
+    &:hover {
+      border-color: $primary-color;
+      color: $primary-color;
+    }
+    
+    i {
+      font-size: 14px;
+    }
+  }
+}
+
+.calendar-months-container {
+  display: flex;
+  gap: 20px;
+  
+  @include tablet {
+    flex-direction: column;
+  }
+}
+
+.calendar-month {
+  flex: 1;
+  
+  &.second-month {
+    @include tablet {
+      display: none;
+    }
+  }
+}
+
+.weekdays-row {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  margin-bottom: 10px;
+  
+  .weekday {
+    text-align: center;
+    font-size: 14px;
+    font-weight: 600;
+    color: $primary-color;
+    padding: 5px 0;
+  }
+}
+
+.days-grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 5px;
+  
+  .day {
+    position: relative;
+    height: 42px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: $transition-fast;
+    font-size: 14px;
+    color: $gray-700;
+    
+    @include mobile {
+      height: 38px;
+      font-size: 13px;
+    }
+    
+    &:hover:not(.disabled) {
+      background-color: $gray-200;
+    }
+    
+    &.disabled {
+      color: $gray-400;
+      cursor: default;
+      pointer-events: none;
+    }
+    
+    &.today {
+      color: $today-color;
+      font-weight: 500;
+      
+      &:not(.selected):not(.in-range) {
+        background-color: $today-bg;
+      }
+    }
+    
+    &.selected, &.range-start, &.range-end {
+      background-color: $primary-color;
+      color: $white;
+      font-weight: 500;
+      position: relative;
+      z-index: 1;
+    }
+    
+    &.in-range {
+      background-color: $primary-light;
+      color: $primary-color;
+      
+      &:hover {
+        background-color: rgba($primary-color, 0.3);
+      }
+    }
+    
+    &.range-start {
+      border-top-right-radius: 0;
+      border-bottom-right-radius: 0;
+    }
+    
+    &.range-end {
+      border-top-left-radius: 0;
+      border-bottom-left-radius: 0;
+    }
+    
+    .day-price {
+      font-size: 10px;
+      color: inherit;
+      opacity: 0.9;
+      margin-top: 2px;
+      
+      @include mobile {
+        font-size: 9px;
+      }
+    }
+  }
+}
+
+.calendar-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  
+  button {
+    padding: 10px 16px;
+    border-radius: 8px;
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: $transition-fast;
+    
+    &.btn-clear {
+      background: none;
+      border: 1px solid $gray-300;
+      color: $gray-700;
+      
+      &:hover {
+        background-color: $gray-100;
+      }
+    }
+    
+    &.btn-apply {
+      background-color: $primary-color;
+      border: none;
+      color: $white;
+      
+      &:hover {
+        background-color: darken($primary-color, 5%);
+      }
+      
+      &:disabled {
+        opacity: 0.6;
+        cursor: not-allowed;
+      }
+    }
+  }
+}
+
+// Animaciones
+@keyframes fadeIn {
+  from { opacity: 0; transform: translate(-50%, -48%); }
+  to { opacity: 1; transform: translate(-50%, -50%); }
+}
+
+.calendar-container.show .calendar-modal {
+  animation: fadeIn 0.3s ease forwards;
+}
+
+// Efectos visuales adicionales para mejorar la experiencia
+
+// Efecto de pulsación en los días
+.day {
+  &:active:not(.disabled) {
+    transform: scale(0.95);
+  }
+}
+
+// Efecto de transición suave para el rango de fechas
+.in-range, .range-start, .range-end {
+  transition: background-color 0.2s ease, color 0.2s ease, transform 0.1s ease !important;
+}
+
+// Estilos para dispositivos táctiles
+@media (hover: none) {
+  .day:not(.disabled):not(.selected):not(.in-range):not(.range-start):not(.range-end) {
+    position: relative;
+    
+    &:after {
+      content: "";
+      position: absolute;
+      left: 0;
+      top: 0;
+      width: 100%;
+      height: 100%;
+      background-color: rgba($gray-500, 0.2);
+      border-radius: 8px;
+      opacity: 0;
+    }
+    
+    &:active:after {
+      opacity: 1;
+    }
+  }
+}
+
+// Mejoras visuales para la navegación del calendario
+.calendar-navigation {
+  position: relative;
+  
+  &:after {
+    content: "";
+    position: absolute;
+    bottom: -10px;
+    left: 0;
+    width: 100%;
+    height: 1px;
+    background-color: $gray-200;
+  }
+}
+
+// Indicador visual cuando se está en modo selección de fecha de regreso
+.calendar-mode-selector {
+  .mode-option.active:after {
+    content: "";
+    position: absolute;
+    bottom: -1px;
+    left: 0;
+    width: 100%;
+    height: 2px;
+    background-color: $primary-color;
+  }
+}
+
+// Tooltips para días especiales
+.day {
+  &.special-price {
+    position: relative;
+    
+    &:before {
+      content: "¡Oferta!";
+      position: absolute;
+      top: -25px;
+      left: 50%;
+      transform: translateX(-50%);
+      background-color: $primary-color;
+      color: $white;
+      padding: 3px 6px;
+      border-radius: 4px;
+      font-size: 10px;
+      white-space: nowrap;
+      opacity: 0;
+      visibility: hidden;
+      transition: $transition-fast;
+      z-index: 10;
+    }
+    
+    &:hover:before {
+      opacity: 1;
+      visibility: visible;
+    }
+  }
+}
+
+// Efecto de desplazamiento suave entre meses
+.calendar-months-container {
+  transition: opacity 0.2s ease;
+  
+  &.changing {
+    opacity: 0.5;
+  }
+}
