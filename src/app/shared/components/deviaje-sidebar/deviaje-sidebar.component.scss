@@ -21,9 +21,9 @@
   left: 0 !important;
   z-index: 100;
   padding: 1.1rem 0;
-  border-right: 1px solid $border-color;
+  border-right: 1px solid #22262e;
   overflow-y: auto;
-  background-color: $background-color;
+  background-color: #151922;
   transition: width 0.5s ease;
   
   &.menu-toggle {
@@ -44,20 +44,20 @@
     border-radius: 0.5rem;
     white-space: nowrap;
     overflow: hidden;
-    color: $text-color;
+    color: $navbar-text-color;
     
     &:hover {
-      background-color: $background-hover;
+      background-color: $navbar-background-hover;
     }
     
     &.selected {
-      color: $text-selected-color;
-      background-color: $background-selected;
+      color: $navbar-text-selected-color;
+      background-color: $navbar-background-selected;
     }
     
     &.search {
       padding: 1rem 0.7rem;
-      border-bottom: 1px solid $border-color;
+      border-bottom: 1px solid $navbar-border-color;
       margin-bottom: 0.2rem;
     }
   }

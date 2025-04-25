@@ -16,13 +16,15 @@ export class DeviajeSidebarComponent {
 
   menuItems: MenuItem[] = [
     { icon: 'home', label: 'Inicio', route: '/home', isSelected: false },
-    { icon: 'flight', label: 'Vuelos', route: '/flights', isSelected: false },
-    { icon: 'hotel', label: 'Hoteles', route: '/hotels', isSelected: false },
-    { icon: 'package', label: 'Paquetes', route: '/packages', isSelected: false },
-    { icon: 'us', label: 'Perfil', route: '/profile', isSelected: false },
-    { icon: 'chart', label: 'Reservas', route: '/bookings', isSelected: false },
+    { icon: 'avion', label: 'Vuelos', route: '/home/flight-search', isSelected: false },
+    { icon: 'hotel', label: 'Hoteles', route: '/home/search', isSelected: false },
+    { icon: 'vacaciones', label: 'Paquetes', route: '/packages', isSelected: false },
+    { icon: 'tours', label: 'Tours', route: '/tours', isSelected: false },
+    { icon: 'perfil', label: 'Perfil', route: '/profile', isSelected: false },
+    { icon: 'reserva', label: 'Reservas', route: '/bookings', isSelected: false },
   ];
 
+  //#EDE4E4 color de los iconos
   constructor() { }
 
   selectMenuItem(item: MenuItem): void {
