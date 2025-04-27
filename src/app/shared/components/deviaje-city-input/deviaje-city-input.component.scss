@@ -1,0 +1,50 @@
+@import '../../../../assets/styles/variables';
+
+// Sugerencias de ciudades
+.city-suggestions {
+  position: absolute;
+  top: calc(100% + 5px);
+  left: 0;
+  width: 100%;
+  background-color: $white;
+  border-radius: $border-radius;
+  box-shadow: $dropdown-shadow;
+  z-index: 1000;
+  max-height: 250px;
+  overflow-y: auto;
+  display: none;
+
+  &.show {
+    display: block;
+  }
+
+  .suggestion-loading,
+  .suggestion-empty {
+    padding: 12px 16px;
+    color: $gray-600;
+    text-align: center;
+  }
+
+  .suggestion-item {
+    padding: 12px 16px;
+    cursor: pointer;
+    transition: $transition-fast;
+
+    &:hover,
+    &.active {
+      background-color: $gray-100;
+    }
+
+    .city-name {
+      font-weight: 500;
+      display: block;
+    }
+
+    .country-name {
+      font-size: 12px;
+      color: $gray-600;
+      display: block;
+      margin-top: 3px;
+    }
+  }
+}

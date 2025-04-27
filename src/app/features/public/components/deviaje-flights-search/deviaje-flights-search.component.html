@@ -42,37 +42,11 @@
             <div class="row mb-3">
 
                 <div class="col-md">
-                    <label class="mb-1">Salgo de</label>
-                    <div class="input-with-icon">
-                        <i class="bi bi-geo-alt"></i>
-                        <input type="text" placeholder="Ciudad" 
-                                formControlName="origin"
-                                (input)="onOriginInputChange($event)"
-                                autocomplete="off"
-                                #originInput>
-                        <div class="city-suggestions"  [class.show]="isOriginSuggestionsOpen">
-                            @if(isLoadingOriginCities) {
-                                <div class="suggestion-loading">
-                                    <i class="bi bi-arrow-repeat spinner"></i> Buscando...
-                                </div>
-                            } @else if(originCities.length === 0) {
-                                <div class="suggestion-empty">
-                                    No se encontraron resultados
-                                </div>
-                            } @else {
-                                @for(city of originCities; track city.iataCode) {
-                                    <div class="suggestion-item" (click)="selectOriginCity(city)">
-                                        <span class="city-name">
-                                            {{ city.name }} {{ city.iataCode ? '(' + city.iataCode + ')' : '' }}
-                                        </span>
-                                        <span class="airport-code">
-                                            {{ city.country }}
-                                        </span>
-                                    </div>
-                                }
-                            }
-                        </div>
-                    </div>
+                    <app-deviaje-city-input
+                    label="Salgo de"
+                    [cityCode]="originCity"
+                    (citySelected)="onOriginCitySelected($event)"
+                  ></app-deviaje-city-input>
                     @if(formSearch.get('origin')?.invalid && formSearch.get('origin')?.touched) {
                         <div class="error-message">
                             Por favor seleccione una ciudad de origen
@@ -87,37 +61,12 @@
                 </div>
 
                 <div class="col-md">
-                    <label class="mb-1">Voy a</label>
-                    <div class="input-with-icon">
-                        <i class="bi bi-geo-alt"></i>
-                        <input type="text" placeholder="Ciudad" 
-                                formControlName="destination"
-                                (input)="onDestinationInputChange($event)"
-                                autocomplete="off"
-                                #destinationInput> 
-                        <div class="city-suggestions" [class.show]="isDestinationSuggestionsOpen">
-                            @if(isLoadingDestinationCities) {
-                                <div class="suggestion-loading">
-                                    <i class="bi bi-arrow-repeat spinner"></i> Buscando...
-                                </div>
-                            } @else if(destinationCities.length === 0) {
-                                <div class="suggestion-empty">
-                                    No se encontraron resultados
-                                </div>
-                            } @else {
-                                @for(city of destinationCities; track city.iataCode) {
-                                    <div class="suggestion-item" (click)="selectDestinationCity(city)">
-                                        <span class="city-name">
-                                            {{ city.name }} {{ city.iataCode ? '(' + city.iataCode + ')' : '' }}
-                                        </span>
-                                        <span class="airport-code">
-                                            {{ city.country }}
-                                        </span>
-                                    </div>
-                                }
-                            }
-                        </div>
-                    </div>
+                    
+                    <app-deviaje-city-input
+                        label="Voy a"
+                        [cityCode]="originCity"
+                        (citySelected)="onDestinationCitySelected($event)"
+                    ></app-deviaje-city-input>
                     @if(formSearch.get('destination')?.invalid && formSearch.get('destination')?.touched) {
                         <div class="error-message">
                             Por favor seleccione una ciudad de destino
