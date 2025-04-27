@@ -10,7 +10,7 @@ import {
   inject
 } from '@angular/core';
 import { CityDto } from '../../models/locations';
-import { debounceTime, of, Subject, Subscription, switchMap } from 'rxjs';
+import { catchError, debounceTime, of, Subject, Subscription, switchMap } from 'rxjs';
 import { CityService } from '../../services/city.service';
 
 @Component({
@@ -49,7 +49,12 @@ export class DeviajeCityInputComponent implements OnInit, OnDestroy {
         debounceTime(300),
         switchMap((term) => {
           this.isLoading = true;
-          return term.length < 2 ? of([]) : this.cityService.searchCities(term);
+          return term.length < 2 ? of([]) : this.cityService.searchCities(term).pipe(
+            catchError(error => {
+              console.error('Error al buscar ciudades:', error);
+              return of([]);
+            })
+          )
         })
       )
       .subscribe((cities) => {

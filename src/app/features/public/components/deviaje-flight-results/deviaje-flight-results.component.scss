@@ -1,0 +1,560 @@
+@import "../../../../../assets/styles/variables";
+
+// Header de resultados
+.results-header {
+  background-color: $primary-color;
+  color: white;
+
+  .results-title {
+    font-size: 1.5rem;
+    font-weight: 700;
+    margin-bottom: 0.5rem;
+
+    @include mobile {
+      font-size: 1.2rem;
+    }
+  }
+
+  .travel-info {
+    display: flex;
+    gap: 1.5rem;
+    align-items: center;
+    flex-wrap: wrap;
+
+    span {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      font-size: 0.9rem;
+
+      i {
+        font-size: 1rem;
+      }
+    }
+
+    @include mobile {
+      gap: 1rem;
+      font-size: 0.8rem;
+    }
+  }
+}
+
+// Panel de filtros lateral
+.filters-panel {
+  background-color: white;
+  border-radius: $border-radius;
+  box-shadow: $box-shadow;
+  padding: 1.5rem;
+  margin-bottom: 1.5rem;
+
+  .filters-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1.5rem;
+
+    .filter-title {
+      font-size: 1.2rem;
+      font-weight: 600;
+      margin: 0;
+    }
+
+    .reset-filters-btn {
+      background: none;
+      border: none;
+      color: $primary-color;
+      font-size: 0.85rem;
+      display: flex;
+      align-items: center;
+      gap: 0.3rem;
+      cursor: pointer;
+
+      &:hover {
+        text-decoration: underline;
+      }
+    }
+  }
+
+  .filter-section {
+    margin-bottom: 1.5rem;
+    padding-bottom: 1.5rem;
+    border-bottom: 1px solid $gray-200;
+
+    &:last-child {
+      margin-bottom: 0;
+      padding-bottom: 0;
+      border-bottom: none;
+    }
+
+    .filter-section-title {
+      font-size: 1rem;
+      font-weight: 500;
+      margin-bottom: 1rem;
+    }
+  }
+
+  .price-labels {
+    display: flex;
+    justify-content: space-between;
+    font-size: 0.85rem;
+    color: $gray-700;
+  }
+
+  .airlines-filter {
+    max-height: 200px;
+    overflow-y: auto;
+
+    .form-check {
+      margin-bottom: 0.5rem;
+
+      &:last-child {
+        margin-bottom: 0;
+      }
+    }
+  }
+}
+
+// Filtros móviles
+.mobile-filter-toggle {
+  position: sticky;
+  top: 0;
+  z-index: 90;
+  background-color: rgba($white, 0.95);
+  padding: 0.5rem 1rem;
+}
+
+.mobile-filters {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 1000;
+  visibility: hidden;
+  pointer-events: none;
+
+  &.show {
+    visibility: visible;
+    pointer-events: auto;
+  }
+
+  .mobile-filters-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba($black, 0.5);
+    backdrop-filter: blur(3px);
+  }
+
+  .mobile-filters-panel {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    max-height: 80vh;
+    background-color: $white;
+    border-top-left-radius: $border-radius-lg;
+    border-top-right-radius: $border-radius-lg;
+    box-shadow: $box-shadow;
+    overflow-y: auto;
+    transform: translateY(100%);
+    transition: transform 0.3s ease;
+
+    .mobile-filters-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 1rem 1.5rem;
+      border-bottom: 1px solid $gray-200;
+
+      h3 {
+        margin: 0;
+        font-size: 1.2rem;
+        font-weight: 600;
+      }
+
+      .close-filters-btn {
+        background: none;
+        border: none;
+        font-size: 1.2rem;
+        color: $gray-700;
+        cursor: pointer;
+      }
+    }
+
+    .mobile-filters-content {
+      padding: 1.5rem;
+
+      .filter-section {
+        margin-bottom: 1.5rem;
+
+        &:last-child {
+          margin-bottom: 0;
+        }
+      }
+    }
+
+    .mobile-filters-footer {
+      display: flex;
+      justify-content: space-between;
+      padding: 1rem 1.5rem;
+      border-top: 1px solid $gray-200;
+
+      button {
+        flex: 1;
+
+        &:first-child {
+          margin-right: 0.5rem;
+        }
+      }
+    }
+  }
+
+  &.show .mobile-filters-panel {
+    transform: translateY(0);
+  }
+}
+
+// Panel de ordenación
+.sort-panel {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background-color: $white;
+  padding: 1rem;
+  border-radius: $border-radius;
+  box-shadow: $box-shadow;
+  margin-bottom: 1.5rem;
+
+  .results-count {
+    font-weight: 500;
+    color: $gray-700;
+  }
+
+  .sort-options {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+
+    label {
+      color: $gray-700;
+      margin-bottom: 0;
+    }
+
+    select {
+      min-width: 200px;
+
+      @include mobile {
+        min-width: 150px;
+      }
+    }
+  }
+
+  @include mobile {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.5rem;
+  }
+}
+
+// Tarjeta de vuelo
+.flight-card {
+  background-color: $white;
+  border-radius: $border-radius;
+  box-shadow: $box-shadow;
+  margin-bottom: 1.5rem;
+  overflow: hidden;
+  transition: $transition-normal;
+
+  &:hover {
+    box-shadow: $hover-shadow;
+    transform: translateY(-2px);
+  }
+
+  .flight-info {
+    padding: 1.5rem;
+    border-bottom: 1px solid $gray-200;
+
+    &.return-flight {
+      background-color: $gray-100;
+      border-top: 1px dashed $gray-300;
+
+      &::before {
+        content: "Vuelo de regreso";
+        display: block;
+        font-size: 0.8rem;
+        color: $gray-600;
+        margin-bottom: 0.5rem;
+      }
+    }
+
+    .flight-route {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+
+      .flight-airline {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        min-width: 80px;
+
+        img {
+          width: 40px;
+          height: 40px;
+          object-fit: contain;
+          margin-bottom: 0.25rem;
+        }
+
+        span {
+          font-size: 0.8rem;
+          color: $gray-700;
+        }
+      }
+
+      .flight-main-details {
+        display: flex;
+        flex: 1;
+        justify-content: space-between;
+        align-items: center;
+
+        @include mobile {
+          flex-direction: column;
+          align-items: stretch;
+          gap: 1rem;
+        }
+      }
+
+      .flight-departure,
+      .flight-arrival {
+        text-align: center;
+
+        .flight-time {
+          font-size: 1.1rem;
+          font-weight: 600;
+          color: $black;
+        }
+
+        .flight-airport {
+          font-size: 0.9rem;
+          font-weight: 500;
+          color: $gray-700;
+        }
+
+        .flight-date {
+          font-size: 0.8rem;
+          color: $gray-600;
+        }
+      }
+
+      .flight-duration {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        padding: 0 1rem;
+
+        .flight-duration-line {
+          width: 100%;
+          position: relative;
+          height: 2px;
+          margin: 0.5rem 0;
+
+          .flight-stops-indicator {
+            position: absolute;
+            top: 50%;
+            left: 0;
+            width: 100%;
+            height: 4px;
+            background-color: $gray-300;
+            transform: translateY(-50%);
+            display: flex;
+            justify-content: space-between;
+
+            .stop-point {
+              width: 8px;
+              height: 8px;
+              border-radius: 50%;
+              background-color: $gray-500;
+              transform: translateY(-25%);
+            }
+
+            .flight-line {
+              flex: 1;
+              height: 100%;
+            }
+          }
+        }
+
+        .flight-duration-time {
+          font-size: 0.85rem;
+          font-weight: 500;
+          color: $gray-700;
+        }
+
+        .flight-stops {
+          font-size: 0.8rem;
+          color: $tertiary-color;
+
+          &:empty::after {
+            content: "Directo";
+            color: $secondary-color;
+          }
+        }
+      }
+    }
+
+    .flight-stops-details {
+      border-top: 1px dashed $gray-200;
+      margin-top: 1rem;
+      padding-top: 1rem;
+
+      .layover-info {
+        display: flex;
+        align-items: center;
+        margin-bottom: 0.5rem;
+
+        &:last-child {
+          margin-bottom: 0;
+        }
+
+        .layover-airport {
+          font-size: 0.85rem;
+          color: $gray-600;
+          display: flex;
+          align-items: center;
+          gap: 0.5rem;
+
+          i {
+            color: $tertiary-color;
+          }
+        }
+      }
+    }
+  }
+
+  .flight-price-booking {
+    padding: 1.5rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+
+    .flight-price {
+      .price-amount {
+        font-size: 1.5rem;
+        font-weight: 700;
+        color: $black;
+      }
+
+      .price-person {
+        font-size: 0.8rem;
+        color: $gray-600;
+      }
+    }
+
+    .book-btn {
+      min-width: 120px;
+    }
+
+    @include mobile {
+      flex-direction: column;
+      gap: 1rem;
+
+      .book-btn {
+        width: 100%;
+      }
+    }
+  }
+}
+
+// Estado de carga y sin resultados
+.loading-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 4rem 2rem;
+  background-color: $white;
+  border-radius: $border-radius;
+  box-shadow: $box-shadow;
+
+  .spinner {
+    width: 40px;
+    height: 40px;
+    border: 4px solid rgba($primary-color, 0.2);
+    border-radius: 50%;
+    border-top-color: $primary-color;
+    animation: spin 1s linear infinite;
+    margin-bottom: 1rem;
+  }
+
+  p {
+    color: $gray-700;
+    font-weight: 500;
+  }
+}
+
+.no-results {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 4rem 2rem;
+  background-color: $white;
+  border-radius: $border-radius;
+  box-shadow: $box-shadow;
+  text-align: center;
+
+  i {
+    font-size: 3rem;
+    color: $gray-500;
+    margin-bottom: 1rem;
+  }
+
+  p {
+    color: $gray-700;
+    margin-bottom: 1.5rem;
+  }
+}
+
+// Paginación
+.pagination-container {
+  display: flex;
+  justify-content: center;
+  margin-top: 2rem;
+  margin-bottom: 2rem;
+
+  .pagination {
+    .page-item {
+      .page-link {
+        color: $gray-700;
+        cursor: pointer;
+
+        &:hover {
+          color: $primary-color;
+          background-color: $gray-100;
+        }
+      }
+
+      &.active .page-link {
+        background-color: $primary-color;
+        border-color: $primary-color;
+        color: $white;
+      }
+
+      &.disabled .page-link {
+        color: $gray-400;
+        pointer-events: none;
+      }
+    }
+  }
+}
+
+// Animaciones
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
