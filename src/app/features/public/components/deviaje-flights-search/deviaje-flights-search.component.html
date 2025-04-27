@@ -8,103 +8,114 @@
                 <div class="trip-type-select">
                     <div class="col-md-auto">
                         <div class="form-check trip-type-option">
-                            <input type="radio" class="form-check-input" name="tripType" id="roundTrip" checked>
+                            <input type="radio" class="form-check-input" name="tripType" id="roundTrip" checked
+                            (change)="setTripType('roundtrip')"
+                            >
                             <label for="roundTrip" class="form-check-label">Ida y vuelta</label>
                         </div>
                     </div>
 
                     <div class="col-md-auto">
                         <div class="form-check trip-type-option">
-                            <input type="radio" class="form-check-input" name="tripType" id="oneWay">
+                            <input type="radio" class="form-check-input" name="tripType" id="oneWay"
+                            (change)="setTripType('oneway')"
+                            >
                             <label for="oneWay" class="form-check-label">Solo ida</label>
                         </div>
                     </div>
 
                     <div class="col-md-auto">
                         <div class="form-check trip-type-option">
-                            <input type="radio" class="form-check-input" name="tripType" id="multiCity">
+                            <input type="radio" class="form-check-input" name="tripType" id="multiCity"
+                            (change)="setTripType('multicity')"
+                            >
                             <label for="multiCity" class="form-check-label">Multidestino</label>
                         </div>
                     </div>
-
-                    <!-- <div class="col-md-auto ms-md-auto">
-                        <div class="add-hotel-option">
-                            <button class="btn-add-hotel">
-                                <i class="bi bi-plus-circle"></i>
-                                Agregar alojamiento
-                            </button>
-                        </div>
-                    </div> -->
                 </div>
 
             </div>
         </div>
 
-        <form class="search-form">
+        <form [formGroup]="formSearch" (ngSubmit)="searchFlights()" class="search-form">
 
             <div class="row mb-3">
 
-                <div class="col-md input-field">
-                    <label>Salgo de</label>
-                    <div class="input-with-icon">
-                        <i class="bi bi-geo-alt"></i>
-                        <input type="text" placeholder="Ciudad o aeropuerto" autocomplete="off">
-                        <div class="city-suggestions">
-                            <!-- Las sugerencias se mostrarán aquí -->
+                <div class="col-md">
+                    <app-deviaje-city-input
+                    label="Salgo de"
+                    [cityCode]="originCity"
+                    (citySelected)="onOriginCitySelected($event)"
+                  ></app-deviaje-city-input>
+                    @if(formSearch.get('origin')?.invalid && formSearch.get('origin')?.touched) {
+                        <div class="error-message">
+                            Por favor seleccione una ciudad de origen
                         </div>
-                    </div>
+                    }
                 </div>
 
                 <div class="col-auto align-self-end swap-button mb-2">
-                    <button type="button" aria-label="Intercambiar origen y destino">
+                    <button type="button" aria-label="Intercambiar origen y destino" (click)="swapLocations()">
                         <i class="bi bi-arrow-left-right"></i>
                     </button>
                 </div>
 
-                <div class="col-md input-field">
-                    <label>Voy a</label>
-                    <div class="input-with-icon">
-                        <i class="bi bi-geo-alt"></i>
-                        <input type="text" placeholder="Ciudad o aeropuerto" autocomplete="off">
-                        <div class="city-suggestions">
-                            <!-- Las sugerencias se mostrarán aquí -->
+                <div class="col-md">
+                    
+                    <app-deviaje-city-input
+                        label="Voy a"
+                        [cityCode]="originCity"
+                        (citySelected)="onDestinationCitySelected($event)"
+                    ></app-deviaje-city-input>
+                    @if(formSearch.get('destination')?.invalid && formSearch.get('destination')?.touched) {
+                        <div class="error-message">
+                            Por favor seleccione una ciudad de destino
                         </div>
-                    </div>
+                    }
                 </div>
             </div>
 
             <div class="row mb-3">
 
-                <div class="col-md input-field">
-                    <label>Fecha de salida</label>
+                <div class="col-md">
+                    <label class="mb-1">Fecha de salida</label>
                     <div class="input-with-icon date-input">
                         <i class="bi bi-calendar3"></i>
                         <input type="text" placeholder="dd/mm/aaaa" class="date-picker-trigger" 
                         [value]="formatDisplayDate(departureDate)"
+                        formControlName="departureDate"
                         readonly
                         (click)="openCalendar('departure')"
                         >
-                        <!-- El componente del calendario se mostrará aquí -->
                     </div>
+                    @if(formSearch.get('departureDate')?.invalid && formSearch.get('departureDate')?.touched) {
+                        <div class="error-message">
+                            La fecha de salida es obligatoria
+                        </div>
+                    }
                 </div>
 
-                <div class="col-md input-field" [class.disabled]="tripType === 'oneway'">
-                    <label>Fecha de regreso</label>
+                <div class="col-md" [class.disabled]="tripType === 'oneway'">
+                    <label class="mb-1">Fecha de regreso</label>
                     <div class="input-with-icon date-input">
                         <i class="bi bi-calendar3"></i>
                         <input type="text" placeholder="dd/mm/aaaa" class="date-picker-trigger"
                         [value]="formatDisplayDate(returnDate)"
                         readonly
-                        [disabled]="tripType === 'oneway'"
+                        formControlName="returnDate"
                         (click)="tripType !== 'oneway' && openCalendar('return')"
                             >
-                        <!-- El componente del calendario se mostrará aquí -->
                     </div>
+                    @if(formSearch.get('returnDate')?.invalid && formSearch.get('returnDate')?.touched && tripType !== 'oneway') {
+                        <div class="error-message">
+                            La fecha de regreso es obligatoria
+                        </div>
+                    }
                 </div>
 
-                <div class="col-md input-field passengers-field">
+                <div class="col-md passengers-field">
 
-                    <label>Pasajeros</label>
+                    <label class="mb-1">Pasajeros</label>
 
                     <div class="input-with-icon passenger-selector-trigger" (click)="togglePassengerDropdown()">
 
@@ -177,11 +188,11 @@
                     </div>
                 </div>
 
-                <div class="col-md input-field class-field">
-                    <label>Clase</label>
+                <div class="col-md class-field">
+                    <label class="mb-1">Clase</label>
                     <div class="input-with-icon class-selector">
                         <i class="bi bi-star"></i>
-                        <select>
+                        <select formControlName="travelClass"> 
                             <option value="ECONOMY">Turista</option>
                             <option value="PREMIUM_ECONOMY">Premium Economy</option>
                             <option value="BUSINESS">Business</option>
@@ -190,11 +201,11 @@
                     </div>
                 </div>
 
-                <div class="col-md input-field currency-field">
-                    <label>Moneda</label>
+                <div class="col-md currency-field">
+                    <label class="mb-1">Moneda</label>
                     <div class="input-with-icon currency-selector">
                         <i class="bi bi-currency-dollar"></i>
-                        <select>
+                        <select formControlName="currency">
                             <option value="USD">USD - Dólares</option>
                             <option value="EUR">EUR - Euros</option>
                             <option value="ARS">ARS - Pesos Argentinos</option>
@@ -205,7 +216,7 @@
         </form>
 
         <div class="search-actions">
-            <button type="button" class="btn-search-flights">
+            <button type="button" class="btn-search-flights"  (click)="searchFlights()">
                 <span>Buscar vuelos</span>
                 <i class="bi bi-search"></i>
             </button>

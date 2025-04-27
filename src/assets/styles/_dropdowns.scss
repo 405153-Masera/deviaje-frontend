@@ -1,0 +1,115 @@
+@import '../styles/variables';
+
+.dropdown {
+  position: relative;
+}
+
+.dropdown-menu {
+  position: absolute;
+  top: calc(100% + 5px);
+  left: 0;
+  width: 100%;
+  background-color: $white;
+  border-radius: $border-radius;
+  box-shadow: $dropdown-shadow;
+  z-index: 1000;
+  overflow: hidden;
+  display: none;
+
+  &.show {
+    display: block;
+  }
+}
+
+// Selector de pasajeros
+.passenger-selector-trigger {
+  cursor: pointer;
+
+  .passenger-summary {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    pointer-events: none;
+  }
+}
+
+.passenger-dropdown {
+  position: absolute;
+  top: calc(100% + 5px);
+  left: 0;
+  width: 320px;
+  background-color: $white;
+  border-radius: $border-radius;
+  box-shadow: $dropdown-shadow;
+  padding: 16px;
+  z-index: 1000;
+  display: none;
+
+  &.show {
+    display: block;
+  }
+
+  @include mobile {
+    width: 100%;
+  }
+}
+
+.passenger-type-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 0;
+  border-bottom: 1px solid $gray-200;
+
+  &:last-of-type {
+    border-bottom: none;
+    margin-bottom: 10px;
+  }
+}
+
+.passenger-type {
+  .passenger-title {
+    font-weight: 500;
+    margin-bottom: 2px;
+  }
+
+  .passenger-subtitle {
+    font-size: 12px;
+    color: $gray-600;
+  }
+}
+
+.passenger-counter {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+
+  .counter-value {
+    font-size: 16px;
+    font-weight: 500;
+    min-width: 20px;
+    text-align: center;
+  }
+}
+
+.dropdown-actions {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 15px;
+}
+
+// Estilos generales para overlays
+.overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba($black, 0.5);
+  z-index: 1050;
+  display: none;
+
+  &.show {
+    display: block;
+  }
+}

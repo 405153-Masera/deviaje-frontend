@@ -1,0 +1,88 @@
+@import "../styles/variables";
+
+// Estilos base para inputs
+input,
+select,
+textarea {
+  width: 100%;
+  padding: 12px 16px;
+  border: 1px solid $gray-300;
+  border-radius: $border-radius;
+  transition: $transition-fast;
+
+  &:focus {
+    outline: none;
+    border-color: $primary-color;
+    box-shadow: 0 0 0 3px rgba($primary-color, 0.2);
+  }
+
+  &::placeholder {
+    color: $gray-500;
+  }
+
+  &:disabled {
+    background-color: $gray-100;
+    color: $gray-600;
+    cursor: not-allowed;
+  }
+}
+
+// Select personalizado
+select {
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='%236c757d'%3E%3Cpath d='M8 10.5l-5-5 1.5-1.5L8 7.5 11.5 4 13 5.5l-5 5z'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 15px center;
+  background-size: 16px;
+  padding-right: 40px;
+}
+
+// Inputs con iconos
+.input-with-icon {
+  position: relative;
+
+  input,
+  select,
+  textarea {
+    padding-left: 42px;
+  }
+
+  i {
+    position: absolute;
+    left: 15px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: $gray-600;
+    font-size: 16px;
+    pointer-events: none;
+    transition: $transition-fast;
+  }
+
+  input:focus + i,
+  select:focus + i,
+  textarea:focus + i {
+    color: $primary-color;
+  }
+}
+
+// Input tipo fecha
+.date-input input {
+  cursor: pointer;
+}
+
+// Estilo para el campo cuando es inválido y fue tocado
+.ng-invalid.ng-touched:not(form) {
+  border-color: $tertiary-color;
+
+  &:focus {
+    box-shadow: 0 0 0 3px rgba($tertiary-color, 0.2);
+  }
+}
+
+// Mensaje de error para campos inválidos
+.error-message {
+  color: $tertiary-color;
+  font-size: 0.8rem;
+  margin-top: 0.25rem;
+}
+

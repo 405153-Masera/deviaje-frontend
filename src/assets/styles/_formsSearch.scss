@@ -1,0 +1,83 @@
+@import '../styles/variables';
+
+//############ Formularios de busqueda ############
+.search-container {
+  width: 100%;
+  max-width: 1200px;
+  margin: 0 auto; // margen superior e inferior 0 y auto a los lados
+  padding: 20px 15px;
+}
+
+.search-panel {
+  border-radius: $border-radius-lg;
+  box-shadow: $box-shadow;
+  position: relative;
+  transition: $transition-normal;
+
+  &:hover {
+    box-shadow: $hover-shadow;
+    transform: translateY(-2px);
+  }
+}
+
+.search-header {
+  padding: 1.5rem 1.5rem 0.1rem;
+}
+
+.search-title {
+  font-size: 28px;
+  margin: 0 0 20px;
+
+  @include tablet {
+    font-size: 24px;
+  }
+
+  @include mobile {
+    font-size: 22px;
+    text-align: center;
+  }
+}
+
+// Opciones de tipo de viaje
+.trip-type-select {
+  display: flex;
+  justify-content: center; // alinea el contenido al centro
+  margin-bottom: 1.5rem;
+  gap: 2rem; // espacio entre los elementos de 2rem
+
+  @include tablet {
+    flex-wrap: wrap; // permite que los elementos se envuelvan en varias líneas
+  }
+
+  .trip-type-option {
+    cursor: pointer; // cambia el cursor al pasar sobre la opción
+    position: relative; // posiciona el elemento relativo a su posición normal
+
+    input[type="radio"] {
+      position: absolute; // posiciona el input radio de forma absoluta
+      cursor: pointer;
+      opacity: 0; // oculta el input radio
+    }
+
+    label {
+      padding: 0.5rem 1rem;
+      cursor: pointer;
+      border-bottom: 2px solid transparent;
+      transition: all 0.3s ease;
+    }
+
+    &.active label,
+    input:checked + label {
+      color: $primary-color;
+      border-bottom: 2px solid $primary-color;
+    }
+  }
+}
+
+.search-form {
+  padding: 5px 30px 20px;
+
+  @include tablet {
+    padding: 5px 20px 15px;
+  }
+}

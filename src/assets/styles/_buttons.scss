@@ -1,0 +1,230 @@
+@import '../styles/variables';
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 10px 16px;
+  border-radius: $border-radius;
+  font-weight: 500;
+  font-size: 14px;
+  text-align: center;
+  cursor: pointer;
+  transition: $transition-fast;
+  border: none;
+  gap: 8px;
+
+  &:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+  }
+}
+
+// Variantes de botones
+.btn-primary {
+  background-color: $primary-color;
+  color: $white;
+
+  &:hover:not(:disabled) {
+    background-color: darken($primary-color, 5%);
+  }
+
+  &:active:not(:disabled) {
+    background-color: darken($primary-color, 10%);
+  }
+}
+
+.btn-secondary {
+  background-color: $secondary-color;
+  color: $white;
+
+  &:hover:not(:disabled) {
+    background-color: darken($secondary-color, 5%);
+  }
+
+  &:active:not(:disabled) {
+    background-color: darken($secondary-color, 10%);
+  }
+}
+
+.btn-tertiary {
+  background-color: $tertiary-color;
+  color: $white;
+
+  &:hover:not(:disabled) {
+    background-color: darken($tertiary-color, 5%);
+  }
+
+  &:active:not(:disabled) {
+    background-color: darken($tertiary-color, 10%);
+  }
+}
+
+.btn-outline {
+  background-color: transparent;
+  border: 1px solid $gray-300;
+  color: $gray-700;
+
+  &:hover:not(:disabled) {
+    background-color: $gray-100;
+  }
+
+  &:active:not(:disabled) {
+    background-color: $gray-200;
+  }
+}
+
+// Tamaños de botones
+.btn-sm {
+  padding: 6px 12px;
+  font-size: 12px;
+}
+
+.btn-lg {
+  padding: 14px 24px;
+  font-size: 16px;
+}
+
+// Botón de búsqueda de vuelos
+.btn-search-flights {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background-color: $primary-color;
+  color: $white;
+  border: none;
+  border-radius: $border-radius;
+  padding: 14px 28px;
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: $transition-fast;
+  position: relative;
+  overflow: hidden;
+
+  &:hover {
+    background-color: darken($primary-color, 5%);
+    transform: translateY(-2px);
+  }
+
+  &:after {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(255, 255, 255, 0.2);
+    transform: translateX(-100%);
+    transition: transform 0.4s ease;
+  }
+
+  &:hover:after {
+    transform: translateX(0);
+  }
+
+  i {
+    font-size: 18px;
+  }
+
+  @include mobile {
+    width: 100%;
+    justify-content: center;
+  }
+}
+
+// Botón para aplicar en dropdowns
+.btn-apply {
+  padding: 8px 16px;
+  background-color: $primary-color;
+  color: $white;
+  border: none;
+  border-radius: $border-radius;
+  font-weight: 500;
+  cursor: pointer;
+  transition: $transition-fast;
+
+  &:hover {
+    background-color: darken($primary-color, 5%);
+  }
+}
+
+// Botón para limpiar/cancelar
+.btn-clear {
+  padding: 8px 16px;
+  background-color: transparent;
+  border: 1px solid $gray-300;
+  color: $gray-700;
+  border-radius: $border-radius;
+  font-weight: 500;
+  cursor: pointer;
+  transition: $transition-fast;
+
+  &:hover {
+    background-color: $gray-100;
+  }
+}
+
+// Botones de contador para pasajeros
+.counter-btn {
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  border: 1px solid $gray-300;
+  background-color: $white;
+  color: $gray-800;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: $transition-fast;
+
+  &:hover:not(:disabled) {
+    border-color: $primary-color;
+    color: $primary-color;
+  }
+
+  &:disabled {
+    border-color: $gray-200;
+    color: $gray-400;
+    cursor: not-allowed;
+  }
+
+  i {
+    font-size: 14px;
+  }
+}
+
+// Botón de intercambio de origen-destino
+.swap-button {
+  button {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background-color: $secondary-color;
+    color: $white;
+    border: none;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: $transition-fast;
+
+    &:hover {
+      background-color: darken($secondary-color, 10%);
+      transform: rotate(180deg);
+    }
+
+    i {
+      font-size: 18px;
+    }
+
+    @include mobile {
+      transform: rotate(90deg);
+
+      &:hover {
+        transform: rotate(270deg);
+      }
+    }
+  }
+}

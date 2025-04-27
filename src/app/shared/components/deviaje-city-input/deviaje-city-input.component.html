@@ -1,0 +1,33 @@
+<div>
+    @if(label){
+    <label class="mb-1">{{ label }}</label>
+    }
+
+    <div class="input-with-icon">
+        <i class="{{ icon }}"></i>
+        <input type="text" [placeholder]="placeholder" [value]="displayValue"
+            (input)="onInputChange($event)" autocomplete="off" #cityInput>
+        <div class="city-suggestions" [class.show]="isSuggestionsOpen">
+            @if(isLoading) {
+            <div class="suggestion-loading">
+                <i class="bi bi-arrow-repeat spinner"></i> Buscando...
+            </div>
+            } @else if(cities.length === 0) {
+            <div class="suggestion-empty">
+                No se encontraron resultados
+            </div>
+            } @else {
+            @for(city of cities; track city.iataCode) {
+            <div class="suggestion-item" (click)="selectCity(city)">
+                <span class="city-name">
+                    {{ city.name }} {{ city.iataCode ? '(' + city.iataCode + ')' : '' }}
+                </span>
+                <span class="country-name">
+                    {{ city.country }}
+                </span>
+            </div>
+            }
+            }
+        </div>
+    </div>
+</div>
