@@ -75,41 +75,6 @@
   }
 }
 
-// Botón de agregar hotel
-.add-hotel-option {
-  margin-left: auto;
-  
-  @include mobile {
-    margin-left: 0;
-    width: 100%;
-    display: flex;
-    justify-content: center;
-  }
-  
-  .btn-add-hotel {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    background-color: transparent;
-    border: 1px solid $secondary-color;
-    color: $secondary-color;
-    font-size: 14px;
-    font-weight: 500;
-    padding: 8px 14px;
-    border-radius: $border-radius;
-    cursor: pointer;
-    transition: $transition-fast;
-    
-    &:hover {
-      background-color: rgba($secondary-color, 0.1);
-    }
-    
-    i {
-      font-size: 16px;
-    }
-  }
-}
-
 // Formulario principal
 .search-form {
   padding: 5px 30px 20px;
@@ -120,12 +85,6 @@
 }
 
 // Campos de entrada
-.input-field { 
-  label {
-    margin-bottom: 6px;
-  }
-}
-
 .input-with-icon {
   position: relative;
   
@@ -360,62 +319,6 @@
   }
 }
 
-// Checkbox personalizado
-.flexible-dates-check {
-  display: flex;
-  align-items: center;
-  
-  input[type="checkbox"] {
-    position: absolute;
-    opacity: 0;
-    width: 0;
-    height: 0;
-  }
-  
-  label {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    font-size: 14px;
-    cursor: pointer;
-  }
-  
-  .checkbox-custom {
-    width: 18px;
-    height: 18px;
-    border: 2px solid $gray-400;
-    border-radius: 4px;
-    display: inline-block;
-    position: relative;
-    transition: $transition-fast;
-    
-    &:after {
-      content: '';
-      position: absolute;
-      left: 5px;
-      top: 1px;
-      width: 5px;
-      height: 10px;
-      border: solid $white;
-      border-width: 0 2px 2px 0;
-      transform: rotate(45deg);
-      opacity: 0;
-    }
-  }
-  
-  input[type="checkbox"]:checked + label .checkbox-custom {
-    background-color: $primary-color;
-    border-color: $primary-color;
-    
-    &:after {
-      opacity: 1;
-    }
-  }
-  
-  label:hover .checkbox-custom {
-    border-color: $primary-color;
-  }
-}
 
 // Botón de búsqueda
 .search-actions {
@@ -457,149 +360,6 @@
     @include mobile {
       width: 100%;
       justify-content: center;
-    }
-  }
-}
-
-// Calendario personalizado
-.custom-calendar {
-  position: fixed;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  width: 320px;
-  background-color: $white;
-  border-radius: $border-radius;
-  box-shadow: $dropdown-shadow;
-  padding: 16px;
-  z-index: 1100;
-  display: none;
-  
-  &.show {
-    display: block;
-  }
-  
-  @include tablet {
-    width: 90%;
-    max-width: 360px;
-  }
-}
-
-.calendar-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  margin-bottom: 15px;
-  
-  .current-month {
-    font-weight: 600;
-    font-size: 16px;
-  }
-  
-  button {
-    width: 30px;
-    height: 30px;
-    border-radius: 50%;
-    border: 1px solid $gray-300;
-    background-color: $white;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    cursor: pointer;
-    transition: $transition-fast;
-    
-    &:hover {
-      border-color: $primary-color;
-      color: $primary-color;
-    }
-    
-    i {
-      font-size: 14px;
-    }
-  }
-}
-
-.calendar-days-header {
-  display: grid;
-  grid-template-columns: repeat(7, 1fr);
-  margin-bottom: 8px;
-  
-  .day-name {
-    text-align: center;
-    font-size: 12px;
-    font-weight: 600;
-    color: $gray-600;
-    padding: 5px 0;
-  }
-}
-
-.calendar-days {
-  display: grid;
-  grid-template-columns: repeat(7, 1fr);
-  gap: 3px;
-  
-  .day {
-    height: 35px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 14px;
-    border-radius: $border-radius-sm;
-    cursor: pointer;
-    transition: $transition-fast;
-    
-    &:hover:not(.disabled) {
-      background-color: $gray-200;
-    }
-    
-    &.disabled {
-      color: $gray-400;
-      cursor: default;
-    }
-    
-    &.selected {
-      background-color: $primary-color;
-      color: $white;
-      font-weight: 500;
-    }
-    
-    &.range {
-      background-color: rgba($primary-color, 0.2);
-      color: $primary-color;
-    }
-  }
-}
-
-.calendar-actions {
-  display: flex;
-  justify-content: space-between;
-  margin-top: 15px;
-  
-  button {
-    padding: 8px 16px;
-    border-radius: $border-radius;
-    font-weight: 500;
-    cursor: pointer;
-    transition: $transition-fast;
-    
-    &.btn-cancel {
-      background-color: $gray-200;
-      border: none;
-      color: $gray-800;
-      
-      &:hover {
-        background-color: $gray-300;
-      }
-    }
-    
-    &.btn-apply {
-      background-color: $primary-color;
-      border: none;
-      color: $white;
-      
-      &:hover {
-        background-color: $primary-light;
-      }
     }
   }
 }
@@ -711,28 +471,6 @@
       height: 30px;
       font-size: 12px;
     }
-  }
-}
-
-// Estilo para el botón de "Agregar Alojamiento" 
-.btn-add-hotel {
-  position: relative;
-  overflow: hidden;
-  
-  &:after {
-    content: "";
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background: rgba($secondary-color, 0.2);
-    transform: translateX(-100%);
-    transition: transform 0.3s ease;
-  }
-  
-  &:hover:after {
-    transform: translateX(0);
   }
 }
 
