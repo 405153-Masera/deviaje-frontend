@@ -1,6 +1,7 @@
 import { Routes } from '@angular/router';
 import { DeviajeMainLayoutComponent } from './shared/components/deviaje-main-layout/deviaje-main-layout.component';
 import { DeviajeFlightsSearchComponent } from './features/public/components/deviaje-flights-search/deviaje-flights-search.component';
+import { DeviajeFlightResultsComponent } from './features/public/components/deviaje-flight-results/deviaje-flight-results.component';
 
 export const routes: Routes = [
 
@@ -14,7 +15,8 @@ export const routes: Routes = [
     path: 'home',
     component: DeviajeMainLayoutComponent,
     children: [
-      { path: 'flight-search', component: DeviajeFlightsSearchComponent }
+      { path: 'flight/search', component: DeviajeFlightsSearchComponent },
+      { path: 'flight/results', component: DeviajeFlightResultsComponent }
     ]
   },
 

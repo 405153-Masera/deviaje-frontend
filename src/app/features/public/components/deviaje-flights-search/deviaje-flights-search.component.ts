@@ -1,8 +1,6 @@
 import { CommonModule } from '@angular/common';
 import {
   Component,
-  ElementRef,
-  HostListener,
   inject,
   OnDestroy,
   OnInit,
@@ -10,7 +8,6 @@ import {
 } from '@angular/core';
 import { DeviajeCalendarComponent } from '../../../../shared/components/deviaje-calendar/deviaje-calendar.component';
 import { FlightService } from '../../../../shared/services/flight.service';
-import { CityService } from '../../../../shared/services/city.service';
 import {
   FormBuilder,
   FormControl,
@@ -19,12 +16,7 @@ import {
   Validators,
 } from '@angular/forms';
 import {
-  debounceTime,
-  distinctUntilChanged,
-  of,
-  Subject,
   Subscription,
-  switchMap,
 } from 'rxjs';
 import { CityDto } from '../../../../shared/models/locations';
 import { Router } from '@angular/router';
@@ -41,7 +33,6 @@ import { DeviajeCityInputComponent } from '../../../../shared/components/deviaje
 export class DeviajeFlightsSearchComponent implements OnInit, OnDestroy {
   private readonly fb: FormBuilder = inject(FormBuilder);
   private readonly flightService: FlightService = inject(FlightService);
-  //private readonly cityService: CityService = inject(CityService);
   private readonly router: Router = inject(Router);
   subscription: Subscription = new Subscription();
 
@@ -50,8 +41,6 @@ export class DeviajeFlightsSearchComponent implements OnInit, OnDestroy {
   @ViewChild('originCityInput') originCityInput!: DeviajeCityInputComponent;
   @ViewChild('destinationCityInput')
   destinationCityInput!: DeviajeCityInputComponent;
-  //@ViewChild('originInput') originInput!: ElementRef;
-  //@ViewChild('destinationInput') destinationInput!: ElementRef;
 
   originControl = new FormControl('', Validators.required);
   destinationControl = new FormControl('', Validators.required);
@@ -71,17 +60,9 @@ export class DeviajeFlightsSearchComponent implements OnInit, OnDestroy {
 
   tripType: 'roundtrip' | 'oneway' | 'multicity' = 'roundtrip';
 
-  //Estas variables las uso para la carga de las ciudades como sugerencia
+  //Estas variables las uso para las ciudades
   originCity: string = '';  // Para almacenar el código IATA
   destinationCity: string = '';  // Para almacenar el código IATA
-  //originSuggestion = new Subject<string>();
-  //destinationSuggestion = new Subject<string>();
-  //originCities: CityDto[] = [];
-  //destinationCities: CityDto[] = [];
-  //isLoadingOriginCities: boolean = false;
-  //isLoadingDestinationCities: boolean = false;
-  //isOriginSuggestionsOpen: boolean = false;
-  //isDestinationSuggestionsOpen: boolean = false;
 
   // Variables para pasajeros
   adults: number = 1;
@@ -100,37 +81,7 @@ export class DeviajeFlightsSearchComponent implements OnInit, OnDestroy {
   isLoading: boolean = false;
 
   ngOnInit(): void {
-    //Aca mapeamos los Subject (observables) con los observables que devuelve el servicio CityService
-    /*this.subscription = this.originSuggestion
-      .pipe(
-        debounceTime(300), // Tiempo que tarda despues que el usuario deja de escribir
-        //distinctUntilChanged(), // emite si el valor actual eers diferente al anterior
-        switchMap((term) => {
-          // este metodo mapea al observable a un nuevo observable
-          this.isLoadingOriginCities = true;
-          return term.length < 2 ? of([]) : this.cityService.searchCities(term);
-        })
-      )
-      .subscribe((cities) => {
-        this.originCities = cities;
-        this.isLoadingOriginCities = false;
-        this.isOriginSuggestionsOpen = cities.length > 0;
-      });
-
-      this.subscription = this.destinationSuggestion
-      .pipe(
-        debounceTime(300),
-        //distinctUntilChanged(),
-        switchMap((term) => {
-          this.isLoadingDestinationCities = true;
-          return term.length < 2 ? of([]) : this.cityService.searchCities(term);
-        })
-      )
-      .subscribe((results) => {
-        this.destinationCities = results;
-        this.isLoadingDestinationCities = false;
-        this.isDestinationSuggestionsOpen = results.length > 0;
-      });*/
+    
   }
 
   ngOnDestroy(): void {
@@ -187,26 +138,6 @@ export class DeviajeFlightsSearchComponent implements OnInit, OnDestroy {
   closePassengerDropdown(): void {
     this.isPassengerDropdownOpen = false;
   }
-
-  /*@HostListener('document:click', ['$event'])
-  onDocumentClick(event: MouseEvent): void {
-    const target = event.target as HTMLElement;
-    const clickedInside = target.closest('.passenger-selector-trigger');
-
-    if (!clickedInside && this.isPassengerDropdownOpen) {
-      this.closePassengerDropdown();
-    }
-
-    const clickedOriginInput = target.closest('.origin-input');
-    if (!clickedOriginInput && this.isOriginSuggestionsOpen) {
-      this.isOriginSuggestionsOpen = false;
-    }
-
-    const clickedDestinationInput = target.closest('.destination-input');
-    if (!clickedDestinationInput && this.isDestinationSuggestionsOpen) {
-      this.isDestinationSuggestionsOpen = false;
-    }
-  }*/
 
   // Métodos para el calendario
   openCalendar(field: 'departure' | 'return'): void {
@@ -280,74 +211,27 @@ export class DeviajeFlightsSearchComponent implements OnInit, OnDestroy {
     this.formSearch.get('returnDate')?.updateValueAndValidity();
   }
 
-  /*//Metodos para el manejo de las ciudades
-  onOriginInputChange(event: Event): void {
-    const target = event.target as HTMLInputElement;
-    const query = target.value;
-
-    if (query.length >= 2) {
-      this.originSuggestion.next(query);
-    } else {
-      this.isOriginSuggestionsOpen = false;
-    }
-  }
-
-  onDestinationInputChange(event: Event): void {
-    const target = event.target as HTMLInputElement;
-    const query = target.value;
-
-    if (query.length >= 2) {
-      this.destinationSuggestion.next(query);
-    } else {
-      this.isDestinationSuggestionsOpen = false;
-    }
-  }*/
-
-  /*selectOriginCity(city: CityDto): void {
-    this.formSearch.get('origin')?.setValue(city.iataCode);
-
-    this.isOriginSuggestionsOpen = false;
-
-    // Si el destino está vacío, enfocar ese input
-    if (!this.formSearch.get('destination')?.value) {
-      setTimeout(() => {
-        this.destinationInput.nativeElement.focus();
-      }, 100);
-    }
-  }
-
-  selectDestinationCity(city: CityDto): void {
-    this.formSearch.get('destination')?.setValue(city.iataCode);
-    this.isDestinationSuggestionsOpen = false;
-
-    // Si las fechas están vacías, abrir el calendario
-    if (!this.formSearch.get('departureDate')?.value) {
-      setTimeout(() => {
-        this.openCalendar('departure');
-      }, 100);
-    }
-  }*/
-
   onOriginCitySelected(city: CityDto): void {
 
     this.originCity = city.iataCode;
     this.formSearch.get('origin')?.setValue(city.iataCode);
-   
   }
 
   onDestinationCitySelected(city: CityDto): void {
 
     this.destinationCity = city.iataCode;
     this.formSearch.get('destination')?.setValue(city.iataCode);
-
-  
   }
 
   // Método para intercambiar origen y destino
   swapLocations(): void {
     const originValue = this.formSearch.get('origin')?.value;
     const destinationValue = this.formSearch.get('destination')?.value;
+    const origin = this.originCity;
+    const destination = this.destinationCity;
 
+    this.originCity = destination;
+    this.destinationCity = origin;
     this.formSearch.get('origin')?.setValue(destinationValue);
     this.formSearch.get('destination')?.setValue(originValue);
   }
@@ -417,7 +301,7 @@ export class DeviajeFlightsSearchComponent implements OnInit, OnDestroy {
           this.isLoading = false;
 
           console.log('Resultados de búsqueda:', flightOffers);
-          this.router.navigate(['/flights/results'], {
+          this.router.navigate(['/home/flight/results'], {
             state: { flightOffers, searchParams },
           });
         },

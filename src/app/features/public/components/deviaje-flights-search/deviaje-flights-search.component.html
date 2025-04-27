@@ -64,7 +64,7 @@
                     
                     <app-deviaje-city-input
                         label="Voy a"
-                        [cityCode]="originCity"
+                        [cityCode]="destinationCity"
                         (citySelected)="onDestinationCitySelected($event)"
                     ></app-deviaje-city-input>
                     @if(formSearch.get('destination')?.invalid && formSearch.get('destination')?.touched) {
