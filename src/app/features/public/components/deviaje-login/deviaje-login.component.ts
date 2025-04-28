@@ -10,9 +10,9 @@ import { CommonModule } from '@angular/common';
   standalone: true,
   imports: [CommonModule, ReactiveFormsModule],
   templateUrl: './deviaje-login.component.html',
-  styleUrl: './deviaje-login.component.css'
+  styleUrl: './deviaje-login.component.scss'
 })
-export class DeviajeLoginComponent implements OnInit, OnDestroy {
+export class DeviajeLoginComponent implements OnInit {
 
   private readonly formBuilder: FormBuilder = inject(FormBuilder);
   private route: ActivatedRoute = inject(ActivatedRoute);
@@ -34,9 +34,6 @@ export class DeviajeLoginComponent implements OnInit, OnDestroy {
     this.returnUrl = this.route.snapshot.queryParams['returnUrl'] || '/home';
   }
 
-  ngOnDestroy(): void {
-    throw new Error('Method not implemented.');
-  }
 
   ngOnInit(): void {
     // Redirigir si ya está autenticado

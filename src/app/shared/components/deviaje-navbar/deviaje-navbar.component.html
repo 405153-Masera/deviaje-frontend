@@ -19,36 +19,36 @@
     <a href="#" class="icons-header">
       <img src="../../../../assets/icons/question.png" alt="question">
     </a>
-    <a href="#" class="icons-header">
-      <img src="../../../../assets/icons/notificacion.png" alt="notification">
-    </a>
-    <img src="" alt="img-user" class="user">
+    <ng-container *ngIf="isAuthenticated">
+      <a href="#" class="icons-header">
+        <img src="../../../../assets/icons/notificacion.png" alt="notification">
+      </a>
+      <div class="dropdown user-dropdown">
+        <a class="user-menu" (click)="toggleUserMenu()" #userMenuTrigger>
+          <img [src]="userAvatarUrl || '../../../../assets/icons/user-default.png'" alt="User" class="user">
+        </a>
+        <div class="dropdown-menu" [class.show]="isUserMenuOpen">
+          <a class="dropdown-item" routerLink="/profile">
+            <i class="bi bi-person"></i> Mi Perfil
+          </a>
+          <a class="dropdown-item" routerLink="/bookings">
+            <i class="bi bi-calendar-check"></i> Mis Reservas
+          </a>
+          <div class="dropdown-divider"></div>
+          <a class="dropdown-item" (click)="logout()">
+            <i class="bi bi-box-arrow-right"></i> Cerrar Sesión
+          </a>
+        </div>
+      </div>
+    </ng-container>
+
+    <ng-container *ngIf="!isAuthenticated">
+      <a routerLink="/user/login" class="auth-btn login-btn">
+        <i class="bi bi-box-arrow-in-right"></i> Iniciar Sesión
+      </a>
+      <a routerLink="/user/signup" class="auth-btn signup-btn">
+        <i class="bi bi-person-plus"></i> Registrarse
+      </a>
+    </ng-container>
   </div>
 </nav>
-
-<!-- Visible si el usuario esta autenticado
- @if(!isAutenticated){
-
-  <li class="nav-item">
-    <a class="nav-link btn btn-success" routerLink="/login">
-      <i class="bi bi-box-arrow-in-right me-1"></i>Ingresar
-    </a>
-  </li>
-  }
-
- Solo visible cuando esta autenticado  
-  @if(isAutenticated){
-  <li class="nav-item dropdown">
-    <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown">
-      <i class="bi bi-person-circle me-1"></i>Mi Cuenta
-    </a>
-    <ul class="dropdown-menu dropdown-menu-end">
-      <li><a class="dropdown-item" routerLink="/profile">Perfil</a></li>
-      <li><a class="dropdown-item" routerLink="/my-bookings">Mis Reservas</a></li>
-      <li>
-        <hr class="dropdown-divider">
-      </li>
-      <li><a class="dropdown-item" href="#">Cerrar Sesión</a></li>
-    </ul>
-  </li>
-  } -->
