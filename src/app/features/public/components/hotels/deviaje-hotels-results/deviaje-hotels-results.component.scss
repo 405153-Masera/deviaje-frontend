@@ -1,0 +1,123 @@
+@import "../../../../../../assets/styles/variables";
+
+// Estilos específicos para la tarjeta de hotel
+.hotel-card {
+  overflow: hidden;
+
+  .hotel-image-container {
+    position: relative;
+    height: 100%;
+    min-height: 200px;
+
+    .hotel-image {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+
+      @include mobile {
+        max-height: 200px;
+      }
+    }
+
+    .promotion-badge {
+      position: absolute;
+      top: 10px;
+      left: 0;
+      background-color: $tertiary-color;
+      color: $white;
+      padding: 4px 12px;
+      font-size: 12px;
+      font-weight: 500;
+      z-index: 1;
+    }
+  }
+
+  .hotel-content {
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+
+    .hotel-name {
+      font-size: 18px;
+      font-weight: 600;
+      margin-bottom: 5px;
+      color: $text-title-color;
+    }
+
+    .hotel-location {
+      font-size: 14px;
+      color: $gray-700;
+      margin-bottom: 8px;
+
+      i {
+        color: $secondary-color;
+      }
+    }
+
+    .hotel-amenities {
+      margin-bottom: 10px;
+    }
+  }
+
+  .hotel-rating {
+    display: flex;
+    align-items: center;
+    margin-top: 10px;
+
+    .rating-badge {
+      background-color: $primary-color;
+      color: $white;
+      padding: 6px 10px;
+      border-radius: 6px;
+      font-weight: 700;
+      font-size: 16px;
+      margin-right: 10px;
+    }
+
+    .rating-details {
+      .rating-category {
+        font-weight: 500;
+        font-size: 14px;
+        color: $gray-800;
+      }
+
+      .rating-count {
+        font-size: 12px;
+        color: $gray-600;
+      }
+    }
+  }
+
+  .hotel-price {
+    text-align: right;
+
+    .old-price {
+      text-decoration: line-through;
+      color: $gray-600;
+      font-size: 14px;
+    }
+
+    .current-price {
+      font-size: 20px;
+      font-weight: 700;
+      color: $black;
+    }
+
+    .price-info {
+      font-size: 12px;
+      color: $gray-600;
+    }
+
+    @include mobile {
+      text-align: left;
+      margin-top: 15px;
+    }
+  }
+}
+
+// Estilos específicos para el componente de estrellas
+.stars-filter {
+  .star-icon {
+    margin-right: 2px;
+  }
+}

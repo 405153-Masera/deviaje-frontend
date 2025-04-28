@@ -220,7 +220,8 @@
               <div class="flight-info">
                 <div class="flight-route">
                   <div class="flight-airline">
-                    <img src="https://via.placeholder.com/30" alt="{{ offer.validatingAirlineCodes[0] }}">
+                    <img [src]="getAirlineLogo(offer.validatingAirlineCodes[0])" 
+                          alt="{{ offer.validatingAirlineCodes[0] }}">
                     <span>{{ getAirlineName(offer.validatingAirlineCodes[0]) }}</span>
                   </div>
                   <div class="flight-main-details">
@@ -262,7 +263,7 @@
                         <div class="layover-info">
                           <div class="layover-airport">
                             <i class="bi bi-geo-alt"></i>
-                            aca me falta llenar datos
+                            Escala en {{ segment.arrival.iataCode }} - {{ flightUtils.formatDuration(flightUtils.getLayoverDuration(segment, offer.itineraries[0].segments[i+1])) }} de espera
                           </div>
                         </div>
                       }
@@ -276,7 +277,8 @@
                 <div class="flight-info return-flight">
                   <div class="flight-route">
                     <div class="flight-airline">
-                      <img src="https://via.placeholder.com/30" alt="{{ offer.validatingAirlineCodes[0] }}">
+                      <img [src]="getAirlineLogo(offer.validatingAirlineCodes[0])" 
+                            alt="{{ offer.validatingAirlineCodes[0] }}">
                       <span>{{ getAirlineName(offer.validatingAirlineCodes[0]) }}</span>
                     </div>
                     <div class="flight-main-details">
@@ -318,7 +320,7 @@
                           <div class="layover-info">
                             <div class="layover-airport">
                               <i class="bi bi-geo-alt"></i>
-                              aca me falta llenar datos
+                              Escala en {{ segment.arrival.iataCode }} - {{ flightUtils.formatDuration(flightUtils.getLayoverDuration(segment, offer.itineraries[1].segments[i+1])) }} de espera
                             </div>
                           </div>
                         }
