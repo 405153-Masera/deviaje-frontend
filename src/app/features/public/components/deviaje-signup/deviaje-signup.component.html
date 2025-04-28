@@ -1,0 +1,177 @@
+<!-- src/app/features/public/components/auth/signup/signup.component.html -->
+<div class="container mt-4 mb-5">
+    <div class="row justify-content-center">
+        <div class="col-md-8 col-lg-6">
+            <div class="card shadow">
+                <div class="card-header bg-primary text-white text-center py-3">
+                    <h2 class="card-title mb-0">Crear Cuenta</h2>
+                </div>
+                <div class="card-body p-4">
+                    <!-- Alerta de éxito -->
+                    <div *ngIf="success" class="alert alert-success alert-dismissible fade show" role="alert">
+                        {{ success }}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"
+                            (click)="success = ''"></button>
+                    </div>
+
+                    <!-- Alerta de error -->
+                    <div *ngIf="error" class="alert alert-danger alert-dismissible fade show" role="alert">
+                        {{ error }}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"
+                            (click)="error = ''"></button>
+                    </div>
+
+                    <form [formGroup]="signupForm" (ngSubmit)="onSubmit()">
+                        <h5 class="mb-3">Información de Cuenta</h5>
+                        <div class="row mb-3">
+                            <div class="col-md-6 mb-3 mb-md-0">
+                                <label for="username" class="form-label">Nombre de Usuario *</label>
+                                <div class="input-with-icon">
+                                    <i class="bi bi-person"></i>
+                                    <input type="text" formControlName="username" class="form-control"
+                                        [ngClass]="{ 'is-invalid': submitted && f['username'].errors }" id="username"
+                                        placeholder="Nombre de usuario">
+                                </div>
+                                <div *ngIf="submitted && f['username'].errors" class="invalid-feedback">
+                                    <div *ngIf="f['username'].errors['required']">El nombre de usuario es obligatorio
+                                    </div>
+                                    <div *ngIf="f['username'].errors['minlength']">El nombre de usuario debe tener al
+                                        menos 3 caracteres</div>
+                                    <div *ngIf="f['username'].errors['maxlength']">El nombre de usuario no debe exceder
+                                        50 caracteres</div>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <label for="email" class="form-label">Correo Electrónico *</label>
+                                <div class="input-with-icon">
+                                    <i class="bi bi-envelope"></i>
+                                    <input type="email" formControlName="email" class="form-control"
+                                        [ngClass]="{ 'is-invalid': submitted && f['email'].errors }" id="email"
+                                        placeholder="correo@ejemplo.com">
+                                </div>
+                                <div *ngIf="submitted && f['email'].errors" class="invalid-feedback">
+                                    <div *ngIf="f['email'].errors['required']">El correo electrónico es obligatorio
+                                    </div>
+                                    <div *ngIf="f['email'].errors['email']">Ingresa un correo electrónico válido</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row mb-4">
+                            <div class="col-md-6 mb-3 mb-md-0">
+                                <label for="password" class="form-label">Contraseña *</label>
+                                <div class="input-with-icon">
+                                    <i class="bi bi-lock"></i>
+                                    <input type="password" formControlName="password" class="form-control"
+                                        [ngClass]="{ 'is-invalid': submitted && f['password'].errors }" id="password"
+                                        placeholder="Contraseña">
+                                </div>
+                                <div *ngIf="submitted && f['password'].errors" class="invalid-feedback">
+                                    <div *ngIf="f['password'].errors['required']">La contraseña es obligatoria</div>
+                                    <div *ngIf="f['password'].errors['minlength']">La contraseña debe tener al menos 6
+                                        caracteres</div>
+                                    <div *ngIf="f['password'].errors['maxlength']">La contraseña no debe exceder 40
+                                        caracteres</div>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <label for="confirmPassword" class="form-label">Confirmar Contraseña *</label>
+                                <div class="input-with-icon">
+                                    <i class="bi bi-lock-fill"></i>
+                                    <input type="password" formControlName="confirmPassword" class="form-control"
+                                        [ngClass]="{ 'is-invalid': submitted && f['confirmPassword'].errors }"
+                                        id="confirmPassword" placeholder="Confirmar contraseña">
+                                </div>
+                                <div *ngIf="submitted && f['confirmPassword'].errors" class="invalid-feedback">
+                                    <div *ngIf="f['confirmPassword'].errors['required']">La confirmación de contraseña
+                                        es obligatoria</div>
+                                    <div *ngIf="f['confirmPassword'].errors['mustMatch']">Las contraseñas no coinciden
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Información personal (opcional) -->
+                        <h5 class="mb-3 mt-4">Información Personal (Opcional)</h5>
+                        <div class="row mb-3">
+                            <div class="col-md-6 mb-3 mb-md-0">
+                                <label for="firstName" class="form-label">Nombre</label>
+                                <div class="input-with-icon">
+                                    <i class="bi bi-person-badge"></i>
+                                    <input type="text" formControlName="firstName" class="form-control" id="firstName"
+                                        placeholder="Nombre">
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <label for="lastName" class="form-label">Apellido</label>
+                                <div class="input-with-icon">
+                                    <i class="bi bi-person-badge-fill"></i>
+                                    <input type="text" formControlName="lastName" class="form-control" id="lastName"
+                                        placeholder="Apellido">
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row mb-3">
+                            <div class="col-md-6 mb-3 mb-md-0">
+                                <label for="phone" class="form-label">Teléfono</label>
+                                <div class="input-with-icon">
+                                    <i class="bi bi-telephone"></i>
+                                    <input type="tel" formControlName="phone" class="form-control" id="phone"
+                                        placeholder="Teléfono">
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <label for="birthDate" class="form-label">Fecha de Nacimiento</label>
+                                <div class="input-with-icon">
+                                    <i class="bi bi-calendar"></i>
+                                    <input type="date" formControlName="birthDate" class="form-control" id="birthDate">
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row mb-4">
+                            <div class="col-md-6 mb-3 mb-md-0">
+                                <label for="dni" class="form-label">Número de Documento</label>
+                                <div class="input-with-icon">
+                                    <i class="bi bi-card-text"></i>
+                                    <input type="text" formControlName="dni" class="form-control" id="dni"
+                                        placeholder="Número de documento">
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <label for="dniTypeId" class="form-label">Tipo de Documento</label>
+                                <div class="input-with-icon">
+                                    <i class="bi bi-card-checklist"></i>
+                                    <select formControlName="dniTypeId" class="form-select" id="dniTypeId">
+                                        <option value="">Seleccionar tipo</option>
+                                        <option value="1">DNI</option>
+                                        <option value="2">Pasaporte</option>
+                                        <option value="3">CUIT/CUIL</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="mb-4 small text-muted">
+                            Los campos marcados con * son obligatorios
+                        </div>
+
+                        <div class="d-grid">
+                            <button type="submit" class="btn btn-primary" [disabled]="loading">
+                                <span *ngIf="loading" class="spinner-border spinner-border-sm me-1" role="status"
+                                    aria-hidden="true"></span>
+                                Crear Cuenta
+                            </button>
+                        </div>
+                    </form>
+                    
+                    <!-- Enlace para login -->
+                    <div class="text-center mt-4">
+                        ¿Ya tienes una cuenta? <a routerLink="/auth/login" class="text-primary">Iniciar Sesión</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
