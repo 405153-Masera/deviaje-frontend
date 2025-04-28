@@ -4,15 +4,19 @@ import { DeviajeFlightsSearchComponent } from './features/public/components/devi
 import { DeviajeFlightResultsComponent } from './features/public/components/deviaje-flight-results/deviaje-flight-results.component';
 import { DeviajeHotelsSearchComponent } from './features/public/components/hotels/deviaje-hotels-search/deviaje-hotels-search.component';
 import { DeviajeHotelsResultsComponent } from './features/public/components/hotels/deviaje-hotels-results/deviaje-hotels-results.component';
+import { DeviajeLoginComponent } from './features/public/components/deviaje-login/deviaje-login.component';
+import { DeviajeSignupComponent } from './features/public/components/deviaje-signup/deviaje-signup.component';
+import { authGuard } from './core/auth/guards/auth.guard';
+import { DeviajeUserProfileComponent } from './features/client/components/deviaje-user-profile/deviaje-user-profile.component';
 
 export const routes: Routes = [
 
   // Ruta principal
   { path: '', redirectTo: '/home', pathMatch: 'full' },
-  //{ path: 'home', component: DeviajeMainLayoutComponent },
-  // Rutas públicas
-  //{ path: 'login', component: LoginComponent },
-  //{ path: 'home', component: HomeComponent },
+  
+  // Rutas públicas para la autenticacion
+  { path: 'user/login', component: DeviajeLoginComponent },
+  { path: 'user/signup', component: DeviajeSignupComponent },
   {
     path: 'home',
     component: DeviajeMainLayoutComponent,
@@ -23,8 +27,14 @@ export const routes: Routes = [
       { path: 'hotels/results', component: DeviajeHotelsResultsComponent }
     ]
   },
-
-
+  {
+    path: 'home',
+    component: DeviajeMainLayoutComponent,
+    canActivate: [authGuard],
+    children: [
+      { path: 'user/profile', component: DeviajeUserProfileComponent },
+    ]
+  },
   // Ruta de página no encontrada
   { path: '**', redirectTo: '/home' }
 ];

@@ -10,7 +10,7 @@ import { CommonModule } from '@angular/common';
   standalone: true,
   imports: [CommonModule, ReactiveFormsModule],
   templateUrl: './deviaje-signup.component.html',
-  styleUrl: './deviaje-signup.component.css'
+  styleUrl: './deviaje-signup.component.scss'
 })
 export class DeviajeSignupComponent {
 
