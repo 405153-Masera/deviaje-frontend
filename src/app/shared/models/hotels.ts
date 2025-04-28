@@ -91,6 +91,7 @@ export interface RateFamily {
 }
 
 export interface Room {
+  name?: string;
   type: string;
   typeEstimated: RoomTypeEstimated;
   description: RoomDescription;
@@ -148,6 +149,11 @@ export interface Policies {
   guarantee: GuaranteePolicy;
   paymentType: string;
   cancellation: CancellationPolicy;
+  refundable: Refundable;
+}
+
+export interface Refundable {
+  cancellationRefund: string;
 }
 
 export interface GuaranteePolicy {
@@ -170,20 +176,27 @@ export interface HotelResult {
   id: string;
   name: string;
   location: string;
-  stars: number;
-  rating: number;
-  reviewCount: number;
+  stars?: number;
+  rating?: number;
+  reviewCount?: number;
   price: number;
-  oldPrice?: number;
   mainImage?: string;
   amenities: string[];
   distanceFromCenter: number;
   isPromoted: boolean;
   description: string;
-  latitude: number;
-  longitude: number;
-  address: string;
-  rooms: RoomOffer[];
+  latitude?: number;
+  longitude?: number;
+  rooms: any[];
+  // Nuevas propiedades
+  roomType?: string;
+  roomName?: string;
+  roomDescription?: string;
+  cancellationPolicy?: string;
+  paymentType?: string;
+  bedType?: string;
+  bedCount?: number;
+  maxOccupancy?: number;
 }
 
 export interface RoomOffer {

@@ -204,7 +204,7 @@
                     <div class="row g-0">
                         <!-- Imagen del hotel -->
                         <div class="col-md-4 hotel-image">
-                            <img src="{{ hotel.imageUrl || 'https://via.placeholder.com/300x200' }}"
+                            <img src="{{ hotel.mainImage }}"
                                 alt="{{ hotel.name }}" class="img-fluid h-100 w-100 object-fit-cover rounded-start">
                         </div>
 
@@ -227,9 +227,9 @@
                                         <span class="rating-badge bg-primary text-white py-1 px-2 rounded">
                                             {{ hotel.rating }}
                                         </span>
-                                        <div class="rating-text">{{ getRatingText(hotel.rating) }}</div>
-                                        <div class="review-count">{{ hotel.reviewCount }} opiniones</div>
-                                    </div>
+                                        <!-- <div class="rating-text">{{ getRatingText(hotel.rating) }}</div>
+                                        <div class="review-count">{{ hotel.reviewCount }} opiniones</div> -->
+                                    </div> 
                                 </div>
 
                                 <!-- Amenidades principales -->
@@ -242,20 +242,17 @@
 
                                 <!-- Características del alojamiento -->
                                 <div class="row mt-2">
-                                    <div class="col-md-8">
-                                        <p class="hotel-room-info mb-1">{{ hotel.roomType || 'Habitación Estándar' }}
+                                     <div class="col-md-8">
+                                        <p class="hotel-room-info mb-1">{{ hotel.roomName || 'Habitación Estándar' }}
                                         </p>
-                                        @if (hotel.boardBasis) {
-                                        <p class="hotel-board-basis mb-1">
-                                            <i class="bi bi-cup-hot"></i> {{ hotel.boardBasis }}
+                                        <p class="hotel-room-info mb-3">{{ hotel.description || 'Habitación Estándar' }}
                                         </p>
-                                        }
-                                        @if (hotel.freeCancellation) {
+                                        @if (hotel.cancellationPolicy) {
                                         <div class="hotel-cancellation text-success">
-                                            <i class="bi bi-check-circle"></i> Cancelación gratuita
+                                            <i class="bi bi-check-circle"></i> {{hotel.cancellationPolicy}}
                                         </div>
                                         }
-                                    </div>
+                                    </div> 
 
                                     <!-- Precio y botón de reserva -->
                                     <div class="col-md-4 text-end">
