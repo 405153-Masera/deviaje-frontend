@@ -17,7 +17,7 @@ export class DeviajeSidebarComponent {
   menuItems: MenuItem[] = [
     { icon: 'home', label: 'Inicio', route: '/home', isSelected: false },
     { icon: 'avion', label: 'Vuelos', route: '/home/flight/search', isSelected: false },
-    { icon: 'hotel', label: 'Hoteles', route: '/home/search', isSelected: false },
+    { icon: 'hotel', label: 'Hoteles', route: '/home/hotels/search', isSelected: false },
     { icon: 'vacaciones', label: 'Paquetes', route: '/packages', isSelected: false },
     { icon: 'tours', label: 'Tours', route: '/tours', isSelected: false },
     { icon: 'perfil', label: 'Perfil', route: '/profile', isSelected: false },

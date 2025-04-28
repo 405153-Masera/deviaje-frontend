@@ -228,3 +228,47 @@
     }
   }
 }
+
+
+.search-actions {
+  padding: 10px 30px 24px;
+  display: flex;
+  justify-content: flex-end;
+  
+  @include tablet {
+    padding: 5px 20px 20px;
+  }
+  
+  @include mobile {
+    justify-content: center;
+  }
+  
+  .btn-search-flights {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    background-color: $primary-color;
+    color: $white;
+    border: none;
+    border-radius: $border-radius;
+    padding: 14px 28px;
+    font-size: 16px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: $transition-fast;
+    
+    &:hover {
+      background-color: $primary-light;
+      transform: translateY(-2px);
+    }
+    
+    i {
+      font-size: 18px;
+    }
+    
+    @include mobile {
+      width: 100%;
+      justify-content: center;
+    }
+  }
+}

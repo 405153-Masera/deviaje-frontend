@@ -1,1 +1,173 @@
-<p>deviaje-hotels-search works!</p>
+<section class="search-container">
+    <div class="search-panel">
+        <div class="search-header">
+            <h2 class="search-title">¿Dónde te gustaría hospedarte?</h2>
+        </div>
+
+        <form [formGroup]="formSearch" (ngSubmit)="searchHotels()" class="search-form">
+            <div class="row mb-3">
+                
+                <div class="col-md">
+                    <app-deviaje-city-input label="Destino" [cityCode]="destinationCity"
+                        (citySelected)="onDestinationCitySelected($event)"></app-deviaje-city-input>
+                    <div class="error-message"
+                        *ngIf="formSearch.get('destination')?.invalid && formSearch.get('destination')?.touched">
+                        Por favor seleccione un destino
+                    </div>
+                </div>
+
+                <div class="col-md">
+                    <label class="mb-1">Fecha de entrada</label>
+                    <div class="input-with-icon date-input">
+                        <i class="bi bi-calendar3"></i>
+                        <input type="text" placeholder="dd/mm/aaaa" class="date-picker-trigger"
+                            [value]="formatDisplayDate(checkInDate)" formControlName="checkInDate" readonly
+                            (click)="openCalendar('checkin')">
+                    </div>
+                    <div class="error-message"
+                        *ngIf="formSearch.get('checkInDate')?.invalid && formSearch.get('checkInDate')?.touched">
+                        La fecha de entrada es obligatoria
+                    </div>
+                </div>
+
+                <div class="col-md">
+                    <label class="mb-1">Fecha de salida</label>
+                    <div class="input-with-icon date-input">
+                        <i class="bi bi-calendar3"></i>
+                        <input type="text" placeholder="dd/mm/aaaa" class="date-picker-trigger"
+                            [value]="formatDisplayDate(checkOutDate)" readonly formControlName="checkOutDate"
+                            (click)="openCalendar('checkout')">
+                    </div>
+                    <div class="error-message"
+                        *ngIf="formSearch.get('checkOutDate')?.invalid && formSearch.get('checkOutDate')?.touched">
+                        La fecha de salida es obligatoria
+                    </div>
+                </div>
+
+            </div>
+
+            <div class="row mb-3">
+                            </div>
+
+            <div class="row mb-3">
+                <div class="col-md">
+                    <label class="mb-1">Habitaciones y huéspedes</label>
+                    <div class="input-with-icon passenger-selector-trigger" (click)="toggleRoomDropdown()">
+                        <div class="passenger-summary">
+                            <i class="bi bi-people"></i>
+                            <span>{{ rooms }} {{ rooms === 1 ? 'habitación' : 'habitaciones' }},
+                                {{ adults }} {{ adults === 1 ? 'adulto' : 'adultos' }}
+                                <ng-container *ngIf="children > 0">,
+                                    {{ children }} {{ children === 1 ? 'niño' : 'niños' }}
+                                </ng-container>
+                            </span>
+                            <i class="bi bi-chevron-down dropdown-icon"></i>
+                        </div>
+
+                        <!-- Dropdown de habitaciones y huéspedes -->
+                        <div class="passenger-dropdown" [class.show]="isRoomDropdownOpen">
+                            <div class="passenger-type-row">
+                                <div class="passenger-type">
+                                    <div class="passenger-title">Habitaciones</div>
+                                </div>
+                                <div class="passenger-counter">
+                                    <button type="button" class="counter-btn" [disabled]="rooms <= 1"
+                                        (click)="decrementRooms()">
+                                        <i class="bi bi-dash"></i>
+                                    </button>
+                                    <span class="counter-value">{{ rooms }}</span>
+                                    <button type="button" class="counter-btn" (click)="incrementRooms()">
+                                        <i class="bi bi-plus"></i>
+                                    </button>
+                                </div>
+                            </div>
+
+                            <div class="passenger-type-row">
+                                <div class="passenger-type">
+                                    <div class="passenger-title">Adultos</div>
+                                    <div class="passenger-subtitle">Mayores de 18 años</div>
+                                </div>
+                                <div class="passenger-counter">
+                                    <button type="button" class="counter-btn" [disabled]="adults <= 1"
+                                        (click)="decrementGuests('adults')">
+                                        <i class="bi bi-dash"></i>
+                                    </button>
+                                    <span class="counter-value">{{ adults }}</span>
+                                    <button type="button" class="counter-btn" (click)="incrementGuests('adults')">
+                                        <i class="bi bi-plus"></i>
+                                    </button>
+                                </div>
+                            </div>
+
+                            <div class="passenger-type-row">
+                                <div class="passenger-type">
+                                    <div class="passenger-title">Niños</div>
+                                    <div class="passenger-subtitle">De 0 a 17 años</div>
+                                </div>
+                                <div class="passenger-counter">
+                                    <button type="button" class="counter-btn" [disabled]="children <= 0"
+                                        (click)="decrementGuests('children')">
+                                        <i class="bi bi-dash"></i>
+                                    </button>
+                                    <span class="counter-value">{{ children }}</span>
+                                    <button type="button" class="counter-btn" (click)="incrementGuests('children')">
+                                        <i class="bi bi-plus"></i>
+                                    </button>
+                                </div>
+                            </div>
+
+                            <div class="dropdown-actions">
+                                <button type="button" class="btn-apply" (click)="closeRoomDropdown()">Aplicar</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-md">
+                    <label class="mb-1">Estrellas</label>
+                    <div class="input-with-icon">
+                        <i class="bi bi-star"></i>
+                        <select formControlName="stars">
+                            <option value="">Todas las estrellas</option>
+                            <option value="5">5 estrellas</option>
+                            <option value="4">4 estrellas</option>
+                            <option value="3">3 estrellas</option>
+                            <option value="2">2 estrellas</option>
+                            <option value="1">1 estrella</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="col-md">
+                    <label class="mb-1">Moneda</label>
+                    <div class="input-with-icon">
+                        <i class="bi bi-currency-dollar"></i>
+                        <select formControlName="currency">
+                            <option value="ARS">ARS - Pesos Argentinos</option>
+                            <option value="USD">USD - Dólares</option>
+                            <option value="EUR">EUR - Euros</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+        </form>
+
+        <div class="search-actions">
+            <button type="button" class="btn-search-flights" (click)="searchHotels()">
+                <span>Buscar hoteles</span>
+                <i class="bi bi-search"></i>
+            </button>
+        </div>
+    </div>
+</section>
+
+<app-deviaje-calendar
+selectionMode="range" 
+[minDate]="minDate" 
+[initialStartDate]="checkInDate"
+[initialEndDate]="checkOutDate" 
+[showTwoMonths]="true" 
+[showPrices]="false"
+(rangeSelected)="selectDateRange($event)" 
+(closed)="closeCalendar()" #dateCalendar>
+</app-deviaje-calendar>

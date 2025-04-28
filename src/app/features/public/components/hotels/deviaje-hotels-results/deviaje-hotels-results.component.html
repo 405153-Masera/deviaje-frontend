@@ -1,1 +1,309 @@
-<p>deviaje-hotels-results works!</p>
+<div class="hotel-results-container">
+    <!-- Header con información de la búsqueda -->
+    <header class="results-header">
+        <div class="container py-4">
+            <div class="row align-items-center">
+                <div class="col-md-8">
+                    <h1 class="results-title">Hoteles en {{ searchParams?.destination }}</h1>
+                    <div class="travel-info">
+                        <span class="travel-dates">
+                            <i class="bi bi-calendar3"></i>
+                            {{ searchParams?.checkInDate | date:'dd MMM' }} - {{ searchParams?.checkOutDate | date:'ddMMM' }}
+                            <small class="ms-1">({{ calculateNights() }} {{ calculateNights() === 1 ? 'noche' : 'noches'
+                                }})</small>
+                        </span>
+                        <span class="travel-guests">
+                            <i class="bi bi-people"></i>
+                            {{ searchParams?.adults }} {{ searchParams?.adults === 1 ? 'adulto' : 'adultos' }}
+                            @if (searchParams?.children) {
+                            , {{ searchParams?.children }} {{ searchParams?.children === 1 ? 'niño' : 'niños' }}
+                            }
+                        </span>
+                        <span class="travel-rooms">
+                            <i class="bi bi-door-open"></i>
+                            {{ searchParams?.rooms }} {{ searchParams?.rooms === 1 ? 'habitación' : 'habitaciones' }}
+                        </span>
+                    </div>
+                </div>
+                <div class="col-md-4 text-md-end">
+                    <button class="btn btn-outline mt-2 mt-md-0" routerLink="/hotels/search">
+                        <i class="bi bi-arrow-left"></i> Modificar búsqueda
+                    </button>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <div class="container">
+        <div class="row">
+            <!-- Filtros laterales (desktop) -->
+            <div class="col-lg-3 d-none d-lg-block filter-sidebar">
+                <div class="filters-panel">
+                    <div class="filters-header">
+                        <h2 class="filter-title">Filtros</h2>
+                        <button class="reset-filters-btn" (click)="resetFilters()">
+                            <i class="bi bi-arrow-counterclockwise"></i> Restablecer
+                        </button>
+                    </div>
+
+                    <!-- Filtro de precio -->
+                    <div class="filter-section">
+                        <h3 class="filter-section-title">Precio por noche</h3>
+                        <div class="price-range">
+                            <div class="price-slider mb-3">
+                                <input type="range" class="form-range" min="{{ priceRange.min }}"
+                                    max="{{ priceRange.max }}" [(ngModel)]="priceRange.max" (change)="onFilterChange()">
+                            </div>
+                            <div class="price-labels">
+                                <span>{{ priceRange.min | currency:(searchParams?.currency || 'USD') }}</span>
+                                <span>{{ priceRange.max | currency:(searchParams?.currency || 'USD') }}</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Filtro de estrellas del hotel -->
+                    <div class="filter-section">
+                        <h3 class="filter-section-title">Estrellas</h3>
+                        <div class="stars-filter">
+                            @for (star of [5, 4, 3, 2, 1]; track star) {
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" id="star-{{ star }}"
+                                    [checked]="selectedStars.includes(star)" (change)="toggleStar(star)">
+                                <label class="form-check-label" for="star-{{ star }}">
+                                    {{ star }} {{ star === 1 ? 'estrella' : 'estrellas' }}
+                                </label>
+                            </div>
+                            }
+                        </div>
+                    </div>
+
+                    <!-- Filtro de puntuación de usuarios -->
+                    <div class="filter-section">
+                        <h3 class="filter-section-title">Puntuación de usuarios</h3>
+                        <div class="user-ratings">
+                            @for (rating of [
+                            {value: 9, label: 'Excelente 9+'},
+                            {value: 8, label: 'Muy bueno 8+'},
+                            {value: 7, label: 'Bueno 7+'},
+                            {value: 6, label: 'Aceptable 6+'}
+                            ]; track rating.value) {
+                            <div class="form-check">
+                                <input class="form-check-input" type="radio" name="userRating"
+                                    id="rating-{{ rating.value }}" [checked]="minUserRating === rating.value"
+                                    (change)="setMinUserRating(rating.value)">
+                                <label class="form-check-label" for="rating-{{ rating.value }}">
+                                    {{ rating.label }}
+                                </label>
+                            </div>
+                            }
+                        </div>
+                    </div>
+
+                    <!-- Filtro de servicios -->
+                    <div class="filter-section">
+                        <h3 class="filter-section-title">Servicios</h3>
+                        <div class="amenities-filter">
+                            @for (amenity of [
+                            {id: 'wifi', label: 'Wi-Fi gratis'},
+                            {id: 'parking', label: 'Estacionamiento'},
+                            {id: 'breakfast', label: 'Desayuno incluido'},
+                            {id: 'pool', label: 'Piscina'},
+                            {id: 'aircon', label: 'Aire acondicionado'}
+                            ]; track amenity.id) {
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" id="amenity-{{ amenity.id }}"
+                                    [checked]="selectedAmenities.includes(amenity.id)"
+                                    (change)="toggleAmenity(amenity.id)">
+                                <label class="form-check-label" for="amenity-{{ amenity.id }}">
+                                    {{ amenity.label }}
+                                </label>
+                            </div>
+                            }
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Botón de filtros móvil -->
+            <div class="d-lg-none mobile-filter-toggle">
+                <button class="btn btn-outline w-100 my-3" (click)="toggleFilters()">
+                    <i class="bi bi-sliders"></i> Filtros
+                </button>
+            </div>
+
+            <!-- Filtros móviles (oculto por defecto) -->
+            <div class="mobile-filters" [class.show]="showFilters">
+                <div class="mobile-filters-overlay" (click)="toggleFilters()"></div>
+                <div class="mobile-filters-panel">
+                    <!-- Contenido similar a los filtros de escritorio -->
+                    <div class="mobile-filters-header">
+                        <h3>Filtros</h3>
+                        <button class="close-filters-btn" (click)="toggleFilters()">
+                            <i class="bi bi-x-lg"></i>
+                        </button>
+                    </div>
+
+                    <!-- Aquí irían los mismos filtros que en la versión de escritorio -->
+                    <div class="mobile-filters-content">
+                        <!-- Filtros de precio, estrellas, etc. similares a la versión desktop -->
+                    </div>
+
+                    <div class="mobile-filters-footer">
+                        <button class="btn btn-outline" (click)="resetFilters()">
+                            Restablecer
+                        </button>
+                        <button class="btn btn-primary" (click)="toggleFilters()">
+                            Aplicar filtros
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Resultados de hoteles -->
+            <div class="col-lg-9">
+                <!-- Barra de ordenación -->
+                <div class="sort-panel">
+                    <div class="results-count">
+                        {{ filteredHotels.length }} hoteles encontrados
+                    </div>
+                    <div class="sort-options">
+                        <label for="sortBy">Ordenar por:</label>
+                        <select id="sortBy" class="form-select form-select-sm" [(ngModel)]="sortOption"
+                            (change)="sortResults()">
+                            <option value="price_asc">Precio (menor a mayor)</option>
+                            <option value="price_desc">Precio (mayor a menor)</option>
+                            <option value="rating_desc">Valoración (mayor a menor)</option>
+                            <option value="stars_desc">Estrellas (mayor a menor)</option>
+                            <option value="name_asc">Nombre (A-Z)</option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- Estado de carga -->
+                @if (isLoading) {
+                <div class="loading-container">
+                    <div class="spinner"></div>
+                    <p>Buscando los mejores hoteles...</p>
+                </div>
+                }
+
+                <!-- Sin resultados -->
+                @if (!isLoading && filteredHotels.length === 0) {
+                <div class="no-results">
+                    <i class="bi bi-x-circle"></i>
+                    <p>No encontramos hoteles que coincidan con tus criterios de búsqueda.</p>
+                    <button class="btn btn-primary" (click)="resetFilters()">
+                        Restablecer filtros
+                    </button>
+                </div>
+                }
+
+                <!-- Lista de hoteles -->
+                @for (hotel of paginatedHotels; track hotel.id) {
+                <div class="result-card hotel-card">
+                    <div class="row g-0">
+                        <!-- Imagen del hotel -->
+                        <div class="col-md-4 hotel-image">
+                            <img src="{{ hotel.imageUrl || 'https://via.placeholder.com/300x200' }}"
+                                alt="{{ hotel.name }}" class="img-fluid h-100 w-100 object-fit-cover rounded-start">
+                        </div>
+
+                        <!-- Información del hotel -->
+                        <div class="col-md-8">
+                            <div class="hotel-content p-3">
+                                <div class="d-flex justify-content-between">
+                                    <div>
+                                        <h3 class="hotel-name mb-1">{{ hotel.name }}</h3>
+                                        <div class="hotel-stars">
+                                            @for (i of [].constructor(hotel.stars); track i) {
+                                            <i class="bi bi-star-fill text-warning"></i>
+                                            }
+                                        </div>
+                                        <p class="hotel-location mt-2 mb-1">
+                                            <i class="bi bi-geo-alt"></i> {{ hotel.location }}
+                                        </p>
+                                    </div>
+                                    <div class="hotel-rating text-end">
+                                        <span class="rating-badge bg-primary text-white py-1 px-2 rounded">
+                                            {{ hotel.rating }}
+                                        </span>
+                                        <div class="rating-text">{{ getRatingText(hotel.rating) }}</div>
+                                        <div class="review-count">{{ hotel.reviewCount }} opiniones</div>
+                                    </div>
+                                </div>
+
+                                <!-- Amenidades principales -->
+                                <div class="hotel-amenities my-3">
+                                    <span class="badge bg-light text-dark me-1 mb-1"
+                                        *ngFor="let amenity of hotel.amenities?.slice(0, 5)">
+                                        {{ amenity }}
+                                    </span>
+                                </div>
+
+                                <!-- Características del alojamiento -->
+                                <div class="row mt-2">
+                                    <div class="col-md-8">
+                                        <p class="hotel-room-info mb-1">{{ hotel.roomType || 'Habitación Estándar' }}
+                                        </p>
+                                        @if (hotel.boardBasis) {
+                                        <p class="hotel-board-basis mb-1">
+                                            <i class="bi bi-cup-hot"></i> {{ hotel.boardBasis }}
+                                        </p>
+                                        }
+                                        @if (hotel.freeCancellation) {
+                                        <div class="hotel-cancellation text-success">
+                                            <i class="bi bi-check-circle"></i> Cancelación gratuita
+                                        </div>
+                                        }
+                                    </div>
+
+                                    <!-- Precio y botón de reserva -->
+                                    <div class="col-md-4 text-end">
+                                        <div class="hotel-price">
+                                            <div class="price-amount">{{ hotel.price | currency:(searchParams?.currency
+                                                || 'USD') }}</div>
+                                            <div class="price-period">por noche</div>
+                                            <div class="price-total small">
+                                                {{ (hotel.price * calculateNights()) | currency:(searchParams?.currency
+                                                || 'USD') }} total
+                                            </div>
+                                        </div>
+                                        <button class="btn btn-primary mt-2 w-100" (click)="selectHotel(hotel)">
+                                            Ver disponibilidad
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                }
+
+                <!-- Paginación -->
+                @if (totalPages > 1) {
+                <nav class="pagination-container">
+                    <ul class="pagination">
+                        <li class="page-item" [class.disabled]="currentPage === 1">
+                            <a class="page-link" (click)="changePage(currentPage - 1)">
+                                <i class="bi bi-chevron-left"></i>
+                            </a>
+                        </li>
+
+                        @for (page of [].constructor(totalPages); track $index; let i = $index) {
+                        <li class="page-item" [class.active]="currentPage === i + 1">
+                            <a class="page-link" (click)="changePage(i + 1)">{{ i + 1 }}</a>
+                        </li>
+                        }
+
+                        <li class="page-item" [class.disabled]="currentPage === totalPages">
+                            <a class="page-link" (click)="changePage(currentPage + 1)">
+                                <i class="bi bi-chevron-right"></i>
+                            </a>
+                        </li>
+                    </ul>
+                </nav>
+                }
+            </div>
+        </div>
+    </div>
+</div>

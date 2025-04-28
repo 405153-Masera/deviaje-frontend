@@ -176,6 +176,11 @@ export class DeviajeFlightResultsComponent implements OnInit{
     return this.flightUtils.getAirlineName(code);
   }
 
+  getAirlineLogo(code: string): string {
+    if (!code) return 'assets/images/generic-airline.png';
+    return `https://www.gstatic.com/flights/airline_logos/70px/${code}.png`;
+  }
+
   toggleFilters(): void {
     this.showFilters = !this.showFilters;
   }
