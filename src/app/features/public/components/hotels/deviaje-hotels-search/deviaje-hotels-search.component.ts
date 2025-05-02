@@ -14,6 +14,7 @@ import { DeviajeCityInputComponent } from '../../../../../shared/components/devi
 import { CityDto } from '../../../../../shared/models/locations';
 import { HotelService } from '../../../../../shared/services/hotel.service';
 import { HotelOffersRequest } from '../../../../../shared/models/hotels';
+import { DeviajeRoomGuestSelectComponent } from "../../../../../shared/components/deviaje-room-guest-select/deviaje-room-guest-select.component";
 
 @Component({
   selector: 'app-deviaje-hotels-search',
@@ -23,7 +24,8 @@ import { HotelOffersRequest } from '../../../../../shared/models/hotels';
     DeviajeCalendarComponent,
     ReactiveFormsModule,
     DeviajeCityInputComponent,
-  ],
+    DeviajeRoomGuestSelectComponent
+],
   templateUrl: './deviaje-hotels-search.component.html',
   styleUrl: './deviaje-hotels-search.component.scss',
 })
@@ -44,11 +46,11 @@ export class DeviajeHotelsSearchComponent implements OnInit, OnDestroy {
     destination: this.destinationControl,
     checkInDate: [null, Validators.required],
     checkOutDate: [null, Validators.required],
-    adults: [1, [Validators.required, Validators.min(1), Validators.max(10)]],
-    children: [0, [Validators.min(0), Validators.max(6)]],
-    rooms: [1, [Validators.required, Validators.min(1), Validators.max(8)]],
+    adults: [1, [Validators.required, Validators.min(1)]],
+    children: [0],
+    rooms: [1, [Validators.required, Validators.min(1), Validators.max(9)]],
     stars: [''],
-    currency: ['USD'],
+    currency: ['ARS'],
   });
 
   // Variables para la ciudad de destino
@@ -58,7 +60,6 @@ export class DeviajeHotelsSearchComponent implements OnInit, OnDestroy {
   adults: number = 1;
   children: number = 0;
   rooms: number = 1;
-  isRoomDropdownOpen: boolean = false;
 
   // Variables para fechas
   checkInDate: Date | null = null;
@@ -71,69 +72,10 @@ export class DeviajeHotelsSearchComponent implements OnInit, OnDestroy {
   isLoading: boolean = false;
 
   ngOnInit(): void {
-    // Inicializar fechas por defecto (hoy y mañana)
-    /*const tomorrow = new Date();
-    tomorrow.setDate(tomorrow.getDate() + 1);
-
-    const nextDay = new Date();
-    nextDay.setDate(nextDay.getDate() + 2);
-
-    this.checkInDate = tomorrow;
-    this.checkOutDate = nextDay;
-
-    this.formSearch.get('checkInDate')?.setValue(tomorrow);
-    this.formSearch.get('checkOutDate')?.setValue(nextDay);*/
   }
 
   ngOnDestroy(): void {
     this.subscription.unsubscribe();
-  }
-
-  // Métodos para habitaciones y huéspedes
-  incrementRooms(): void {
-    const maxRooms = 8;
-    if (this.rooms < maxRooms) {
-      this.rooms++;
-      this.formSearch.get('rooms')?.setValue(this.rooms);
-    }
-  }
-
-  decrementRooms(): void {
-    if (this.rooms > 1) {
-      this.rooms--;
-      this.formSearch.get('rooms')?.setValue(this.rooms);
-    }
-  }
-
-  incrementGuests(type: 'adults' | 'children'): void {
-    const maxAdults = 9;
-    const maxChildren = 6;
-
-    if (type === 'adults' && this.adults < maxAdults) {
-      this.adults++;
-      this.formSearch.get('adults')?.setValue(this.adults);
-    } else if (type === 'children' && this.children < maxChildren) {
-      this.children++;
-      this.formSearch.get('children')?.setValue(this.children);
-    }
-  }
-
-  decrementGuests(type: 'adults' | 'children'): void {
-    if (type === 'adults' && this.adults > 1) {
-      this.adults--;
-      this.formSearch.get('adults')?.setValue(this.adults);
-    } else if (type === 'children' && this.children > 0) {
-      this.children--;
-      this.formSearch.get('children')?.setValue(this.children);
-    }
-  }
-
-  toggleRoomDropdown(): void {
-    this.isRoomDropdownOpen = !this.isRoomDropdownOpen;
-  }
-
-  closeRoomDropdown(): void {
-    this.isRoomDropdownOpen = false;
   }
 
   // Métodos para el calendario

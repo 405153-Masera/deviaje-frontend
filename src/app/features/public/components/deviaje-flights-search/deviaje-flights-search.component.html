@@ -1,5 +1,5 @@
 <!-- unique-flight-search.component.html -->
-<section class="search-container">
+<section class="container">
     <div class="search-panel">
         <div class="search-header">
             <h2 class="search-title">¿A dónde te gustaría volar?</h2>
@@ -9,8 +9,7 @@
                     <div class="col-md-auto">
                         <div class="form-check trip-type-option">
                             <input type="radio" class="form-check-input" name="tripType" id="roundTrip" checked
-                            (change)="setTripType('roundtrip')"
-                            >
+                                (change)="setTripType('roundtrip')">
                             <label for="roundTrip" class="form-check-label">Ida y vuelta</label>
                         </div>
                     </div>
@@ -18,8 +17,7 @@
                     <div class="col-md-auto">
                         <div class="form-check trip-type-option">
                             <input type="radio" class="form-check-input" name="tripType" id="oneWay"
-                            (change)="setTripType('oneway')"
-                            >
+                                (change)="setTripType('oneway')">
                             <label for="oneWay" class="form-check-label">Solo ida</label>
                         </div>
                     </div>
@@ -27,8 +25,7 @@
                     <div class="col-md-auto">
                         <div class="form-check trip-type-option">
                             <input type="radio" class="form-check-input" name="tripType" id="multiCity"
-                            (change)="setTripType('multicity')"
-                            >
+                                (change)="setTripType('multicity')">
                             <label for="multiCity" class="form-check-label">Multidestino</label>
                         </div>
                     </div>
@@ -42,15 +39,12 @@
             <div class="row mb-3">
 
                 <div class="col-md">
-                    <app-deviaje-city-input
-                    label="Salgo de"
-                    [cityCode]="originCity"
-                    (citySelected)="onOriginCitySelected($event)"
-                  ></app-deviaje-city-input>
+                    <app-deviaje-city-input label="Salgo de" [cityCode]="originCity"
+                        (citySelected)="onOriginCitySelected($event)"></app-deviaje-city-input>
                     @if(formSearch.get('origin')?.invalid && formSearch.get('origin')?.touched) {
-                        <div class="error-message">
-                            Por favor seleccione una ciudad de origen
-                        </div>
+                    <div class="error-message">
+                        Por favor seleccione una ciudad de origen
+                    </div>
                     }
                 </div>
 
@@ -61,138 +55,64 @@
                 </div>
 
                 <div class="col-md">
-                    
-                    <app-deviaje-city-input
-                        label="Voy a"
-                        [cityCode]="destinationCity"
-                        (citySelected)="onDestinationCitySelected($event)"
-                    ></app-deviaje-city-input>
+
+                    <app-deviaje-city-input label="Voy a" [cityCode]="destinationCity"
+                        (citySelected)="onDestinationCitySelected($event)"></app-deviaje-city-input>
                     @if(formSearch.get('destination')?.invalid && formSearch.get('destination')?.touched) {
-                        <div class="error-message">
-                            Por favor seleccione una ciudad de destino
-                        </div>
+                    <div class="error-message">
+                        Por favor seleccione una ciudad de destino
+                    </div>
                     }
                 </div>
             </div>
 
             <div class="row mb-3">
 
-                <div class="col-md">
-                    <label class="mb-1">Fecha de salida</label>
+                <div class="col-lg col-md-6 mb-3">
+                    <label class="mb-1" for="departureDate">Fecha de salida</label>
                     <div class="input-with-icon date-input">
                         <i class="bi bi-calendar3"></i>
-                        <input type="text" placeholder="dd/mm/aaaa" class="date-picker-trigger" 
-                        [value]="formatDisplayDate(departureDate)"
-                        formControlName="departureDate"
-                        readonly
-                        (click)="openCalendar('departure')"
-                        >
+                        <input id="departureDate" type="text" placeholder="dd/mm/aaaa" class="date-picker-trigger"
+                            [value]="formatDisplayDate(departureDate)" formControlName="departureDate" readonly
+                            (click)="openCalendar('departure')"
+                            (keydown.enter)="openCalendar('departure')"
+                            (keydown.space)="openCalendar('departure')">
                     </div>
                     @if(formSearch.get('departureDate')?.invalid && formSearch.get('departureDate')?.touched) {
-                        <div class="error-message">
-                            La fecha de salida es obligatoria
-                        </div>
+                    <div class="error-message">
+                        La fecha de salida es obligatoria
+                    </div>
                     }
                 </div>
 
-                <div class="col-md" [class.disabled]="tripType === 'oneway'">
-                    <label class="mb-1">Fecha de regreso</label>
+                <div class="col-lg col-md-6 mb-3" [class.disabled]="tripType === 'oneway'">
+                    <label class="mb-1" for="dateReturn">Fecha de regreso</label>
                     <div class="input-with-icon date-input">
                         <i class="bi bi-calendar3"></i>
-                        <input type="text" placeholder="dd/mm/aaaa" class="date-picker-trigger"
-                        [value]="formatDisplayDate(returnDate)"
-                        readonly
-                        formControlName="returnDate"
-                        (click)="tripType !== 'oneway' && openCalendar('return')"
-                            >
+                        <input type="text" placeholder="dd/mm/aaaa" id="dateReturn" class="date-picker-trigger"
+                            [value]="formatDisplayDate(returnDate)" readonly formControlName="returnDate"
+                            (click)="tripType !== 'oneway' && openCalendar('return')"
+                            (keydown.enter)="tripType !== 'oneway' && openCalendar('return')"
+                            (keydown.space)="tripType !== 'oneway' && openCalendar('return')">
                     </div>
-                    @if(formSearch.get('returnDate')?.invalid && formSearch.get('returnDate')?.touched && tripType !== 'oneway') {
-                        <div class="error-message">
-                            La fecha de regreso es obligatoria
-                        </div>
+                    @if(formSearch.get('returnDate')?.invalid && formSearch.get('returnDate')?.touched && tripType !==
+                    'oneway') {
+                    <div class="error-message">
+                        La fecha de regreso es obligatoria
+                    </div>
                     }
                 </div>
 
-                <div class="col-md passengers-field">
-
-                    <label class="mb-1">Pasajeros</label>
-
-                    <div class="input-with-icon passenger-selector-trigger" (click)="togglePassengerDropdown()">
-
-                        <div class="passenger-summary">
-                            <i class="bi bi-chevron-down"></i>
-                            <i class="bi bi-person"></i>
-                            <span>{{ totalPassengers }}</span>
-                            <span>{{ totalPassengers === 1 ? 'Pasajero' : 'Pasajeros' }}</span>
-                        </div>
-
-
-                        <!-- Dropdown de pasajeros -->
-                        <div class="passenger-dropdown" [class.show]="isPassengerDropdownOpen">
-                            <div class="passenger-type-row">
-                                <div class="passenger-type">
-                                    <div class="passenger-title">Adultos</div>
-                                    <div class="passenger-subtitle">Más de 12 años</div>
-                                </div>
-                                <div class="passenger-counter">
-                                    <button type="button" class="counter-btn" [disabled]="adults <= 1"
-                                        (click)="decrementPassengers('adults')">
-                                        <i class="bi bi-dash"></i>
-                                    </button>
-                                    <span class="counter-value">{{ adults }}</span>
-                                    <button type="button" class="counter-btn" (click)="incrementPassengers('adults')">
-                                        <i class="bi bi-plus"></i>
-                                    </button>
-                                </div>
-                            </div>
-
-                            <div class="passenger-type-row">
-                                <div class="passenger-type">
-                                    <div class="passenger-title">Niños</div>
-                                    <div class="passenger-subtitle">De 2 a 12 años</div>
-                                </div>
-                                <div class="passenger-counter">
-                                    <button type="button" class="counter-btn" [disabled]="children <= 0"
-                                        (click)="decrementPassengers('children')">
-                                        <i class="bi bi-dash"></i>
-                                    </button>
-                                    <span class="counter-value">{{ children }}</span>
-                                    <button type="button" class="counter-btn" (click)="incrementPassengers('children')">
-                                        <i class="bi bi-plus"></i>
-                                    </button>
-                                </div>
-                            </div>
-
-                            <div class="passenger-type-row">
-                                <div class="passenger-type">
-                                    <div class="passenger-title">Bebés</div>
-                                    <div class="passenger-subtitle">Menores de 2 años</div>
-                                </div>
-                                <div class="passenger-counter">
-                                    <button type="button" class="counter-btn" [disabled]="infants <= 0"
-                                        (click)="decrementPassengers('infants')">
-                                        <i class="bi bi-dash"></i>
-                                    </button>
-                                    <span class="counter-value">{{ infants }}</span>
-                                    <button type="button" class="counter-btn" (click)="incrementPassengers('infants')">
-                                        <i class="bi bi-plus"></i>
-                                    </button>
-                                </div>
-                            </div>
-
-                            <div class="dropdown-actions">
-                                <button type="button" class="btn-apply"
-                                    (click)="closePassengerDropdown()">Aplicar</button>
-                            </div>
-                        </div>
-                    </div>
+                <div class="col-lg col-md-4 mb-3">
+                    <app-deviaje-passenger-select [adults]="adults" [children]="children" [infants]="infants"
+                        (passengersChanged)="handlePassengersChanged($event)"></app-deviaje-passenger-select>
                 </div>
 
-                <div class="col-md class-field">
-                    <label class="mb-1">Clase</label>
-                    <div class="input-with-icon class-selector">
+                <div class="col-lg col-md-4 mb-3">
+                    <label class="mb-1" for="selectClass">Clase</label>
+                    <div class="input-with-icon">
                         <i class="bi bi-star"></i>
-                        <select formControlName="travelClass"> 
+                        <select formControlName="travelClass" id="selectClass">
                             <option value="ECONOMY">Turista</option>
                             <option value="PREMIUM_ECONOMY">Premium Economy</option>
                             <option value="BUSINESS">Business</option>
@@ -201,11 +121,11 @@
                     </div>
                 </div>
 
-                <div class="col-md currency-field">
-                    <label class="mb-1">Moneda</label>
-                    <div class="input-with-icon currency-selector">
+                <div class="col-lg col-md-4">
+                    <label class="mb-1" for="currency">Moneda</label>
+                    <div class="input-with-icon">
                         <i class="bi bi-currency-dollar"></i>
-                        <select formControlName="currency">
+                        <select formControlName="currency" id="currency">
                             <option value="USD">USD - Dólares</option>
                             <option value="EUR">EUR - Euros</option>
                             <option value="ARS">ARS - Pesos Argentinos</option>
@@ -213,26 +133,20 @@
                     </div>
                 </div>
             </div>
-        </form>
+            <div class="row mt-5">
+                <div class="col-md d-flex justify-content-end">
+                    <button type="button" class="btn-search" (click)="searchFlights()">
+                        <span>Buscar vuelos</span>
+                        <i class="bi bi-search"></i>
+                    </button>
+                </div>
+            </div>
 
-        <div class="search-actions">
-            <button type="button" class="btn-search-flights"  (click)="searchFlights()">
-                <span>Buscar vuelos</span>
-                <i class="bi bi-search"></i>
-            </button>
-        </div>
+        </form>
     </div>
 </section>
 
-<app-deviaje-calendar
-  [selectionMode]="tripType === 'oneway' ? 'single' : 'range'"
-  [minDate]="minDate"
-  [initialStartDate]="departureDate"
-  [initialEndDate]="returnDate"
-  [showTwoMonths]="true"
-  [showPrices]="false"
-  (dateSelected)="selectSingleDate($event)"
-  (rangeSelected)="selectDateRange($event)"
-  (closed)="closeCalendar()"
-  #dateCalendar
-></app-deviaje-calendar>
+<app-deviaje-calendar [selectionMode]="tripType === 'oneway' ? 'single' : 'range'" [minDate]="minDate"
+    [initialStartDate]="departureDate" [initialEndDate]="returnDate" [showTwoMonths]="true" [showPrices]="false"
+    (dateSelected)="selectSingleDate($event)" (rangeSelected)="selectDateRange($event)" (closed)="closeCalendar()"
+    #dateCalendar></app-deviaje-calendar>

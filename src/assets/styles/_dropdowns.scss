@@ -1,103 +1,145 @@
 @import '../styles/variables';
 
-.dropdown {
+//######### Estilos para el selector de busqueda de hoteles y vuelos ##########
+
+// Trigger que muestra el dropdown
+.selector-trigger {
   position: relative;
-}
-
-.dropdown-menu {
-  position: absolute;
-  top: calc(100% + 5px);
-  left: 0;
-  width: 100%;
-  background-color: $white;
-  border-radius: $border-radius;
-  box-shadow: $dropdown-shadow;
-  z-index: 1000;
-  overflow: hidden;
-  display: none;
-
-  &.show {
-    display: block;
-  }
-}
-
-// Selector de pasajeros
-.passenger-selector-trigger {
   cursor: pointer;
+  width: 100%;
+  background: white;
+  border: 1px solid $gray-300;
+  border-radius: $border-radius;
+  padding: 12px 16px;
+  display: flex;
+  align-items: center;
 
-  .passenger-summary {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    pointer-events: none;
+  &:hover {
+    border-color: $primary-color;
+  }
+
+  &:focus {
+    outline: none;
+    border-color: $primary-color;
+    box-shadow: 0 0 0 3px rgba($primary-color, 0.2);
+  }
+
+  i.bi-person {
+    margin-right: 12px;
+    color: $gray-600;
+  }
+
+  .dropdown-icon {
+    position: absolute; // Esto permite posicionar el ícono de forma precisa dentro de su contenedor relativo
+    right: 15px;
+    color: $gray-600;
+    transition: transform 0.2s ease;
+  }
+
+  &:hover .dropdown-icon {
+    color: $primary-color;
   }
 }
 
-.passenger-dropdown {
+// Dropdown de pasajeros
+.dropdown-search {
   position: absolute;
   top: calc(100% + 5px);
-  left: 0;
-  width: 320px;
+  width: 100%;
   background-color: $white;
   border-radius: $border-radius;
   box-shadow: $dropdown-shadow;
   padding: 16px;
   z-index: 1000;
   display: none;
+  border: 1px solid $gray-200;
 
   &.show {
     display: block;
+    animation: fadeIn 0.2s ease;
   }
 
-  @include mobile {
-    width: 100%;
+  @media (min-width: 768px) {
+    width: 14.4rem;
+    right: auto;
+  }
+  // Filas del dropdown
+  .dropdown-search-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 12px 0;
+    border-bottom: 1px solid $gray-200;
+
+    &:last-of-type { //aplica solo a la ultima fila
+      border-bottom: none;
+      margin-bottom: 15px;
+    }
+  }
+
+  // Información del tipo de pasajero
+  .option-row {
+    .option-title {
+      font-weight: 500;
+      font-size: 15px;
+      color: $gray-800;
+      margin-bottom: 3px;
+    }
+
+    .option-subtitle {
+      font-size: 12px;
+      color: $gray-600;
+    }
+  }
+
+  // Contador de pasajeros
+  .option-counter {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+
+    .counter-btn {
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      border: 1px solid $gray-300;
+      background-color: $white;
+      color: $gray-800;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: $transition-fast;
+      padding: 0;
+
+      i {
+        font-size: 16px;
+        line-height: 1;
+      }
+
+      &:hover:not(:disabled) {
+        border-color: $primary-color;
+        color: $primary-color;
+      }
+
+      &:active:not(:disabled) {
+        transform: scale(0.95);
+      }
+
+      &:disabled {
+        border-color: $gray-200;
+        color: $gray-400;
+        cursor: not-allowed;
+      }
+    }
+
+    .counter-value {
+      font-size: 16px;
+      font-weight: 500;
+      text-align: center;
+    }
   }
 }
-
-.passenger-type-row {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 12px 0;
-  border-bottom: 1px solid $gray-200;
-
-  &:last-of-type {
-    border-bottom: none;
-    margin-bottom: 10px;
-  }
-}
-
-.passenger-type {
-  .passenger-title {
-    font-weight: 500;
-    margin-bottom: 2px;
-  }
-
-  .passenger-subtitle {
-    font-size: 12px;
-    color: $gray-600;
-  }
-}
-
-.passenger-counter {
-  display: flex;
-  align-items: center;
-  gap: 15px;
-
-  .counter-value {
-    font-size: 16px;
-    font-weight: 500;
-    min-width: 20px;
-    text-align: center;
-  }
-}
-
-.dropdown-actions {
-  display: flex;
-  justify-content: flex-end;
-  margin-top: 15px;
-}
-
 // Estilos generales para overlays
 .overlay {
   position: fixed;

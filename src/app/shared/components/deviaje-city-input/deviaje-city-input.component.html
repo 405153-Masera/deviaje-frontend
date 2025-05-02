@@ -1,12 +1,12 @@
 <div>
     @if(label){
-    <label class="mb-1">{{ label }}</label>
+    <label class="mb-1" for="{{label}}">{{ label }}</label>
     }
 
     <div class="input-with-icon">
         <i class="{{ icon }}"></i>
-        <input type="text" [placeholder]="placeholder" [value]="displayValue"
-            (input)="onInputChange($event)" autocomplete="off" #cityInput>
+        <input id="{{label}}" type="text" [placeholder]="placeholder" [value]="displayValue"
+            (input)="onInputChange($event)" [class]="class" autocomplete="off" #cityInput>
         <div class="city-suggestions" [class.show]="isSuggestionsOpen">
             @if(isLoading) {
             <div class="suggestion-loading">

@@ -1,9 +1,9 @@
 @import '../styles/variables';
 
 .btn {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
+  display: inline-flex;  // inline: no comienza lina nueva y ocupa el espacio necesario. flex: permite alinear su contenido
+  align-items: center; // centra los elementos hijos verticalmente
+  justify-content: center; // centra los elementos horizontalmente
   padding: 10px 16px;
   border-radius: $border-radius;
   font-weight: 500;
@@ -12,7 +12,7 @@
   cursor: pointer;
   transition: $transition-fast;
   border: none;
-  gap: 8px;
+  gap: 8px; // separacion entre elementos hijos
 
   &:disabled {
     opacity: 0.6;
@@ -25,6 +25,7 @@
   background-color: $primary-color;
   color: $white;
 
+  //el hover no se aplica si el boton esta deshabilitado
   &:hover:not(:disabled) {
     background-color: darken($primary-color, 5%);
   }
@@ -86,7 +87,7 @@
 }
 
 // Botón de búsqueda de vuelos
-.btn-search-flights {
+.btn-search {
   display: flex;
   align-items: center;
   gap: 10px;
@@ -225,50 +226,6 @@
       &:hover {
         transform: rotate(270deg);
       }
-    }
-  }
-}
-
-
-.search-actions {
-  padding: 10px 30px 24px;
-  display: flex;
-  justify-content: flex-end;
-  
-  @include tablet {
-    padding: 5px 20px 20px;
-  }
-  
-  @include mobile {
-    justify-content: center;
-  }
-  
-  .btn-search-flights {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    background-color: $primary-color;
-    color: $white;
-    border: none;
-    border-radius: $border-radius;
-    padding: 14px 28px;
-    font-size: 16px;
-    font-weight: 600;
-    cursor: pointer;
-    transition: $transition-fast;
-    
-    &:hover {
-      background-color: $primary-light;
-      transform: translateY(-2px);
-    }
-    
-    i {
-      font-size: 18px;
-    }
-    
-    @include mobile {
-      width: 100%;
-      justify-content: center;
     }
   }
 }
