@@ -16,6 +16,10 @@ textarea {
     box-shadow: 0 0 0 3px rgba($primary-color, 0.2);
   }
 
+  &:hover {
+    border-color: $primary-color;
+  }
+  
   &::placeholder {
     color: $gray-500;
   }
@@ -79,10 +83,24 @@ select {
   }
 }
 
+.is-invalid {
+  border-color: $tertiary-color;
+  
+  &:focus {
+    box-shadow: 0 0 0 3px rgba($tertiary-color, 0.2) !important;
+  }
+}
 // Mensaje de error para campos inválidos
 .error-message {
   color: $tertiary-color;
   font-size: 0.8rem;
   margin-top: 0.25rem;
+  //min-height: 1.5em; /* o lo que mida el mensaje */
+  display: block;
+  visibility: hidden;
+}
+
+.error-message.visible {
+  visibility: visible;
 }
 

@@ -26,6 +26,7 @@ export class DeviajeCityInputComponent implements OnInit, OnDestroy {
   @Input() placeholder: string = 'Ciudad o aeropuerto';
   @Input() icon: string = 'bi bi-geo-alt';
   @Input() cityCode: string = ''; 
+  @Input() class: string = '';
 
   @Output() citySelected = new EventEmitter<CityDto>();
 

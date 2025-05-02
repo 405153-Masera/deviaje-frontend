@@ -22,11 +22,12 @@ import { CityDto } from '../../../../shared/models/locations';
 import { Router } from '@angular/router';
 import { FlightSearchRequest } from '../../../../shared/models/flights';
 import { DeviajeCityInputComponent } from '../../../../shared/components/deviaje-city-input/deviaje-city-input.component';
+import { DeviajePassengerSelectComponent } from "../../../../shared/components/deviaje-passenger-select/deviaje-passenger-select.component";
 
 @Component({
   selector: 'app-deviaje-flights-search',
   standalone: true,
-  imports: [CommonModule, DeviajeCalendarComponent, ReactiveFormsModule, DeviajeCityInputComponent],
+  imports: [CommonModule, DeviajeCalendarComponent, ReactiveFormsModule, DeviajeCityInputComponent, DeviajePassengerSelectComponent],
   templateUrl: './deviaje-flights-search.component.html',
   styleUrl: './deviaje-flights-search.component.scss',
 })
@@ -86,49 +87,6 @@ export class DeviajeFlightsSearchComponent implements OnInit, OnDestroy {
 
   ngOnDestroy(): void {
     this.subscription.unsubscribe();
-  }
-
-  // Métodos para pasajeros
-  get totalPassengers(): number {
-    return this.adults + this.children + this.infants;
-  }
-
-  get totalMaxPassengers(): number {
-    return this.adults + this.children;
-  }
-
-  incrementPassengers(type: 'adults' | 'children' | 'infants'): void {
-    const maxSeatedPassengers = 9;
-
-    if (type === 'adults' && this.totalMaxPassengers < maxSeatedPassengers) {
-      this.adults++;
-      this.formSearch.get('adults')?.setValue(this.adults);
-    } else if (
-      type === 'children' &&
-      this.totalMaxPassengers < maxSeatedPassengers
-    ) {
-      this.children++;
-      this.formSearch.get('children')?.setValue(this.children);
-    } else if (type === 'infants' && this.infants < this.adults) {
-      this.infants++;
-      this.formSearch.get('infants')?.setValue(this.infants);
-    }
-  }
-
-  decrementPassengers(type: 'adults' | 'children' | 'infants'): void {
-    if (type === 'adults' && this.adults > 1) {
-      this.adults--;
-      this.formSearch.get('adults')?.setValue(this.adults);
-
-      if (this.infants > this.adults) {
-        this.infants = this.adults;
-        this.formSearch.get('infants')?.setValue(this.infants);
-      }
-    } else if (type === 'children' && this.children > 0) {
-      this.children--;
-    } else if (type === 'infants' && this.infants > 0) {
-      this.infants--;
-    }
   }
 
   togglePassengerDropdown(): void {
@@ -313,5 +271,16 @@ export class DeviajeFlightsSearchComponent implements OnInit, OnDestroy {
           );
         },
       });
+  }
+
+  handlePassengersChanged(passengers: {adults: number, children: number, infants: number}): void {
+    this.adults = passengers.adults;
+    this.children = passengers.children;
+    this.infants = passengers.infants;
+    
+    // Actualizar el formulario si es necesario
+    this.formSearch.get('adults')?.setValue(this.adults);
+    this.formSearch.get('children')?.setValue(this.children);
+    this.formSearch.get('infants')?.setValue(this.infants);
   }
 }

@@ -1,17 +1,11 @@
 @import '../styles/variables';
 
 //############ Formularios de busqueda ############
-.search-container {
-  width: 100%;
-  max-width: 1200px;
-  margin: 0 auto; // margen superior e inferior 0 y auto a los lados
-  padding: 20px 15px;
-}
 
 .search-panel {
   border-radius: $border-radius-lg;
   box-shadow: $box-shadow;
-  position: relative;
+  position: relative; 
   transition: $transition-normal;
 
   &:hover {

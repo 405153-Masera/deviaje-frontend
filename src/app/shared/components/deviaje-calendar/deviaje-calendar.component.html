@@ -1,161 +1,148 @@
 <div class="calendar-container" [class.show]="isVisible">
-    <div class="calendar-overlay" (click)="closeCalendar()"></div>
-    
-    <div class="calendar-modal">
-      <div class="calendar-header">
-        <h5>{{ selectionMode === 'range' ? 'Seleccionar fechas' : 'Seleccionar fecha' }}</h5>
-        <button class="btn-close" (click)="closeCalendar()">
-          <i class="bi bi-x-lg"></i>
+  <div class="calendar-overlay" (click)="closeCalendar()"></div>
+
+  <div class="calendar-modal">
+    <div class="calendar-header">
+      <h5>{{ selectionMode === 'range' ? 'Seleccionar fechas' : 'Seleccionar fecha' }}</h5>
+      <button class="btn-close" (click)="closeCalendar()">
+        <i class="bi bi-x-lg"></i>
+      </button>
+    </div>
+
+    @if(selectionMode === 'range'){
+    <div class="calendar-mode-selector">
+      <div class="mode-option" [class.active]="activeInput === 'start'" (click)="setActiveInput('start')">
+        <div class="mode-label">Ida</div>
+        <div class="mode-value">{{ formatDate(selectedStartDate) || 'No seleccionada' }}</div>
+      </div>
+      <div class="mode-option" [class.active]="activeInput === 'end'" (click)="setActiveInput('end')">
+        <div class="mode-label">Vuelta</div>
+        <div class="mode-value">{{ formatDate(selectedEndDate) || 'No seleccionada' }}</div>
+      </div>
+    </div>
+    }
+
+
+    <div class="calendar-body">
+      <div class="calendar-navigation">
+        <button class="nav-btn" (click)="prevMonth()">
+          <i class="bi bi-chevron-left"></i>
+        </button>
+        <div class="current-month">{{ months[currentMonth.getMonth()] }} {{ currentMonth.getFullYear() }}</div>
+
+        <div></div>
+
+        @if(showTwoMonths){
+        <div class="current-month current-second-month">{{ months[nextMonths.getMonth()] }} {{ nextMonths.getFullYear()
+          }}</div>
+        }
+
+        <button class="nav-btn" (click)="nextMonth()">
+          <i class="bi bi-chevron-right"></i>
         </button>
       </div>
-      
-      @if(selectionMode === 'range'){
-        <div class="calendar-mode-selector">
-          <div class="mode-option" [class.active]="activeInput === 'start'" (click)="setActiveInput('start')">
-            <div class="mode-label">Ida</div>
-            <div class="mode-value">{{ formatDate(selectedStartDate) || 'No seleccionada' }}</div>
+
+      <div class="calendar-months-container">
+        <div class="calendar-month">
+
+          <div class="weekdays-row">
+            @for(day of weekDays; track $index){
+            <div class="weekday">{{ day }}</div>
+            }
           </div>
-          <div class="mode-option" [class.active]="activeInput === 'end'" (click)="setActiveInput('end')">
-            <div class="mode-label">Vuelta</div>
-            <div class="mode-value">{{ formatDate(selectedEndDate) || 'No seleccionada' }}</div>
-          </div>
-        </div>
-      }
-      
-      
-      <div class="calendar-body">
-        <div class="calendar-navigation">
-          <button class="nav-btn" (click)="prevMonth()">
-            <i class="bi bi-chevron-left"></i>
-          </button>
-          <div class="current-month">{{ months[currentMonth.getMonth()] }} {{ currentMonth.getFullYear() }}</div>
 
-          <div></div>
-          
-          @if(showTwoMonths){
-            <div class="current-month current-second-month">{{ months[nextMonths.getMonth()] }} {{ nextMonths.getFullYear() }}</div>
-          }
-          
-          <button class="nav-btn" (click)="nextMonth()">
-            <i class="bi bi-chevron-right"></i>
-          </button>
-        </div>
-        
-        <div class="calendar-months-container">
-          <div class="calendar-month">
-            
-            <div class="weekdays-row">
-              @for(day of weekDays; track $index){
-                <div class="weekday">{{ day }}</div>
-              }
-            </div>
-            
-            <div class="days-grid">
-              <!-- Días del mes anterior que lo lleno vacio -->
+          <div class="days-grid">
+            <!-- Días del mes anterior que lo lleno vacio -->
 
-              @for(day of getMonthStartGap(); track $index){
-                <div class="day disabled"></div>
-              }
-              
-              <!-- Días del mes actual -->
+            @for(day of getMonthStartGap(); track $index){
+            <div class="day disabled"></div>
+            }
 
-              @for(day of getDaysInMonth(); track $index){
-                <div 
-                  class="day"
-                  [class.disabled]="isDateDisabled(day)"
-                  [class.selected]="isDateSelected(day)"
-                  [class.range-start]="isRangeStart(day)"
-                  [class.range-end]="isRangeEnd(day)"
-                  [class.in-range]="isInRange(day)"
-                  [class.today]="isToday(day)"
-                  (click)="selectDate(day)"
-                >
-                {{ day.getDate() }}
+            <!-- Días del mes actual -->
 
-                @if(showPrices && getPriceForDate(day)){
-                  <div class="day-price">
-                    {{ getPriceForDate(day) | currency:'USD':'symbol-narrow':'1.0-0' }}
-                  </div>
-                } 
-                </div>
-              }
-              
-              <!-- Días del mes siguiente que se llenan vacios -->
+            @for(day of getDaysInMonth(); track $index){
+            <div class="day" [class.disabled]="isDateDisabled(day)" [class.selected]="isDateSelected(day)"
+              [class.range-start]="isRangeStart(day)" [class.range-end]="isRangeEnd(day)"
+              [class.in-range]="isInRange(day)" [class.today]="isToday(day)" (click)="selectDate(day)">
+              {{ day.getDate() }}
 
-              @for(day of getMonthEndGap(); track $index){
-                <div class="day disabled"></div>
-              } 
-            </div>
-          </div>
-          
-          <!-- Segundo mes (para vista de escritorio) -->
-          
-          @if(showTwoMonths){
-            <div class="calendar-month second-month">
-              <div class="weekdays-row">
-                @for(day of weekDays; track $index){
-                  <div class="weekday">{{ day }}</div>
-                }
+              @if(showPrices && getPriceForDate(day)){
+              <div class="day-price">
+                {{ getPriceForDate(day) | currency:'USD':'symbol-narrow':'1.0-0' }}
               </div>
-              
-              <div class="days-grid">
-                <!-- Días del mes anterior que se llenan vacios -->
-
-                @for(day of getNextMonthStartGap(); track $index){
-                  <div class="day disabled"></div>
-                }
-                
-                <!-- Días del mes actual -->
-
-                @for(day of getDaysInNextMonth(); track $index){
-                  <div 
-                    class="day"
-                    [class.disabled]="isDateDisabled(day)"
-                    [class.selected]="isDateSelected(day)"
-                    [class.range-start]="isRangeStart(day)"
-                    [class.range-end]="isRangeEnd(day)"
-                    [class.in-range]="isInRange(day)"
-                    [class.today]="isToday(day)"
-                    (click)="selectDate(day)"
-                  >
-                  {{ day.getDate() }}
-
-                  @if(showPrices && getPriceForDate(day)){
-                    <div class="day-price">
-                      {{ getPriceForDate(day) | currency:'USD':'symbol-narrow':'1.0-0' }}
-                    </div>
-                  }
-                  
-                </div>
-                }
-                
-                
-                <!-- Días del mes siguiente que se llenan vacios -->
-
-                @for(day of getNextMonthEndGap(); track $index){
-                  <div class="day disabled"></div>
-                }
-              </div>
+              }
             </div>
-          }
-          
-        </div>
-      </div>
-      
-      <div class="p-1">
-        <div class="calendar-actions">
-          
-          @if(selectionMode === 'range'  && (selectedStartDate || selectedEndDate)){
-            <button class="btn-clear" (click)="clearSelection()">
-              Limpiar
-            </button>
-          }
-          
-          <button class="btn-apply" (click)="applySelection()" [disabled]="!canApply()">
-            Aplicar
-          </button>
-        </div>
-      </div>
+            }
 
+            <!-- Días del mes siguiente que se llenan vacios -->
+
+            @for(day of getMonthEndGap(); track $index){
+            <div class="day disabled"></div>
+            }
+          </div>
+        </div>
+
+        <!-- Segundo mes (para vista de escritorio) -->
+
+        @if(showTwoMonths){
+        <div class="calendar-month second-month">
+          <div class="weekdays-row">
+            @for(day of weekDays; track $index){
+            <div class="weekday">{{ day }}</div>
+            }
+          </div>
+
+          <div class="days-grid">
+            <!-- Días del mes anterior que se llenan vacios -->
+
+            @for(day of getNextMonthStartGap(); track $index){
+            <div class="day disabled"></div>
+            }
+
+            <!-- Días del mes actual -->
+
+            @for(day of getDaysInNextMonth(); track $index){
+            <div class="day" [class.disabled]="isDateDisabled(day)" [class.selected]="isDateSelected(day)"
+              [class.range-start]="isRangeStart(day)" [class.range-end]="isRangeEnd(day)"
+              [class.in-range]="isInRange(day)" [class.today]="isToday(day)" (click)="selectDate(day)">
+              {{ day.getDate() }}
+
+              @if(showPrices && getPriceForDate(day)){
+              <div class="day-price">
+                {{ getPriceForDate(day) | currency:'USD':'symbol-narrow':'1.0-0' }}
+              </div>
+              }
+
+            </div>
+            }
+
+
+            <!-- Días del mes siguiente que se llenan vacios -->
+
+            @for(day of getNextMonthEndGap(); track $index){
+            <div class="day disabled"></div>
+            }
+          </div>
+        </div>
+        }
+
+      </div>
     </div>
+
+    <div class="p-1">
+      <div class="calendar-actions">
+
+        @if(selectionMode === 'range' && (selectedStartDate || selectedEndDate)){
+        <button class="btn-clear" (click)="clearSelection()">
+          Limpiar
+        </button>
+        }
+
+        <button class="btn-apply" (click)="applySelection()" [disabled]="!canApply()">
+          Aplicar
+        </button>
+      </div>
+    </div>
+
   </div>
+</div>

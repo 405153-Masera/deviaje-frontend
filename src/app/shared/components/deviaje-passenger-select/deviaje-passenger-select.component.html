@@ -1,0 +1,76 @@
+<div class="position-relative w-100">
+  <label class="mb-1" id="selectPassenger">Pasajeros</label>
+  <div class="selector-trigger" role="button" tabindex="0" aria-labelledby="selectPassenger"
+    (click)="toggleDropdown($event)" (keydown.enter)="toggleDropdown($event)" (keydown.space)="toggleDropdown($event)">
+    <div>
+      <i class="bi bi-person"></i>
+      <span>{{ displayText }}</span>
+    </div>
+    <i class="bi bi-chevron-down dropdown-icon"></i>
+  </div>
+
+  <!-- Dropdown de pasajeros -->
+  <div class="dropdown-search" [class.show]="isDropdownOpen">
+    <div class="dropdown-search-row">
+      <div class="option-row">
+        <div class="option-title">Adultos</div>
+        <div class="option-subtitle">Más de 12 años</div>
+      </div>
+      <div class="option-counter">
+        <button type="button" class="counter-btn" [disabled]="adults <= minAdults"
+          (click)="decrementPassengers('adults', $event)">
+          <i class="bi bi-dash"></i>
+        </button>
+        <span class="counter-value">{{ adults }}</span>
+        <button type="button" class="counter-btn"
+          [disabled]="adults >= maxPassengers || (totalMaxPassengers >= maxPassengers)"
+          (click)="incrementPassengers('adults', $event)">
+          <i class="bi bi-plus"></i>
+        </button>
+      </div>
+    </div>
+
+    <div class="dropdown-search-row">
+      <div class="option-row">
+        <div class="option-title">Niños</div>
+        <div class="option-subtitle">De 2 a 12 años</div>
+      </div>
+      <div class="option-counter">
+        <button type="button" class="counter-btn" [disabled]="children <= 0"
+          (click)="decrementPassengers('children', $event)">
+          <i class="bi bi-dash"></i>
+        </button>
+        <span class="counter-value">{{ children }}</span>
+        <button type="button" class="counter-btn"
+          [disabled]="children >= maxPassengers || (totalMaxPassengers >= maxPassengers)"
+          (click)="incrementPassengers('children', $event)">
+          <i class="bi bi-plus"></i>
+        </button>
+      </div>
+    </div>
+
+    <div class="dropdown-search-row">
+      <div class="option-row">
+        <div class="option-title">Bebés</div>
+        <div class="option-subtitle">Menores de 2 años</div>
+      </div>
+      <div class="option-counter">
+        <button type="button" class="counter-btn" [disabled]="infants <= 0"
+          (click)="decrementPassengers('infants', $event)">
+          <i class="bi bi-dash"></i>
+        </button>
+        <span class="counter-value">{{ infants }}</span>
+        <button type="button" class="counter-btn" [disabled]="infants >= adults"
+          (click)="incrementPassengers('infants', $event)">
+          <i class="bi bi-plus"></i>
+        </button>
+      </div>
+    </div>
+
+    <div class="d-flex justify-content-end mt-1">
+      <button type="button" class="btn-apply" (click)="applySelection($event)">
+        Aplicar
+      </button>
+    </div>
+  </div>
+</div>
