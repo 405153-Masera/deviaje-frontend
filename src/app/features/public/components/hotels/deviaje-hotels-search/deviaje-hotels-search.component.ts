@@ -201,7 +201,6 @@ export class DeviajeHotelsSearchComponent implements OnInit, OnDestroy {
         error: (error) => {
           console.error('Error al buscar hoteles:', error);
           this.isLoading = false;
-          // Mostrar mensaje de error
         }
       })
     );

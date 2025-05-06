@@ -1,0 +1,412 @@
+<div class="flight-detail-container">
+    <!-- Información del vuelo -->
+    <div class="card mb-4">
+        <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
+            <h5 class="mb-0">Detalles del vuelo</h5>
+            <span>
+                <strong>{{ flightOffer.price.total | currency:(searchParams?.currency || 'USD') }}</strong>
+                - precio final
+            </span>
+        </div>
+
+        <!-- Mostrar el itinerario de ida -->
+        <div class="card-body">
+            <h6 class="text-secondary mb-3">Vuelo de ida -
+                {{flightUtils.formatDate(flightOffer.itineraries[0].segments[0].departure.at) }}</h6>
+
+            <!-- Línea de tiempo del vuelo -->
+            <div class="timeline-container mb-4">
+                <div class="timeline-header d-flex justify-content-between">
+                    <div class="departure">
+                        <div class="fw-bold">{{
+                            flightUtils.formatTime(flightOffer.itineraries[0].segments[0].departure.at) }}</div>
+                        <div>{{ flightOffer.itineraries[0].segments[0].departure.iataCode }}</div>
+                    </div>
+                    <div class="duration text-center">
+                        <div class="text-secondary">{{ getTotalDuration(flightOffer, 0) }}</div>
+                        <div class="flight-line position-relative">
+                            <div class="flight-stops"></div>
+                        </div>
+                        <div class="text-secondary">{{ flightUtils.getStopsLabel(flightOffer.itineraries[0].segments) }}
+                        </div>
+                    </div>
+                    <div class="arrival">
+                        <div class="fw-bold">{{
+                            flightUtils.formatTime(flightOffer.itineraries[0].segments[flightOffer.itineraries[0].segments.length-1].arrival.at)
+                            }}</div>
+                        <div>{{
+                            flightOffer.itineraries[0].segments[flightOffer.itineraries[0].segments.length-1].arrival.iataCode
+                            }}</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Segmentos del vuelo de ida -->
+            <div class="segments-container">
+                @for (segment of flightOffer.itineraries[0].segments; track segment.id; let i = $index) {
+                <div class="segment-card mb-3">
+                    <div class="segment-header d-flex align-items-center p-3" (click)="toggleSegmentDetails(0, i)">
+                        <div class="airline-logo me-3">
+                            <img [src]="getAirlineLogo(segment.carrierCode)" alt="Airline" class="img-fluid"
+                                style="max-height: 40px;">
+                        </div>
+                        <div class="segment-main flex-grow-1">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <span class="airline-name">{{ flightUtils.getAirlineName(segment.carrierCode) }} {{
+                                    segment.number }}</span>
+                                <span class="segment-duration">{{
+                                    flightUtils.minutesToString(flightUtils.durationToMinutes(segment.duration)) }}</span>
+                            </div>
+                            <div class="d-flex justify-content-between text-secondary small">
+                                <span>{{ segment.departure.iataCode }} → {{ segment.arrival.iataCode }}</span>
+                                <span>{{ segment.aircraft.code }}</span>
+                            </div>
+                        </div>
+                        <div class="toggle-icon ms-2">
+                            <i class="bi" [ngClass]="isSegmentExpanded(0, i) ? 'bi-chevron-up' : 'bi-chevron-down'"></i>
+                        </div>
+                    </div>
+
+                    <!-- Detalles del segmento (expandible) -->
+                    <div class="segment-details p-3 border-top" *ngIf="isSegmentExpanded(0, i)">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="departure-details">
+                                    <h6 class="mb-2">Salida</h6>
+                                    <p class="mb-1">{{ flightUtils.formatDate(segment.departure.at) }} - {{
+                                        flightUtils.formatTime(segment.departure.at) }}</p>
+                                    <p class="mb-1">{{ segment.departure.iataCode }}</p>
+                                    @if (segment.departure.terminal) {
+                                    <p class="mb-0">Terminal {{ segment.departure.terminal }}</p>
+                                    }
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="arrival-details">
+                                    <h6 class="mb-2">Llegada</h6>
+                                    <p class="mb-1">{{ flightUtils.formatDate(segment.arrival.at) }} - {{
+                                        flightUtils.formatTime(segment.arrival.at) }}</p>
+                                    <p class="mb-1">{{ segment.arrival.iataCode }}</p>
+                                    @if (segment.arrival.terminal) {
+                                    <p class="mb-0">Terminal {{ segment.arrival.terminal }}</p>
+                                    }
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row mt-3">
+                            <div class="col-12">
+                                <div class="cabin-info">
+                                    <h6 class="mb-2">Información de cabina</h6>
+                                    @if (flightOffer.travelerPricings && flightOffer.travelerPricings.length > 0) {
+                                    @for (pricing of flightOffer.travelerPricings; track pricing.travelerId) {
+                                    @for (fareDetail of pricing.fareDetailsBySegment; track fareDetail.segmentId) {
+                                    @if (fareDetail.segmentId === segment.id) {
+                                    <p class="mb-1">Clase: {{ flightUtils.getCabinClass(fareDetail.cabin) }}</p>
+                                    @if (fareDetail.includedCheckedBags) {
+                                    <p class="mb-0">Equipaje incluido: {{ fareDetail.includedCheckedBags.quantity }}
+                                        maleta(s)</p>
+                                    }
+                                    }
+                                    }
+                                    }
+                                    }
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Información de escala si hay un segmento siguiente -->
+                @if (i < flightOffer.itineraries[0].segments.length - 1) { <div
+                    class="layover-info mb-3 py-2 px-3 bg-light rounded">
+                    <div class="d-flex align-items-center text-secondary">
+                        <i class="bi bi-clock me-2"></i>
+                        <div>
+                            <span class="fw-medium">Escala de {{
+                                flightUtils.minutesToString(flightUtils.getLayoverDuration(segment,
+                                flightOffer.itineraries[0].segments[i+1])) }} en {{ segment.arrival.iataCode }}</span>
+                        </div>
+                    </div>
+            </div>
+            }
+            }
+        </div>
+
+        <!-- Itinerario de vuelta (si existe) -->
+        @if (flightOffer.itineraries.length > 1) {
+        <hr class="my-4">
+        <h6 class="text-secondary mb-3">Vuelo de regreso - {{
+            flightUtils.formatDate(flightOffer.itineraries[1].segments[0].departure.at) }}</h6>
+
+        <!-- Línea de tiempo del vuelo de vuelta -->
+        <div class="timeline-container mb-4">
+            <div class="timeline-header d-flex justify-content-between">
+                <div class="departure">
+                    <div class="fw-bold">{{ flightUtils.formatTime(flightOffer.itineraries[1].segments[0].departure.at)
+                        }}</div>
+                    <div>{{ flightOffer.itineraries[1].segments[0].departure.iataCode }}</div>
+                </div>
+                <div class="duration text-center">
+                    <div class="text-secondary">{{ getTotalDuration(flightOffer, 1) }}</div>
+                    <div class="flight-line position-relative">
+                        <div class="flight-stops"></div>
+                    </div>
+                    <div class="text-secondary">{{ flightUtils.getStopsLabel(flightOffer.itineraries[1].segments) }}
+                    </div>
+                </div>
+                <div class="arrival">
+                    <div class="fw-bold">{{
+                        flightUtils.formatTime(flightOffer.itineraries[1].segments[flightOffer.itineraries[1].segments.length-1].arrival.at)
+                        }}</div>
+                    <div>{{
+                        flightOffer.itineraries[1].segments[flightOffer.itineraries[1].segments.length-1].arrival.iataCode
+                        }}</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Segmentos del vuelo de vuelta -->
+        <div class="segments-container">
+            @for (segment of flightOffer.itineraries[1].segments; track segment.id; let i = $index) {
+            <div class="segment-card mb-3">
+                <div class="segment-header d-flex align-items-center p-3" (click)="toggleSegmentDetails(1, i)">
+                    <div class="airline-logo me-3">
+                        <img [src]="getAirlineLogo(segment.carrierCode)" alt="Airline" class="img-fluid"
+                            style="max-height: 40px;">
+                    </div>
+                    <div class="segment-main flex-grow-1">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <span class="airline-name">{{ flightUtils.getAirlineName(segment.carrierCode) }} {{
+                                segment.number }}</span>
+                            <span class="segment-duration">{{
+                                flightUtils.minutesToString(flightUtils.durationToMinutes(segment.duration)) }}</span>
+                        </div>
+                        <div class="d-flex justify-content-between text-secondary small">
+                            <span>{{ segment.departure.iataCode }} → {{ segment.arrival.iataCode }}</span>
+                            <span>{{ segment.aircraft.code }}</span>
+                        </div>
+                    </div>
+                    <div class="toggle-icon ms-2">
+                        <i class="bi" [ngClass]="isSegmentExpanded(1, i) ? 'bi-chevron-up' : 'bi-chevron-down'"></i>
+                    </div>
+                </div>
+
+                <!-- Detalles del segmento (expandible) -->
+                <div class="segment-details p-3 border-top" *ngIf="isSegmentExpanded(1, i)">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="departure-details">
+                                <h6 class="mb-2">Salida</h6>
+                                <p class="mb-1">{{ flightUtils.formatDate(segment.departure.at) }} - {{
+                                    flightUtils.formatTime(segment.departure.at) }}</p>
+                                <p class="mb-1">{{ segment.departure.iataCode }}</p>
+                                @if (segment.departure.terminal) {
+                                <p class="mb-0">Terminal {{ segment.departure.terminal }}</p>
+                                }
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="arrival-details">
+                                <h6 class="mb-2">Llegada</h6>
+                                <p class="mb-1">{{ flightUtils.formatDate(segment.arrival.at) }} - {{
+                                    flightUtils.formatTime(segment.arrival.at) }}</p>
+                                <p class="mb-1">{{ segment.arrival.iataCode }}</p>
+                                @if (segment.arrival.terminal) {
+                                <p class="mb-0">Terminal {{ segment.arrival.terminal }}</p>
+                                }
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row mt-3">
+                        <div class="col-12">
+                            <div class="cabin-info">
+                                <h6 class="mb-2">Información de cabina</h6>
+                                @if (flightOffer.travelerPricings && flightOffer.travelerPricings.length > 0) {
+                                @for (pricing of flightOffer.travelerPricings; track pricing.travelerId) {
+                                @for (fareDetail of pricing.fareDetailsBySegment; track fareDetail.segmentId) {
+                                @if (fareDetail.segmentId === segment.id) {
+                                <p class="mb-1">Clase: {{ flightUtils.getCabinClass(fareDetail.cabin) }}</p>
+                                @if (fareDetail.includedCheckedBags) {
+                                <p class="mb-0">Equipaje incluido: {{ fareDetail.includedCheckedBags.quantity }}
+                                    maleta(s)</p>
+                                }
+                                }
+                                }
+                                }
+                                }
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Información de escala si hay un segmento siguiente -->
+            @if (i < flightOffer.itineraries[1].segments.length - 1) { <div
+                class="layover-info mb-3 py-2 px-3 bg-light rounded">
+                <div class="d-flex align-items-center text-secondary">
+                    <i class="bi bi-clock me-2"></i>
+                    <div>
+                        <span class="fw-medium">Escala de {{
+                            flightUtils.minutesToString(flightUtils.getLayoverDuration(segment,
+                            flightOffer.itineraries[1].segments[i+1])) }} en {{ segment.arrival.iataCode }}</span>
+                    </div>
+                </div>
+        </div>
+        }
+        }
+    </div>
+    }
+</div>
+</div>
+
+<!-- Sección de tarifas alternativas -->
+<div class="card mb-4">
+    <div class="card-header bg-primary text-white">
+        <h5 class="mb-0">Selecciona tu tarifa</h5>
+    </div>
+    <div class="card-body">
+        @if (isLoading) {
+        <div class="d-flex justify-content-center my-4">
+            <div class="spinner-border text-primary" role="status">
+                <span class="visually-hidden">Cargando...</span>
+            </div>
+        </div>
+        }
+
+        @if (hasError) {
+        <div class="alert alert-warning">
+            <i class="bi bi-exclamation-triangle me-2"></i>
+            {{ errorMessage }}
+        </div>
+        }
+
+        @if (!isLoading && !hasError) {
+        <!-- Tarifa original -->
+        <div class="fare-option mb-3" [class.selected]="selectedOffer?.id === flightOffer.id">
+            <div class="row">
+                <div class="col-md-4">
+                    <div class="fare-type p-3">
+                        <h6 class="mb-2">Tarifa Básica</h6>
+                        <ul class="list-unstyled mb-0">
+                            @for (benefit of getFareBenefits(flightOffer); track $index) {
+                            <li class="mb-1">
+                                <i class="bi bi-check-circle-fill text-success me-2"></i>
+                                {{ benefit }}
+                            </li>
+                            }
+                        </ul>
+                    </div>
+                </div>
+                <div class="col-md-8">
+                    <div class="fare-details d-flex justify-content-between align-items-center p-3">
+                        <div class="price-info">
+                            <div class="total-price h5 mb-1">{{ flightOffer.price.total |
+                                currency:(searchParams?.currency || 'USD') }}</div>
+                            <div class="price-details small text-secondary">
+                                Precio final
+                                @if (flightOffer.travelerPricings.length > 1) {
+                                para {{ flightOffer.travelerPricings.length }} pasajeros
+                                }
+                            </div>
+                        </div>
+                        <div class="action-buttons">
+                            <button class="btn btn-outline-primary me-2" (click)="selectOffer(flightOffer)">
+                                Ver detalles
+                            </button>
+                            <button class="btn btn-primary" (click)="verifyAndBook(flightOffer)">
+                                Seleccionar
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Tarifas alternativas -->
+        @if (alternativeOffers.length > 0) {
+        @for (offer of alternativeOffers; track offer.id) {
+        @if (offer.id !== flightOffer.id) {
+        <div class="fare-option mb-3" [class.selected]="selectedOffer?.id === offer.id">
+            <div class="row">
+                <div class="col-md-4">
+                    <div class="fare-type p-3">
+                        <h6 class="mb-2">Tarifa {{ offer.travelerPricings[0].fareOption || 'Alternativa' }}</h6>
+                        <ul class="list-unstyled mb-0">
+                            @for (benefit of getFareBenefits(offer); track $index) {
+                            <li class="mb-1">
+                                <i class="bi bi-check-circle-fill text-success me-2"></i>
+                                {{ benefit }}
+                            </li>
+                            }
+                        </ul>
+                    </div>
+                </div>
+                <div class="col-md-8">
+                    <div class="fare-details d-flex justify-content-between align-items-center p-3">
+                        <div class="price-info">
+                            <div class="total-price h5 mb-1">{{ offer.price.total | currency:(searchParams?.currency ||
+                                'USD') }}</div>
+                            <div class="price-details small text-secondary">
+                                Precio final
+                                @if (offer.travelerPricings.length > 1) {
+                                para {{ offer.travelerPricings.length }} pasajeros
+                                }
+                            </div>
+                        </div>
+                        <div class="action-buttons">
+                            <button class="btn btn-outline-primary me-2" (click)="selectOffer(offer)">
+                                Ver detalles
+                            </button>
+                            <button class="btn btn-primary" (click)="verifyAndBook(offer)">
+                                Seleccionar
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        }
+        }
+        } @else {
+        <div class="alert alert-info">
+            <i class="bi bi-info-circle me-2"></i>
+            No hay tarifas alternativas disponibles para este vuelo.
+        </div>
+        }
+        }
+    </div>
+</div>
+
+<!-- Sección de políticas y condiciones -->
+<div class="card">
+    <div class="card-header bg-light">
+        <h5 class="mb-0">Políticas y condiciones</h5>
+    </div>
+    <div class="card-body">
+        <div class="row">
+            <div class="col-md-4">
+                <div class="policy-section mb-3">
+                    <h6 class="mb-2"><i class="bi bi-calendar-x me-2"></i>Política de cancelación</h6>
+                    <p class="mb-0">Consulta con la aerolínea {{
+                        flightUtils.getAirlineName(flightOffer.validatingAirlineCodes[0]) }} para conocer las políticas
+                        de cancelación específicas.</p>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="policy-section mb-3">
+                    <h6 class="mb-2"><i class="bi bi-shield-check me-2"></i>Condiciones de compra</h6>
+                    <p class="mb-0">Al confirmar la reserva, aceptas las condiciones de la aerolínea. La tarifa podría
+                        cambiar si no se emite inmediatamente.</p>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="policy-section mb-3">
+                    <h6 class="mb-2"><i class="bi bi-credit-card me-2"></i>Métodos de pago</h6>
+                    <p class="mb-0">Aceptamos tarjetas de crédito/débito y transferencias bancarias. Todos los pagos son
+                        procesados de forma segura.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+</div>

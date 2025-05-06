@@ -1,63 +1,143 @@
 <div class="flight-results-container">
-    <!-- Header con información del viaje -->
-    <header class="results-header">
-      <div class="container py-4">
-        <div class="row align-items-center">
-          <div class="col-md-8">
-            <h1 class="results-title">Vuelos de {{ searchParams?.origin }} a {{ searchParams?.destination }}</h1>
-            <div class="travel-info">
-              <span class="travel-dates">
-                <i class="bi bi-calendar3"></i>
-                {{ searchParams?.departureDate | date:'dd MMM' }}
-                @if (searchParams?.returnDate) {
-                  - {{ searchParams?.returnDate | date:'dd MMM' }}
-                }
-              </span>
-              <span class="travel-passengers">
-                <i class="bi bi-person"></i>
-                {{ searchParams?.adults }} {{ searchParams?.adults === 1 ? 'adulto' : 'adultos' }}
-                @if (searchParams?.children) {
-                  , {{ searchParams?.children }} {{ searchParams?.children === 1 ? 'niño' : 'niños' }}
-                }
-                @if (searchParams?.infants) {
-                  , {{ searchParams?.infants }} {{ searchParams?.infants === 1 ? 'bebé' : 'bebés' }}
-                }
-              </span>
-              @if(searchParams?.travelClass) {
-                <span class="travel-class">
-                  <i class="bi bi-star"></i>
-                  {{ flightUtils.getCabinClass(searchParams?.travelClass || 'default') }}
-                </span>
+  <!-- Header con información del viaje -->
+  <header class="results-header">
+    <div class="container py-4">
+      <div class="row align-items-center">
+        <div class="col-md-8">
+          <h1 class="results-title">Vuelos de {{ searchParams?.origin }} a {{ searchParams?.destination }}</h1>
+          <div class="travel-info">
+            <span class="travel-dates">
+              <i class="bi bi-calendar3"></i>
+              {{ searchParams?.departureDate | date:'dd MMM' }}
+              @if (searchParams?.returnDate) {
+              - {{ searchParams?.returnDate | date:'dd MMM' }}
+              }
+            </span>
+            <span class="travel-passengers">
+              <i class="bi bi-person"></i>
+              {{ searchParams?.adults }} {{ searchParams?.adults === 1 ? 'adulto' : 'adultos' }}
+              @if (searchParams?.children) {
+              , {{ searchParams?.children }} {{ searchParams?.children === 1 ? 'niño' : 'niños' }}
+              }
+              @if (searchParams?.infants) {
+              , {{ searchParams?.infants }} {{ searchParams?.infants === 1 ? 'bebé' : 'bebés' }}
+              }
+            </span>
+            @if(searchParams?.travelClass) {
+            <span class="travel-class">
+              <i class="bi bi-star"></i>
+              {{ flightUtils.getCabinClass(searchParams?.travelClass || 'default') }}
+            </span>
+            }
+          </div>
+        </div>
+        <div class="col-md-4 text-md-end">
+          <button class="btn btn-outline mt-2 mt-md-0" routerLink="/home/flight-search">
+            <i class="bi bi-arrow-left"></i> Modificar búsqueda
+          </button>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <div class="container">
+    <div class="row">
+      <!-- Filtros laterales (visible en desktop) -->
+      <div class="col-lg-3 d-none d-lg-block filter-sidebar">
+        <div class="filters-panel">
+          <div class="filters-header">
+            <h2 class="filter-title">Filtros</h2>
+            <button class="reset-filters-btn" (click)="resetFilters()">
+              <i class="bi bi-arrow-counterclockwise"></i> Restablecer
+            </button>
+          </div>
+
+          <!-- Filtro de precio -->
+          <div class="filter-section">
+            <h3 class="filter-section-title">Precio</h3>
+            <div class="price-range">
+              <div class="price-slider mb-3">
+                <input type="range" class="form-range" min="{{ priceRange.min }}" max="{{ priceRange.max }}"
+                  [(ngModel)]="priceRange.max" (change)="onFilterChange()">
+              </div>
+              <div class="price-labels">
+                <span>{{ priceRange.min | currency:(searchParams?.currency || 'USD') }}</span>
+                <span>{{ priceRange.max | currency:(searchParams?.currency || 'USD') }}</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Filtro de aerolíneas -->
+          <div class="filter-section">
+            <h3 class="filter-section-title">Aerolíneas</h3>
+            <div class="airlines-filter">
+              @for (airline of selectedAirlines; track airline) {
+              <div class="form-check">
+                <input class="form-check-input" type="checkbox" id="airline-{{ airline }}"
+                  [checked]="selectedAirlines.includes(airline)" (change)="onFilterChange()">
+                <label class="form-check-label" for="airline-{{ airline }}">
+                  {{ getAirlineName(airline) }}
+                </label>
+              </div>
               }
             </div>
           </div>
-          <div class="col-md-4 text-md-end">
-            <button class="btn btn-outline mt-2 mt-md-0" routerLink="/home/flight-search">
-              <i class="bi bi-arrow-left"></i> Modificar búsqueda
-            </button>
+
+          <!-- Filtro de clases de cabina -->
+          <div class="filter-section">
+            <h3 class="filter-section-title">Clase de cabina</h3>
+            <div class="cabin-filter">
+              @for (cabin of selectedCabins; track cabin) {
+              <div class="form-check">
+                <input class="form-check-input" type="checkbox" id="cabin-{{ cabin }}"
+                  [checked]="selectedCabins.includes(cabin)" (change)="onFilterChange()">
+                <label class="form-check-label" for="cabin-{{ cabin }}">
+                  {{ flightUtils.getCabinClass(cabin) }}
+                </label>
+              </div>
+              }
+            </div>
+          </div>
+
+          <!-- Filtro de escalas -->
+          <div class="filter-section">
+            <h3 class="filter-section-title">Escalas</h3>
+            <div class="form-check">
+              <input class="form-check-input" type="checkbox" id="direct-flights" [(ngModel)]="directFlightsOnly"
+                (change)="onFilterChange()">
+              <label class="form-check-label" for="direct-flights">
+                Solo vuelos directos
+              </label>
+            </div>
           </div>
         </div>
       </div>
-    </header>
-  
-    <div class="container">
-      <div class="row">
-        <!-- Filtros laterales (visible en desktop) -->
-        <div class="col-lg-3 d-none d-lg-block filter-sidebar">
-          <div class="filters-panel">
-            <div class="filters-header">
-              <h2 class="filter-title">Filtros</h2>
-              <button class="reset-filters-btn" (click)="resetFilters()">
-                <i class="bi bi-arrow-counterclockwise"></i> Restablecer
-              </button>
-            </div>
-            
+
+      <!-- Botón de filtros (visible en móvil) -->
+      <div class="d-lg-none mobile-filter-toggle">
+        <button class="btn btn-outline w-100 my-3" (click)="toggleFilters()">
+          <i class="bi bi-sliders"></i> Filtros
+        </button>
+      </div>
+
+      <!-- Filtros móviles (oculto por defecto) -->
+      <div class="mobile-filters" [class.show]="showFilters">
+        <div class="mobile-filters-overlay" (click)="toggleFilters()"></div>
+        <div class="mobile-filters-panel">
+          <div class="mobile-filters-header">
+            <h3>Filtros</h3>
+            <button class="close-filters-btn" (click)="toggleFilters()">
+              <i class="bi bi-x-lg"></i>
+            </button>
+          </div>
+
+          <div class="mobile-filters-content">
             <!-- Filtro de precio -->
             <div class="filter-section">
               <h3 class="filter-section-title">Precio</h3>
               <div class="price-range">
                 <div class="price-slider mb-3">
-                  <input type="range" class="form-range" min="{{ priceRange.min }}" max="{{ priceRange.max }}" 
+                  <input type="range" class="form-range" min="{{ priceRange.min }}" max="{{ priceRange.max }}"
                     [(ngModel)]="priceRange.max" (change)="onFilterChange()">
                 </div>
                 <div class="price-labels">
@@ -66,308 +146,297 @@
                 </div>
               </div>
             </div>
-            
+
             <!-- Filtro de aerolíneas -->
             <div class="filter-section">
               <h3 class="filter-section-title">Aerolíneas</h3>
               <div class="airlines-filter">
                 @for (airline of selectedAirlines; track airline) {
-                  <div class="form-check">
-                    <input class="form-check-input" type="checkbox" 
-                      id="airline-{{ airline }}"
-                      [checked]="selectedAirlines.includes(airline)"
-                      (change)="onFilterChange()">
-                    <label class="form-check-label" for="airline-{{ airline }}">
-                      {{ getAirlineName(airline) }}
-                    </label>
-                  </div>
+                <div class="form-check">
+                  <input class="form-check-input" type="checkbox" id="mobile-airline-{{ airline }}"
+                    [checked]="selectedAirlines.includes(airline)" (change)="onFilterChange()">
+                  <label class="form-check-label" for="mobile-airline-{{ airline }}">
+                    {{ getAirlineName(airline) }}
+                  </label>
+                </div>
                 }
               </div>
             </div>
-            
+
+            <!-- Filtro de clases de cabina -->
+            <div class="filter-section">
+              <h3 class="filter-section-title">Clase de cabina</h3>
+              <div class="cabin-filter">
+                @for (cabin of selectedCabins; track cabin) {
+                <div class="form-check">
+                  <input class="form-check-input" type="checkbox" id="mobile-cabin-{{ cabin }}"
+                    [checked]="selectedCabins.includes(cabin)" (change)="onFilterChange()">
+                  <label class="form-check-label" for="mobile-cabin-{{ cabin }}">
+                    {{ flightUtils.getCabinClass(cabin) }}
+                  </label>
+                </div>
+                }
+              </div>
+            </div>
+
             <!-- Filtro de escalas -->
             <div class="filter-section">
               <h3 class="filter-section-title">Escalas</h3>
               <div class="form-check">
-                <input class="form-check-input" type="checkbox" id="direct-flights"
+                <input class="form-check-input" type="checkbox" id="mobile-direct-flights"
                   [(ngModel)]="directFlightsOnly" (change)="onFilterChange()">
-                <label class="form-check-label" for="direct-flights">
+                <label class="form-check-label" for="mobile-direct-flights">
                   Solo vuelos directos
                 </label>
               </div>
             </div>
           </div>
+
+          <div class="mobile-filters-footer">
+            <button class="btn btn-outline" (click)="resetFilters()">
+              Restablecer
+            </button>
+            <button class="btn btn-primary" (click)="toggleFilters()">
+              Aplicar filtros
+            </button>
+          </div>
         </div>
-        
-        <!-- Botón de filtros (visible en móvil) -->
-        <div class="d-lg-none mobile-filter-toggle">
-          <button class="btn btn-outline w-100 my-3" (click)="toggleFilters()">
-            <i class="bi bi-sliders"></i> Filtros
+      </div>
+
+      <!-- Resultados de vuelos -->
+      <div class="col-lg-9">
+        <!-- Barra de ordenación -->
+        <div class="sort-panel">
+          <div class="results-count">
+            {{ filteredOffers.length }} resultados encontrados
+          </div>
+          <div class="sort-options">
+            <label for="sortBy">Ordenar por:</label>
+            <select id="sortBy" class="form-select form-select-sm" [(ngModel)]="sortOption" (change)="sortResults()">
+              <option value="price_asc">Precio (menor a mayor)</option>
+              <option value="price_desc">Precio (mayor a menor)</option>
+              <option value="duration_asc">Duración (más corto primero)</option>
+              <option value="departure_asc">Hora de salida (más temprano)</option>
+              <option value="arrival_asc">Hora de llegada (más temprano)</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- Estado de carga -->
+        @if (isLoading) {
+        <div class="loading-container">
+          <div class="spinner"></div>
+          <p>Cargando resultados...</p>
+        </div>
+        }
+
+        <!-- Lista de resultados -->
+        @if (!isLoading && paginatedOffers.length === 0) {
+        <div class="no-results">
+          <i class="bi bi-x-circle"></i>
+          <p>No se encontraron vuelos que coincidan con los filtros seleccionados.</p>
+          <button class="btn btn-primary" (click)="resetFilters()">
+            Restablecer filtros
           </button>
         </div>
-        
-        <!-- Filtros móviles (oculto por defecto) -->
-        <div class="mobile-filters" [class.show]="showFilters">
-          <div class="mobile-filters-overlay" (click)="toggleFilters()"></div>
-          <div class="mobile-filters-panel">
-            <div class="mobile-filters-header">
-              <h3>Filtros</h3>
-              <button class="close-filters-btn" (click)="toggleFilters()">
-                <i class="bi bi-x-lg"></i>
-              </button>
-            </div>
-            
-            <div class="mobile-filters-content">
-              <!-- Filtro de precio -->
-              <div class="filter-section">
-                <h3 class="filter-section-title">Precio</h3>
-                <div class="price-range">
-                  <div class="price-slider mb-3">
-                    <input type="range" class="form-range" min="{{ priceRange.min }}" max="{{ priceRange.max }}" 
-                      [(ngModel)]="priceRange.max" (change)="onFilterChange()">
-                  </div>
-                  <div class="price-labels">
-                    <span>{{ priceRange.min | currency:(searchParams?.currency || 'USD') }}</span>
-                    <span>{{ priceRange.max | currency:(searchParams?.currency || 'USD') }}</span>
-                  </div>
-                </div>
+        }
+
+        @for (offer of paginatedOffers; track offer.id) {
+        <div class="flight-card">
+          <!-- Vuelo de ida -->
+          <div class="flight-info">
+            <div class="flight-route">
+              <div class="flight-airline">
+                <img [src]="getAirlineLogo(offer.validatingAirlineCodes[0])"
+                  alt="{{ offer.validatingAirlineCodes[0] }}">
+                <span>{{ getAirlineName(offer.validatingAirlineCodes[0]) }}</span>
+                @if (hasFlightCabinInfo(offer)) {
+                <span class="cabin-badge">{{ flightUtils.getCabinClass(getFlightPrimaryCabin(offer)) }}</span>
+                }
               </div>
-              
-              <!-- Filtro de aerolíneas -->
-              <div class="filter-section">
-                <h3 class="filter-section-title">Aerolíneas</h3>
-                <div class="airlines-filter">
-                  @for (airline of selectedAirlines; track airline) {
-                    <div class="form-check">
-                      <input class="form-check-input" type="checkbox" 
-                        id="mobile-airline-{{ airline }}"
-                        [checked]="selectedAirlines.includes(airline)"
-                        (change)="onFilterChange()">
-                      <label class="form-check-label" for="mobile-airline-{{ airline }}">
-                        {{ getAirlineName(airline) }}
-                      </label>
+              <div class="flight-main-details">
+                <div class="flight-departure">
+                  <div class="flight-time">{{ formatTime(offer.itineraries[0].segments[0].departure.at) }}</div>
+                  <div class="flight-airport">{{ offer.itineraries[0].segments[0].departure.iataCode }}</div>
+                  <div class="flight-date">{{ formatDate(offer.itineraries[0].segments[0].departure.at) }}</div>
+                </div>
+                <div class="flight-duration">
+                  <div class="flight-duration-line">
+                    <div class="flight-stops-indicator">
+                      @for (segment of offer.itineraries[0].segments; track segment.id) {
+                      @if (!$first) {
+                      <div class="stop-point"></div>
+                      }
+                      <div class="flight-line" [class.last-segment]="$last"></div>
+                      }
                     </div>
+                  </div>
+                  <div class="flight-duration-time">{{ minutesToString(durationToMinutes(offer.itineraries[0].duration))
+                    }}</div>
+                  <div class="flight-stops">{{ getStopsLabel(offer.itineraries[0].segments) }}</div>
+                </div>
+                <div class="flight-arrival">
+                  @if (offer.itineraries[0].segments.length > 0) {
+                  @let lastSegment = offer.itineraries[0].segments[offer.itineraries[0].segments.length - 1];
+                  <div class="flight-time">{{ formatTime(lastSegment.arrival.at) }}</div>
+                  <div class="flight-airport">{{ lastSegment.arrival.iataCode }}</div>
+                  <div class="flight-date">{{ formatDate(lastSegment.arrival.at) }}</div>
                   }
                 </div>
               </div>
-              
-              <!-- Filtro de escalas -->
-              <div class="filter-section">
-                <h3 class="filter-section-title">Escalas</h3>
-                <div class="form-check">
-                  <input class="form-check-input" type="checkbox" id="mobile-direct-flights"
-                    [(ngModel)]="directFlightsOnly" (change)="onFilterChange()">
-                  <label class="form-check-label" for="mobile-direct-flights">
-                    Solo vuelos directos
-                  </label>
+            </div>
+
+            <!-- Detalles de escalas (oculto por defecto) -->
+            @if (offer.itineraries[0].segments.length > 1) {
+            <div class="flight-stops-details">
+              @for (segment of offer.itineraries[0].segments; track segment.id; let i = $index; let last = $last) {
+              @if (i < offer.itineraries[0].segments.length - 1) { <div class="layover-info">
+                <div class="layover-info">
+                  <div class="layover-airport">
+                    <i class="bi bi-geo-alt"></i>
+                    Escala en {{ segment.arrival.iataCode }} - {{
+                    flightUtils.minutesToString(flightUtils.getLayoverDuration(segment,
+                    offer.itineraries[0].segments[i+1])) }} de espera
+                  </div>
                 </div>
-              </div>
             </div>
-            
-            <div class="mobile-filters-footer">
-              <button class="btn btn-outline" (click)="resetFilters()">
-                Restablecer
-              </button>
-              <button class="btn btn-primary" (click)="toggleFilters()">
-                Aplicar filtros
-              </button>
-            </div>
+            }
+            }
           </div>
+          }
         </div>
-        
-        <!-- Resultados de vuelos -->
-        <div class="col-lg-9">
-          <!-- Barra de ordenación -->
-          <div class="sort-panel">
-            <div class="results-count">
-              {{ filteredOffers.length }} resultados encontrados
+
+        <!-- Vuelo de regreso (si corresponde) -->
+        @if (offer.itineraries.length > 1) {
+        <div class="flight-info return-flight">
+          <div class="flight-route">
+            <div class="flight-airline">
+              <img [src]="getAirlineLogo(offer.validatingAirlineCodes[0])" alt="{{ offer.validatingAirlineCodes[0] }}">
+              <span>{{ getAirlineName(offer.validatingAirlineCodes[0]) }}</span>
+              <!-- Clase de cabina -->
+              @if (hasFlightCabinInfo(offer)) {
+              <span class="cabin-badge">{{ flightUtils.getCabinClass(getFlightPrimaryCabin(offer)) }}</span>
+              }
             </div>
-            <div class="sort-options">
-              <label for="sortBy">Ordenar por:</label>
-              <select id="sortBy" class="form-select form-select-sm" 
-                [(ngModel)]="sortOption" (change)="sortResults()">
-                <option value="price_asc">Precio (menor a mayor)</option>
-                <option value="price_desc">Precio (mayor a menor)</option>
-                <option value="duration_asc">Duración (más corto primero)</option>
-                <option value="departure_asc">Hora de salida (más temprano)</option>
-                <option value="arrival_asc">Hora de llegada (más temprano)</option>
-              </select>
-            </div>
-          </div>
-          
-          <!-- Estado de carga -->
-          @if (isLoading) {
-            <div class="loading-container">
-              <div class="spinner"></div>
-              <p>Cargando resultados...</p>
-            </div>
-          }
-          
-          <!-- Lista de resultados -->
-          @if (!isLoading && paginatedOffers.length === 0) {
-            <div class="no-results">
-              <i class="bi bi-x-circle"></i>
-              <p>No se encontraron vuelos que coincidan con los filtros seleccionados.</p>
-              <button class="btn btn-primary" (click)="resetFilters()">
-                Restablecer filtros
-              </button>
-            </div>
-          }
-          
-          @for (offer of paginatedOffers; track offer.id) {
-            <div class="flight-card">
-              <!-- Vuelo de ida -->
-              <div class="flight-info">
-                <div class="flight-route">
-                  <div class="flight-airline">
-                    <img [src]="getAirlineLogo(offer.validatingAirlineCodes[0])" 
-                          alt="{{ offer.validatingAirlineCodes[0] }}">
-                    <span>{{ getAirlineName(offer.validatingAirlineCodes[0]) }}</span>
-                  </div>
-                  <div class="flight-main-details">
-                    <div class="flight-departure">
-                      <div class="flight-time">{{ formatTime(offer.itineraries[0].segments[0].departure.at) }}</div>
-                      <div class="flight-airport">{{ offer.itineraries[0].segments[0].departure.iataCode }}</div>
-                      <div class="flight-date">{{ formatDate(offer.itineraries[0].segments[0].departure.at) }}</div>
-                    </div>
-                    <div class="flight-duration">
-                      <div class="flight-duration-line">
-                        <div class="flight-stops-indicator">
-                          @for (segment of offer.itineraries[0].segments; track segment.id) {
-                            @if (!$first) {
-                              <div class="stop-point"></div>
-                            }
-                            <div class="flight-line" [class.last-segment]="$last"></div>
-                          }
-                        </div>
-                      </div>
-                      <div class="flight-duration-time">{{ formatDuration(parseDuration(offer.itineraries[0].duration)) }}</div>
-                      <div class="flight-stops">{{ getStopsLabel(offer.itineraries[0].segments) }}</div>
-                    </div>
-                    <div class="flight-arrival">
-                      @if (offer.itineraries[0].segments.length > 0) {
-                        @let lastSegment = offer.itineraries[0].segments[offer.itineraries[0].segments.length - 1];
-                        <div class="flight-time">{{ formatTime(lastSegment.arrival.at) }}</div>
-                        <div class="flight-airport">{{ lastSegment.arrival.iataCode }}</div>
-                        <div class="flight-date">{{ formatDate(lastSegment.arrival.at) }}</div>
-                      }
-                    </div>
-                  </div>
-                </div>
-  
-                <!-- Detalles de escalas (oculto por defecto) -->
-                @if (offer.itineraries[0].segments.length > 1) {
-                  <div class="flight-stops-details">
-                    @for (segment of offer.itineraries[0].segments; track segment.id; let i = $index; let last = $last) {
-                      @if (i < offer.itineraries[0].segments.length - 1) {
-                        <div class="layover-info">
-                          <div class="layover-airport">
-                            <i class="bi bi-geo-alt"></i>
-                            Escala en {{ segment.arrival.iataCode }} - {{ flightUtils.formatDuration(flightUtils.getLayoverDuration(segment, offer.itineraries[0].segments[i+1])) }} de espera
-                          </div>
-                        </div>
-                      }
+            <div class="flight-main-details">
+              <div class="flight-departure">
+                <div class="flight-time">{{ formatTime(offer.itineraries[1].segments[0].departure.at) }}</div>
+                <div class="flight-airport">{{ offer.itineraries[1].segments[0].departure.iataCode }}</div>
+                <div class="flight-date">{{ formatDate(offer.itineraries[1].segments[0].departure.at) }}</div>
+              </div>
+              <div class="flight-duration">
+                <div class="flight-duration-line">
+                  <div class="flight-stops-indicator">
+                    @for (segment of offer.itineraries[1].segments; track segment.id) {
+                    @if ($first) {
+                    <div class="stop-point"></div>
+                    }
+                    <div class="flight-line" [class.last-segment]="$last"></div>
                     }
                   </div>
-                }
+                </div>
+                <div class="flight-duration-time">{{ minutesToString(durationToMinutes(offer.itineraries[1].duration))
+                  }}</div>
+                <div class="flight-stops">{{ getStopsLabel(offer.itineraries[1].segments) }}</div>
               </div>
-              
-              <!-- Vuelo de regreso (si corresponde) -->
-              @if (offer.itineraries.length > 1) {
-                <div class="flight-info return-flight">
-                  <div class="flight-route">
-                    <div class="flight-airline">
-                      <img [src]="getAirlineLogo(offer.validatingAirlineCodes[0])" 
-                            alt="{{ offer.validatingAirlineCodes[0] }}">
-                      <span>{{ getAirlineName(offer.validatingAirlineCodes[0]) }}</span>
-                    </div>
-                    <div class="flight-main-details">
-                      <div class="flight-departure">
-                        <div class="flight-time">{{ formatTime(offer.itineraries[1].segments[0].departure.at) }}</div>
-                        <div class="flight-airport">{{ offer.itineraries[1].segments[0].departure.iataCode }}</div>
-                        <div class="flight-date">{{ formatDate(offer.itineraries[1].segments[0].departure.at) }}</div>
-                      </div>
-                      <div class="flight-duration">
-                        <div class="flight-duration-line">
-                          <div class="flight-stops-indicator">
-                            @for (segment of offer.itineraries[1].segments; track segment.id) {
-                              @if ($first) {
-                                <div class="stop-point"></div>
-                              }
-                              <div class="flight-line" [class.last-segment]="$last"></div>
-                            }
-                          </div>
-                        </div>
-                        <div class="flight-duration-time">{{ formatDuration(parseDuration(offer.itineraries[1].duration)) }}</div>
-                        <div class="flight-stops">{{ getStopsLabel(offer.itineraries[1].segments) }}</div>
-                      </div>
-                      <div class="flight-arrival">
-                        @if (offer.itineraries[1].segments.length > 0) {
-                          @let lastSegment = offer.itineraries[1].segments[offer.itineraries[1].segments.length - 1];
-                          <div class="flight-time">{{ formatTime(lastSegment.arrival.at) }}</div>
-                          <div class="flight-airport">{{ lastSegment.arrival.iataCode }}</div>
-                          <div class="flight-date">{{ formatDate(lastSegment.arrival.at) }}</div>*
-                        }
-                      </div>
-                    </div>
-                  </div>
-  
-                  <!-- Detalles de escalas del vuelo de regreso -->
-                  @if (offer.itineraries[1].segments.length > 1) {
-                    <div class="flight-stops-details">
-                      @for (segment of offer.itineraries[1].segments; track segment.id; let i = $index) {
-                        @if (i < offer.itineraries[1].segments.length - 1) {
-                          <div class="layover-info">
-                            <div class="layover-airport">
-                              <i class="bi bi-geo-alt"></i>
-                              Escala en {{ segment.arrival.iataCode }} - {{ flightUtils.formatDuration(flightUtils.getLayoverDuration(segment, offer.itineraries[1].segments[i+1])) }} de espera
-                            </div>
-                          </div>
-                        }
-                      }
-                    </div>
-                  }
-                </div>
-              }
-              
-              <!-- Precio y botón de reserva -->
-              <div class="flight-price-booking">
-                <div class="flight-price">
-                  <div class="price-amount">{{ offer.price.total | currency:(searchParams?.currency || 'USD') }}</div>
-                  <div class="price-person">por persona</div>
-                </div>
-                <button class="btn btn-primary book-btn" (click)="bookFlight(offer)">
-                  Seleccionar
-                </button>
+              <div class="flight-arrival">
+                @if (offer.itineraries[1].segments.length > 0) {
+                @let lastSegment = offer.itineraries[1].segments[offer.itineraries[1].segments.length - 1];
+                <div class="flight-time">{{ formatTime(lastSegment.arrival.at) }}</div>
+                <div class="flight-airport">{{ lastSegment.arrival.iataCode }}</div>
+                <div class="flight-date">{{ formatDate(lastSegment.arrival.at) }}</div>*
+                }
               </div>
             </div>
+          </div>
+
+          <!-- Detalles de escalas del vuelo de regreso -->
+          @if (offer.itineraries[1].segments.length > 1) {
+          <div class="flight-stops-details">
+            @for (segment of offer.itineraries[1].segments; track segment.id; let i = $index) {
+            @if (i < offer.itineraries[1].segments.length - 1) { <div class="layover-info">
+              <div class="layover-info">
+                <div class="layover-airport">
+                  <i class="bi bi-geo-alt"></i>
+                  Escala en {{ segment.arrival.iataCode }} - {{
+                  flightUtils.minutesToString(flightUtils.getLayoverDuration(segment,
+                  offer.itineraries[1].segments[i+1]))
+                  }} de espera
+                </div>
+              </div>
+          </div>
           }
-          
-          <!-- Paginación -->
-          @if (totalPages > 1) {
-            <nav class="pagination-container">
-              <ul class="pagination">
-                <li class="page-item" [class.disabled]="currentPage === 1">
-                  <a class="page-link" (click)="changePage(currentPage - 1)">
-                    <i class="bi bi-chevron-left"></i>
-                  </a>
-                </li>
-                
-                @for (page of [].constructor(totalPages); track $index; let i = $index) {
-                  <li class="page-item" [class.active]="currentPage === i + 1">
-                    <a class="page-link" (click)="changePage(i + 1)">{{ i + 1 }}</a>
-                  </li>
-                }
-                
-                <li class="page-item" [class.disabled]="currentPage === totalPages">
-                  <a class="page-link" (click)="changePage(currentPage + 1)">
-                    <i class="bi bi-chevron-right"></i>
-                  </a>
-                </li>
-              </ul>
-            </nav>
           }
+        </div>
+        }
+      </div>
+      }
+
+      <!-- Precio y botón de reserva -->
+      <div class="flight-price-booking">
+        <div class="flight-price">
+          <div class="price-amount">{{ offer.price.total | currency:(searchParams?.currency || 'USD') }}</div>
+          <div class="price-details">
+            <div class="price-label">Precio total</div>
+            @if (offer.travelerPricings.length > 1) {
+            <div class="price-passengers">{{ offer.travelerPricings.length }} pasajeros</div>
+            }
+          </div>
+        </div>
+        <div class="action-buttons">
+          <button class="btn btn-outline-primary me-2" (click)="showFlightDetails(offer)">
+            <i class="bi bi-list-ul me-1"></i> Ver más
+          </button>
+          <button class="btn btn-primary book-btn" (click)="bookFlight(offer)">
+            Seleccionar
+          </button>
         </div>
       </div>
     </div>
+    }
+
+    <!-- Paginación -->
+    @if (totalPages > 1) {
+    <nav class="pagination-container">
+      <ul class="pagination">
+        <li class="page-item" [class.disabled]="currentPage === 1">
+          <a class="page-link" (click)="changePage(currentPage - 1)">
+            <i class="bi bi-chevron-left"></i>
+          </a>
+        </li>
+
+        @for (page of [].constructor(totalPages); track $index; let i = $index) {
+        <li class="page-item" [class.active]="currentPage === i + 1">
+          <a class="page-link" (click)="changePage(i + 1)">{{ i + 1 }}</a>
+        </li>
+        }
+
+        <li class="page-item" [class.disabled]="currentPage === totalPages">
+          <a class="page-link" (click)="changePage(currentPage + 1)">
+            <i class="bi bi-chevron-right"></i>
+          </a>
+        </li>
+      </ul>
+    </nav>
+    }
   </div>
+</div>
+</div>
+<div class="flight-detail-modal" [class.show]="showDetailModal">
+  <div class="modal-overlay" (click)="closeDetailModal()"></div>
+  <div class="modal-content">
+    <div class="modal-header">
+      <h5 class="modal-title">Detalles del vuelo</h5>
+      <button type="button" class="btn-close" (click)="closeDetailModal()">
+        <i class="bi bi-x-lg"></i>
+      </button>
+    </div>
+    <div class="modal-body">
+      @if (selectedFlightForDetail) {
+      <app-deviaje-flight-detail [flightOffer]="selectedFlightForDetail" [searchParams]="searchParams">
+      </app-deviaje-flight-detail>
+      }
+    </div>
+  </div>
+</div>
+</div>

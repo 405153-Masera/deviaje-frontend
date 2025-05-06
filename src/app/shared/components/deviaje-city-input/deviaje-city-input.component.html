@@ -6,7 +6,7 @@
     <div class="input-with-icon">
         <i class="{{ icon }}"></i>
         <input id="{{label}}" type="text" [placeholder]="placeholder" [value]="displayValue"
-            (input)="onInputChange($event)" [class]="class" autocomplete="off" #cityInput>
+            (input)="onInputChange($event)" [disabled]="isDisabled" autocomplete="off">
         <div class="city-suggestions" [class.show]="isSuggestionsOpen">
             @if(isLoading) {
             <div class="suggestion-loading">

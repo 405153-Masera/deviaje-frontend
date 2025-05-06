@@ -103,12 +103,16 @@
   .airlines-filter {
     max-height: 200px;
     overflow-y: auto;
-
-    .form-check {
-      margin-bottom: 0.5rem;
-
-      &:last-child {
-        margin-bottom: 0;
+    .cabin-filter {
+      max-height: 200px;
+      overflow-y: auto;
+  
+      .form-check {
+        margin-bottom: 0.5rem;
+  
+        &:last-child {
+          margin-bottom: 0;
+        }
       }
     }
   }
@@ -312,6 +316,16 @@
           font-size: 0.8rem;
           color: $gray-700;
         }
+
+        .cabin-badge {
+          display: inline-block;
+          background-color: $background-selected;
+          color: $text-selected-color;
+          font-size: 0.7rem;
+          padding: 0.2rem 0.5rem;
+          border-radius: $border-radius-sm;
+          margin-top: 0.25rem;
+        }
       }
 
       .flight-main-details {
@@ -448,22 +462,38 @@
         color: $black;
       }
 
-      .price-person {
-        font-size: 0.8rem;
-        color: $gray-600;
+      .price-details {
+        .price-label {
+          font-size: 0.8rem;
+          color: $gray-600;
+        }
+        
+        .price-passengers {
+          font-size: 0.75rem;
+          color: $gray-500;
+        }
       }
     }
 
-    .book-btn {
-      min-width: 120px;
+    .action-buttons {
+      display: flex;
+      gap: 0.75rem;
+      
+      .book-btn {
+        min-width: 120px;
+      }
     }
 
     @include mobile {
       flex-direction: column;
       gap: 1rem;
 
-      .book-btn {
+      .action-buttons {
         width: 100%;
+        
+        button {
+          flex: 1;
+        }
       }
     }
   }
@@ -548,6 +578,95 @@
         color: $gray-400;
         pointer-events: none;
       }
+    }
+  }
+}
+
+// Modal de detalles de vuelo
+.flight-detail-modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 2000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  visibility: hidden;
+  transition: all 0.3s ease;
+  
+  &.show {
+    opacity: 1;
+    visibility: visible;
+  }
+  
+  .modal-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba($black, 0.5);
+    backdrop-filter: blur(2px);
+  }
+  
+  .modal-content {
+    position: relative;
+    width: 90%;
+    max-width: 1000px;
+    max-height: 90vh;
+    background-color: $white;
+    border-radius: $border-radius-lg;
+    box-shadow: $dropdown-shadow;
+    display: flex;
+    flex-direction: column;
+    transform: translateY(20px);
+    transition: transform 0.3s ease;
+    overflow: hidden;
+    
+    .modal-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 1rem 1.5rem;
+      border-bottom: 1px solid $gray-200;
+      
+      .modal-title {
+        font-weight: 600;
+        margin: 0;
+      }
+      
+      .btn-close {
+        background: none;
+        border: none;
+        font-size: 1.5rem;
+        color: $gray-700;
+        cursor: pointer;
+        padding: 0;
+        line-height: 1;
+        
+        &:hover {
+          color: $black;
+        }
+      }
+    }
+    
+    .modal-body {
+      padding: 0;
+      overflow-y: auto;
+    }
+  }
+  
+  &.show .modal-content {
+    transform: translateY(0);
+  }
+  
+  @include mobile {
+    .modal-content {
+      width: 95%;
+      max-height: 95vh;
     }
   }
 }

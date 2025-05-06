@@ -1,31 +1,49 @@
 import { Injectable } from '@angular/core';
-import { FlightOffer, Itinerary, Segment } from '../models/flights';
+import { FlightDictionaries, FlightOffer, Itinerary, Segment } from '../models/flights';
 
 @Injectable({
   providedIn: 'root'
 })
 export class FlightUtilsService {
 
+  //Datos de Amadeus para manejoar los codigos
+  private carriers: { [code: string]: string } = {};
+  private aircraft: { [code: string]: string } = {};
+
+  /**
+   * Establece los diccionarios desde la respuesta de Amadeus
+   * @param dictionaries Diccionarios recibidos desde Amadeus
+   */
+  setDictionaries(dictionaries: FlightDictionaries): void {
+    if (dictionaries.carriers) {
+      this.carriers = dictionaries.carriers;
+    }
+    
+    if (dictionaries.aircraft) {
+      this.aircraft = dictionaries.aircraft;
+    }
+  }
+
    /**
-   * Calcula la duración total de un vuelo en minutos
+   * Calcula la duración total de un itinerario
    * @param offer Oferta de vuelo
    * @param itineraryIndex Índice del itinerario (0 para ida, 1 para vuelta)
    * @returns Duración en minutos
    */
-   getTotalDurationMinutes(offer: FlightOffer, itineraryIndex: number = 0): number {
+   getItineraryDurationMinutes(offer: FlightOffer, itineraryIndex: number = 0): number {
     if (!offer.itineraries || !offer.itineraries[itineraryIndex]) {
       return 0;
     }
-    
-    return this.parseDuration(offer.itineraries[itineraryIndex].duration);
+
+    return this.durationToMinutes(offer.itineraries[itineraryIndex].duration);
   }
 
   /**
-   * Formatea la duración en formato legible (Xh Ym)
+   * Formatea la duración de minutos a un formato legible hh:mm
    * @param minutes Duración en minutos
    * @returns Formato legible de duración
    */
-  formatDuration(minutes: number): string {
+  minutesToString(minutes: number): string {
     const hours = Math.floor(minutes / 60);
     const mins = minutes % 60;
     return `${hours}h ${mins}m`;
@@ -36,12 +54,12 @@ export class FlightUtilsService {
    * @param duration Duración en formato PT2H30M
    * @returns Duración en minutos
    */
-  parseDuration(duration: string): number {
+  durationToMinutes(duration: string): number {
     if (!duration) return 0;
     
     let totalMinutes = 0;
     // Formato PT2H30M (2 horas y 30 minutos)
-    const hourMatch = duration.match(/(\d+)H/);
+    const hourMatch = duration.match(/(\d+)H/); // match captura la expresión regular ["2H", "2"] 
     const minuteMatch = duration.match(/(\d+)M/);
     
     if (hourMatch) {
@@ -56,8 +74,8 @@ export class FlightUtilsService {
 
   /**
    * Formatea una fecha en formato corto (día, mes)
-   * @param dateString Fecha en formato ISO
-   * @returns Fecha formateada
+   * @param dateString Fecha en formato ISO "2025-05-05T00:00:00Z"
+   * @returns Fecha formateada "lun., 05 may."
    */
   formatDate(dateString: string): string {
     if (!dateString) return '';
@@ -86,11 +104,11 @@ export class FlightUtilsService {
   }
 
   /**
-   * Obtiene la hora de llegada del último segmento de un itinerario
+   * Obtiene la fecha de llegada del último segmento de un itinerario
    * @param itinerary Itinerario del vuelo
    * @returns Fecha de llegada
    */
-  getArrivalTime(itinerary: Itinerary): Date {
+  getArrivalDate(itinerary: Itinerary): Date {
     if (!itinerary || !itinerary.segments || itinerary.segments.length === 0) {
       return new Date();
     }
@@ -152,21 +170,23 @@ export class FlightUtilsService {
    * @returns Nombre de la aerolínea
    */
   getAirlineName(code: string): string {
-    const airlines: Record<string, string> = {
-      'AA': 'American Airlines',
-      'DL': 'Delta Air Lines',
-      'UA': 'United Airlines',
-      'LH': 'Lufthansa',
-      'BA': 'British Airways',
-      'AF': 'Air France',
-      'IB': 'Iberia',
-      'AV': 'Avianca',
-      'LA': 'LATAM Airlines',
-      'AR': 'Aerolíneas Argentinas',
-      // Añadir más aerolíneas según sea necesario
-    };
+    const name = this.carriers[code];
+    if (!name) return '';
     
-    return airlines[code] || code;
+    return name
+      .toLowerCase() // primero lo pasamos todo a minúsculas
+      .split(' ')     // separamos por espacio
+      .map(word => word.charAt(0).toUpperCase() + word.slice(1)) // capitalizamos cada palabra
+      .join(' ');     // volvemos a unirlo
+  }
+  
+  /**
+   * Obtiene el nombre del modelo de avión a partir de su código
+   * @param code Código del avión
+   * @returns Nombre del modelo de avión
+   */
+  getAircraftName(code: string): string {
+    return this.aircraft[code];
   }
   
   /**

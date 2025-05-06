@@ -39,6 +39,16 @@ select {
   background-position: right 15px center;
   background-size: 16px;
   padding-right: 40px;
+
+  option {
+    background-color: white;
+    color: $gray-600;
+    margin-left: 0%;
+    &:hover {
+      border-color: $primary-color;
+    }
+  }
+  
 }
 
 // Inputs con iconos
@@ -95,7 +105,6 @@ select {
   color: $tertiary-color;
   font-size: 0.8rem;
   margin-top: 0.25rem;
-  //min-height: 1.5em; /* o lo que mida el mensaje */
   display: block;
   visibility: hidden;
 }
