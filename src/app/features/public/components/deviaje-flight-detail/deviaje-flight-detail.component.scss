@@ -1,0 +1,135 @@
+@import '../../../../../assets/styles/variables';
+
+.flight-detail-container {
+  padding: 1.5rem 0;
+  
+  .card {
+    border: none;
+    border-radius: $border-radius;
+    box-shadow: $box-shadow;
+    overflow: hidden;
+    
+    .card-header {
+      padding: 1rem 1.5rem;
+    }
+  }
+  
+  // Timeline para vuelos
+  .timeline-container {
+    padding: 1rem 0;
+    
+    .timeline-header {
+      position: relative;
+      padding: 0 1rem;
+      
+      .departure, .arrival {
+        text-align: center;
+        min-width: 80px;
+      }
+      
+      .duration {
+        flex: 1;
+        padding: 0 1.5rem;
+        
+        .flight-line {
+          height: 2px;
+          background-color: $gray-300;
+          margin: 0.5rem 0;
+          
+          .flight-stops {
+            position: absolute;
+            top: 50%;
+            left: 0;
+            width: 100%;
+            transform: translateY(-50%);
+          }
+        }
+      }
+    }
+  }
+  
+  // Segmentos de vuelo
+  .segment-card {
+    border: 1px solid $gray-200;
+    border-radius: $border-radius;
+    overflow: hidden;
+    
+    .segment-header {
+      background-color: $white;
+      cursor: pointer;
+      transition: $transition-normal;
+      
+      &:hover {
+        background-color: $gray-100;
+      }
+    }
+    
+    .segment-details {
+      background-color: $gray-500;
+    }
+  }
+  
+  // Opciones de tarifas
+  .fare-option {
+    border: 1px solid $gray-200;
+    border-radius: $border-radius;
+    overflow: hidden;
+    transition: $transition-normal;
+    
+    &.selected {
+      border-color: $primary-color;
+      box-shadow: 0 0 0 1px $primary-color;
+    }
+    
+    .fare-type {
+      background-color: $gray-100;
+      height: 100%;
+    }
+    
+    .fare-details {
+      height: 100%;
+    }
+    
+    &:hover {
+      box-shadow: $hover-shadow;
+      transform: translateY(-2px);
+    }
+  }
+  
+  // Información de escala
+  .layover-info {
+    border-left: 3px solid $gray-400;
+  }
+  
+  // Sección de políticas
+  .policy-section {
+    h6 {
+      color: $gray-700;
+    }
+    
+    p {
+      color: $gray-600;
+      font-size: 0.9rem;
+    }
+  }
+  
+  // Ajustes para móviles
+  @include mobile {
+    .fare-option {
+      .fare-details {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 1rem;
+        
+        .action-buttons {
+          width: 100%;
+          display: flex;
+          
+          button {
+            flex: 1;
+          }
+        }
+      }
+    }
+  }
+}

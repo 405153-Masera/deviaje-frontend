@@ -31,7 +31,8 @@
   
   // Animación para elementos que aparecen
   .dropdown-menu.show,
-  .passenger-dropdown.show,
+  .custom-calendar.show,
+  .dropdown-search,
   .city-suggestions.show {
     animation: fadeIn 0.3s ease forwards;
   }

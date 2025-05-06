@@ -346,12 +346,6 @@ export class DeviajeCalendarComponent implements OnInit {
   
 }
 
-interface PopularDateRange {
-  startDate: Date;
-  endDate: Date;
-  label?: string;
-}
-
 interface DatePrice {
   date: Date;
   price: number;

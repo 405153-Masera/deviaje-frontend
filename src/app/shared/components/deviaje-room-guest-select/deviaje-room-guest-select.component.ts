@@ -82,11 +82,15 @@ export class DeviajeRoomGuestSelectComponent {
 
   incrementGuest(type: 'adults' | 'children', event: Event): void {
     event.stopPropagation();
-    if (type === 'adults' && this.totalGuest < this.maxAdultsPerRoom) {
-      this.adults++;
-    } else if (type === 'children' && this.totalGuest < this.maxAdultsPerRoom) {
-      this.children++;
-    }
+    if (this.totalGuest < this.maxAdultsPerRoom) {
+      
+      if(type === 'adults') {
+        this.adults++;
+       } else if(type=== 'children') {
+        
+          this.children++;
+       }
+    }  
     this.emitChange();
   }
 

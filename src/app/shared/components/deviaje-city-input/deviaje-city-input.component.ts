@@ -3,15 +3,20 @@ import {
   Input,
   OnDestroy,
   OnInit,
-  Output,
-  EventEmitter,
-  ElementRef,
-  ViewChild,
-  inject
+  inject,
+  forwardRef,
 } from '@angular/core';
 import { CityDto } from '../../models/locations';
-import { catchError, debounceTime, of, Subject, Subscription, switchMap } from 'rxjs';
+import {
+  catchError,
+  debounceTime,
+  of,
+  Subject,
+  Subscription,
+  switchMap,
+} from 'rxjs';
 import { CityService } from '../../services/city.service';
+import { ControlValueAccessor, NG_VALUE_ACCESSOR } from '@angular/forms';
 
 @Component({
   selector: 'app-deviaje-city-input',
@@ -19,30 +24,35 @@ import { CityService } from '../../services/city.service';
   imports: [],
   templateUrl: './deviaje-city-input.component.html',
   styleUrl: './deviaje-city-input.component.scss',
+  providers: [
+    {
+      provide: NG_VALUE_ACCESSOR,
+      useExisting: forwardRef(() => DeviajeCityInputComponent),
+      multi: true
+    }
+  ]
 })
-export class DeviajeCityInputComponent implements OnInit, OnDestroy {
-  
+export class DeviajeCityInputComponent
+  implements OnInit, OnDestroy, ControlValueAccessor
+{
+  // Propiedades requeridas por ControlValueAccessor
+  private onChange: (value: CityDto | null) => void = () => {};
+  private onTouched: () => void = () => {};
+  private selectedCity: CityDto | null = null; // Almacena la ciudad seleccionada
+
   @Input() label: string = '';
-  @Input() placeholder: string = 'Ciudad o aeropuerto';
+  @Input() placeholder: string = 'Ciudad';
   @Input() icon: string = 'bi bi-geo-alt';
-  @Input() cityCode: string = ''; 
-  @Input() class: string = '';
-
-  @Output() citySelected = new EventEmitter<CityDto>();
-
-  @ViewChild('cityInput') cityInput!: ElementRef;
 
   displayValue: string = '';
   cities: CityDto[] = [];
   isLoading: boolean = false;
   isSuggestionsOpen: boolean = false;
+  isDisabled: boolean = false; 
 
   private readonly cityService: CityService = inject(CityService);
   private citySearch = new Subject<string>();
   private subscription: Subscription = new Subscription();
-
-  private onChange: any = () => {};
-  private onTouched: any = () => {};
 
   ngOnInit(): void {
     this.subscription = this.citySearch
@@ -50,12 +60,14 @@ export class DeviajeCityInputComponent implements OnInit, OnDestroy {
         debounceTime(300),
         switchMap((term) => {
           this.isLoading = true;
-          return term.length < 2 ? of([]) : this.cityService.searchCities(term).pipe(
-            catchError(error => {
-              console.error('Error al buscar ciudades:', error);
-              return of([]);
-            })
-          )
+          return term.length < 2
+            ? of([])
+            : this.cityService.searchCities(term).pipe(
+                catchError((error) => {
+                  console.error('Error al buscar ciudades:', error);
+                  return of([]);
+                })
+              );
         })
       )
       .subscribe((cities) => {
@@ -74,6 +86,11 @@ export class DeviajeCityInputComponent implements OnInit, OnDestroy {
     const query = target.value;
     this.displayValue = query;
 
+    // Si el usuario escribe algo, reseteamos la ciudad seleccionada
+    this.selectedCity = null;
+    this.onChange(null); // Notificar al formulario que no hay ciudad seleccionada
+    this.onTouched(); // Marcar como tocado
+
     // Emitir el valor para búsqueda
     if (query.length >= 3) {
       this.citySearch.next(query);
@@ -83,19 +100,41 @@ export class DeviajeCityInputComponent implements OnInit, OnDestroy {
   }
 
   selectCity(city: CityDto): void {
+    this.selectedCity = city;
     this.displayValue = `${city.name} (${city.iataCode})`;
-    this.cityInput.nativeElement.value = this.displayValue;
     this.isSuggestionsOpen = false;
-    this.citySelected.emit(city);
+    this.onChange(city); // Notificar al formulario del nuevo valor
+    this.onTouched(); // Marcar como tocado
   }
 
   closeDropdown(): void {
     this.isSuggestionsOpen = false;
   }
 
-  focus(): void {
-    if (this.cityInput) {
-      this.cityInput.nativeElement.focus();
+
+  //Se llama cuando en el formulario se establece un valor inicial
+  writeValue(value: CityDto | null): void {
+    if (value) {
+      this.selectedCity = value;
+      this.displayValue = `${value.name} (${value.iataCode})`;
+    } else {
+      this.selectedCity = null;
+      this.displayValue = '';
     }
+  }
+
+  // Se ejecuta cuando el valor del control cambia
+  registerOnChange(fn: (value: CityDto | null) => void): void {
+    this.onChange = fn;
+  }
+
+  // Se ejecuta cuando el control es tocado
+  registerOnTouched(fn: () => void): void {
+    this.onTouched = fn;
+  }
+
+  // Permite deshabilitar el control si se requiere
+  setDisabledState(isDisabled: boolean): void {
+    this.isDisabled = isDisabled;
   }
 }

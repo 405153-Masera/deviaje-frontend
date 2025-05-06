@@ -10,7 +10,6 @@ import { DeviajeCalendarComponent } from '../../../../shared/components/deviaje-
 import { FlightService } from '../../../../shared/services/flight.service';
 import {
   FormBuilder,
-  FormControl,
   FormGroup,
   ReactiveFormsModule,
   Validators,
@@ -18,52 +17,49 @@ import {
 import {
   Subscription,
 } from 'rxjs';
-import { CityDto } from '../../../../shared/models/locations';
 import { Router } from '@angular/router';
 import { FlightSearchRequest } from '../../../../shared/models/flights';
 import { DeviajeCityInputComponent } from '../../../../shared/components/deviaje-city-input/deviaje-city-input.component';
 import { DeviajePassengerSelectComponent } from "../../../../shared/components/deviaje-passenger-select/deviaje-passenger-select.component";
+import { DateFormatPipe } from '../../../../shared/pipes/date-format.pipe';
 
 @Component({
   selector: 'app-deviaje-flights-search',
   standalone: true,
-  imports: [CommonModule, DeviajeCalendarComponent, ReactiveFormsModule, DeviajeCityInputComponent, DeviajePassengerSelectComponent],
+  imports: [CommonModule, DeviajeCalendarComponent, ReactiveFormsModule, 
+    DeviajeCityInputComponent, DeviajePassengerSelectComponent,
+    DateFormatPipe
+  ],
   templateUrl: './deviaje-flights-search.component.html',
   styleUrl: './deviaje-flights-search.component.scss',
 })
 export class DeviajeFlightsSearchComponent implements OnInit, OnDestroy {
+
+  private today: Date = new Date();
+  private departureInitialDate: Date = new Date(this.today);
+  private returnInitialDate: Date = new Date(this.today);
+  
   private readonly fb: FormBuilder = inject(FormBuilder);
-  private readonly flightService: FlightService = inject(FlightService);
   private readonly router: Router = inject(Router);
   subscription: Subscription = new Subscription();
 
   // Esto sirve para usar los componentes en el type script
   @ViewChild('dateCalendar') calendar!: DeviajeCalendarComponent;
-  @ViewChild('originCityInput') originCityInput!: DeviajeCityInputComponent;
-  @ViewChild('destinationCityInput')
-  destinationCityInput!: DeviajeCityInputComponent;
-
-  originControl = new FormControl('', Validators.required);
-  destinationControl = new FormControl('', Validators.required);
 
   formSearch: FormGroup = this.fb.group({
-    origin: this.originControl,
-    destination: this.destinationControl,
-    departureDate: [null, Validators.required],
-    returnDate: [null],
+    origin: [null, Validators.required],
+    destination: [null, Validators.required],
+    departureDate: [this.departureInitialDate, Validators.required],
+    returnDate: [this.returnInitialDate],
     adults: [1, [Validators.required, Validators.min(1), Validators.max(9)]],
     children: [0],
     infants: [0],
     travelClass: [''],
-    currency: [''],
+    currency: ['ARS'],
     nonStop: [false],
   });
 
   tripType: 'roundtrip' | 'oneway' | 'multicity' = 'roundtrip';
-
-  //Estas variables las uso para las ciudades
-  originCity: string = '';  // Para almacenar el código IATA
-  destinationCity: string = '';  // Para almacenar el código IATA
 
   // Variables para pasajeros
   adults: number = 1;
@@ -82,7 +78,9 @@ export class DeviajeFlightsSearchComponent implements OnInit, OnDestroy {
   isLoading: boolean = false;
 
   ngOnInit(): void {
-    
+    this.updateReturnDateValidators();
+    this.departureInitialDate.setDate(this.today.getDate() + 10);
+    this.returnInitialDate.setDate(this.today.getDate() + 17);
   }
 
   ngOnDestroy(): void {
@@ -126,17 +124,6 @@ export class DeviajeFlightsSearchComponent implements OnInit, OnDestroy {
     this.currentCalendarField = null;
   }
 
-  formatDisplayDate(date: Date | null): string {
-    if (!date) return '';
-
-    // Formatea la fecha como dd/mm/aaaa
-    const day = date.getDate().toString().padStart(2, '0');
-    const month = (date.getMonth() + 1).toString().padStart(2, '0');
-    const year = date.getFullYear();
-
-    return `${day}/${month}/${year}`;
-  }
-
   selectSingleDate(date: Date | null): void {
     this.departureDate = date;
     this.formSearch.get('departureDate')?.setValue(date);
@@ -169,27 +156,10 @@ export class DeviajeFlightsSearchComponent implements OnInit, OnDestroy {
     this.formSearch.get('returnDate')?.updateValueAndValidity();
   }
 
-  onOriginCitySelected(city: CityDto): void {
-
-    this.originCity = city.iataCode;
-    this.formSearch.get('origin')?.setValue(city.iataCode);
-  }
-
-  onDestinationCitySelected(city: CityDto): void {
-
-    this.destinationCity = city.iataCode;
-    this.formSearch.get('destination')?.setValue(city.iataCode);
-  }
-
   // Método para intercambiar origen y destino
   swapLocations(): void {
     const originValue = this.formSearch.get('origin')?.value;
     const destinationValue = this.formSearch.get('destination')?.value;
-    const origin = this.originCity;
-    const destination = this.destinationCity;
-
-    this.originCity = destination;
-    this.destinationCity = origin;
     this.formSearch.get('origin')?.setValue(destinationValue);
     this.formSearch.get('destination')?.setValue(originValue);
   }
@@ -210,8 +180,8 @@ export class DeviajeFlightsSearchComponent implements OnInit, OnDestroy {
 
     // Solo incluye los campos obligatorios inicialmente
     const searchParams: FlightSearchRequest = {
-      origin: this.formSearch.get('origin')?.value!,
-      destination: this.formSearch.get('destination')?.value!,
+      origin: this.formSearch.get('origin')?.value.iataCode,
+      destination: this.formSearch.get('destination')?.value.iataCode,
       departureDate: formatDate(this.formSearch.get('departureDate')?.value)!,
       adults: this.formSearch.get('adults')?.value!,
     };
@@ -252,25 +222,10 @@ export class DeviajeFlightsSearchComponent implements OnInit, OnDestroy {
       searchParams.nonStop = nonStop;
     }
 
-    this.subscription = this.flightService
-      .searchFlights(searchParams)
-      .subscribe({
-        next: (flightOffers) => {
-          this.isLoading = false;
-
-          console.log('Resultados de búsqueda:', flightOffers);
-          this.router.navigate(['/home/flight/results'], {
-            state: { flightOffers, searchParams },
-          });
-        },
-        error: (error) => {
-          console.error('Error en la búsqueda de vuelos:', error);
-          this.isLoading = false;
-          alert(
-            'Ocurrió un error al buscar los vuelos. Por favor, intenta de nuevo.'
-          );
-        },
-      });
+    this.router.navigate(['/home/flight/results'], {
+      state: { searchParams }
+    });
+    this.isLoading = false;
   }
 
   handlePassengersChanged(passengers: {adults: number, children: number, infants: number}): void {
@@ -282,5 +237,15 @@ export class DeviajeFlightsSearchComponent implements OnInit, OnDestroy {
     this.formSearch.get('adults')?.setValue(this.adults);
     this.formSearch.get('children')?.setValue(this.children);
     this.formSearch.get('infants')?.setValue(this.infants);
+  }
+
+  private updateReturnDateValidators(): void {
+    const returnDateControl = this.formSearch.get('returnDate');
+    if (this.tripType === 'roundtrip') {
+      returnDateControl?.setValidators(Validators.required);
+    } else {
+      returnDateControl?.clearValidators();
+    }
+    returnDateControl?.updateValueAndValidity();
   }
 }
