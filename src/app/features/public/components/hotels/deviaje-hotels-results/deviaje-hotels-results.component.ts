@@ -34,7 +34,7 @@ export class DeviajeHotelsResultsComponent implements OnInit {
   errorMessage: string = '';
   
   // Filtros
-  priceRange: { min: number, max: number } = { min: 0, max: 10000 };
+  priceRange: { min: number; max: number; current: number } = { min: 0, max: 10000 , current: 10000 };
   selectedCategories: string[] = [];
   sortOption: string = 'price_asc';
   showFilters: boolean = false;
@@ -158,6 +158,7 @@ export class DeviajeHotelsResultsComponent implements OnInit {
     const prices = hotels.map(hotel => hotel.minRate || 0);
     this.priceRange.min = Math.floor(Math.min(...prices));
     this.priceRange.max = Math.ceil(Math.max(...prices));
+    this.priceRange.current = this.priceRange.max;
     
     // Categorías de hotel
     const categories = new Set<string>();
@@ -259,7 +260,11 @@ export class DeviajeHotelsResultsComponent implements OnInit {
       this.selectedHotelForDetail = hotel;
       this.showDetailModal = true;
     } else {
-      // En modo normal, navegar a página de detalle
+      console.log('Navigating to hotel detail with code:', hotel.code); // Depura
+        if (!hotel.code) {
+            console.error('Hotel code is missing:', hotel);
+            return; // Evitar navegar si no hay code
+        }
       this.router.navigate(['/home/hotels/detail', hotel.code], {
         state: { hotel, searchParams: this.searchParams }
       });

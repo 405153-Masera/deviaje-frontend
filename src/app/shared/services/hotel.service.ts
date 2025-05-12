@@ -18,7 +18,7 @@ export class HotelService {
    * @returns Observable con los resultados de la búsqueda
    */
   findHotelsByCity(params: HotelSearchRequest): Observable<any> {
-    return this.http.post<any>(`${this.url}/by-city`, params)
+    return this.http.post<any>(`${this.url}`, params)
       .pipe(
         catchError(error => {
           console.error('Error buscando hoteles:', error);
