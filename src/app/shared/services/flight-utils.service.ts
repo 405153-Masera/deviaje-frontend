@@ -10,6 +10,9 @@ export class FlightUtilsService {
   private carriers: { [code: string]: string } = {};
   private aircraft: { [code: string]: string } = {};
 
+  // Mapa para almacenar los pares de códigos de tarifa y sus etiquetas
+  private brandedFareLabels: Map<string, string> = new Map();
+
   /**
    * Establece los diccionarios desde la respuesta de Amadeus
    * @param dictionaries Diccionarios recibidos desde Amadeus
@@ -24,6 +27,237 @@ export class FlightUtilsService {
     }
   }
 
+  /**
+   * Extrae y almacena las etiquetas de tarifas de una oferta de vuelo
+   * @param offer Oferta de vuelo recibida de la API
+   */
+  extractBrandedFares(offer: FlightOffer): void {
+    if (!offer || !offer.travelerPricings) return;
+    
+    for (const pricing of offer.travelerPricings) {
+      if (!pricing.fareDetailsBySegment) continue;
+      
+      for (const segment of pricing.fareDetailsBySegment) {
+        if (segment.brandedFare && segment.brandedFareLabel) {
+          this.brandedFareLabels.set(segment.brandedFare, segment.brandedFareLabel);
+        }
+      }
+    }
+  }
+
+   /**
+   * Extrae y almacena las etiquetas de tarifas de múltiples ofertas
+   * @param offers Lista de ofertas de vuelo
+   */
+   extractBrandedFaresFromOffers(offers: FlightOffer[]): void {
+    if (!offers || !offers.length) return;
+    
+    offers.forEach(offer => this.extractBrandedFares(offer));
+  }
+
+   /**
+   * Obtiene el nombre de una tarifa a partir de su código
+   * @param code Código de la tarifa brandedFare
+   * @returns Nombre legible de la tarifa
+   */
+   getBrandedFareName(code: string): string {
+    if (!code) return 'Tarifa Estándar';
+    
+    return this.brandedFareLabels.get(code) || `Tarifa ${code}`;
+  }
+
+  /**
+   * Verifica si una oferta tiene diferentes tarifas para ida y vuelta
+   * @param offer Oferta de vuelo
+   * @returns true si hay diferentes tarifas en ida y vuelta
+   */
+  hasDifferentFaresInTrip(offer: FlightOffer): boolean {
+    if (!offer.travelerPricings || !offer.itineraries || offer.itineraries.length <= 1) {
+      return false;
+    }
+    
+    const faresByItinerary = new Map<number, Set<string>>();
+    
+    for (const pricing of offer.travelerPricings) {
+      if (!pricing.fareDetailsBySegment) continue;
+      
+      for (const detail of pricing.fareDetailsBySegment) {
+        // Encontrar a qué itinerario pertenece este segmento
+        let itineraryIndex = -1;
+        
+        for (let i = 0; i < offer.itineraries.length; i++) {
+          if (offer.itineraries[i].segments.some(seg => seg.id === detail.segmentId)) {
+            itineraryIndex = i;
+            break;
+          }
+        }
+        
+        if (itineraryIndex !== -1) {
+          if (!faresByItinerary.has(itineraryIndex)) {
+            faresByItinerary.set(itineraryIndex, new Set<string>());
+          }
+          
+          if (detail.brandedFare) {
+            faresByItinerary.get(itineraryIndex)!.add(detail.brandedFare);
+          }
+        }
+      }
+    }
+    
+    // Verificar si hay diferencias entre las tarifas de ida y vuelta
+    if (faresByItinerary.size >= 2) {
+      const fares0 = faresByItinerary.get(0);
+      const fares1 = faresByItinerary.get(1);
+      
+      if (fares0 && fares1) {
+        // Convertir a arrays para comparar
+        const array0 = Array.from(fares0);
+        const array1 = Array.from(fares1);
+        
+        if (array0.length !== array1.length) return true;
+        
+        for (const fare of array0) {
+          if (!array1.includes(fare)) return true;
+        }
+        
+        for (const fare of array1) {
+          if (!array0.includes(fare)) return true;
+        }
+      }
+    }
+    
+    return false;
+  }
+
+  /**
+   * Obtiene las tarifas de un itinerario específico
+   * @param offer Oferta de vuelo
+   * @param itineraryIndex Índice del itinerario (0 para ida, 1 para vuelta)
+   * @returns Array de nombres de tarifas
+   */
+  getItineraryFares(offer: FlightOffer, itineraryIndex: number): string[] {
+    const fares: string[] = [];
+    
+    if (!offer.travelerPricings) return fares;
+    
+    for (const pricing of offer.travelerPricings) {
+      if (!pricing.fareDetailsBySegment) continue;
+      
+      for (const detail of pricing.fareDetailsBySegment) {
+        // Verificar si este detalle pertenece al itinerario solicitado
+        let belongsToItinerary = false;
+        
+        if (offer.itineraries && offer.itineraries[itineraryIndex]) {
+          belongsToItinerary = offer.itineraries[itineraryIndex].segments.some(
+            seg => seg.id === detail.segmentId
+          );
+        }
+        
+        if (belongsToItinerary && detail.brandedFare) {
+          const fareName = this.getBrandedFareName(detail.brandedFare);
+          if (!fares.includes(fareName)) {
+            fares.push(fareName);
+          }
+        }
+      }
+    }
+    
+    return fares;
+  }
+
+  /**
+   * Obtiene todas las amenidades de una oferta
+   * @param offer Oferta de vuelo
+   * @returns Lista de amenidades con sus detalles
+   */
+  getDetailedAmenities(offer: FlightOffer): any[] {
+    const amenitiesList: any[] = [];
+    
+    if (!offer.travelerPricings) return amenitiesList;
+    
+    for (const pricing of offer.travelerPricings) {
+      if (pricing.amenities) {
+        for (const amenity of pricing.amenities) {
+          if (!amenitiesList.some(a => a.description === amenity.description)) {
+            amenitiesList.push({
+              description: amenity.description,
+              isChargeable: amenity.isChargeable,
+              type: amenity.amenityType,
+              provider: amenity.amenityProvider?.name
+            });
+          }
+        }
+      }
+    }
+    
+    return amenitiesList;
+  }
+
+  /**
+   * Obtiene los beneficios de una tarifa
+   * @param offer Oferta de vuelo
+   * @returns Lista de beneficios en formato legible
+   */
+  getFareBenefits(offer: FlightOffer): string[] {
+    const benefits: string[] = [];
+    
+    if (!offer.travelerPricings || offer.travelerPricings.length === 0) {
+      return ['Tarifa básica'];
+    }
+    
+    // Encontrar todos los tipos de cabina en la oferta
+    const cabins = new Set<string>();
+    const baggage = new Set<string>();
+    
+    for (const pricing of offer.travelerPricings) {
+      if (!pricing.fareDetailsBySegment) continue;
+      
+      for (const segment of pricing.fareDetailsBySegment) {
+        // Agregar cabina
+        if (segment.cabin) {
+          cabins.add(`Clase ${this.getCabinClass(segment.cabin)}`);
+        }
+        
+        // Agregar equipaje
+        if (segment.includedCheckedBags && segment.includedCheckedBags.quantity > 0) {
+          baggage.add(`${segment.includedCheckedBags.quantity} maleta(s) incluida(s)`);
+        } else {
+          baggage.add('Sin equipaje incluido');
+        }
+        
+        // Agregar tipo de tarifa si existe
+        if (segment.brandedFare) {
+          const fareLabel = this.getBrandedFareName(segment.brandedFare);
+          benefits.push(`Tarifa ${fareLabel}`);
+        }
+      }
+      
+      // Agregar amenidades si existen
+      if (pricing.amenities) {
+        for (const amenity of pricing.amenities) {
+          if (amenity.description) {
+            const description = amenity.isChargeable 
+              ? `${amenity.description} (con costo adicional)` 
+              : amenity.description;
+            benefits.push(description);
+          }
+        }
+      }
+    }
+    
+    // Agregar los sets a la lista de beneficios
+    cabins.forEach(cabin => benefits.push(cabin));
+    baggage.forEach(bag => benefits.push(bag));
+    
+    // Si no hay beneficios específicos, agregar uno genérico
+    if (benefits.length === 0) {
+      benefits.push('Tarifa básica');
+    }
+    
+    // Eliminar duplicados
+    return [...new Set(benefits)];
+  }
+  
    /**
    * Calcula la duración total de un itinerario
    * @param offer Oferta de vuelo
@@ -170,9 +404,30 @@ export class FlightUtilsService {
    * @returns Nombre de la aerolínea
    */
   getAirlineName(code: string): string {
-    const name = this.carriers[code];
-    if (!name) return '';
+    const airlines: Record<string, string> = {
+      'AA': 'American Airlines',
+      'DL': 'Delta Air Lines',
+      'UA': 'United Airlines',
+      'LH': 'Lufthansa',
+      'BA': 'British Airways',
+      'AF': 'Air France',
+      'IB': 'Iberia',
+      'AV': 'Avianca',
+      'LA': 'LATAM Airlines',
+      'AR': 'Aerolíneas Argentinas',
+      // Añadir más aerolíneas según sea necesario
+    };
     
+    let name = this.carriers[code];
+
+    if (!name && airlines[code]) {
+      name = airlines[code];
+    }
+
+    if (!name) {
+      return code;
+    }
+
     return name
       .toLowerCase() // primero lo pasamos todo a minúsculas
       .split(' ')     // separamos por espacio
@@ -190,7 +445,7 @@ export class FlightUtilsService {
   }
   
   /**
-   * Obtiene el nombre de la clase de cabina
+   * Obtiene el nombre de la clase de cabina.
    * @param classCode Código de clase
    * @returns Nombre legible de la clase
    */

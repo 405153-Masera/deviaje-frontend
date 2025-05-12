@@ -112,6 +112,23 @@
       font-size: 0.9rem;
     }
   }
+
+  // Detalles expandibles de tarifas
+  .fare-details-expanded {
+    .card {
+      box-shadow: none;
+      border: 1px solid $gray-300;
+    }
+  }
+  
+  // Distintivos para tarifas
+  .fare-badge-container {
+    .badge {
+      font-weight: 500;
+      padding: 0.5rem 0.75rem;
+    }
+  }
+  
   
   // Ajustes para móviles
   @include mobile {

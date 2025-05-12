@@ -1,10 +1,10 @@
-import { Component, inject, OnInit } from '@angular/core';
+import { Component, inject, Input, OnInit } from '@angular/core';
 import { Router, RouterModule } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { Hotel, HotelOffer, HotelResult } from '../../../../../shared/models/hotels';
 import { HotelService } from '../../../../../shared/services/hotel.service';
-import { CityService } from '../../../../../shared/services/city.service';
+import { Subscription } from 'rxjs';
+import { HotelSearchRequest, HotelSearchResponse } from '../../../../../shared/models/hotels';
 
 @Component({
   selector: 'app-deviaje-hotels-results',
@@ -15,282 +15,330 @@ import { CityService } from '../../../../../shared/services/city.service';
 })
 export class DeviajeHotelsResultsComponent implements OnInit {
   
-  private readonly cityService: CityService = inject(CityService);
-  // Datos de hoteles y búsqueda
-  hotelOffers: HotelOffer[] = [];
-  hotels: HotelResult[] = [];
-  filteredHotels: HotelResult[] = [];
-  searchParams?: any;
-
+  private readonly router: Router = inject(Router);
+  private readonly hotelService: HotelService = inject(HotelService);
+  
+  subscription: Subscription = new Subscription();
+  
+  // Input para cuando se utiliza como componente dentro de paquetes
+  @Input() inPackageMode: boolean = false;
+  @Input() searchParams?: HotelSearchRequest;
+  
+  // Resultados y filtros
+  searchResults: HotelSearchResponse | null = null;
+  filteredHotels: HotelSearchResponse.Hotel[] = [];
+  
+  // Estado de carga
+  isLoading: boolean = false;
+  hasError: boolean = false;
+  errorMessage: string = '';
+  
   // Filtros
-  priceRange: { min: number; max: number } = { min: 0, max: 1000 };
-  selectedStars: number[] = [1, 2, 3, 4, 5];
-  minUserRating: number = 0;
-  selectedAmenities: string[] = [];
-
+  priceRange: { min: number, max: number } = { min: 0, max: 10000 };
+  selectedCategories: string[] = [];
+  sortOption: string = 'price_asc';
+  showFilters: boolean = false;
+  
   // Paginación
   currentPage: number = 1;
   itemsPerPage: number = 10;
-
-  // Ordenamiento
-  sortOption: string = 'price_asc';
-
-  // Estados de UI
-  isLoading: boolean = true;
-  showFilters: boolean = false;
-
-  private readonly router: Router = inject(Router);
-  private readonly hotelService: HotelService = inject(HotelService);
-
+  
+  // Hotel seleccionado para detalle
+  selectedHotelForDetail: HotelSearchResponse.Hotel | null = null;
+  showDetailModal: boolean = false;
+  
   ngOnInit(): void {
-    // Obtener parámetros de búsqueda del state
-    const state = history.state;
-
-    if (state && state.searchParams) {
-      this.isLoading = true;
-      this.searchParams = state.searchParams;
-      this.hotelOffers = state.hotelOffers;
+    if (!this.inPackageMode) {
+      // Solo buscar hoteles si no estamos en modo paquete
+      if (typeof window !== 'undefined') {
+        const state = window.history.state;
+        
+        if (state && state.searchParams) {
+          this.searchParams = state.searchParams;
+          
+          if (state.searchResults) {
+            this.processSearchResults(state.searchResults);
+          } else {
+            this.searchHotels();
+          }
+        } else {
+          this.tryLoadFromStorage();
+        }
+      }
+    } else if (this.searchParams) {
+      // Si estamos en modo paquete y tenemos parámetros, hacer búsqueda
+      this.searchHotels();
+    }
+  }
+  
+  ngOnDestroy(): void {
+    this.subscription.unsubscribe();
+  }
+  
+  searchHotels(): void {
+    if (!this.searchParams) {
+      this.router.navigate(['/home/hotels/search']);
+      return;
+    }
+    
+    this.isLoading = true;
+    this.hasError = false;
+    
+    this.subscription.add(
+      this.hotelService.findHotelsByCity(this.searchParams).subscribe({
+        next: (response) => {
+          this.processSearchResults(response);
+          this.isLoading = false;
+          
+          if (!this.inPackageMode) {
+            // Solo guardar en localStorage si no estamos en modo paquete
+            try {
+              localStorage.setItem('hotelSearchParams', JSON.stringify(this.searchParams));
+              localStorage.setItem('hotelSearchResults', JSON.stringify(response));
+              localStorage.setItem('hotelSearchTimestamp', Date.now().toString());
+            } catch (e) {
+              console.warn('No se pudo guardar en localStorage:', e);
+            }
+          }
+        },
+        error: (error) => {
+          console.error('Error al buscar hoteles:', error);
+          this.isLoading = false;
+          this.hasError = true;
+          this.errorMessage = 'Error al buscar hoteles. Por favor, intenta de nuevo.';
+        }
+      })
+    );
+  }
+  
+  private tryLoadFromStorage(): void {
+    try {
+      const storedParams = localStorage.getItem('hotelSearchParams');
+      const storedResults = localStorage.getItem('hotelSearchResults');
+      const timestamp = localStorage.getItem('hotelSearchTimestamp');
       
-      // Procesamos las ofertas de hoteles recibidas
-      this.processHotelOffers();
-      this.isLoading = false;
+      // Verificar si los datos tienen menos de 10 minutos
+      const isDataFresh = timestamp && (Date.now() - parseInt(timestamp)) < 10 * 60 * 1000;
       
-    } else {
-      // Redirigir si no hay parámetros
+      if (storedParams && storedResults && isDataFresh) {
+        this.searchParams = JSON.parse(storedParams);
+        this.processSearchResults(JSON.parse(storedResults));
+      } else if (storedParams) {
+        // Si los datos son viejos pero tenemos parámetros, hacer nueva búsqueda
+        this.searchParams = JSON.parse(storedParams);
+        this.searchHotels();
+      } else {
+        // Si no hay datos, redirigir a búsqueda
+        this.router.navigate(['/home/hotels/search']);
+      }
+    } catch (e) {
+      console.warn('Error al recuperar datos de localStorage:', e);
       this.router.navigate(['/home/hotels/search']);
     }
   }
-
-  // Procesar las ofertas de hoteles para convertirlas en el formato que espera la UI
-  processHotelOffers(): void {
-    this.hotels = this.hotelOffers.map(offer => this.mapHotelOfferToResult(offer));
+  
+  private processSearchResults(response: HotelSearchResponse): void {
+    this.searchResults = response;
     
-    // Establecer rango de precios basado en los resultados
-    if (this.hotels.length > 0) {
-      const prices = this.hotels.map(hotel => hotel.price);
-      this.priceRange.min = Math.floor(Math.min(...prices));
-      this.priceRange.max = Math.ceil(Math.max(...prices));
-    }
-    
-    // Aplicar los filtros iniciales
-    this.filteredHotels = [...this.hotels];
-    
-    // Ordenar resultados
-    this.sortResults();
-  }
-
-  // Mapear una oferta de hotel a un resultado para la UI
-  mapHotelOfferToResult(hotelOffer: HotelOffer): HotelResult {
-    const hotel = hotelOffer.hotel;
-    const offer = hotelOffer.offers && hotelOffer.offers.length > 0 ? hotelOffer.offers[0] : null;
-    
-    // Extraer el precio de la oferta
-    const price = offer ? parseFloat(offer.price.total) : 0;
-    
-    // Obtener descripción de la habitación (si está disponible)
-    const roomDescription = offer?.room?.description?.text || '';
-    
-    // Verificar si la cancelación es gratuita
-    const isCancellable = offer?.policies?.refundable?.cancellationRefund === 'REFUNDABLE_UP_TO_DEADLINE';
-    
-    // Obtener tipo de pago
-    const paymentType = offer?.policies?.paymentType || '';
-    
-    return {
-      id: hotel.hotelId,
-      name: hotel.name,
-      location: `${hotel.cityCode}, ${hotel.name}`,
-      stars: hotel.rating ? parseInt(hotel.rating) : 3,
-      // Como no hay ratings en la API, podemos usar un valor por defecto o una lógica empresarial
-      rating: 7.5, // Valor por defecto mientras se decide cómo manejar ratings
-      reviewCount: 0, // No hay reviews en la API
-      price: price,
-      mainImage: undefined, // La API actual no proporciona imágenes
-      amenities: [], // La API actual no proporciona amenidades
-      distanceFromCenter: 0, // No disponible en la API
-      isPromoted: false,
-      description: hotel.description?.text || "",
-      latitude: hotel.latitude,
-      longitude: hotel.longitude,
-      rooms: [],
-      roomType: offer?.room?.type || "Habitación Estándar",
-      roomName: offer?.room?.name || "Habitación",
-      roomDescription: roomDescription,
-      // Información de políticas
-      cancellationPolicy: isCancellable ? "Cancelación gratuita hasta la fecha límite" : "No reembolsable",
-      paymentType: paymentType === 'prepay' ? "Prepago" : "Pago en el hotel",
-      bedType: offer?.room?.typeEstimated?.bedType || "",
-      bedCount: offer?.room?.typeEstimated?.beds || 1
-    };
-  }
-
-  // Métodos para filtros
-  resetFilters(): void {
-    this.priceRange = { min: 0, max: 1000 };
-    this.selectedStars = [1, 2, 3, 4, 5];
-    this.minUserRating = 0;
-    this.selectedAmenities = [];
-    this.applyFilters();
-  }
-
-  toggleStar(star: number): void {
-    const index = this.selectedStars.indexOf(star);
-    if (index > -1) {
-      this.selectedStars.splice(index, 1);
+    if (response && response.hotels && response.hotels.hotels) {
+      const hotels = response.hotels.hotels;
+      
+      // Inicializar filtros
+      this.initializeFilters(hotels);
+      
+      // Aplicar filtros iniciales
+      this.applyFilters();
     } else {
-      this.selectedStars.push(star);
+      this.filteredHotels = [];
     }
-    this.applyFilters();
   }
-
-  setMinUserRating(rating: number): void {
-    this.minUserRating = rating;
-    this.applyFilters();
+  
+  private initializeFilters(hotels: HotelSearchResponse.Hotel[]): void {
+    // Rango de precios
+    const prices = hotels.map(hotel => hotel.minRate || 0);
+    this.priceRange.min = Math.floor(Math.min(...prices));
+    this.priceRange.max = Math.ceil(Math.max(...prices));
+    
+    // Categorías de hotel
+    const categories = new Set<string>();
+    hotels.forEach(hotel => {
+      if (hotel.categoryCode) {
+        categories.add(hotel.categoryCode);
+      }
+    });
+    this.selectedCategories = Array.from(categories);
   }
-
-  toggleAmenity(amenityId: string): void {
-    const index = this.selectedAmenities.indexOf(amenityId);
-    if (index > -1) {
-      this.selectedAmenities.splice(index, 1);
-    } else {
-      this.selectedAmenities.push(amenityId);
-    }
-    this.applyFilters();
-  }
-
-  toggleFilters(): void {
-    this.showFilters = !this.showFilters;
-  }
-
-  onFilterChange(): void {
-    this.applyFilters();
-  }
-
+  
   applyFilters(): void {
-    this.isLoading = true;
-
-    // Simular tiempo de procesamiento
-    setTimeout(() => {
-      this.filteredHotels = this.hotels.filter((hotel) => {
-        // Filtrar por precio
-        if (
-          hotel.price < this.priceRange.min ||
-          hotel.price > this.priceRange.max
-        ) {
-          return false;
-        }
-
-        // Filtrar por estrellas
-        
-
-        // Filtrar por valoración de usuarios
-        
-
-        // Filtrar por amenidades (si se seleccionaron)
-        if (this.selectedAmenities.length > 0) {
-          if (
-            !hotel.amenities ||
-            !this.selectedAmenities.every((amenity) =>
-              hotel.amenities?.some((hotelAmenity) =>
-                hotelAmenity
-                  .toLowerCase()
-                  .includes(this.getAmenityLabel(amenity).toLowerCase())
-              )
-            )
-          ) {
-            return false;
-          }
-        }
-
-        return true;
-      });
-
-      // Ordenar resultados
-      this.sortResults();
-
-      // Resetear paginación
-      this.currentPage = 1;
-
-      this.isLoading = false;
-    }, 500);
+    if (!this.searchResults || !this.searchResults.hotels || !this.searchResults.hotels.hotels) {
+      return;
+    }
+    
+    // Filtrar por precio
+    this.filteredHotels = this.searchResults.hotels.hotels.filter(hotel => {
+      const price = hotel.minRate || 0;
+      return price >= this.priceRange.min && price <= this.priceRange.max;
+    });
+    
+    // Filtrar por categorías seleccionadas
+    if (this.selectedCategories && this.selectedCategories.length > 0) {
+      this.filteredHotels = this.filteredHotels.filter(hotel => 
+        hotel.categoryCode && this.selectedCategories.includes(hotel.categoryCode)
+      );
+    }
+    
+    // Aplicar ordenación
+    this.sortResults();
+    
+    // Reset paginación
+    this.currentPage = 1;
   }
-
+  
   sortResults(): void {
     switch (this.sortOption) {
       case 'price_asc':
-        this.filteredHotels.sort((a, b) => a.price - b.price);
+        this.filteredHotels.sort((a, b) => (a.minRate || 0) - (b.minRate || 0));
         break;
       case 'price_desc':
-        this.filteredHotels.sort((a, b) => b.price - a.price);
+        this.filteredHotels.sort((a, b) => (b.minRate || 0) - (a.minRate || 0));
         break;
-      // case 'rating_desc':
-      //   this.filteredHotels.sort((a, b) => b.rating - a.rating);
-      //   break;
-      // case 'stars_desc':
-      //   this.filteredHotels.sort((a, b) => b.stars - a.stars);
-      //   break;
+      case 'stars_desc':
+        this.filteredHotels.sort((a, b) => {
+          const starsA = this.getCategoryStars(a.categoryCode || '');
+          const starsB = this.getCategoryStars(b.categoryCode || '');
+          return starsB - starsA;
+        });
+        break;
       case 'name_asc':
-        this.filteredHotels.sort((a, b) => a.name.localeCompare(b.name));
+        this.filteredHotels.sort((a, b) => (a.name || '').localeCompare(b.name || ''));
         break;
     }
   }
-
-  // Paginación
-  get paginatedHotels(): HotelResult[] {
-    const startIndex = (this.currentPage - 1) * this.itemsPerPage;
-    return this.filteredHotels.slice(
-      startIndex,
-      startIndex + this.itemsPerPage
-    );
+  
+  getCategoryStars(categoryCode: string): number {
+    // La categoría suele ser un código como 1EST, 2EST, 3EST, 4EST, 5EST
+    const match = categoryCode.match(/^(\d)/);
+    if (match && match[1]) {
+      return parseInt(match[1]);
+    }
+    return 0;
   }
-
+  
+  resetFilters(): void {
+    if (this.searchResults && this.searchResults.hotels && this.searchResults.hotels.hotels) {
+      this.initializeFilters(this.searchResults.hotels.hotels);
+      this.applyFilters();
+    }
+  }
+  
+  toggleFilters(): void {
+    this.showFilters = !this.showFilters;
+  }
+  
+  // Métodos de paginación
+  get paginatedHotels(): HotelSearchResponse.Hotel[] {
+    const startIndex = (this.currentPage - 1) * this.itemsPerPage;
+    return this.filteredHotels.slice(startIndex, startIndex + this.itemsPerPage);
+  }
+  
   get totalPages(): number {
     return Math.ceil(this.filteredHotels.length / this.itemsPerPage);
   }
-
+  
   changePage(page: number): void {
     if (page >= 1 && page <= this.totalPages) {
       this.currentPage = page;
       window.scrollTo(0, 0);
     }
   }
-
-  // Métodos de utilidad
-  calculateNights(): number {
-    if (!this.searchParams?.checkInDate || !this.searchParams?.checkOutDate) {
-      return 1;
+  
+  // Métodos para mostrar detalles
+  showHotelDetails(hotel: HotelSearchResponse.Hotel): void {
+    if (this.inPackageMode) {
+      // En modo paquete, mostrar modal
+      this.selectedHotelForDetail = hotel;
+      this.showDetailModal = true;
+    } else {
+      // En modo normal, navegar a página de detalle
+      this.router.navigate(['/home/hotels/detail', hotel.code], {
+        state: { hotel, searchParams: this.searchParams }
+      });
     }
-
-    const checkIn = new Date(this.searchParams.checkInDate);
-    const checkOut = new Date(this.searchParams.checkOutDate);
-    const timeDiff = checkOut.getTime() - checkIn.getTime();
-    return Math.ceil(timeDiff / (1000 * 3600 * 24));
   }
-
-  getRatingText(rating: number): string {
-    if (rating >= 9) return 'Excelente';
-    if (rating >= 8) return 'Muy bueno';
-    if (rating >= 7) return 'Bueno';
-    if (rating >= 6) return 'Aceptable';
-    return 'Regular';
+  
+  closeDetailModal(): void {
+    this.showDetailModal = false;
+    this.selectedHotelForDetail = null;
   }
-
-  getAmenityLabel(amenityId: string): string {
-    const amenityMap: { [key: string]: string } = {
-      wifi: 'Wi-Fi gratis',
-      parking: 'Estacionamiento',
-      breakfast: 'Desayuno',
-      pool: 'Piscina',
-      aircon: 'Aire acondicionado',
-    };
-
-    return amenityMap[amenityId] || amenityId;
+  
+  // Obtener el precio mínimo de las habitaciones
+  getMinRoomPrice(hotel: HotelSearchResponse.Hotel): number {
+    if (!hotel.rooms || hotel.rooms.length === 0) {
+      return hotel.minRate || 0;
+    }
+    
+    let minPrice = Number.MAX_VALUE;
+    
+    for (const room of hotel.rooms) {
+      if (room.rates && room.rates.length > 0) {
+        for (const rate of room.rates) {
+          if (rate.net !== undefined && rate.net < minPrice) {
+            minPrice = rate.net;
+          }
+        }
+      }
+    }
+    
+    return minPrice === Number.MAX_VALUE ? (hotel.minRate || 0) : minPrice;
   }
-
-  selectHotel(hotel: HotelResult): void {
-    // Navegar a la página de detalles del hotel
-    this.router.navigate(['/hotels/details'], {
-      state: { hotel, searchParams: this.searchParams },
-    });
+  
+  // Obtener una imagen para el hotel
+  getHotelImage(hotel: HotelSearchResponse.Hotel): string {
+    // Aquí deberías implementar la lógica para obtener la imagen del hotel
+    // Por ahora, devolvemos una imagen genérica
+    return `https://via.placeholder.com/300x200?text=${encodeURIComponent(hotel.name || 'Hotel')}`;
+  }
+  
+  // Seleccionar un hotel (para modo paquete)
+  selectHotel(hotel: HotelSearchResponse.Hotel): void {
+    // Emitir evento para seleccionar este hotel en el paquete
+    // Implementar lógica específica para el modo de paquete
+  }
+  
+  // Obtener nombre de categoría de hotel a partir del código
+  getCategoryName(categoryCode: string): string {
+    const stars = this.getCategoryStars(categoryCode);
+    return `${stars} ${stars === 1 ? 'Estrella' : 'Estrellas'}`;
+  }
+  
+  // Formatear precio para mostrar
+  formatPrice(price: number, currency: string = 'USD'): string {
+    return new Intl.NumberFormat('es-AR', {
+      style: 'currency',
+      currency: currency,
+      minimumFractionDigits: 2
+    }).format(price);
+  }
+  
+  // Obtener el número total de habitaciones de la búsqueda actual
+  getTotalRooms(): number {
+    if (!this.searchParams || !this.searchParams.occupancies) {
+      return 0;
+    }
+    
+    return this.searchParams.occupancies.reduce((total, occupancy) => {
+      return total + (occupancy.rooms || 0);
+    }, 0);
+  }
+  
+  // Obtener el número total de huéspedes de la búsqueda actual
+  getTotalGuests(): number {
+    if (!this.searchParams || !this.searchParams.occupancies) {
+      return 0;
+    }
+    
+    return this.searchParams.occupancies.reduce((total, occupancy) => {
+      return total + (occupancy.adults || 0) + (occupancy.children || 0);
+    }, 0);
   }
 }

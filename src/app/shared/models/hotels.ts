@@ -1,10 +1,29 @@
 export interface HotelSearchRequest {
-  cityCode: string;
-  radius?: number;
-  radiusUnit?: string;
-  ratings?: string[];
-  amenities?: string[];
-  chainCodes?: string[];
+  stay: {
+    checkIn: Date;
+    checkOut: Date;
+  };
+  occupancies: Array<{
+    rooms: number;
+    adults: number;
+    children: number;
+    paxes?: Array<{
+      type: string;
+      age: number;
+    }>;
+  }>;
+  destination: {
+    code: string;
+    zoneCode?: string;
+  };
+  filter?: {
+    minCategory?: number;
+    maxCategory?: number;
+    minRate?: number;
+    maxRate?: number;
+  };
+  currency?: string;
+  language?: string;
 }
 
 export interface HotelOffersRequest {
@@ -19,8 +38,53 @@ export interface HotelOffersRequest {
 }
 
 export interface HotelSearchResponse {
-  data: HotelOffer[];
-  meta: any;
+  hotels: {
+    hotels: HotelSearchResponse.Hotel[];
+  };
+}
+
+export namespace HotelSearchResponse {
+  export interface Hotel {
+    code: string;
+    name: string;
+    categoryCode: string;
+    categoryName: string;
+    destinationCode: string;
+    latitude: number;
+    longitude: number;
+    rooms: Room[];
+    minRate: number;
+    currency: string;
+  }
+
+  export interface Room {
+    code: string;
+    name: string;
+    rates: Rate[];
+  }
+
+  export interface Rate {
+    rateKey: string;
+    rateClass: string;
+    rateType: string;
+    net: number;
+    discount?: number;
+    cancellationPolicies?: CancellationPolicy[];
+    boardCode?: string;
+    boardName?: string;
+    taxes?: Tax[];
+  }
+
+  export interface CancellationPolicy {
+    amount: string;
+    from: string;
+  }
+
+  export interface Tax {
+    included: boolean;
+    amount: number;
+    currency: string;
+  }
 }
 
 export interface HotelOffer {
@@ -171,32 +235,34 @@ export interface CancellationPolicy {
   deadline: string;
 }
 
-// Modelo simplificado para la respuesta de hotel al cliente
-export interface HotelResult {
-  id: string;
+export interface HotelResponseDto {
+  code: string;
   name: string;
-  location: string;
-  stars?: number;
-  rating?: number;
-  reviewCount?: number;
-  price: number;
-  mainImage?: string;
-  amenities: string[];
-  distanceFromCenter: number;
-  isPromoted: boolean;
   description: string;
-  latitude?: number;
-  longitude?: number;
-  rooms: any[];
-  // Nuevas propiedades
-  roomType?: string;
-  roomName?: string;
-  roomDescription?: string;
-  cancellationPolicy?: string;
-  paymentType?: string;
-  bedType?: string;
-  bedCount?: number;
-  maxOccupancy?: number;
+  country?: {
+    code: string;
+    name: string;
+  };
+  state?: string;
+  destination?: string;
+  zone?: string;
+  categoryCode?: string;
+  categoryGroupCode?: string;
+  chainCode?: string;
+  accommodationTypeCode?: string;
+  address?: string;
+  street?: string;
+  number?: string;
+  city?: string;
+  email?: string;
+  images: {
+    imageTypeCode: string;
+    path: string;
+    roomCode?: string;
+    roomType?: string;
+    order?: number;
+    visualOrder?: string;
+  }[];
 }
 
 export interface RoomOffer {

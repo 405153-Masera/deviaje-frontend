@@ -4,15 +4,17 @@
 .results-header {
   background-color: $primary-color;
   color: white;
-
+  
   .results-title {
     font-size: 1.5rem;
     font-weight: 700;
     margin-bottom: 0.5rem;
 
-    @include mobile {
+    @include tablet {
       font-size: 1.2rem;
+      text-align: center;
     }
+    
   }
 
   .travel-info {
@@ -32,9 +34,10 @@
       }
     }
 
-    @include mobile {
+    @include tablet {
       gap: 1rem;
       font-size: 0.8rem;
+      justify-content: center;
     }
   }
 }
