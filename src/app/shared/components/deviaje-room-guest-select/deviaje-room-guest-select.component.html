@@ -1,72 +1,99 @@
-<div class="position-relative w-100">
-    <label class="mb-1" id="selectGuest">Habitaciones y huéspedes</label>
-    <div class="selector-trigger" role="button" tabindex="0" aria-labelledby="selectGuest" 
-    (click)="toggleDropdown($event)" (keydown.enter)="toggleDropdown($event)" (keydown.space)="toggleDropdown($event)">
-        <div>
-            <i class="bi bi-people"></i>
-            <span>{{ displayText }}</span>
-        </div>
-        <i class="bi bi-chevron-down dropdown-icon"></i>
-    </div>
-
-    <!-- Dropdown de habitaciones y huéspedes -->
-    <div class="dropdown-search" [class.show]="isDropdownOpen">
-        <div class="dropdown-search-row">
-            <div class="option-row">
-                <div class="option-title">Habitaciones</div>
-            </div>
-            <div class="option-counter">
-                <button type="button" class="counter-btn" [disabled]="rooms <= minRooms"
-                    (click)="decrementRooms($event)">
+<div class="room-guest-select">
+    <label class="mb-1">{{ label }}</label>
+    <div class="position-relative">
+      <div class="selector-trigger" (click)="toggleDropdown()">
+        <i class="bi bi-person me-2"></i>
+        <span>{{ getTotalRooms() }} {{ getTotalRooms() === 1 ? 'habitación' : 'habitaciones' }}, {{ getTotalGuests() }} huéspedes</span>
+        <i class="bi bi-chevron-down dropdown-icon" [class.rotate]="isDropdownOpen"></i>
+      </div>
+  
+      <!-- Dropdown para habitaciones y huéspedes -->
+      <div class="dropdown-search" [class.show]="isDropdownOpen">
+        <div class="rooms-container">
+          @for (room of occupancies; track $index) {
+            <div class="room-section">
+              <div class="room-header d-flex justify-content-between align-items-center mb-3">
+                <h6 class="mb-0">Habitación {{ $index + 1 }}</h6>
+                @if (occupancies.length > 1) {
+                  <button type="button" class="btn-close" (click)="removeRoom($index)"></button>
+                }
+              </div>
+  
+              <!-- Adultos -->
+              <div class="dropdown-search-row">
+                <div class="option-row">
+                  <div class="option-title">Adultos</div>
+                  <div class="option-subtitle">A partir de 18 años</div>
+                </div>
+                <div class="option-counter">
+                  <button type="button" class="counter-btn" [disabled]="room.adults <= 1" (click)="updateAdults($index, false)">
                     <i class="bi bi-dash"></i>
-                </button>
-                <span class="counter-value">{{ rooms }}</span>
-                <button type="button" class="counter-btn" [disabled]="rooms >= maxRooms"
-                    (click)="incrementRooms($event)">
+                  </button>
+                  <div class="counter-value">{{ room.adults }}</div>
+                  <button type="button" class="counter-btn" [disabled]="room.adults >= 6" (click)="updateAdults($index, true)">
                     <i class="bi bi-plus"></i>
-                </button>
-            </div>
-        </div>
-
-        <div class="dropdown-search-row">
-            <div class="option-row">
-                <div class="option-title">Adultos</div>
-            </div>
-            <div class="option-counter">
-                <button type="button" class="counter-btn" [disabled]="adults <= minAdults"
-                    (click)="decrementGuest('adults', $event)">
+                  </button>
+                </div>
+              </div>
+  
+              <!-- Niños -->
+              <div class="dropdown-search-row">
+                <div class="option-row">
+                  <div class="option-title">Niños</div>
+                  <div class="option-subtitle">0 a 17 años</div>
+                </div>
+                <div class="option-counter">
+                  <button type="button" class="counter-btn" [disabled]="room.children <= 0" (click)="updateChildren($index, false)">
                     <i class="bi bi-dash"></i>
-                </button>
-                <span class="counter-value">{{ adults }}</span>
-                <button type="button" class="counter-btn" [disabled]="totalGuest >= maxAdultsPerRoom "
-                    (click)="incrementGuest('adults', $event)">
+                  </button>
+                  <div class="counter-value">{{ room.children }}</div>
+                  <button type="button" class="counter-btn" [disabled]="room.children >= 4" (click)="updateChildren($index, true)">
                     <i class="bi bi-plus"></i>
-                </button>
+                  </button>
+                </div>
+              </div>
+  
+              <!-- Edades de los niños -->
+              @if (room.children > 0 && room.paxes) {
+                <div class="child-ages mt-3">
+                  <div class="child-ages-label mb-2">Edad de los niños al momento del check-out</div>
+                  
+                  @for (pax of room.paxes; track childIndex; let childIndex = $index) {
+                    @if (pax.type === 'CH') {
+                      <div class="child-age-row mb-2">
+                        <label class="form-label">Niño {{ childIndex + 1 }}</label>
+                        <select class="form-select form-select-sm" 
+                                [(ngModel)]="pax.age" 
+                                (change)="updateChildAge($index, childIndex, pax.age)">
+                          @for (age of [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17]; track age) {
+                            <option [value]="age">{{ age }} {{ age === 1 ? 'año' : 'años' }}</option>
+                          }
+                        </select>
+                      </div>
+                    }
+                  }
+                </div>
+              }
             </div>
-        </div>
-
-        <div class="dropdown-search-row">
-            <div class="option-row">
-                <div class="option-title">Niños</div>
-                <div class="option-subtitle">De 0 a 11 años</div>
-            </div>
-            <div class="option-counter">
-                <button type="button" class="counter-btn" [disabled]="children <= 0"
-                    (click)="decrementGuest('children', $event)">
-                    <i class="bi bi-dash"></i>
-                </button>
-                <span class="counter-value">{{ children }}</span>
-                <button type="button" class="counter-btn" [disabled]="totalGuest >= maxAdultsPerRoom"
-                    (click)="incrementGuest('children', $event)">
-                    <i class="bi bi-plus"></i>
-                </button>
-            </div>
-        </div>
-
-        <div class="d-flex justify-content-end mt-1">
-            <button type="button" class="btn-apply" (click)="applySelection($event)">
-                Aplicar
+          }
+  
+          <!-- Botón para agregar habitación -->
+          <div class="add-room-button mt-3">
+            <button type="button" class="btn btn-outline w-100" [disabled]="occupancies.length >= 4" (click)="addRoom()">
+              <i class="bi bi-plus-circle me-2"></i> Agregar habitación
             </button>
+          </div>
+  
+          <!-- Botón para aplicar configuración -->
+          <div class="d-flex justify-content-end mt-3">
+            <button type="button" class="btn btn-apply" (click)="applyChanges()">
+              Aplicar
+            </button>
+          </div>
         </div>
+      </div>
     </div>
-</div>
+  </div>
+  
+  <!-- Overlay para cerrar el dropdown al hacer clic fuera -->
+  <div class="overlay" [class.show]="isDropdownOpen" (click)="closeDropdown()"></div>

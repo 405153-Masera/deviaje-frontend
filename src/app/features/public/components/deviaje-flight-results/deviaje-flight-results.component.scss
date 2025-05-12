@@ -1,44 +1,5 @@
 @import "../../../../../assets/styles/variables";
 
-// Header de resultados
-.results-header {
-  background-color: $primary-color;
-  color: white;
-
-  .results-title {
-    font-size: 1.5rem;
-    font-weight: 700;
-    margin-bottom: 0.5rem;
-
-    @include mobile {
-      font-size: 1.2rem;
-    }
-  }
-
-  .travel-info {
-    display: flex;
-    gap: 1.5rem;
-    align-items: center;
-    flex-wrap: wrap;
-
-    span {
-      display: flex;
-      align-items: center;
-      gap: 0.5rem;
-      font-size: 0.9rem;
-
-      i {
-        font-size: 1rem;
-      }
-    }
-
-    @include mobile {
-      gap: 1rem;
-      font-size: 0.8rem;
-    }
-  }
-}
-
 // Panel de filtros lateral
 .filters-panel {
   background-color: white;
@@ -94,8 +55,6 @@
   }
 
   .price-labels {
-    display: flex;
-    justify-content: space-between;
     font-size: 0.85rem;
     color: $gray-700;
   }

@@ -16,6 +16,6 @@ section {
 @include mobile {
   section {
     margin-top: $navbar-height;
-    padding: 1rem; // Podríamos reducir el padding en móviles
+    padding: 1rem;
   }
 }

@@ -59,7 +59,7 @@
                             </div>
                             <div class="d-flex justify-content-between text-secondary small">
                                 <span>{{ segment.departure.iataCode }} → {{ segment.arrival.iataCode }}</span>
-                                <span>{{ segment.aircraft.code }}</span>
+                                <span>{{ flightUtils.getAircraftName(segment.aircraft.code) }}</span>
                             </div>
                         </div>
                         <div class="toggle-icon ms-2">
@@ -69,6 +69,7 @@
 
                     <!-- Detalles del segmento (expandible) -->
                     <div class="segment-details p-3 border-top" *ngIf="isSegmentExpanded(0, i)">
+                        
                         <div class="row">
                             <div class="col-md-6">
                                 <div class="departure-details">
@@ -81,6 +82,7 @@
                                     }
                                 </div>
                             </div>
+
                             <div class="col-md-6">
                                 <div class="arrival-details">
                                     <h6 class="mb-2">Llegada</h6>
@@ -93,8 +95,20 @@
                                 </div>
                             </div>
                         </div>
-                        <div class="row mt-3">
-                            <div class="col-12">
+
+                        <div class="row mt-3">    
+                            <div class="col-md-6">
+                                <div class="flight-details">
+                                    <h6 class="mb-2">Detalles del vuelo</h6>
+                                    <p class="mb-1"><strong>Aerolínea operadora:</strong> {{ 
+                                        flightUtils.getAirlineName(segment.operating.carrierCode) }}</p>
+                                    <p class="mb-1"><strong>Aeronave:</strong> {{ flightUtils.getAircraftName(segment.aircraft.code) }}</p>
+                                    <p class="mb-0"><strong>Duración:</strong> {{ 
+                                        flightUtils.minutesToString(flightUtils.durationToMinutes(segment.duration)) }}</p>
+                                </div>
+                            </div>
+                            
+                            <div class="col-md-6">
                                 <div class="cabin-info">
                                     <h6 class="mb-2">Información de cabina</h6>
                                     @if (flightOffer.travelerPricings && flightOffer.travelerPricings.length > 0) {
@@ -117,8 +131,8 @@
                 </div>
 
                 <!-- Información de escala si hay un segmento siguiente -->
-                @if (i < flightOffer.itineraries[0].segments.length - 1) { <div
-                    class="layover-info mb-3 py-2 px-3 bg-light rounded">
+                @if (i < flightOffer.itineraries[0].segments.length - 1) {
+                <div class="layover-info mb-3 py-2 px-3 bg-light rounded">
                     <div class="d-flex align-items-center text-secondary">
                         <i class="bi bi-clock me-2"></i>
                         <div>
@@ -127,8 +141,8 @@
                                 flightOffer.itineraries[0].segments[i+1])) }} en {{ segment.arrival.iataCode }}</span>
                         </div>
                     </div>
-            </div>
-            }
+                </div>
+                }
             }
         </div>
 
@@ -183,7 +197,7 @@
                         </div>
                         <div class="d-flex justify-content-between text-secondary small">
                             <span>{{ segment.departure.iataCode }} → {{ segment.arrival.iataCode }}</span>
-                            <span>{{ segment.aircraft.code }}</span>
+                            <span>{{ flightUtils.getAircraftName(segment.aircraft.code) }}</span>
                         </div>
                     </div>
                     <div class="toggle-icon ms-2">
@@ -217,8 +231,20 @@
                             </div>
                         </div>
                     </div>
+
                     <div class="row mt-3">
-                        <div class="col-12">
+                        <div class="col-md-6">
+                            <div class="flight-details">
+                                <h6 class="mb-2">Detalles del vuelo</h6>
+                                <p class="mb-1"><strong>Aerolínea operadora:</strong> {{ 
+                                    flightUtils.getAirlineName(segment.operating.carrierCode) }}</p>
+                                <p class="mb-1"><strong>Aeronave:</strong> {{ flightUtils.getAircraftName(segment.aircraft.code) }}</p>
+                                <p class="mb-0"><strong>Duración:</strong> {{ 
+                                    flightUtils.minutesToString(flightUtils.durationToMinutes(segment.duration)) }}</p>
+                            </div>
+                        </div>
+
+                        <div class="col-md-6">
                             <div class="cabin-info">
                                 <h6 class="mb-2">Información de cabina</h6>
                                 @if (flightOffer.travelerPricings && flightOffer.travelerPricings.length > 0) {
@@ -241,8 +267,8 @@
             </div>
 
             <!-- Información de escala si hay un segmento siguiente -->
-            @if (i < flightOffer.itineraries[1].segments.length - 1) { <div
-                class="layover-info mb-3 py-2 px-3 bg-light rounded">
+            @if (i < flightOffer.itineraries[1].segments.length - 1) { 
+            <div class="layover-info mb-3 py-2 px-3 bg-light rounded">
                 <div class="d-flex align-items-center text-secondary">
                     <i class="bi bi-clock me-2"></i>
                     <div>
@@ -251,8 +277,8 @@
                             flightOffer.itineraries[1].segments[i+1])) }} en {{ segment.arrival.iataCode }}</span>
                     </div>
                 </div>
-        </div>
-        }
+            </div>
+            }
         }
     </div>
     }
@@ -286,17 +312,71 @@
             <div class="row">
                 <div class="col-md-4">
                     <div class="fare-type p-3">
-                        <h6 class="mb-2">Tarifa Básica</h6>
-                        <ul class="list-unstyled mb-0">
-                            @for (benefit of getFareBenefits(flightOffer); track $index) {
-                            <li class="mb-1">
-                                <i class="bi bi-check-circle-fill text-success me-2"></i>
-                                {{ benefit }}
-                            </li>
+                        <h6 class="mb-2">
+                            @if (flightOffer.travelerPricings && flightOffer.travelerPricings[0].fareDetailsBySegment && flightOffer.travelerPricings[0].fareDetailsBySegment[0].brandedFare) {
+                                {{ flightUtils.getBrandedFareName(flightOffer.travelerPricings[0].fareDetailsBySegment[0].brandedFare) }}
+                                } @else {
+                                Tarifa Básica
                             }
-                        </ul>
+                        </h6>
+                        
+                        <div class="d-flex justify-content-between">
+                            <ul class="list-unstyled mb-0">
+                                @for (benefit of flightUtils.getFareBenefits(flightOffer); track $index; let i = $index) {
+                                    @if(i < 5){
+                                        <li class="mb-1">
+                                            <i class="bi bi-check-circle-fill text-success me-2"></i>
+                                            {{ benefit }}
+                                        </li>
+                                    }
+                                }
+                            </ul>
+                            @if (flightUtils.getFareBenefits(flightOffer).length > 5) {
+                                <div>
+                                    <button class="btn btn-link p-0 text-primary" 
+                                            (click)="toggleFareDetails(flightOffer.id)">
+                                        Ver más
+                                        <i class="bi" [ngClass]="isFareExpanded(flightOffer.id) ? 'bi-chevron-up' : 'bi-chevron-down'"></i>
+                                    </button>
+                                </div>
+                                }
+                        </div>
+                      <!-- Detalles expandibles de la tarifa -->
+                      @if (isFareExpanded(flightOffer.id)) {
+                        <div class="fare-details-expanded mt-3">
+                            <div class="card">
+                                <div class="card-body">
+                                    <h6 class="card-title">Beneficios incluidos</h6>
+                                    <ul class="list-unstyled mb-0">
+                                        @for (benefit of flightUtils.getFareBenefits(flightOffer); track $index) {
+                                        <li class="mb-1">
+                                            <i class="bi bi-check-circle-fill text-success me-2"></i>
+                                            {{ benefit }}
+                                        </li>
+                                        }
+                                    </ul>
+                                    
+                                    @if (flightUtils.getDetailedAmenities(flightOffer).length > 0) {
+                                    <h6 class="card-title mt-3">Amenidades</h6>
+                                    <ul class="list-unstyled">
+                                        @for (amenity of flightUtils.getDetailedAmenities(flightOffer); track $index) {
+                                        <li class="mb-1">
+                                            <i [ngClass]="amenity.isChargeable ? 'bi bi-currency-dollar text-warning' : 'bi bi-check-circle-fill text-success'" class="me-2"></i>
+                                            {{ amenity.description }}
+                                            @if (amenity.isChargeable) {
+                                            <span class="text-warning">(con costo adicional)</span>
+                                            }
+                                        </li>
+                                        }
+                                    </ul>
+                                    }
+                                </div>
+                            </div>
+                        </div>
+                        }
                     </div>
                 </div>
+
                 <div class="col-md-8">
                     <div class="fare-details d-flex justify-content-between align-items-center p-3">
                         <div class="price-info">
@@ -330,17 +410,95 @@
             <div class="row">
                 <div class="col-md-4">
                     <div class="fare-type p-3">
-                        <h6 class="mb-2">Tarifa {{ offer.travelerPricings[0].fareOption || 'Alternativa' }}</h6>
-                        <ul class="list-unstyled mb-0">
-                            @for (benefit of getFareBenefits(offer); track $index) {
-                            <li class="mb-1">
-                                <i class="bi bi-check-circle-fill text-success me-2"></i>
-                                {{ benefit }}
-                            </li>
-                            }
-                        </ul>
+                            <h6 class="mb-2">
+                                @if (offer.travelerPricings && offer.travelerPricings[0].fareDetailsBySegment && offer.travelerPricings[0].fareDetailsBySegment[0].brandedFare) {
+                                {{ flightUtils.getBrandedFareName(offer.travelerPricings[0].fareDetailsBySegment[0].brandedFare) }}
+                                } @else {
+                                Tarifa Alternativa
+                                }
+                            </h6>
+
+                            <div class="d-flex justify-content-between">
+                                <ul class="list-unstyled mb-0">
+                                    @for (benefit of flightUtils.getFareBenefits(offer); track $index; let i = $index) {
+                                        @if(i < 5){
+                                            <li class="mb-1">
+                                                <i class="bi bi-check-circle-fill text-success me-2"></i>
+                                                {{ benefit }}
+                                            </li>
+                                        }
+                                    }
+                                </ul>
+                                @if (flightUtils.getFareBenefits(offer).length > 5 || flightUtils.hasDifferentFaresInTrip(offer)) {
+                                    <div>
+                                        <button class="btn btn-link p-0 text-primary" 
+                                                (click)="toggleFareDetails(offer.id)">
+                                            Ver más
+                                            <i class="bi" [ngClass]="isFareExpanded(offer.id) ? 'bi-chevron-up' : 'bi-chevron-down'"></i>
+                                        </button>
+                                    </div>
+                                }
+                            </div>
+                           <!-- Detalles expandibles de la tarifa -->
+                           @if (isFareExpanded(offer.id)) {
+                            <div class="fare-details-expanded mt-3">
+                                <div class="card">
+                                    <div class="card-body">
+                                        @if (flightUtils.hasDifferentFaresInTrip(offer)) {
+                                        <div class="alert alert-info py-2">
+                                            <small><i class="bi bi-info-circle me-2"></i>Este vuelo tiene diferentes tarifas para ida y vuelta</small>
+                                        </div>
+                                        <div class="row mb-3">
+                                            <div class="col-md-6">
+                                                <h6 class="card-subtitle text-secondary">Tarifas de ida</h6>
+                                                <ul class="list-unstyled mb-0">
+                                                    @for (fare of flightUtils.getItineraryFares(offer, 0); track fare) {
+                                                    <li><span class="badge bg-primary me-1">{{ fare }}</span></li>
+                                                    }
+                                                </ul>
+                                            </div>
+                                            <div class="col-md-6">
+                                                <h6 class="card-subtitle text-secondary">Tarifas de vuelta</h6>
+                                                <ul class="list-unstyled mb-0">
+                                                    @for (fare of flightUtils.getItineraryFares(offer, 1); track fare) {
+                                                    <li><span class="badge bg-primary me-1">{{ fare }}</span></li>
+                                                    }
+                                                </ul>
+                                            </div>
+                                        </div>
+                                        }
+                                        
+                                        <h6 class="card-title">Beneficios incluidos</h6>
+                                        <ul class="list-unstyled mb-0">
+                                            @for (benefit of flightUtils.getFareBenefits(offer); track $index) {
+                                            <li class="mb-1">
+                                                <i class="bi bi-check-circle-fill text-success me-2"></i>
+                                                {{ benefit }}
+                                            </li>
+                                            }
+                                        </ul>
+                                        
+                                        @if (flightUtils.getDetailedAmenities(offer).length > 0) {
+                                        <h6 class="card-title mt-3">Amenidades</h6>
+                                        <ul class="list-unstyled">
+                                            @for (amenity of flightUtils.getDetailedAmenities(offer); track $index) {
+                                            <li class="mb-1">
+                                                <i [ngClass]="amenity.isChargeable ? 'bi bi-currency-dollar text-warning' : 'bi bi-check-circle-fill text-success'" class="me-2"></i>
+                                                {{ amenity.description }}
+                                                @if (amenity.isChargeable) {
+                                                <span class="text-warning">(con costo adicional)</span>
+                                                }
+                                            </li>
+                                            }
+                                        </ul>
+                                        }
+                                    </div>
+                                </div>
+                            </div>
+                            } 
                     </div>
                 </div>
+
                 <div class="col-md-8">
                     <div class="fare-details d-flex justify-content-between align-items-center p-3">
                         <div class="price-info">
@@ -374,39 +532,6 @@
         </div>
         }
         }
-    </div>
-</div>
-
-<!-- Sección de políticas y condiciones -->
-<div class="card">
-    <div class="card-header bg-light">
-        <h5 class="mb-0">Políticas y condiciones</h5>
-    </div>
-    <div class="card-body">
-        <div class="row">
-            <div class="col-md-4">
-                <div class="policy-section mb-3">
-                    <h6 class="mb-2"><i class="bi bi-calendar-x me-2"></i>Política de cancelación</h6>
-                    <p class="mb-0">Consulta con la aerolínea {{
-                        flightUtils.getAirlineName(flightOffer.validatingAirlineCodes[0]) }} para conocer las políticas
-                        de cancelación específicas.</p>
-                </div>
-            </div>
-            <div class="col-md-4">
-                <div class="policy-section mb-3">
-                    <h6 class="mb-2"><i class="bi bi-shield-check me-2"></i>Condiciones de compra</h6>
-                    <p class="mb-0">Al confirmar la reserva, aceptas las condiciones de la aerolínea. La tarifa podría
-                        cambiar si no se emite inmediatamente.</p>
-                </div>
-            </div>
-            <div class="col-md-4">
-                <div class="policy-section mb-3">
-                    <h6 class="mb-2"><i class="bi bi-credit-card me-2"></i>Métodos de pago</h6>
-                    <p class="mb-0">Aceptamos tarjetas de crédito/débito y transferencias bancarias. Todos los pagos son
-                        procesados de forma segura.</p>
-                </div>
-            </div>
-        </div>
     </div>
 </div>
 </div>

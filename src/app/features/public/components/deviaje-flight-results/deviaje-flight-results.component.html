@@ -1,4 +1,4 @@
-<div class="flight-results-container">
+<div>
   <!-- Header con información del viaje -->
   <header class="results-header">
     <div class="container py-4">
@@ -6,14 +6,14 @@
         <div class="col-md-8">
           <h1 class="results-title">Vuelos de {{ searchParams?.origin }} a {{ searchParams?.destination }}</h1>
           <div class="travel-info">
-            <span class="travel-dates">
+            <span>
               <i class="bi bi-calendar3"></i>
               {{ searchParams?.departureDate | date:'dd MMM' }}
               @if (searchParams?.returnDate) {
               - {{ searchParams?.returnDate | date:'dd MMM' }}
               }
             </span>
-            <span class="travel-passengers">
+            <span>
               <i class="bi bi-person"></i>
               {{ searchParams?.adults }} {{ searchParams?.adults === 1 ? 'adulto' : 'adultos' }}
               @if (searchParams?.children) {
@@ -31,8 +31,8 @@
             }
           </div>
         </div>
-        <div class="col-md-4 text-md-end">
-          <button class="btn btn-outline mt-2 mt-md-0" routerLink="/home/flight-search">
+        <div class="col-md-4 text-md-end text-center">
+          <button class="btn btn-outline mt-2 mt-md-0" routerLink="/home/flight/search">
             <i class="bi bi-arrow-left"></i> Modificar búsqueda
           </button>
         </div>
@@ -45,9 +45,9 @@
       <!-- Filtros laterales (visible en desktop) -->
       <div class="col-lg-3 d-none d-lg-block filter-sidebar">
         <div class="filters-panel">
-          <div class="filters-header">
-            <h2 class="filter-title">Filtros</h2>
-            <button class="reset-filters-btn" (click)="resetFilters()">
+          <div class="filters-header row">
+            <h2 class="filter-title col-12 col-xl-auto">Filtros</h2>
+            <button class="reset-filters-btn col-12 col-xl-auto" (click)="resetFilters()">
               <i class="bi bi-arrow-counterclockwise"></i> Restablecer
             </button>
           </div>
@@ -57,12 +57,14 @@
             <h3 class="filter-section-title">Precio</h3>
             <div class="price-range">
               <div class="price-slider mb-3">
-                <input type="range" class="form-range" min="{{ priceRange.min }}" max="{{ priceRange.max }}"
-                  [(ngModel)]="priceRange.max" (change)="onFilterChange()">
+                <input type="range" class="form-range" 
+                        min="{{ priceRange.min }}" 
+                        max="{{ priceRange.max }}"
+                        [(ngModel)]="priceRange.current" 
+                        (input)="onFilterChange()">
               </div>
-              <div class="price-labels">
-                <span>{{ priceRange.min | currency:(searchParams?.currency || 'USD') }}</span>
-                <span>{{ priceRange.max | currency:(searchParams?.currency || 'USD') }}</span>
+              <div class="price-labels d-flex justify-content-between flex-column">
+                <span>{{ priceRange.current | currency:(searchParams?.currency || 'USD') }}</span>
               </div>
             </div>
           </div>
@@ -71,9 +73,9 @@
           <div class="filter-section">
             <h3 class="filter-section-title">Aerolíneas</h3>
             <div class="airlines-filter">
-              @for (airline of selectedAirlines; track airline) {
-              <div class="form-check">
-                <input class="form-check-input" type="checkbox" id="airline-{{ airline }}"
+              @for (airline of availableAirlines; track airline) {
+              <div class="form-check py-1">
+                <input class="form-check-input me-2" type="checkbox" id="airline-{{ airline }}"
                   [checked]="selectedAirlines.includes(airline)" (change)="onFilterChange()">
                 <label class="form-check-label" for="airline-{{ airline }}">
                   {{ getAirlineName(airline) }}
@@ -87,9 +89,9 @@
           <div class="filter-section">
             <h3 class="filter-section-title">Clase de cabina</h3>
             <div class="cabin-filter">
-              @for (cabin of selectedCabins; track cabin) {
-              <div class="form-check">
-                <input class="form-check-input" type="checkbox" id="cabin-{{ cabin }}"
+              @for (cabin of availableCabins; track cabin) {
+              <div class="form-check py-1">
+                <input class="form-check-input me-2" type="checkbox" id="cabin-{{ cabin }}"
                   [checked]="selectedCabins.includes(cabin)" (change)="onFilterChange()">
                 <label class="form-check-label" for="cabin-{{ cabin }}">
                   {{ flightUtils.getCabinClass(cabin) }}
@@ -102,8 +104,8 @@
           <!-- Filtro de escalas -->
           <div class="filter-section">
             <h3 class="filter-section-title">Escalas</h3>
-            <div class="form-check">
-              <input class="form-check-input" type="checkbox" id="direct-flights" [(ngModel)]="directFlightsOnly"
+            <div class="form-check py-1">
+              <input class="form-check-input me-2" type="checkbox" id="direct-flights" [(ngModel)]="directFlightsOnly"
                 (change)="onFilterChange()">
               <label class="form-check-label" for="direct-flights">
                 Solo vuelos directos
@@ -138,11 +140,10 @@
               <div class="price-range">
                 <div class="price-slider mb-3">
                   <input type="range" class="form-range" min="{{ priceRange.min }}" max="{{ priceRange.max }}"
-                    [(ngModel)]="priceRange.max" (change)="onFilterChange()">
+                    [(ngModel)]="priceRange.current" (input)="onFilterChange()">
                 </div>
                 <div class="price-labels">
-                  <span>{{ priceRange.min | currency:(searchParams?.currency || 'USD') }}</span>
-                  <span>{{ priceRange.max | currency:(searchParams?.currency || 'USD') }}</span>
+                  <span>{{ priceRange.current | currency:(searchParams?.currency || 'USD') }}</span>
                 </div>
               </div>
             </div>
@@ -151,9 +152,9 @@
             <div class="filter-section">
               <h3 class="filter-section-title">Aerolíneas</h3>
               <div class="airlines-filter">
-                @for (airline of selectedAirlines; track airline) {
-                <div class="form-check">
-                  <input class="form-check-input" type="checkbox" id="mobile-airline-{{ airline }}"
+                @for (airline of availableAirlines; track airline) {
+                <div class="form-check py-1">
+                  <input class="form-check-input me-2" type="checkbox" id="mobile-airline-{{ airline }}"
                     [checked]="selectedAirlines.includes(airline)" (change)="onFilterChange()">
                   <label class="form-check-label" for="mobile-airline-{{ airline }}">
                     {{ getAirlineName(airline) }}
@@ -167,9 +168,9 @@
             <div class="filter-section">
               <h3 class="filter-section-title">Clase de cabina</h3>
               <div class="cabin-filter">
-                @for (cabin of selectedCabins; track cabin) {
-                <div class="form-check">
-                  <input class="form-check-input" type="checkbox" id="mobile-cabin-{{ cabin }}"
+                @for (cabin of availableCabins; track cabin) {
+                <div class="form-check py-1">
+                  <input class="form-check-input me-2" type="checkbox" id="mobile-cabin-{{ cabin }}"
                     [checked]="selectedCabins.includes(cabin)" (change)="onFilterChange()">
                   <label class="form-check-label" for="mobile-cabin-{{ cabin }}">
                     {{ flightUtils.getCabinClass(cabin) }}
@@ -182,8 +183,8 @@
             <!-- Filtro de escalas -->
             <div class="filter-section">
               <h3 class="filter-section-title">Escalas</h3>
-              <div class="form-check">
-                <input class="form-check-input" type="checkbox" id="mobile-direct-flights"
+              <div class="form-check py-1">
+                <input class="form-check-input me-2" type="checkbox" id="mobile-direct-flights"
                   [(ngModel)]="directFlightsOnly" (change)="onFilterChange()">
                 <label class="form-check-label" for="mobile-direct-flights">
                   Solo vuelos directos

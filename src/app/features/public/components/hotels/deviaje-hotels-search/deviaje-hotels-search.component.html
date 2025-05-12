@@ -6,11 +6,11 @@
 
         <form [formGroup]="formSearch" (ngSubmit)="searchHotels()" class="search-form">
             <div class="row">
-                
+
                 <div class="col-md mb-2">
                     <app-deviaje-city-input label="Destino" formControlName="destination"></app-deviaje-city-input>
                     <span class="error-message"
-                    [class.visible]="formSearch.get('destination')?.invalid && formSearch.get('destination')?.touched">
+                        [class.visible]="formSearch.get('destination')?.invalid && formSearch.get('destination')?.touched">
                         Por favor seleccione un destino
                     </span>
                 </div>
@@ -21,12 +21,11 @@
                         <i class="bi bi-calendar3"></i>
                         <input id="checkin" type="text" placeholder="dd/mm/aaaa" class="date-picker-trigger"
                             [value]="formatDisplayDate(checkInDate)" formControlName="checkInDate" readonly
-                            (click)="openCalendar('checkin')"
-                            (keydown.enter)="openCalendar('checkin')"
+                            (click)="openCalendar('checkin')" (keydown.enter)="openCalendar('checkin')"
                             (keydown.space)="openCalendar('checkin')">
                     </div>
                     <span class="error-message"
-                    [class.visible]="formSearch.get('checkInDate')?.invalid && formSearch.get('checkInDate')?.touched">
+                        [class.visible]="formSearch.get('checkInDate')?.invalid && formSearch.get('checkInDate')?.touched">
                         La fecha de entrada es obligatoria
                     </span>
                 </div>
@@ -37,12 +36,11 @@
                         <i class="bi bi-calendar3"></i>
                         <input id="checkout" type="text" placeholder="dd/mm/aaaa" class="date-picker-trigger"
                             [value]="formatDisplayDate(checkOutDate)" readonly formControlName="checkOutDate"
-                            (click)="openCalendar('checkout')"
-                            (keydown.enter)="openCalendar('checkout')"
+                            (click)="openCalendar('checkout')" (keydown.enter)="openCalendar('checkout')"
                             (keydown.space)="openCalendar('checkout')">
                     </div>
                     <span class="error-message"
-                    [class.visible]="formSearch.get('checkOutDate')?.invalid && formSearch.get('checkOutDate')?.touched">
+                        [class.visible]="formSearch.get('checkOutDate')?.invalid && formSearch.get('checkOutDate')?.touched">
                         La fecha de salida es obligatoria
                     </span>
                 </div>
@@ -51,23 +49,9 @@
 
             <div class="row mb-3">
                 <div class="col-md">
-                    <app-deviaje-room-guest-select>
+                    <app-deviaje-room-guest-select [occupancies]="occupancies"
+                        (occupanciesChanged)="handleOccupanciesChanged($event)">
                     </app-deviaje-room-guest-select>
-                </div>
-
-                <div class="col-md">
-                    <label class="mb-1">Estrellas</label>
-                    <div class="input-with-icon">
-                        <i class="bi bi-star"></i>
-                        <select formControlName="stars">
-                            <option value="">Todas las estrellas</option>
-                            <option value="5">5 estrellas</option>
-                            <option value="4">4 estrellas</option>
-                            <option value="3">3 estrellas</option>
-                            <option value="2">2 estrellas</option>
-                            <option value="1">1 estrella</option>
-                        </select>
-                    </div>
                 </div>
 
                 <div class="col-md">
@@ -92,17 +76,17 @@
             </div>
         </form>
 
-        
+
     </div>
 </section>
 
-<app-deviaje-calendar
-selectionMode="range" 
-[minDate]="minDate" 
-[initialStartDate]="checkInDate"
-[initialEndDate]="checkOutDate" 
-[showTwoMonths]="true" 
-[showPrices]="false"
-(rangeSelected)="selectDateRange($event)" 
-(closed)="closeCalendar()" #dateCalendar>
+<app-deviaje-calendar selectionMode="range" [minDate]="minDate" [initialStartDate]="checkInDate"
+    [initialEndDate]="checkOutDate" [showTwoMonths]="true" [showPrices]="false"
+    (rangeSelected)="selectDateRange($event)" (closed)="closeCalendar()" #dateCalendar>
 </app-deviaje-calendar>
+
+<!-- Overlay para carga -->
+<div class="search-loading" [class.show]="isLoading">
+    <div class="spinner"></div>
+    <div class="loading-text">Buscando las mejores opciones...</div>
+</div>

@@ -1,8 +1,8 @@
 import { HttpClient } from '@angular/common/http';
 import { inject, Injectable } from '@angular/core';
 import { environment } from '../../shared/enviroments/enviroment';
-import { catchError, map, Observable } from 'rxjs';
-import { HotelSearchRequest, HotelOffersRequest, HotelOffer, HotelSearchResponse } from '../models/hotels';
+import { catchError, map, Observable, throwError } from 'rxjs';
+import { HotelSearchRequest, HotelOffersRequest, HotelOffer, HotelSearchResponse, HotelResponseDto } from '../models/hotels';
 
 @Injectable({
   providedIn: 'root'
@@ -26,50 +26,47 @@ export class HotelService {
         })
       );
   }
-
   /**
-   * Busca ofertas de hoteles
-   * @param params Parámetros de búsqueda de ofertas
-   * @returns Observable con las ofertas de hoteles
+   * Obtiene los detalles de un hotel específico
+   * @param hotelCode Código del hotel
+   * @returns Observable con los detalles del hotel
    */
-  findHotelOffers(params: HotelOffersRequest): Observable<HotelOffer[]> {
-    return this.http.post<HotelSearchResponse>(`${this.url}/offers`, params)
+  getHotelOfferDetails(hotelCode: string): Observable<HotelResponseDto> {
+    return this.http.get<HotelResponseDto>(`${this.url}/${hotelCode}`)
       .pipe(
-        map(response => response.data || []),
         catchError(error => {
-          console.error('Error buscando ofertas de hoteles:', error);
-          throw error;
+          console.error('Error obteniendo detalles del hotel:', error);
+          return throwError(() => new Error('Error al obtener detalles del hotel: ' + (error.message || 'Error desconocido')));
         })
       );
   }
 
   /**
-   * Obtiene los detalles de una oferta de hotel específica
-   * @param offerId ID de la oferta
-   * @returns Observable con los detalles de la oferta
+   * Verifica la disponibilidad y precio de una tarifa
+   * @param rateKey Clave de la tarifa a verificar
+   * @returns Observable con la información actualizada de la tarifa
    */
-  getHotelOfferDetails(offerId: string): Observable<any> {
-    return this.http.get<any>(`${this.url}/offers/${offerId}`)
+  checkRates(rateKey: string): Observable<any> {
+    return this.http.get<any>(`${this.url}/checkrates/${rateKey}`)
       .pipe(
         catchError(error => {
-          console.error('Error obteniendo detalles de la oferta:', error);
-          throw error;
+          console.error('Error al verificar tarifa:', error);
+          return throwError(() => new Error('Error al verificar tarifa: ' + (error.message || 'Esta tarifa ya no está disponible')));
         })
       );
   }
 
   /**
-   * Obtiene la disponibilidad de habitaciones de un hotel
-   * @param hotelId ID del hotel
-   * @param params Parámetros de búsqueda
-   * @returns Observable con la disponibilidad de habitaciones
+   * Crea una reserva de hotel
+   * @param bookingRequest Datos de la reserva
+   * @returns Observable con la confirmación de la reserva
    */
-  getHotelRoomsAvailability(hotelId: string, params: any): Observable<any> {
-    return this.http.post<any>(`${this.url}/${hotelId}/rooms`, params)
+  createBooking(bookingRequest: any): Observable<any> {
+    return this.http.post<any>(`${this.url}/booking`, bookingRequest)
       .pipe(
         catchError(error => {
-          console.error('Error obteniendo disponibilidad de habitaciones:', error);
-          throw error;
+          console.error('Error al crear reserva:', error);
+          return throwError(() => new Error('Error al crear reserva: ' + (error.message || 'Error desconocido')));
         })
       );
   }

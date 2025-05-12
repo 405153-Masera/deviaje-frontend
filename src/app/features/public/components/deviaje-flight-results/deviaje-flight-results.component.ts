@@ -34,7 +34,9 @@ export class DeviajeFlightResultsComponent implements OnInit, OnDestroy {
   Math = Math;
 
   // Propiedades para manejar los filtros
-  priceRange: { min: number; max: number } = { min: 0, max: 10000 };
+  priceRange: { min: number; max: number; current: number } = { min: 0, max: 10000, current:10000 };
+  availableAirlines: string[] = []; 
+  availableCabins: string[] = []; 
   selectedAirlines: string[] = [];
   selectedCabins: string[] = [];
   directFlightsOnly: boolean = false;
@@ -122,6 +124,7 @@ export class DeviajeFlightResultsComponent implements OnInit, OnDestroy {
         next: (flightOffers) => {
           this.isLoading = false;
           this.flightOffers = flightOffers;
+          this.flightUtils.extractBrandedFaresFromOffers(flightOffers);
 
           try {
             localStorage.setItem('flightSearchResults', JSON.stringify(flightOffers));
@@ -132,7 +135,7 @@ export class DeviajeFlightResultsComponent implements OnInit, OnDestroy {
 
           this.router.navigate([], {
             relativeTo: this.route,
-            state: { flightOffers, searchParams: this.searchParams }
+            state: { flightOffers: flightOffers, searchParams: this.searchParams }
           });
 
           this.initializeFilters();
@@ -163,6 +166,7 @@ export class DeviajeFlightResultsComponent implements OnInit, OnDestroy {
       );
       this.priceRange.min = Math.floor(Math.min(...prices));
       this.priceRange.max = Math.ceil(Math.max(...prices));
+      this.priceRange.current = this.priceRange.max;
 
       // Aca inicializo las aerolineas (solo los codigos)
       const airlines = new Set<string>();
@@ -171,7 +175,8 @@ export class DeviajeFlightResultsComponent implements OnInit, OnDestroy {
           airlines.add(airline)
         );
       });
-      this.selectedAirlines = Array.from(airlines);
+      this.availableAirlines = Array.from(airlines);
+      this.selectedAirlines = [...this.availableAirlines];
 
       // Aca inicializo las travel class segun las ofertas de vuelos
       const cabins = new Set<string>();
@@ -191,27 +196,44 @@ export class DeviajeFlightResultsComponent implements OnInit, OnDestroy {
           });
         }
       });
-      this.selectedCabins = Array.from(cabins);
+      this.availableCabins = Array.from(cabins);
+      this.selectedCabins = [...this.availableCabins];
 
        // Aca establezco la duración máxima
        const durations = this.flightOffers.map(offer => this.flightUtils.getItineraryDurationMinutes(offer));
        this.maxDuration = Math.max(...durations);
+       this.filteredOffers = [...this.flightOffers];
     }
-    this.filteredOffers = [...this.flightOffers];
   }
 
   applyFilters(): void {
     this.isLoading = true;
 
+    // Verificar si hay alguna aerolínea o cabina seleccionada
+    const hasAirlinesSelected = this.selectedAirlines.length > 0;
+    const hasCabinsSelected = this.selectedCabins.length > 0;
+  
+    // Si no hay ninguna aerolínea o cabina seleccionada, mostrar mensaje de "No hay resultados"
+    if ((!hasAirlinesSelected && this.availableAirlines.length > 0) || 
+        (!hasCabinsSelected && this.availableCabins.length > 0)) {
+      this.filteredOffers = [];
+      this.sortResults();
+      this.currentPage = 1;
+      this.isLoading = false;
+      return;
+    }
+
+    let filtered = [...this.flightOffers];
+
     // Filtrar por precio
-    this.filteredOffers = this.flightOffers.filter((offer) => {
+    filtered = filtered.filter((offer) => {
       const price = parseFloat(offer.price.total);
-      return price >= this.priceRange.min && price <= this.priceRange.max;
+      return price >= this.priceRange.min && price <= this.priceRange.current;
     });
 
     // Filtrar por aerolíneas seleccionadas
-    if (this.selectedAirlines && this.selectedAirlines.length > 0) {
-      this.filteredOffers = this.filteredOffers.filter(
+    if (this.selectedAirlines.length > 0) {
+      filtered = filtered.filter(
         (offer) =>
           offer.validatingAirlineCodes &&
           offer.validatingAirlineCodes.some((airline) =>
@@ -222,7 +244,7 @@ export class DeviajeFlightResultsComponent implements OnInit, OnDestroy {
 
     // Filtrar por vuelos directos
     if (this.directFlightsOnly) {
-      this.filteredOffers = this.filteredOffers.filter(
+      filtered = filtered.filter(
         (offer) =>
           offer.itineraries &&
           offer.itineraries.every(
@@ -232,8 +254,8 @@ export class DeviajeFlightResultsComponent implements OnInit, OnDestroy {
     }
 
      // Filtrar por cabinas seleccionadas
-    if (this.selectedCabins && this.selectedCabins.length > 0) {
-      this.filteredOffers = this.filteredOffers.filter(offer => {
+    if (this.selectedCabins.length > 0) {
+      filtered = filtered.filter(offer => {
         if (!offer.travelerPricings || offer.travelerPricings.length === 0) {
           return false;
         }
@@ -254,9 +276,29 @@ export class DeviajeFlightResultsComponent implements OnInit, OnDestroy {
         return false;
       });
     }
+    this.filteredOffers = filtered;
     this.sortResults();
     this.currentPage = 1;
     this.isLoading = false;
+  }
+
+  toggleSelectedFilters(): void {
+    // Obtener referencias a todos los checkboxes
+    const airlineCheckboxes = document.querySelectorAll('input[id^="airline-"]');
+    const cabinCheckboxes = document.querySelectorAll('input[id^="cabin-"]');
+    
+    // Actualizar el array de aerolíneas seleccionadas
+    this.selectedAirlines = Array.from(airlineCheckboxes)
+      .filter((checkbox: any) => checkbox.checked)
+      .map((checkbox: any) => checkbox.id.replace('airline-', ''));
+    
+    // Actualizar el array de cabinas seleccionadas
+    this.selectedCabins = Array.from(cabinCheckboxes)
+      .filter((checkbox: any) => checkbox.checked)
+      .map((checkbox: any) => checkbox.id.replace('cabin-', ''));
+    
+    // Actualizar el filtro de vuelos directos
+    this.directFlightsOnly = (document.getElementById('direct-flights') as HTMLInputElement)?.checked || false;
   }
 
   sortResults(): void {
@@ -337,6 +379,7 @@ export class DeviajeFlightResultsComponent implements OnInit, OnDestroy {
   }
 
   onFilterChange(): void {
+    this.toggleSelectedFilters();
     this.applyFilters();
   }
 

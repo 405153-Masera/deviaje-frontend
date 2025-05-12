@@ -13,8 +13,11 @@ import { DeviajeCalendarComponent } from '../../../../../shared/components/devia
 import { DeviajeCityInputComponent } from '../../../../../shared/components/deviaje-city-input/deviaje-city-input.component';
 import { CityDto } from '../../../../../shared/models/locations';
 import { HotelService } from '../../../../../shared/services/hotel.service';
-import { HotelOffersRequest } from '../../../../../shared/models/hotels';
-import { DeviajeRoomGuestSelectComponent } from "../../../../../shared/components/deviaje-room-guest-select/deviaje-room-guest-select.component";
+import {
+  HotelOffersRequest,
+  HotelSearchRequest,
+} from '../../../../../shared/models/hotels';
+import { DeviajeRoomGuestSelectComponent } from '../../../../../shared/components/deviaje-room-guest-select/deviaje-room-guest-select.component';
 
 @Component({
   selector: 'app-deviaje-hotels-search',
@@ -24,14 +27,13 @@ import { DeviajeRoomGuestSelectComponent } from "../../../../../shared/component
     DeviajeCalendarComponent,
     ReactiveFormsModule,
     DeviajeCityInputComponent,
-    DeviajeRoomGuestSelectComponent
-],
+    DeviajeRoomGuestSelectComponent,
+  ],
   templateUrl: './deviaje-hotels-search.component.html',
   styleUrl: './deviaje-hotels-search.component.scss',
 })
 export class DeviajeHotelsSearchComponent implements OnInit, OnDestroy {
-
-  private readonly hotelService: HotelService = inject(HotelService);
+  //private readonly hotelService: HotelService = inject(HotelService);
   private readonly fb: FormBuilder = inject(FormBuilder);
   private readonly router: Router = inject(Router);
   subscription: Subscription = new Subscription();
@@ -40,26 +42,32 @@ export class DeviajeHotelsSearchComponent implements OnInit, OnDestroy {
   @ViewChild('destinationCityInput')
   destinationCityInput!: DeviajeCityInputComponent;
 
-  destinationControl = new FormControl('', Validators.required);
-
   formSearch: FormGroup = this.fb.group({
-    destination: this.destinationControl,
-    checkInDate: [null, Validators.required],
-    checkOutDate: [null, Validators.required],
-    adults: [1, [Validators.required, Validators.min(1)]],
-    children: [0],
-    rooms: [1, [Validators.required, Validators.min(1), Validators.max(9)]],
-    stars: [''],
+    destination: [null, Validators.required],
+    checkIn: [
+      new Date(new Date().setDate(new Date().getDate() + 1)),
+      Validators.required,
+    ],
+    checkOut: [
+      new Date(new Date().setDate(new Date().getDate() + 7)),
+      Validators.required,
+    ],
     currency: ['ARS'],
   });
 
   // Variables para la ciudad de destino
   destinationCity: string = '';
 
-  // Variables para habitaciones y huéspedes
-  adults: number = 1;
-  children: number = 0;
-  rooms: number = 1;
+  // Ocupación de habitaciones
+  occupancies: Array<{
+    rooms: number;
+    adults: number;
+    children: number;
+    paxes?: Array<{
+      type: string;
+      age: number;
+    }>;
+  }> = [{ rooms: 1, adults: 2, children: 0 }];
 
   // Variables para fechas
   checkInDate: Date | null = null;
@@ -71,8 +79,7 @@ export class DeviajeHotelsSearchComponent implements OnInit, OnDestroy {
   // Estado de carga
   isLoading: boolean = false;
 
-  ngOnInit(): void {
-  }
+  ngOnInit(): void {}
 
   ngOnDestroy(): void {
     this.subscription.unsubscribe();
@@ -129,6 +136,30 @@ export class DeviajeHotelsSearchComponent implements OnInit, OnDestroy {
     this.formSearch.get('destination')?.setValue(city.iataCode);
   }
 
+  // Método para recibir cambios en las ocupaciones
+  handleOccupanciesChanged(
+    occupancies: Array<{
+      rooms: number;
+      adults: number;
+      children: number;
+      paxes?: Array<{
+        type: string;
+        age: number;
+      }>;
+    }>
+  ): void {
+    this.occupancies = occupancies;
+  }
+  getTotalRooms(): number {
+    return this.occupancies.length;
+  }
+
+  getTotalGuests(): number {
+    return this.occupancies.reduce((total, room) => {
+      return total + room.adults + room.children;
+    }, 0);
+  }
+
   searchHotels(): void {
     if (this.formSearch.invalid) {
       this.formSearch.markAllAsTouched();
@@ -137,72 +168,43 @@ export class DeviajeHotelsSearchComponent implements OnInit, OnDestroy {
 
     this.isLoading = true;
 
-    const formatDate = (date: Date | null): string | undefined => {
-      if (!date) return undefined;
-      return date.toISOString().split('T')[0];
+    // Crear estructura de ocupaciones
+    const occupancies = this.occupancies.map((room) => {
+      const occupancy: any = {
+        rooms: room.rooms,
+        adults: room.adults,
+        children: room.children,
+      };
+
+      // Solo agregar paxes si hay niños
+      if (room.children > 0 && room.paxes) {
+        occupancy.paxes = room.paxes.map((pax) => ({
+          type: pax.type,
+          age: pax.age,
+        }));
+      }
+
+      return occupancy;
+    });
+
+    // Crear solicitud completa
+    const searchParams: HotelSearchRequest = {
+      stay: {
+        checkIn: this.formSearch.get('checkIn')?.value,
+        checkOut: this.formSearch.get('checkOut')?.value,
+      },
+      occupancies: occupancies,
+      destination: {
+        code: this.formSearch.get('destination')?.value.iataCode,
+      },
+      currency: this.formSearch.get('currency')?.value,
     };
 
-    // Primero vamos a buscar hoteles en la ciudad
-    const citySearchParams = {
-      cityCode: this.formSearch.get('destination')?.value,
-      ratings: this.formSearch.get('stars')?.value ? [this.formSearch.get('stars')?.value] : undefined
-    };
+    // Navegar a la página de resultados
+    this.router.navigate(['/home/hotels/results'], {
+      state: { searchParams },
+    });
 
-    this.subscription.add(
-      this.hotelService.findHotelsByCity(citySearchParams).subscribe({
-        next: (response) => {
-          // Extraer IDs de los hoteles encontrados
-          const hotelIds = response.data.map((hotel: any) => hotel.hotelId);
-          
-          if (hotelIds.length === 0) {
-            this.isLoading = false;
-            // Mostrar mensaje de no hay hoteles disponibles
-            return;
-          }
-          
-          // Ahora buscar ofertas para esos hoteles
-          const offerParams: HotelOffersRequest = {
-            hotelIds: hotelIds.slice(0, 20), // Limitar a 20 hoteles para evitar sobrecarga
-            checkInDate: formatDate(this.formSearch.get('checkInDate')?.value)!,
-            checkOutDate: formatDate(this.formSearch.get('checkOutDate')?.value)!,
-            adults: this.formSearch.get('adults')?.value,
-            roomQuantity: this.formSearch.get('rooms')?.value,
-            currency: this.formSearch.get('currency')?.value
-          };
-          
-          // Buscar ofertas para los hoteles encontrados
-          this.hotelService.findHotelOffers(offerParams).subscribe({
-            next: (offers) => {
-              this.isLoading = false;
-              
-              // Navegar a la página de resultados con los parámetros y ofertas
-              const searchParams = {
-                destination: this.formSearch.get('destination')?.value,
-                checkInDate: formatDate(this.formSearch.get('checkInDate')?.value),
-                checkOutDate: formatDate(this.formSearch.get('checkOutDate')?.value),
-                adults: this.formSearch.get('adults')?.value,
-                children: this.formSearch.get('children')?.value,
-                rooms: this.formSearch.get('rooms')?.value,
-                stars: this.formSearch.get('stars')?.value,
-                currency: this.formSearch.get('currency')?.value,
-              };
-              
-              this.router.navigate(['/home/hotels/results'], {
-                state: { searchParams, hotelOffers: offers }
-              });
-            },
-            error: (error) => {
-              console.error('Error al buscar ofertas de hoteles:', error);
-              this.isLoading = false;
-              // Mostrar mensaje de error
-            }
-          });
-        },
-        error: (error) => {
-          console.error('Error al buscar hoteles:', error);
-          this.isLoading = false;
-        }
-      })
-    );
+    this.isLoading = false;
   }
 }
