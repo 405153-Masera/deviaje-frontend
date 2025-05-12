@@ -8,6 +8,7 @@ import { DeviajeLoginComponent } from './features/public/components/deviaje-logi
 import { DeviajeSignupComponent } from './features/public/components/deviaje-signup/deviaje-signup.component';
 import { authGuard } from './core/auth/guards/auth.guard';
 import { DeviajeUserProfileComponent } from './features/client/components/deviaje-user-profile/deviaje-user-profile.component';
+import { DeviajeHotelDetailComponent } from './features/public/components/hotels/deviaje-hotel-detail/deviaje-hotel-detail.component';
 
 export const routes: Routes = [
 
@@ -24,7 +25,8 @@ export const routes: Routes = [
       { path: 'flight/search', component: DeviajeFlightsSearchComponent },
       { path: 'flight/results', component: DeviajeFlightResultsComponent },
       { path: 'hotels/search', component: DeviajeHotelsSearchComponent },
-      { path: 'hotels/results', component: DeviajeHotelsResultsComponent }
+      { path: 'hotels/results', component: DeviajeHotelsResultsComponent },
+      { path: 'hotels/detail/:code', component: DeviajeHotelDetailComponent },
     ]
   },
   {

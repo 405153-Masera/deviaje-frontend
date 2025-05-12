@@ -44,11 +44,11 @@ export class DeviajeHotelsSearchComponent implements OnInit, OnDestroy {
 
   formSearch: FormGroup = this.fb.group({
     destination: [null, Validators.required],
-    checkIn: [
+    checkInDate: [
       new Date(new Date().setDate(new Date().getDate() + 1)),
       Validators.required,
     ],
-    checkOut: [
+    checkOutDate: [
       new Date(new Date().setDate(new Date().getDate() + 7)),
       Validators.required,
     ],
@@ -190,8 +190,8 @@ export class DeviajeHotelsSearchComponent implements OnInit, OnDestroy {
     // Crear solicitud completa
     const searchParams: HotelSearchRequest = {
       stay: {
-        checkIn: this.formSearch.get('checkIn')?.value,
-        checkOut: this.formSearch.get('checkOut')?.value,
+        checkIn: this.formSearch.get('checkInDate')?.value,
+        checkOut: this.formSearch.get('checkOutDate')?.value,
       },
       occupancies: occupancies,
       destination: {
