@@ -212,15 +212,12 @@ getThumbnailImages(): any[] {
   }
   
   getRoomImage(roomCode: string): string {
-    if (this.hotelDetails && this.hotelDetails.images) {
-      // Buscar una imagen de la habitación
-      const roomImage = this.hotelDetails.images.find(img => img.roomCode === roomCode);
-      if (roomImage) {
-        return roomImage.path;
-      }
+    if (this.hotelDetails && this.hotelDetails.images && this.hotelDetails.images.length > 0) {
+        const roomImage = this.hotelDetails.images.find(img => img.roomCode === roomCode);
+        if (roomImage && roomImage.path) {
+            return `http://photos.hotelbeds.com/giata/${roomImage.path}`;
+        }
     }
-    
-    // Si no hay imagen de habitación, devolver una genérica
     return 'https://via.placeholder.com/300x200?text=Habitación';
   }
 }

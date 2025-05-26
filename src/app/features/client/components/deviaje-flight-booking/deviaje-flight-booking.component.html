@@ -1,0 +1,302 @@
+<div class="container my-4">
+  <!-- Alerta de error -->
+  <div *ngIf="errorMessage" class="alert alert-danger alert-dismissible fade show" role="alert">
+    <i class="bi bi-exclamation-triangle-fill me-2"></i>
+    {{ errorMessage }}
+    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close" (click)="errorMessage = ''"></button>
+  </div>
+
+  <!-- Alerta de éxito -->
+  <div *ngIf="showSuccessMessage" class="alert alert-success" role="alert">
+    <i class="bi bi-check-circle-fill me-2"></i>
+    <strong>¡Reserva exitosa!</strong> Tu reserva ha sido procesada correctamente. Número de referencia: {{ bookingReference }}
+    <div class="mt-2">
+      Redirigiendo a la página de tus reservas...
+      <div class="spinner-border spinner-border-sm ms-2" role="status">
+        <span class="visually-hidden">Cargando...</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Verificación de disponibilidad -->
+  <div *ngIf="isVerifying" class="card mb-4">
+    <div class="card-body d-flex justify-content-center align-items-center p-4">
+      <div class="spinner-border text-primary me-3" role="status">
+        <span class="visually-hidden">Cargando...</span>
+      </div>
+      <span>Verificando disponibilidad y precio actual...</span>
+    </div>
+  </div>
+
+  <!-- Panel de información del vuelo -->
+  <div class="card mb-4" *ngIf="selectedOffer && !isVerifying">
+    <div class="card-header bg-primary text-white">
+      <h5 class="mb-0">Detalles del vuelo</h5>
+    </div>
+    <div class="card-body">
+      <div class="row">
+        <div class="col-md-6">
+          <h6 class="mb-3">Origen y destino</h6>
+          <div class="d-flex justify-content-between align-items-center mb-3">
+            <div class="text-center">
+              <div class="fw-bold fs-5">{{ selectedOffer.itineraries[0].segments[0].departure.iataCode }}</div>
+              <div class="small text-muted">{{ flightUtils.formatTime(selectedOffer.itineraries[0].segments[0].departure.at) }}</div>
+            </div>
+            <div class="flight-line position-relative flex-grow-1 mx-3">
+              <div class="text-center text-muted small">
+                {{ flightUtils.minutesToString(flightUtils.durationToMinutes(selectedOffer.itineraries[0].duration)) }}
+              </div>
+              <hr class="flight-path">
+              <div class="text-center text-muted small">
+                {{ flightUtils.getStopsLabel(selectedOffer.itineraries[0].segments) }}
+              </div>
+            </div>
+            <div class="text-center">
+              <div class="fw-bold fs-5">{{ selectedOffer.itineraries[0].segments[selectedOffer.itineraries[0].segments.length-1].arrival.iataCode }}</div>
+              <div class="small text-muted">{{ flightUtils.formatTime(selectedOffer.itineraries[0].segments[selectedOffer.itineraries[0].segments.length-1].arrival.at) }}</div>
+            </div>
+          </div>
+
+          <!-- Vuelo de regreso (si aplica) -->
+          <div *ngIf="selectedOffer.itineraries.length > 1" class="mt-4">
+            <hr>
+            <div class="d-flex justify-content-between align-items-center mb-3">
+              <div class="text-center">
+                <div class="fw-bold fs-5">{{ selectedOffer.itineraries[1].segments[0].departure.iataCode }}</div>
+                <div class="small text-muted">{{ flightUtils.formatTime(selectedOffer.itineraries[1].segments[0].departure.at) }}</div>
+              </div>
+              <div class="flight-line position-relative flex-grow-1 mx-3">
+                <div class="text-center text-muted small">
+                  {{ flightUtils.minutesToString(flightUtils.durationToMinutes(selectedOffer.itineraries[1].duration)) }}
+                </div>
+                <hr class="flight-path">
+                <div class="text-center text-muted small">
+                  {{ flightUtils.getStopsLabel(selectedOffer.itineraries[1].segments) }}
+                </div>
+              </div>
+              <div class="text-center">
+                <div class="fw-bold fs-5">{{ selectedOffer.itineraries[1].segments[selectedOffer.itineraries[1].segments.length-1].arrival.iataCode }}</div>
+                <div class="small text-muted">{{ flightUtils.formatTime(selectedOffer.itineraries[1].segments[selectedOffer.itineraries[1].segments.length-1].arrival.at) }}</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="col-md-6">
+          <h6 class="mb-3">Aerolínea</h6>
+          <div class="d-flex align-items-center mb-4">
+            <img [src]="'https://www.gstatic.com/flights/airline_logos/70px/' + selectedOffer.validatingAirlineCodes[0] + '.png'" 
+                 alt="Airline" 
+                 class="me-3" 
+                 style="height: 40px; width: auto;">
+            <div>
+              <div class="fw-bold">{{ flightUtils.getAirlineName(selectedOffer.validatingAirlineCodes[0]) }}</div>
+              <div class="small text-muted">{{ selectedOffer.validatingAirlineCodes[0] }}</div>
+            </div>
+          </div>
+
+          <h6 class="mb-3">Precio</h6>
+          <div class="d-flex justify-content-between align-items-center">
+            <div>
+              <div class="fw-bold fs-4">{{ selectedOffer.price.total | currency:(selectedOffer.price.currency || 'USD') }}</div>
+              <div class="small text-muted">Precio total para {{ selectedOffer.travelerPricings.length }} pasajero(s)</div>
+            </div>
+            <div>
+              <span class="badge bg-success">Confirmado</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Formulario principal -->
+  <div *ngIf="selectedOffer && !isVerifying && !showSuccessMessage">
+    <div class="card mb-4">
+      <div class="card-header bg-primary text-white">
+        <div class="d-flex justify-content-between align-items-center">
+          <h5 class="mb-0">Proceso de reserva</h5>
+          <div class="d-flex align-items-center">
+            <span class="me-2">Paso {{ currentStep }} de {{ totalSteps }}</span>
+            <div class="progress" style="width: 150px; height: 10px;">
+              <div class="progress-bar" role="progressbar" [style.width]="(currentStep / totalSteps * 100) + '%'" 
+                   [attr.aria-valuenow]="currentStep" aria-valuemin="0" [attr.aria-valuemax]="totalSteps"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <div class="card-body">
+        <form [formGroup]="mainForm">
+          <!-- Paso 1: Información de los pasajeros -->
+          <div *ngIf="currentStep === 1">
+            <h5 class="card-title mb-4">Información de los pasajeros</h5>
+
+            <div formArrayName="travelers">
+              <div *ngFor="let travelerForm of travelers.controls; let i = index" class="mb-4">
+                <div class="card">
+                  <div class="card-header bg-light">
+                    <div class="d-flex justify-content-between align-items-center">
+                      <h6 class="mb-0">
+                        Pasajero {{ i + 1 }} 
+                        <span class="badge" 
+                              [ngClass]="{
+                                'bg-primary': travelerForm.get('travelerType')?.value === 'ADULT',
+                                'bg-info': travelerForm.get('travelerType')?.value === 'CHILD',
+                                'bg-warning': travelerForm.get('travelerType')?.value === 'INFANT'
+                              }">
+                          {{ travelerForm.get('travelerType')?.value === 'ADULT' ? 'Adulto' : 
+                             travelerForm.get('travelerType')?.value === 'CHILD' ? 'Niño' : 'Bebé' }}
+                        </span>
+                        <span *ngIf="i === 0" class="badge bg-secondary ms-2">Titular</span>
+                      </h6>
+                    </div>
+                  </div>
+                  
+                  <div class="card-body">
+                    <app-deviaje-traveler-form [travelerForm]="travelerForm" [isPrimaryTraveler]="i === 0"></app-deviaje-traveler-form>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Paso 2: Información de pago -->
+          <div *ngIf="currentStep === 2">
+            <h5 class="card-title mb-4">Información de pago</h5>
+            <app-deviaje-payments-form [paymentForm]="mainForm.get('payment')" [amount]="selectedOffer.price.total" [currency]="selectedOffer.price.currency"></app-deviaje-payments-form>
+          </div>
+
+          <!-- Paso 3: Confirmación de la reserva -->
+          <div *ngIf="currentStep === 3">
+            <h5 class="card-title mb-4">Confirmación de la reserva</h5>
+            
+            <div class="alert alert-info">
+              <i class="bi bi-info-circle-fill me-2"></i>
+              Por favor revisa la información antes de confirmar la reserva.
+            </div>
+            
+            <!-- Resumen de pasajeros -->
+            <div class="card mb-4">
+              <div class="card-header bg-light">
+                <h6 class="mb-0">Pasajeros</h6>
+              </div>
+              <div class="card-body">
+                <div class="table-responsive">
+                  <table class="table table-striped">
+                    <thead>
+                      <tr>
+                        <th>Pasajero</th>
+                        <th>Nombre</th>
+                        <th>Documento</th>
+                        <th>Tipo</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <tr *ngFor="let travelerForm of travelers.controls; let i = index">
+                        <td>{{ i + 1 }}</td>
+                        <td>{{ travelerForm.get('name')?.get('firstName')?.value }} {{ travelerForm.get('name')?.get('lastName')?.value }}</td>
+                        <td *ngIf="travelerForm.get('documents')?.get('0')?.get('number')?.value">
+                          {{ travelerForm.get('documents')?.get('0')?.get('documentType')?.value }}: 
+                          {{ travelerForm.get('documents')?.get('0')?.get('number')?.value }}
+                        </td>
+                        <td *ngIf="!travelerForm.get('documents')?.get('0')?.get('number')?.value">-</td>
+                        <td>
+                          <span class="badge" 
+                                [ngClass]="{
+                                  'bg-primary': travelerForm.get('travelerType')?.value === 'ADULT',
+                                  'bg-info': travelerForm.get('travelerType')?.value === 'CHILD',
+                                  'bg-warning': travelerForm.get('travelerType')?.value === 'INFANT'
+                                }">
+                            {{ travelerForm.get('travelerType')?.value === 'ADULT' ? 'Adulto' : 
+                               travelerForm.get('travelerType')?.value === 'CHILD' ? 'Niño' : 'Bebé' }}
+                          </span>
+                        </td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            </div>
+
+            <!-- Información de contacto -->
+            <div class="card mb-4">
+              <div class="card-header bg-light">
+                <h6 class="mb-0">Información de contacto</h6>
+              </div>
+              <div class="card-body">
+                <div class="row">
+                  <div class="col-md-6">
+                    <p><strong>Email:</strong> {{ travelers.at(0).get('contact')?.get('emailAddress')?.value }}</p>
+                  </div>
+                  <div class="col-md-6">
+                    <p><strong>Teléfono:</strong> +{{ travelers.at(0).get('contact')?.get('phones')?.get('0')?.get('countryCallingCode')?.value }} {{ travelers.at(0)?.get('contact')?.get('phones')?.get('0')?.get('number')?.value }}</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Resumen de pago -->
+            <div class="card mb-4">
+              <div class="card-header bg-light">
+                <h6 class="mb-0">Información de pago</h6>
+              </div>
+              <div class="card-body">
+                <div class="row">
+                  <div class="col-md-6">
+                    <p><strong>Método:</strong> Tarjeta de crédito</p>
+                    <p><strong>Titular:</strong> {{ mainForm.get('payment')?.get('cardholderName')?.value }}</p>
+                    <p><strong>Número:</strong> **** **** **** {{ mainForm.get('payment')?.get('cardNumber')?.value.substring(12) }}</p>
+                  </div>
+                  <div class="col-md-6">
+                    <p><strong>Monto total:</strong> {{ selectedOffer.price.total | currency:(selectedOffer.price.currency || 'USD') }}</p>
+                    <p><strong>Moneda:</strong> {{ selectedOffer.price.currency }}</p>
+                    <p><strong>Cuotas:</strong> 1</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Términos y condiciones -->
+            <div class="form-check mb-4">
+              <input class="form-check-input" type="checkbox" id="acceptTerms" checked>
+              <label class="form-check-label" for="acceptTerms">
+                Acepto los <a href="#" target="_blank">términos y condiciones</a> y las <a href="#" target="_blank">políticas de privacidad</a>
+              </label>
+            </div>
+          </div>
+        </form>
+      </div>
+
+      <div class="card-footer">
+        <div class="d-flex justify-content-between">
+          <button class="btn btn-outline-secondary" 
+                  [disabled]="currentStep === 1 || isLoading" 
+                  (click)="previousStep()">
+            <i class="bi bi-arrow-left me-1"></i> Anterior
+          </button>
+          
+          <div>
+            <button *ngIf="currentStep < totalSteps" 
+                    class="btn btn-primary" 
+                    [disabled]="isLoading" 
+                    (click)="nextStep()">
+              Siguiente <i class="bi bi-arrow-right ms-1"></i>
+            </button>
+            
+            <button *ngIf="currentStep === totalSteps" 
+                    class="btn btn-success" 
+                    [disabled]="isLoading" 
+                    (click)="submitBooking()">
+              <span *ngIf="!isLoading">Confirmar reserva</span>
+              <span *ngIf="isLoading">
+                <span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+                Procesando...
+              </span>
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
