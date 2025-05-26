@@ -164,7 +164,13 @@
           <!-- Paso 2: Información de pago -->
           <div *ngIf="currentStep === 2">
             <h5 class="card-title mb-4">Información de pago</h5>
-            <app-deviaje-payments-form [paymentForm]="mainForm.get('payment')" [amount]="selectedOffer.price.total" [currency]="selectedOffer.price.currency"></app-deviaje-payments-form>
+            <ng-container *ngIf="mainForm.get('payment')">
+              <app-deviaje-payments-form 
+                [paymentForm]="mainForm.get('payment')" 
+                [amount]="selectedOffer.price.total || '0'" 
+                [currency]="selectedOffer.price.currency || 'USD'">
+              </app-deviaje-payments-form>
+            </ng-container>
           </div>
 
           <!-- Paso 3: Confirmación de la reserva -->
@@ -230,7 +236,7 @@
                     <p><strong>Email:</strong> {{ travelers.at(0).get('contact')?.get('emailAddress')?.value }}</p>
                   </div>
                   <div class="col-md-6">
-                    <p><strong>Teléfono:</strong> +{{ travelers.at(0).get('contact')?.get('phones')?.get('0')?.get('countryCallingCode')?.value }} {{ travelers.at(0)?.get('contact')?.get('phones')?.get('0')?.get('number')?.value }}</p>
+                    <p><strong>Teléfono:</strong> +{{ travelers.at(0).get('contact')?.get('phones')?.get('0')?.get('countryCallingCode')?.value }} {{ travelers.at(0).get('contact')?.get('phones')?.get('0')?.get('number')?.value }}</p>
                   </div>
                 </div>
               </div>

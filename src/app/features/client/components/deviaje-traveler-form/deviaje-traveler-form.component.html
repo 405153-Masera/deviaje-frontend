@@ -215,7 +215,7 @@
             id="expiryDate" 
             formControlName="expiryDate"
             [ngClass]="{'is-invalid': travelerForm.get('documents')?.get('0')?.get('expiryDate')?.invalid && travelerForm.get('documents')?.get('0')?.get('expiryDate')?.touched}"
-            [min]="formatDateForInput(new Date())"
+            [min]="formatDateForInput(today)"
           >
           <div class="invalid-feedback">
             La fecha de vencimiento es obligatoria y debe ser posterior a la fecha actual

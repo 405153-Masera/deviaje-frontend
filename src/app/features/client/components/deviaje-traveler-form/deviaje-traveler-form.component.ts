@@ -1,7 +1,7 @@
 import { CommonModule } from '@angular/common';
 import { HttpClient } from '@angular/common/http';
 import { Component, inject, Input, OnInit } from '@angular/core';
-import { FormGroup, ReactiveFormsModule } from '@angular/forms';
+import { AbstractControl, FormGroup, ReactiveFormsModule } from '@angular/forms';
 
 @Component({
   selector: 'app-deviaje-traveler-form',
@@ -11,7 +11,7 @@ import { FormGroup, ReactiveFormsModule } from '@angular/forms';
   styleUrl: './deviaje-traveler-form.component.scss'
 })
 export class DeviajeTravelerFormComponent implements OnInit {
-  @Input() travelerForm!: FormGroup;
+  @Input() travelerForm!: AbstractControl;
   @Input() isPrimaryTraveler: boolean = false;
 
   private http = inject(HttpClient);
@@ -19,6 +19,7 @@ export class DeviajeTravelerFormComponent implements OnInit {
   countries: Country[] = [];
   filteredCountries: Country[] = [];
   isLoading = false;
+  today: Date = new Date();
 
   genderOptions = [
     { value: 'MALE', label: 'Masculino' },
@@ -104,9 +105,15 @@ export class DeviajeTravelerFormComponent implements OnInit {
     this.travelerForm.get('dateOfBirth')?.setValue(formattedDate);
   }
 
-  // Formatear un objeto Date como YYYY-MM-DD
-  formatDateForInput(date: Date): string {
-    return date.toISOString().split('T')[0];
+   // Formatear un objeto Date como YYYY-MM-DD
+   formatDateForInput(date: Date): string {
+    if (!date) return '';
+    
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    
+    return `${year}-${month}-${day}`;
   }
 
   // Calcular la fecha mínima y máxima según el tipo de pasajero
