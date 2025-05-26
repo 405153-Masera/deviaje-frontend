@@ -50,6 +50,16 @@ export class DeviajeFlightBookingComponent implements OnInit {
     return this.mainForm.get('travelers') as FormArray;
   }
 
+   // Método helper para obtener un control como FormGroup para usar en el template
+   getTravelerFormGroup(index: number): FormGroup {
+    return this.travelers.at(index) as FormGroup;
+  }
+
+  // Método helper para obtener el payment form como FormGroup
+  get paymentFormGroup(): FormGroup {
+    return this.mainForm.get('payment') as FormGroup;
+  }
+  
   ngOnInit(): void {
     // Obtener los datos del vuelo seleccionado del state del router
     const navigation = this.router.getCurrentNavigation();

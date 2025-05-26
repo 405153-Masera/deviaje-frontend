@@ -10,7 +10,7 @@ import { AbstractControl, FormGroup, ReactiveFormsModule } from '@angular/forms'
   styleUrl: './deviaje-payments-form.component.scss'
 })
 export class DeviajePaymentsFormComponent implements OnInit {
-  @Input() paymentForm: AbstractControl | null = null;
+  @Input() paymentForm: FormGroup | null = null;
   @Input() amount: string = '0';
   @Input() currency: string = 'USD';
   

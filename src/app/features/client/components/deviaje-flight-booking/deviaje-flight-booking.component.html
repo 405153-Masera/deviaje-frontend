@@ -154,7 +154,7 @@
                   </div>
                   
                   <div class="card-body">
-                    <app-deviaje-traveler-form [travelerForm]="travelerForm" [isPrimaryTraveler]="i === 0"></app-deviaje-traveler-form>
+                    <app-deviaje-traveler-form [travelerForm]="getTravelerFormGroup(i)" [isPrimaryTraveler]="i === 0"></app-deviaje-traveler-form>
                   </div>
                 </div>
               </div>
@@ -166,7 +166,7 @@
             <h5 class="card-title mb-4">Información de pago</h5>
             <ng-container *ngIf="mainForm.get('payment')">
               <app-deviaje-payments-form 
-                [paymentForm]="mainForm.get('payment')" 
+                [paymentForm]="paymentFormGroup" 
                 [amount]="selectedOffer.price.total || '0'" 
                 [currency]="selectedOffer.price.currency || 'USD'">
               </app-deviaje-payments-form>
