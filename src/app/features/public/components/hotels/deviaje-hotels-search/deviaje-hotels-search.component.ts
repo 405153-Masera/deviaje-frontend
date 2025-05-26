@@ -198,6 +198,7 @@ export class DeviajeHotelsSearchComponent implements OnInit, OnDestroy {
         code: this.formSearch.get('destination')?.value.iataCode,
       },
       currency: this.formSearch.get('currency')?.value,
+      language: 'CAS',
     };
 
     // Navegar a la página de resultados

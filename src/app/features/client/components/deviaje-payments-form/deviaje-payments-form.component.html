@@ -1,0 +1,129 @@
+<div *ngIf="paymentForm" class="payment-section">
+    <div class="row">
+        <!-- Vista previa de la tarjeta -->
+        <div class="col-lg-5 mb-4 mb-lg-0">
+            <div class="card-preview" [class.flip]="!showCardPreview">
+                <div class="card-front">
+                    <div class="card-bg" [ngClass]="cardType">
+                        <div class="card-chip"></div>
+                        <div class="card-logo" [ngClass]="cardType"></div>
+                        <div class="card-number">{{ previewCardNumber }}</div>
+                        <div class="card-info">
+                            <div class="card-holder">
+                                <div class="label">TITULAR</div>
+                                <div class="value">{{ previewCardHolder }}</div>
+                            </div>
+                            <div class="card-expires">
+                                <div class="label">VENCE</div>
+                                <div class="value">{{ previewCardExpiry }}</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-back">
+                    <div class="card-bg" [ngClass]="cardType">
+                        <div class="card-band"></div>
+                        <div class="card-cvv">
+                            <div class="label">CVV</div>
+                            <div class="value">
+                                <span *ngFor="let _ of [].constructor(3)">•</span>
+                            </div>
+                        </div>
+                        <div class="card-logo" [ngClass]="cardType"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Formulario de pago -->
+        <div class="col-lg-7">
+            <form [formGroup]="paymentForm">
+                <div class="mb-3">
+                    <label for="cardNumber" class="form-label">Número de tarjeta <span
+                            class="text-danger">*</span></label>
+                    <div class="input-group">
+                        <span class="input-group-text"><i class="bi" [ngClass]="cardTypeIcon"></i></span>
+                        <input type="text" class="form-control" id="cardNumber" formControlName="cardNumber"
+                            placeholder="Número de tarjeta" (input)="formatCardNumber($event)"
+                            [ngClass]="{'is-invalid': paymentForm.get('cardNumber')?.invalid && paymentForm.get('cardNumber')?.touched}"
+                            maxlength="16">
+                        <div class="invalid-feedback">
+                            Ingrese un número de tarjeta válido (16 dígitos)
+                        </div>
+                    </div>
+                </div>
+
+                <div class="mb-3">
+                    <label for="cardholderName" class="form-label">Nombre del titular <span
+                            class="text-danger">*</span></label>
+                    <input type="text" class="form-control" id="cardholderName" formControlName="cardholderName"
+                        placeholder="Nombre como aparece en la tarjeta"
+                        [ngClass]="{'is-invalid': paymentForm.get('cardholderName')?.invalid && paymentForm.get('cardholderName')?.touched}">
+                    <div class="invalid-feedback">
+                        El nombre del titular es obligatorio
+                    </div>
+                </div>
+
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label for="expiryDate" class="form-label">Fecha de vencimiento <span
+                                class="text-danger">*</span></label>
+                        <input type="text" class="form-control" id="expiryDate" formControlName="expiryDate"
+                            placeholder="MM/YY" (input)="formatExpiryDate($event)"
+                            [ngClass]="{'is-invalid': paymentForm.get('expiryDate')?.invalid && paymentForm.get('expiryDate')?.touched}"
+                            maxlength="5">
+                        <div class="invalid-feedback">
+                            Ingrese una fecha de vencimiento válida (MM/YY)
+                        </div>
+                    </div>
+
+                    <div class="col-md-6 mb-3">
+                        <label for="cvv" class="form-label">Código de seguridad <span
+                                class="text-danger">*</span></label>
+                        <div class="input-group">
+                            <input type="text" class="form-control" id="cvv" formControlName="cvv" placeholder="CVV"
+                                (input)="formatCvv($event)"
+                                [ngClass]="{'is-invalid': paymentForm.get('cvv')?.invalid && paymentForm.get('cvv')?.touched}"
+                                maxlength="4" (focus)="flipCard(true)" (blur)="flipCard(false)">
+                            <span class="input-group-text">
+                                <i class="bi bi-question-circle" data-bs-toggle="tooltip" data-bs-placement="top"
+                                    title="Código de 3 o 4 dígitos en la parte posterior de su tarjeta"></i>
+                            </span>
+                            <div class="invalid-feedback">
+                                Ingrese un código de seguridad válido (3 o 4 dígitos)
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label for="amount" class="form-label">Monto</label>
+                        <div class="input-group">
+                            <span class="input-group-text">{{ currency }}</span>
+                            <input type="text" class="form-control" id="amount" [value]="amount" readonly>
+                        </div>
+                    </div>
+
+                    <div class="col-md-6 mb-3">
+                        <label for="installments" class="form-label">Cuotas</label>
+                        <select class="form-select" id="installments">
+                            <option value="1" selected>1 cuota</option>
+                            <option value="3">3 cuotas</option>
+                            <option value="6">6 cuotas</option>
+                            <option value="12">12 cuotas</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="alert alert-info mt-3">
+                    <i class="bi bi-info-circle-fill me-2"></i>
+                    Todos los pagos son procesados de manera segura a través de Mercado Pago.
+                </div>
+
+                <input type="hidden" formControlName="amount">
+                <input type="hidden" formControlName="currency">
+            </form>
+        </div>
+    </div>
+</div>
