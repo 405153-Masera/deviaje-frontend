@@ -420,7 +420,7 @@ export class DeviajeFlightResultsComponent implements OnInit, OnDestroy {
 
   bookFlight(offer: FlightOffer): void {
     // Navegar a la página de reserva de vuelo
-    this.router.navigate(['/flight/booking'], {
+    this.router.navigate(['/home/flight/booking'], {
       state: { flightOffer: offer, searchParams: this.searchParams },
     });
   }

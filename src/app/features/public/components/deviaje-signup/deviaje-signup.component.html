@@ -29,16 +29,19 @@
                                 <div class="input-with-icon">
                                     <i class="bi bi-person"></i>
                                     <input type="text" formControlName="username" class="form-control"
-                                        [ngClass]="{ 'is-invalid': submitted && f['username'].errors }" id="username"
+                                        [ngClass]="{ 'is-invalid': submitted && f['username'].errors || f['username'].errors?.['usernameExists'] }" 
+                                        id="username"
                                         placeholder="Nombre de usuario">
+                                         <div *ngIf="f['username'].pending" class="spinner-border spinner-border-sm text-primary position-absolute" style="right: 10px; top: 10px;"></div>
                                 </div>
-                                <div *ngIf="submitted && f['username'].errors" class="invalid-feedback">
+                                <div *ngIf="submitted && f['username'].errors" class="invalid-feedback d-block">
                                     <div *ngIf="f['username'].errors['required']">El nombre de usuario es obligatorio
                                     </div>
                                     <div *ngIf="f['username'].errors['minlength']">El nombre de usuario debe tener al
                                         menos 3 caracteres</div>
                                     <div *ngIf="f['username'].errors['maxlength']">El nombre de usuario no debe exceder
                                         50 caracteres</div>
+                                    <div *ngIf="f['username'].errors?.['usernameExists']">Este nombre de usuario ya está en uso</div>
                                 </div>
                             </div>
                             <div class="col-md-6">
@@ -46,13 +49,16 @@
                                 <div class="input-with-icon">
                                     <i class="bi bi-envelope"></i>
                                     <input type="email" formControlName="email" class="form-control"
-                                        [ngClass]="{ 'is-invalid': submitted && f['email'].errors }" id="email"
+                                        [ngClass]="{ 'is-invalid': submitted && f['email'].errors || f['email'].errors?.['emailExists'] }"
+                                        id="email"
                                         placeholder="correo@ejemplo.com">
+                                    <div *ngIf="f['email'].pending" class="spinner-border spinner-border-sm text-primary position-absolute" style="right: 10px; top: 10px;"></div>
                                 </div>
-                                <div *ngIf="submitted && f['email'].errors" class="invalid-feedback">
+                                <div *ngIf="submitted && f['email'].errors" class="invalid-feedback d-block">
                                     <div *ngIf="f['email'].errors['required']">El correo electrónico es obligatorio
                                     </div>
                                     <div *ngIf="f['email'].errors['email']">Ingresa un correo electrónico válido</div>
+                                    <div *ngIf="f['email'].errors?.['emailExists']">Este correo electrónico ya está registrado</div>
                                 </div>
                             </div>
                         </div>
@@ -62,27 +68,60 @@
                                 <label for="password" class="form-label">Contraseña *</label>
                                 <div class="input-with-icon">
                                     <i class="bi bi-lock"></i>
-                                    <input type="password" formControlName="password" class="form-control"
+                                    <input [type]="showPassword ? 'text' : 'password'" formControlName="password" class="form-control"
                                         [ngClass]="{ 'is-invalid': submitted && f['password'].errors }" id="password"
                                         placeholder="Contraseña">
+                                    <button type="button" class="btn btn-link text-muted password-toggle" (click)="togglePasswordVisibility('password')">
+                                        <i class="bi" [ngClass]="showPassword ? 'bi-eye-slash' : 'bi-eye'"></i>
+                                    </button>
                                 </div>
-                                <div *ngIf="submitted && f['password'].errors" class="invalid-feedback">
+                                <div *ngIf="f['password'].value">
+                                    <div class="password-strength-meter mt-2">
+                                        <div class="progress" style="height: 5px;">
+                                            <div class="progress-bar" role="progressbar" [style.width.%]="passwordStrength"
+                                                [ngClass]="{
+                                                    'bg-danger': passwordStrength < 40,
+                                                    'bg-warning': passwordStrength >= 40 && passwordStrength < 70,
+                                                    'bg-success': passwordStrength >= 70
+                                                }" 
+                                                [attr.aria-valuenow]="passwordStrength" aria-valuemin="0" aria-valuemax="100">
+                                            </div>
+                                        </div>
+                                        <small class="d-block mt-1 text-muted">
+                                            Seguridad: 
+                                            <span [ngClass]="{
+                                                'text-danger': passwordStrength < 40,
+                                                'text-warning': passwordStrength >= 40 && passwordStrength < 70,
+                                                'text-success': passwordStrength >= 70
+                                            }">
+                                                {{ passwordStrength < 40 ? 'Débil' : (passwordStrength < 70 ? 'Media' : 'Fuerte') }}
+                                            </span>
+                                        </small>
+                                    </div>
+                                </div>
+                                <div *ngIf="submitted && f['password'].errors" class="invalid-feedback d-block">
                                     <div *ngIf="f['password'].errors['required']">La contraseña es obligatoria</div>
-                                    <div *ngIf="f['password'].errors['minlength']">La contraseña debe tener al menos 6
-                                        caracteres</div>
-                                    <div *ngIf="f['password'].errors['maxlength']">La contraseña no debe exceder 40
-                                        caracteres</div>
+                                    <div *ngIf="f['password'].errors['minlength']">La contraseña debe tener al menos 8 caracteres</div>
+                                    <div *ngIf="f['password'].errors['maxlength']">La contraseña no debe exceder 30 caracteres</div>
+                                    <div *ngIf="f['password'].errors?.['noUppercase']">Debe contener al menos una letra mayúscula</div>
+                                    <div *ngIf="f['password'].errors?.['noLowercase']">Debe contener al menos una letra minúscula</div>
+                                    <div *ngIf="f['password'].errors?.['noDigit']">Debe contener al menos un número</div>
+                                    <div *ngIf="f['password'].errors?.['noSpecialChar']">Debe contener al menos un carácter especial</div>
+                                    <div *ngIf="f['password'].errors?.['hasWhitespace']">No debe contener espacios en blanco</div>
                                 </div>
                             </div>
                             <div class="col-md-6">
                                 <label for="confirmPassword" class="form-label">Confirmar Contraseña *</label>
                                 <div class="input-with-icon">
                                     <i class="bi bi-lock-fill"></i>
-                                    <input type="password" formControlName="confirmPassword" class="form-control"
+                                    <input [type]="showConfirmPassword ? 'text' : 'password'" formControlName="confirmPassword" class="form-control"
                                         [ngClass]="{ 'is-invalid': submitted && f['confirmPassword'].errors }"
                                         id="confirmPassword" placeholder="Confirmar contraseña">
+                                    <button type="button" class="btn btn-link text-muted password-toggle" (click)="togglePasswordVisibility('confirmPassword')">
+                                        <i class="bi" [ngClass]="showConfirmPassword ? 'bi-eye-slash' : 'bi-eye'"></i>
+                                    </button>
                                 </div>
-                                <div *ngIf="submitted && f['confirmPassword'].errors" class="invalid-feedback">
+                                <div *ngIf="submitted && f['confirmPassword'].errors" class="invalid-feedback d-block">
                                     <div *ngIf="f['confirmPassword'].errors['required']">La confirmación de contraseña
                                         es obligatoria</div>
                                     <div *ngIf="f['confirmPassword'].errors['mustMatch']">Las contraseñas no coinciden
@@ -112,43 +151,29 @@
                             </div>
                         </div>
 
-                        <div class="row mb-3">
+                        <div class="row mb-4">
                             <div class="col-md-6 mb-3 mb-md-0">
-                                <label for="phone" class="form-label">Teléfono</label>
+                                <label for="gender" class="form-label">Género</label>
                                 <div class="input-with-icon">
-                                    <i class="bi bi-telephone"></i>
-                                    <input type="tel" formControlName="phone" class="form-control" id="phone"
-                                        placeholder="Teléfono">
+                                    <i class="bi bi-gender-ambiguous"></i>
+                                    <select formControlName="gender" class="form-select" id="gender">
+                                        <option value="">Seleccionar género</option>
+                                        <option *ngFor="let option of genderOptions" [value]="option.value">
+                                            {{ option.label }}
+                                        </option>
+                                    </select>
                                 </div>
                             </div>
                             <div class="col-md-6">
                                 <label for="birthDate" class="form-label">Fecha de Nacimiento</label>
                                 <div class="input-with-icon">
                                     <i class="bi bi-calendar"></i>
-                                    <input type="date" formControlName="birthDate" class="form-control" id="birthDate">
+                                    <input type="date" formControlName="birthDate" class="form-control" id="birthDate"
+                                        [max]="minDate.toISOString().split('T')[0]"
+                                        [ngClass]="{ 'is-invalid': submitted && f['birthDate'].errors }">
                                 </div>
-                            </div>
-                        </div>
-
-                        <div class="row mb-4">
-                            <div class="col-md-6 mb-3 mb-md-0">
-                                <label for="dni" class="form-label">Número de Documento</label>
-                                <div class="input-with-icon">
-                                    <i class="bi bi-card-text"></i>
-                                    <input type="text" formControlName="dni" class="form-control" id="dni"
-                                        placeholder="Número de documento">
-                                </div>
-                            </div>
-                            <div class="col-md-6">
-                                <label for="dniTypeId" class="form-label">Tipo de Documento</label>
-                                <div class="input-with-icon">
-                                    <i class="bi bi-card-checklist"></i>
-                                    <select formControlName="dniTypeId" class="form-select" id="dniTypeId">
-                                        <option value="">Seleccionar tipo</option>
-                                        <option value="1">DNI</option>
-                                        <option value="2">Pasaporte</option>
-                                        <option value="3">CUIT/CUIL</option>
-                                    </select>
+                                <div *ngIf="submitted && f['birthDate'].errors?.['underage']" class="invalid-feedback d-block">
+                                    Debes tener al menos 18 años para registrarte
                                 </div>
                             </div>
                         </div>

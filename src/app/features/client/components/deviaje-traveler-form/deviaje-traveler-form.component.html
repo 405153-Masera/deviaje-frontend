@@ -11,9 +11,9 @@
           formControlName="firstName"
           [ngClass]="{'is-invalid': travelerForm.get('name')?.get('firstName')?.invalid && travelerForm.get('name')?.get('firstName')?.touched}"
         >
-        <div class="invalid-feedback">
+        <!-- <div class="invalid-feedback">
           El nombre es obligatorio
-        </div>
+        </div> -->
       </div>
       <div class="col-md-6">
         <label for="lastName" class="form-label">Apellido <span class="text-danger">*</span></label>
@@ -25,9 +25,9 @@
           formControlName="lastName"
           [ngClass]="{'is-invalid': travelerForm.get('name')?.get('lastName')?.invalid && travelerForm.get('name')?.get('lastName')?.touched}"
         >
-        <div class="invalid-feedback">
+        <!-- <div class="invalid-feedback">
           El apellido es obligatorio
-        </div>
+        </div> -->
       </div>
     </div>
   
@@ -172,6 +172,7 @@
               type="text" 
               class="form-control" 
               id="nationality" 
+              formControlName="nationality"
               (input)="filterCountries($event)"
               [ngClass]="{'is-invalid': travelerForm.get('documents')?.get('0')?.get('nationality')?.invalid && travelerForm.get('documents')?.get('0')?.get('nationality')?.touched}"
               list="countryList1"
@@ -207,7 +208,7 @@
           </div>
         </div>
   
-        <div class="mb-3">
+        <!-- <div class="mb-3">
           <label for="expiryDate" class="form-label">Fecha de vencimiento <span class="text-danger">*</span></label>
           <input 
             type="date" 
@@ -220,7 +221,7 @@
           <div class="invalid-feedback">
             La fecha de vencimiento es obligatoria y debe ser posterior a la fecha actual
           </div>
-        </div>
+        </div> -->
       </div>
     </div>
   </form>

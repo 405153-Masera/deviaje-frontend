@@ -21,10 +21,8 @@ export interface SignupRequest {
   password: string;
   firstName?: string;
   lastName?: string;
-  phone?: string;
+  gender?: string;
   birthDate?: Date;
-  dni?: string;
-  dniTypeId?: number;
 }
 
 //Models para recuperar la contraseña
