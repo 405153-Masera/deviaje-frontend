@@ -31,7 +31,6 @@ import {
   styleUrl: './deviaje-signup.component.scss',
 })
 export class DeviajeSignupComponent implements OnInit {
-  
   signupForm!: FormGroup;
   loading = false;
   submitted = false;
@@ -80,12 +79,12 @@ export class DeviajeSignupComponent implements OnInit {
             Validators.maxLength(50),
           ],
           nonNullable: true,
-          asyncValidators: [this.validateUsername.bind(this)],
+          asyncValidators: [this.validatorsService.validateUniqueUsername()],
         }),
         email: this.formBuilder.control('', {
           validators: [Validators.required, Validators.email],
           nonNullable: true,
-          asyncValidators: [this.validateEmail.bind(this)],
+          asyncValidators: [this.validatorsService.validateUniqueEmail()],
         }),
         password: this.formBuilder.control('', {
           validators: [
@@ -122,14 +121,34 @@ export class DeviajeSignupComponent implements OnInit {
       .subscribe((password) => {
         this.calculatePasswordStrength(password);
       });
+
+    this.signupForm.get('password')?.valueChanges.subscribe(() => {
+      const confirmPasswordControl = this.signupForm.get('confirmPassword');
+      if (confirmPasswordControl?.value) {
+        confirmPasswordControl.updateValueAndValidity();
+      }
+    });
   }
 
   get f() {
     return this.signupForm.controls;
   }
 
+    // Helper methods para mostrar errores
+  shouldShowError(fieldName: string): boolean {
+    const field = this.signupForm.get(fieldName);
+    return !!(field && field.invalid && (field.dirty || field.touched || this.submitted));
+  }
+
+  getFieldErrors(fieldName: string): ValidationErrors | null {
+    const field = this.signupForm.get(fieldName);
+    return field ? field.errors : null;
+  }
+
   onSubmit(): void {
     this.submitted = true;
+
+    this.markFormGroupTouched(this.signupForm);
 
     // Detener si el formulario es inválido
     if (this.signupForm.invalid) {
@@ -145,7 +164,9 @@ export class DeviajeSignupComponent implements OnInit {
       firstName: this.f['firstName'].value || undefined,
       lastName: this.f['lastName'].value || undefined,
       gender: this.f['gender'].value || undefined,
-      birthDate: this.f['birthDate'].value ? new Date(this.f['birthDate'].value) : undefined
+      birthDate: this.f['birthDate'].value
+        ? new Date(this.f['birthDate'].value)
+        : undefined,
     };
 
     this.authService.signup(signupRequest).subscribe({
@@ -170,41 +191,30 @@ export class DeviajeSignupComponent implements OnInit {
     });
   }
 
+  private markFormGroupTouched(formGroup: FormGroup): void {
+    Object.keys(formGroup.controls).forEach(key => {
+      const control = formGroup.get(key);
+      control?.markAsTouched();
+
+      if (control instanceof FormGroup) {
+        this.markFormGroupTouched(control);
+      }
+    });
+  }
+
+  private getFormValidationErrors() {
+    let formErrors: any = {};
+
+    Object.keys(this.signupForm.controls).forEach(key => {
+      const controlErrors: ValidationErrors | null = this.signupForm.get(key)!.errors;
+      if (controlErrors) {
+        formErrors[key] = controlErrors;
+      }
+    });
+
+    return formErrors;
+  }
   //Validaciones para el formulario
-
-  validateUsername(control: AbstractControl) {
-    return control.valueChanges.pipe(
-      debounceTime(300), // espera 300ms antes de emitir el valor
-      distinctUntilChanged(), // solo emite si un valor es diferente al anterior
-      filter((value) => value?.length >= 3), // filtra valores menores a 3 caracteres
-      switchMap(
-        (
-          value // mapea a un nuevo observable. Si un nuevo valor es emitido, cancela la solicitud anterior
-        ) =>
-          this.validatorsService.checkUsernameAvailability(value).pipe(
-            //pipe para encadenar operadores
-            map((isAvailable) =>
-              isAvailable ? null : { usernameExists: true }
-            ),
-            catchError(() => of(null))
-          )
-      )
-    );
-  }
-
-  validateEmail(control: AbstractControl) {
-    return control.valueChanges.pipe(
-      debounceTime(300),
-      distinctUntilChanged(),
-      filter((value) => Validators.email(control) === null),
-      switchMap((value) =>
-        this.validatorsService.checkEmailAvailability(value).pipe(
-          map((isAvailable) => (isAvailable ? null : { emailExists: true })),
-          catchError(() => of(null))
-        )
-      )
-    );
-  }
 
   validatePasswordComplexity(
     control: AbstractControl
@@ -268,10 +278,16 @@ export class DeviajeSignupComponent implements OnInit {
       }
 
       if (control.value !== matchingControl.value) {
-        matchingControl.setErrors({ mustMatch: true });
+        matchingControl.setErrors({ ...matchingControl.errors, mustMatch: true });
         return { mustMatch: true };
       } else {
-        matchingControl.setErrors(null);
+        // Limpiar solo el error mustMatch, preservar otros errores
+        if (matchingControl.errors) {
+          delete matchingControl.errors['mustMatch'];
+          if (Object.keys(matchingControl.errors).length === 0) {
+            matchingControl.setErrors(null);
+          }
+        }
         return null;
       }
     };

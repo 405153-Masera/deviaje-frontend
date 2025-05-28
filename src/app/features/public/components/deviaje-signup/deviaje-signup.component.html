@@ -29,19 +29,17 @@
                                 <div class="input-with-icon">
                                     <i class="bi bi-person"></i>
                                     <input type="text" formControlName="username" class="form-control"
-                                        [ngClass]="{ 'is-invalid': submitted && f['username'].errors || f['username'].errors?.['usernameExists'] }" 
+                                        [ngClass]="{ 'is-invalid': shouldShowError('username') }"  
                                         id="username"
                                         placeholder="Nombre de usuario">
                                          <div *ngIf="f['username'].pending" class="spinner-border spinner-border-sm text-primary position-absolute" style="right: 10px; top: 10px;"></div>
                                 </div>
-                                <div *ngIf="submitted && f['username'].errors" class="invalid-feedback d-block">
-                                    <div *ngIf="f['username'].errors['required']">El nombre de usuario es obligatorio
-                                    </div>
-                                    <div *ngIf="f['username'].errors['minlength']">El nombre de usuario debe tener al
-                                        menos 3 caracteres</div>
-                                    <div *ngIf="f['username'].errors['maxlength']">El nombre de usuario no debe exceder
-                                        50 caracteres</div>
-                                    <div *ngIf="f['username'].errors?.['usernameExists']">Este nombre de usuario ya está en uso</div>
+                                <div *ngIf="shouldShowError('username')" class="invalid-feedback d-block">
+                                    <div *ngIf="getFieldErrors('username')?.['required']">El nombre de usuario es obligatorio</div>
+                                    <div *ngIf="getFieldErrors('username')?.['minlength']">El nombre de usuario debe tener al menos 3 caracteres</div>
+                                    <div *ngIf="getFieldErrors('username')?.['maxlength']">El nombre de usuario no debe exceder 50 caracteres</div>
+                                    <div *ngIf="getFieldErrors('username')?.['usernameTaken']">Este nombre de usuario ya está en uso</div>
+                                    <div *ngIf="getFieldErrors('username')?.['serverError']">Error en el servidor. No se puede validar</div>
                                 </div>
                             </div>
                             <div class="col-md-6">
@@ -49,16 +47,16 @@
                                 <div class="input-with-icon">
                                     <i class="bi bi-envelope"></i>
                                     <input type="email" formControlName="email" class="form-control"
-                                        [ngClass]="{ 'is-invalid': submitted && f['email'].errors || f['email'].errors?.['emailExists'] }"
+                                        [ngClass]="{ 'is-invalid': shouldShowError('email') }"
                                         id="email"
                                         placeholder="correo@ejemplo.com">
                                     <div *ngIf="f['email'].pending" class="spinner-border spinner-border-sm text-primary position-absolute" style="right: 10px; top: 10px;"></div>
                                 </div>
-                                <div *ngIf="submitted && f['email'].errors" class="invalid-feedback d-block">
-                                    <div *ngIf="f['email'].errors['required']">El correo electrónico es obligatorio
-                                    </div>
-                                    <div *ngIf="f['email'].errors['email']">Ingresa un correo electrónico válido</div>
-                                    <div *ngIf="f['email'].errors?.['emailExists']">Este correo electrónico ya está registrado</div>
+                               <div *ngIf="shouldShowError('email')" class="invalid-feedback d-block">
+                                    <div *ngIf="getFieldErrors('email')?.['required']">El correo electrónico es obligatorio</div>
+                                    <div *ngIf="getFieldErrors('email')?.['email']">Ingresa un correo electrónico válido</div>
+                                    <div *ngIf="getFieldErrors('email')?.['emailTaken']">Este correo electrónico ya está registrado</div>
+                                    <div *ngIf="getFieldErrors('email')?.['serverError']">Error en el servidor. No se puede validar</div>
                                 </div>
                             </div>
                         </div>
@@ -69,13 +67,13 @@
                                 <div class="input-with-icon">
                                     <i class="bi bi-lock"></i>
                                     <input [type]="showPassword ? 'text' : 'password'" formControlName="password" class="form-control"
-                                        [ngClass]="{ 'is-invalid': submitted && f['password'].errors }" id="password"
+                                        [ngClass]="{ 'is-invalid': shouldShowError('password') }" id="password"
                                         placeholder="Contraseña">
                                     <button type="button" class="btn btn-link text-muted password-toggle" (click)="togglePasswordVisibility('password')">
                                         <i class="bi" [ngClass]="showPassword ? 'bi-eye-slash' : 'bi-eye'"></i>
                                     </button>
                                 </div>
-                                <div *ngIf="f['password'].value">
+                                <div *ngIf="f['password'].value && f['password'].value.length > 0">
                                     <div class="password-strength-meter mt-2">
                                         <div class="progress" style="height: 5px;">
                                             <div class="progress-bar" role="progressbar" [style.width.%]="passwordStrength"
@@ -99,15 +97,15 @@
                                         </small>
                                     </div>
                                 </div>
-                                <div *ngIf="submitted && f['password'].errors" class="invalid-feedback d-block">
-                                    <div *ngIf="f['password'].errors['required']">La contraseña es obligatoria</div>
-                                    <div *ngIf="f['password'].errors['minlength']">La contraseña debe tener al menos 8 caracteres</div>
-                                    <div *ngIf="f['password'].errors['maxlength']">La contraseña no debe exceder 30 caracteres</div>
-                                    <div *ngIf="f['password'].errors?.['noUppercase']">Debe contener al menos una letra mayúscula</div>
-                                    <div *ngIf="f['password'].errors?.['noLowercase']">Debe contener al menos una letra minúscula</div>
-                                    <div *ngIf="f['password'].errors?.['noDigit']">Debe contener al menos un número</div>
-                                    <div *ngIf="f['password'].errors?.['noSpecialChar']">Debe contener al menos un carácter especial</div>
-                                    <div *ngIf="f['password'].errors?.['hasWhitespace']">No debe contener espacios en blanco</div>
+                               <div *ngIf="shouldShowError('password')" class="invalid-feedback d-block">
+                                    <div *ngIf="getFieldErrors('password')?.['required']">La contraseña es obligatoria</div>
+                                    <div *ngIf="getFieldErrors('password')?.['minlength']">La contraseña debe tener al menos 8 caracteres</div>
+                                    <div *ngIf="getFieldErrors('password')?.['maxlength']">La contraseña no debe exceder 30 caracteres</div>
+                                    <div *ngIf="getFieldErrors('password')?.['noUppercase']">Debe contener al menos una letra mayúscula</div>
+                                    <div *ngIf="getFieldErrors('password')?.['noLowercase']">Debe contener al menos una letra minúscula</div>
+                                    <div *ngIf="getFieldErrors('password')?.['noDigit']">Debe contener al menos un número</div>
+                                    <div *ngIf="getFieldErrors('password')?.['noSpecialChar']">Debe contener al menos un carácter especial</div>
+                                    <div *ngIf="getFieldErrors('password')?.['hasWhitespace']">No debe contener espacios en blanco</div>
                                 </div>
                             </div>
                             <div class="col-md-6">
@@ -115,17 +113,15 @@
                                 <div class="input-with-icon">
                                     <i class="bi bi-lock-fill"></i>
                                     <input [type]="showConfirmPassword ? 'text' : 'password'" formControlName="confirmPassword" class="form-control"
-                                        [ngClass]="{ 'is-invalid': submitted && f['confirmPassword'].errors }"
+                                        [ngClass]="{ 'is-invalid': shouldShowError('confirmPassword') }"
                                         id="confirmPassword" placeholder="Confirmar contraseña">
                                     <button type="button" class="btn btn-link text-muted password-toggle" (click)="togglePasswordVisibility('confirmPassword')">
                                         <i class="bi" [ngClass]="showConfirmPassword ? 'bi-eye-slash' : 'bi-eye'"></i>
                                     </button>
                                 </div>
-                                <div *ngIf="submitted && f['confirmPassword'].errors" class="invalid-feedback d-block">
-                                    <div *ngIf="f['confirmPassword'].errors['required']">La confirmación de contraseña
-                                        es obligatoria</div>
-                                    <div *ngIf="f['confirmPassword'].errors['mustMatch']">Las contraseñas no coinciden
-                                    </div>
+                                <div *ngIf="shouldShowError('confirmPassword')" class="invalid-feedback d-block">
+                                    <div *ngIf="getFieldErrors('confirmPassword')?.['required']">La confirmación de contraseña es obligatoria</div>
+                                    <div *ngIf="getFieldErrors('confirmPassword')?.['mustMatch']">Las contraseñas no coinciden</div>
                                 </div>
                             </div>
                         </div>
@@ -170,10 +166,12 @@
                                     <i class="bi bi-calendar"></i>
                                     <input type="date" formControlName="birthDate" class="form-control" id="birthDate"
                                         [max]="minDate.toISOString().split('T')[0]"
-                                        [ngClass]="{ 'is-invalid': submitted && f['birthDate'].errors }">
+                                        [ngClass]="{ 'is-invalid': shouldShowError('birthDate') }">
                                 </div>
-                                <div *ngIf="submitted && f['birthDate'].errors?.['underage']" class="invalid-feedback d-block">
-                                    Debes tener al menos 18 años para registrarte
+                                <div *ngIf="shouldShowError('birthDate')" class="invalid-feedback d-block">
+                                    <div *ngIf="getFieldErrors('birthDate')?.['underage']">
+                                        Debes tener al menos 18 años para registrarte
+                                    </div>
                                 </div>
                             </div>
                         </div>
