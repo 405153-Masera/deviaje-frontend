@@ -1,0 +1,86 @@
+@import '../../../../../assets/styles/variables';
+
+// Password strength indicator styles
+.password-strength-meter {
+  margin-top: 0.5rem;
+
+  .progress {
+    height: 4px;
+    background-color: $gray-200;
+    border-radius: $border-radius-sm;
+    margin-bottom: 0.25rem;
+  }
+}
+
+// Password toggle button
+.password-toggle {
+  position: absolute;
+  right: 5px;
+  top: 50%;
+  transform: translateY(-50%);
+  border: none;
+  background: transparent;
+  padding: 0;
+  margin: 0;
+  cursor: pointer;
+  height: 30px;
+  width: 30px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  
+  &:hover {
+    color: $primary-color;
+  }
+  
+  &:focus {
+    outline: none;
+    box-shadow: none;
+  }
+}
+
+// Validation feedback
+.invalid-feedback {
+  font-size: 0.75rem;
+  margin-top: 0.25rem;
+}
+
+// Explicitly show validation errors
+.invalid-feedback.d-block {
+  display: block !important;
+}
+
+// Custom form control focus
+.form-control:focus,
+.form-select:focus {
+  border-color: $primary-color;
+  box-shadow: 0 0 0 0.25rem rgba($primary-color, 0.25);
+}
+
+// Input group spacing
+.input-with-icon {
+  position: relative;
+  
+  i {
+    position: absolute;
+    left: 10px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: $gray-500;
+  }
+  
+  .form-control,
+  .form-select {
+    padding-left: 35px;
+  }
+  
+  .form-control:focus + i,
+  .form-select:focus + i {
+    color: $primary-color;
+  }
+}
+
+// Required field indicator
+.form-label {
+  position: relative;
+}
