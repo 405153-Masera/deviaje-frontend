@@ -10,6 +10,8 @@ import { authGuard } from './core/auth/guards/auth.guard';
 import { DeviajeUserProfileComponent } from './features/client/components/deviaje-user-profile/deviaje-user-profile.component';
 import { DeviajeHotelDetailComponent } from './features/public/components/hotels/deviaje-hotel-detail/deviaje-hotel-detail.component';
 import { DeviajeFlightBookingComponent } from './features/client/components/deviaje-flight-booking/deviaje-flight-booking.component';
+import { DeviajeForgotPasswordComponent } from './shared/components/deviaje-forgot-password/deviaje-forgot-password.component';
+import { DeviajeResetPasswordComponent } from './shared/components/deviaje-reset-password/deviaje-reset-password.component';
 
 export const routes: Routes = [
 
@@ -19,6 +21,8 @@ export const routes: Routes = [
   // Rutas públicas para la autenticacion
   { path: 'user/login', component: DeviajeLoginComponent },
   { path: 'user/signup', component: DeviajeSignupComponent },
+  { path: 'user/forgot-password', component: DeviajeForgotPasswordComponent },
+  { path: 'user/reset-password', component: DeviajeResetPasswordComponent },
   {
     path: 'home',
     component: DeviajeMainLayoutComponent,

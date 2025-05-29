@@ -1,14 +1,15 @@
 <!-- src/app/features/public/components/auth/signup/signup.component.html -->
 <div class="container mt-4 mb-5">
     <div class="row justify-content-center">
-        <div class="col-md-8 col-lg-6">
+        <div class="col-xl-8 ">
             <div class="card shadow">
                 <div class="card-header bg-primary text-white text-center py-3">
                     <h2 class="card-title mb-0">Crear Cuenta</h2>
                 </div>
-                <div class="card-body p-4">
+                <div class="card-body">
                     <!-- Alerta de éxito -->
                     <div *ngIf="success" class="alert alert-success alert-dismissible fade show" role="alert">
+                        <i class="bi bi-check-circle-fill me-2"></i>
                         {{ success }}
                         <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"
                             (click)="success = ''"></button>
@@ -16,12 +17,13 @@
 
                     <!-- Alerta de error -->
                     <div *ngIf="error" class="alert alert-danger alert-dismissible fade show" role="alert">
+                        <i class="bi bi-exclamation-triangle-fill me-2"></i>
                         {{ error }}
                         <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"
                             (click)="error = ''"></button>
                     </div>
 
-                    <form [formGroup]="signupForm" (ngSubmit)="onSubmit()">
+                    <form class="p-4" [formGroup]="signupForm" (ngSubmit)="onSubmit()">
                         <h5 class="mb-3">Información de Cuenta</h5>
                         <div class="row mb-3">
                             <div class="col-md-6 mb-3 mb-md-0">
@@ -29,7 +31,7 @@
                                 <div class="input-with-icon">
                                     <i class="bi bi-person"></i>
                                     <input type="text" formControlName="username" class="form-control"
-                                        [ngClass]="{ 'is-invalid': shouldShowError('username') }"  
+                                        [ngClass]="onValidate('username')"  
                                         id="username"
                                         placeholder="Nombre de usuario">
                                          <div *ngIf="f['username'].pending" class="spinner-border spinner-border-sm text-primary position-absolute" style="right: 10px; top: 10px;"></div>
@@ -47,7 +49,7 @@
                                 <div class="input-with-icon">
                                     <i class="bi bi-envelope"></i>
                                     <input type="email" formControlName="email" class="form-control"
-                                        [ngClass]="{ 'is-invalid': shouldShowError('email') }"
+                                        [ngClass]="onValidate('email')"
                                         id="email"
                                         placeholder="correo@ejemplo.com">
                                     <div *ngIf="f['email'].pending" class="spinner-border spinner-border-sm text-primary position-absolute" style="right: 10px; top: 10px;"></div>
@@ -64,14 +66,14 @@
                         <div class="row mb-4">
                             <div class="col-md-6 mb-3 mb-md-0">
                                 <label for="password" class="form-label">Contraseña *</label>
-                                <div class="input-with-icon">
+                                <div class="input-with-icon input-group">
                                     <i class="bi bi-lock"></i>
                                     <input [type]="showPassword ? 'text' : 'password'" formControlName="password" class="form-control"
-                                        [ngClass]="{ 'is-invalid': shouldShowError('password') }" id="password"
+                                        [ngClass]="onValidate('password')" id="password"
                                         placeholder="Contraseña">
-                                    <button type="button" class="btn btn-link text-muted password-toggle" (click)="togglePasswordVisibility('password')">
-                                        <i class="bi" [ngClass]="showPassword ? 'bi-eye-slash' : 'bi-eye'"></i>
-                                    </button>
+                                    <span class="input-group-text" [ngClass]="showPassword ? 'bi-eye-slash' : 'bi-eye'"
+                                        (click)="togglePasswordVisibility('password')" style="cursor: pointer;">
+                                    </span>
                                 </div>
                                 <div *ngIf="f['password'].value && f['password'].value.length > 0">
                                     <div class="password-strength-meter mt-2">
@@ -110,14 +112,14 @@
                             </div>
                             <div class="col-md-6">
                                 <label for="confirmPassword" class="form-label">Confirmar Contraseña *</label>
-                                <div class="input-with-icon">
+                                <div class="input-with-icon input-group">
                                     <i class="bi bi-lock-fill"></i>
                                     <input [type]="showConfirmPassword ? 'text' : 'password'" formControlName="confirmPassword" class="form-control"
-                                        [ngClass]="{ 'is-invalid': shouldShowError('confirmPassword') }"
+                                        [ngClass]="onValidate('confirmPassword')"
                                         id="confirmPassword" placeholder="Confirmar contraseña">
-                                    <button type="button" class="btn btn-link text-muted password-toggle" (click)="togglePasswordVisibility('confirmPassword')">
-                                        <i class="bi" [ngClass]="showConfirmPassword ? 'bi-eye-slash' : 'bi-eye'"></i>
-                                    </button>
+                                    <span class="input-group-text" [ngClass]="showConfirmPassword ? 'bi-eye-slash' : 'bi-eye'"
+                                        (click)="togglePasswordVisibility('confirmPassword')" style="cursor: pointer;">
+                                    </span>
                                 </div>
                                 <div *ngIf="shouldShowError('confirmPassword')" class="invalid-feedback d-block">
                                     <div *ngIf="getFieldErrors('confirmPassword')?.['required']">La confirmación de contraseña es obligatoria</div>
@@ -165,8 +167,7 @@
                                 <div class="input-with-icon">
                                     <i class="bi bi-calendar"></i>
                                     <input type="date" formControlName="birthDate" class="form-control" id="birthDate"
-                                        [max]="minDate.toISOString().split('T')[0]"
-                                        [ngClass]="{ 'is-invalid': shouldShowError('birthDate') }">
+                                        [max]="minDate.toISOString().split('T')[0]">
                                 </div>
                                 <div *ngIf="shouldShowError('birthDate')" class="invalid-feedback d-block">
                                     <div *ngIf="getFieldErrors('birthDate')?.['underage']">
@@ -190,7 +191,7 @@
                     </form>
                     
                     <!-- Enlace para login -->
-                    <div class="text-center mt-4">
+                    <div class="text-center pb-4">
                         ¿Ya tienes una cuenta? <a routerLink="/user/login" class="text-primary">Iniciar Sesión</a>
                     </div>
                 </div>

@@ -1,65 +1,72 @@
 <!-- src/app/features/public/components/auth/login/login.component.html -->
 <div class="container mt-5">
     <div class="row justify-content-center">
-        <div class="col-md-6 col-lg-5">
+        <div class="col-lg-8">
             <div class="card shadow">
                 <div class="card-header bg-primary text-white text-center py-3">
                     <h2 class="card-title mb-0">Iniciar Sesión</h2>
                 </div>
-                <div class="card-body p-4">
+                <div class="card-body">
                     <!-- Alerta de error -->
                     <div *ngIf="error" class="alert alert-danger alert-dismissible fade show" role="alert">
+                        <i class="bi bi-exclamation-triangle-fill me-2"></i>
                         {{ error }}
                         <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"
                             (click)="error = ''"></button>
                     </div>
 
-                    <form [formGroup]="loginForm" (ngSubmit)="onSubmit()">
+                    <form class="p-4" [formGroup]="loginForm" (ngSubmit)="onSubmit()">
 
                         <div class="mb-3">
                             <label for="username" class="form-label">Usuario</label>
                             <div class="input-with-icon">
                                 <i class="bi bi-person"></i>
                                 <input type="text" formControlName="username" class="form-control"
-                                    [ngClass]="{ 'is-invalid': submitted && f['username'].errors }" id="username"
-                                    placeholder="Nombre de usuario" autocomplete="username">
+                                    [ngClass]="onValidate('username')"
+                                    placeholder="Nombre de usuario">
                             </div>
-                            <div *ngIf="submitted && f['username'].errors" class="invalid-feedback">
-                                <div *ngIf="f['username'].errors['required']">El nombre de usuario es obligatorio</div>
+                            <div *ngIf="shouldShowError('username')" class="invalid-feedback d-block">
+                                <div *ngIf="getFieldErrors('username')?.['required']">El nombre de usuario es requerido</div>
                             </div>
                         </div>
 
                         <div class="mb-4">
                             <label for="password" class="form-label">Contraseña</label>
-                            <div class="input-with-icon">
+                            <div class="input-with-icon input-group">
                                 <i class="bi bi-lock"></i>
-                                <input type="password" formControlName="password" class="form-control"
-                                    [ngClass]="{ 'is-invalid': submitted && f['password'].errors }" id="password"
-                                    placeholder="Contraseña" autocomplete="current-password">
+                                <input [type]="showPassword ? 'text' : 'password'" formControlName="password" class="form-control"
+                                    [ngClass]="onValidate('password')"
+                                    id="password"
+                                    placeholder="Contraseña">
+                                    <span class="input-group-text" [ngClass]="showPassword ? 'bi-eye-slash' : 'bi-eye'"
+                                        (click)="togglePasswordVisibility()" style="cursor: pointer;">
+                                    </span>
                             </div>
-                            <div *ngIf="submitted && f['password'].errors" class="invalid-feedback">
-                                <div *ngIf="f['password'].errors['required']">La contraseña es obligatoria</div>
+                            <div *ngIf="shouldShowError('password')" class="invalid-feedback d-block">
+                                <div *ngIf="getFieldErrors('password')?.['required']">La contraseña es obligatoria</div>
                             </div>
                         </div>
 
                         <!-- Enlace para recuperar contraseña -->
                         <div class="text-end mb-4">
-                            <a routerLink="/auth/forgot-password" class="text-primary">¿Olvidaste tu contraseña?</a>
+                            <a routerLink="/user/forgot-password" class="text-primary">¿Olvidaste tu contraseña?</a>
                         </div>
 
-                        <div class="d-grid">
+                        <div class="d-grid gap-2">
                             <button type="submit" class="btn btn-primary" [disabled]="loading">
                                 <span *ngIf="loading" class="spinner-border spinner-border-sm me-1" role="status"
                                     aria-hidden="true"></span>
                                 Iniciar Sesión
                             </button>
+                            <a routerLink="/home" class="btn btn-outline-secondary">
+                                <i class="bi bi-arrow-left me-2"></i> Volver
+                            </a>
+                        </div>
+                         <!-- Enlace para registro -->
+                        <div class="text-center mt-2">
+                            ¿No tienes una cuenta? <a routerLink="/user/signup" class="text-primary">Regístrate</a>
                         </div>
                     </form>
-                    
-                    <!-- Enlace para registro -->
-                    <div class="text-center mt-4">
-                        ¿No tienes una cuenta? <a routerLink="/user/signup" class="text-primary">Regístrate</a>
-                    </div>
                 </div>
             </div>
         </div>

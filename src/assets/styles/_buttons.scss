@@ -25,6 +25,11 @@
   background-color: $primary-color;
   color: $white;
 
+  &:disabled {
+    background-color: desaturate($primary-color, 5%); // o desaturate($primary-color, 20%)
+    cursor: not-allowed;
+  }
+  
   //el hover no se aplica si el boton esta deshabilitado
   &:hover:not(:disabled) {
     background-color: darken($primary-color, 5%);
@@ -39,6 +44,11 @@
   background-color: $secondary-color;
   color: $white;
 
+  &:disabled {
+    background-color: desaturate($secondary-color, 5%); // o desaturate($primary-color, 20%)
+    cursor: not-allowed;
+  }
+
   &:hover:not(:disabled) {
     background-color: darken($secondary-color, 5%);
   }
@@ -48,9 +58,18 @@
   }
 }
 
+.btn-outline-secondary {
+  border: 1px solid;
+}
+
 .btn-tertiary {
   background-color: $tertiary-color;
   color: $white;
+
+  &:disabled {
+    background-color: desaturate($tertiary-color, 5%); // o desaturate($primary-color, 20%)
+    cursor: not-allowed;
+  }
 
   &:hover:not(:disabled) {
     background-color: darken($tertiary-color, 5%);

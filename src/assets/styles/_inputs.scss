@@ -61,6 +61,19 @@ select {
     padding-left: 42px;
   }
 
+  .form-control,
+  .form-select {
+    padding-left: 40px;
+    
+    // Ajustar padding cuando hay botón de toggle
+    &[type="password"],
+    &[type="text"] {
+      &:not(:only-child) {
+        padding-right: 45px;
+      }
+    }
+  }
+
   i {
     position: absolute;
     left: 15px;
@@ -77,7 +90,22 @@ select {
   textarea:focus + i {
     color: $primary-color;
   }
+
+  .form-control:focus + i,
+  .form-select:focus + i {
+    color: $primary-color;
+  }
+
+   .spinner-border-sm {
+    width: 1rem;
+    height: 1rem;
+    right: 15px;
+    top: 50%;
+    transform: translateY(-50%);
+    z-index: 3;
+  }
 }
+
 
 // Input tipo fecha
 .date-input input {
@@ -113,3 +141,17 @@ select {
   visibility: visible;
 }
 
+// Validation feedback
+.invalid-feedback {
+  margin-top: 0.25rem;
+  line-height: 1.3;
+}
+
+// Explicitly show validation errors
+.invalid-feedback.d-block {
+  display: block !important;
+}
+
+.invalid-feedback {
+  transition: opacity 0.15s ease-in-out;
+}

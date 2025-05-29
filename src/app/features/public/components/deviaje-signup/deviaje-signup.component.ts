@@ -14,13 +14,8 @@ import { SignupRequest } from '../../../../core/auth/models/jwt-models';
 import { CommonModule } from '@angular/common';
 import { ValidatorsService } from '../../../../shared/services/validators.service';
 import {
-  catchError,
   debounceTime,
   distinctUntilChanged,
-  filter,
-  map,
-  of,
-  switchMap,
 } from 'rxjs';
 
 @Component({
@@ -145,6 +140,14 @@ export class DeviajeSignupComponent implements OnInit {
     return field ? field.errors : null;
   }
 
+  onValidate(fieldName: string) {
+    const control = this.signupForm.get(fieldName);
+    return {
+      'is-invalid': control?.invalid && (control?.dirty || control?.touched),
+      'is-valid': control?.valid
+    }
+  }
+
   onSubmit(): void {
     this.submitted = true;
 
@@ -200,19 +203,6 @@ export class DeviajeSignupComponent implements OnInit {
         this.markFormGroupTouched(control);
       }
     });
-  }
-
-  private getFormValidationErrors() {
-    let formErrors: any = {};
-
-    Object.keys(this.signupForm.controls).forEach(key => {
-      const controlErrors: ValidationErrors | null = this.signupForm.get(key)!.errors;
-      if (controlErrors) {
-        formErrors[key] = controlErrors;
-      }
-    });
-
-    return formErrors;
   }
   //Validaciones para el formulario
 
