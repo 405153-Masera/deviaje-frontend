@@ -1,227 +1,159 @@
 <form [formGroup]="travelerForm">
-    <!-- Datos personales -->
-    <div class="row mb-3">
-      <div class="col-md-6 mb-3 mb-md-0">
-        <label for="firstName" class="form-label">Nombre <span class="text-danger">*</span></label>
-        <input 
-          type="text" 
-          class="form-control" 
-          id="firstName" 
-          formGroupName="name" 
-          formControlName="firstName"
-          [ngClass]="{'is-invalid': travelerForm.get('name')?.get('firstName')?.invalid && travelerForm.get('name')?.get('firstName')?.touched}"
-        >
-        <!-- <div class="invalid-feedback">
-          El nombre es obligatorio
-        </div> -->
-      </div>
-      <div class="col-md-6">
-        <label for="lastName" class="form-label">Apellido <span class="text-danger">*</span></label>
-        <input 
-          type="text" 
-          class="form-control" 
-          id="lastName" 
-          formGroupName="name" 
-          formControlName="lastName"
-          [ngClass]="{'is-invalid': travelerForm.get('name')?.get('lastName')?.invalid && travelerForm.get('name')?.get('lastName')?.touched}"
-        >
-        <!-- <div class="invalid-feedback">
-          El apellido es obligatorio
-        </div> -->
+  <!-- Datos personales -->
+  <div class="row mb-3">
+    <div class="col-md-6">
+      <label for="firstName" class="form-label">Nombre <span class="text-danger">*</span></label>
+      <input type="text" class="form-control" id="firstName" formControlName="firstName"
+        [ngClass]="onValidate('firstName')">
+
+      <div *ngIf="shouldShowError('firstName')" class="invalid-feedback d-block">
+        <div *ngIf="getFieldErrors('firstName')?.['required']">El nombre es obligatorio</div>
       </div>
     </div>
-  
-    <div class="row mb-3">
-      <div class="col-md-6 mb-3 mb-md-0">
-        <label for="gender" class="form-label">Género <span class="text-danger">*</span></label>
-        <select 
-          class="form-select" 
-          id="gender" 
-          formControlName="gender"
-          [ngClass]="{'is-invalid': travelerForm.get('gender')?.invalid && travelerForm.get('gender')?.touched}"
-        >
-          <option *ngFor="let option of genderOptions" [value]="option.value">
-            {{ option.label }}
-          </option>
-        </select>
-        <div class="invalid-feedback">
-          El género es obligatorio
-        </div>
-      </div>
-      <div class="col-md-6">
-        <label for="birthDate" class="form-label">Fecha de nacimiento <span class="text-danger">*</span></label>
-        <input 
-          type="date" 
-          class="form-control" 
-          id="birthDate" 
-          formControlName="dateOfBirth"
-          [ngClass]="{'is-invalid': travelerForm.get('dateOfBirth')?.invalid && travelerForm.get('dateOfBirth')?.touched}"
-          [min]="getDateConstraints(travelerForm.get('travelerType')?.value).min"
-          [max]="getDateConstraints(travelerForm.get('travelerType')?.value).max"
-        >
-        <div class="invalid-feedback">
-          La fecha de nacimiento es obligatoria y debe ser válida para el tipo de pasajero
-        </div>
+
+
+    <div class="col-md-6">
+      <label for="lastName" class="form-label">Apellido <span class="text-danger">*</span></label>
+      <input type="text" class="form-control" id="lastName" formControlName="lastName"
+        [ngClass]="onValidate('lastName')">
+      <div *ngIf="shouldShowError('lastName')" class="invalid-feedback d-block">
+        <div *ngIf="getFieldErrors('lastName')?.['required']">El apellido es obligatorio</div>
       </div>
     </div>
-  
-    <!-- Información de contacto (solo para el pasajero principal) -->
-    <div *ngIf="isPrimaryTraveler" formGroupName="contact" class="mt-4 mb-3">
-      <h6 class="mb-3">Información de contacto</h6>
-      
-      <div class="mb-3">
-        <label for="email" class="form-label">Correo electrónico <span class="text-danger">*</span></label>
-        <input 
-          type="email" 
-          class="form-control" 
-          id="email" 
-          formControlName="emailAddress"
-          [ngClass]="{'is-invalid': travelerForm.get('contact')?.get('emailAddress')?.invalid && travelerForm.get('contact')?.get('emailAddress')?.touched}"
-        >
-        <div class="invalid-feedback">
-          Ingrese un correo electrónico válido
-        </div>
-      </div>
-      
-      <!-- Teléfono -->
-      <div class="row" formArrayName="phones">
-        <div formGroupName="0">
-          <div class="row">
-            <div class="col-md-4 mb-3">
-              <label for="phoneCode" class="form-label">Código de país <span class="text-danger">*</span></label>
-              <div class="input-group">
-                <span class="input-group-text">+</span>
-                <input 
-                  type="text" 
-                  class="form-control" 
-                  id="phoneCode" 
-                  formControlName="countryCallingCode"
-                  [ngClass]="{'is-invalid': travelerForm.get('contact')?.get('phones')?.get('0')?.get('countryCallingCode')?.invalid && travelerForm.get('contact')?.get('phones')?.get('0')?.get('countryCallingCode')?.touched}"
-                  (input)="filterCountries($event)"
-                  list="phoneCodeList"
-                >
-                <datalist id="phoneCodeList">
-                  <option *ngFor="let country of filteredCountries" [value]="country.phoneCode">
-                    +{{ country.phoneCode }} ({{ country.name }})
-                  </option>
-                </datalist>
-                <div class="invalid-feedback">
-                  El código de país es obligatorio
-                </div>
-              </div>
-            </div>
-            <div class="col-md-8 mb-3">
-              <label for="phoneNumber" class="form-label">Número de teléfono <span class="text-danger">*</span></label>
-              <input 
-                type="tel" 
-                class="form-control" 
-                id="phoneNumber" 
-                formControlName="number"
-                [ngClass]="{'is-invalid': travelerForm.get('contact')?.get('phones')?.get('0')?.get('number')?.invalid && travelerForm.get('contact')?.get('phones')?.get('0')?.get('number')?.touched}"
-              >
-              <div class="invalid-feedback">
-                El número de teléfono es obligatorio
-              </div>
-            </div>
-          </div>
-        </div>
+  </div>
+
+  <div class="row mb-3">
+    <div class="col-md-6 mb-3 mb-md-0">
+      <label for="gender" class="form-label">Género <span class="text-danger">*</span></label>
+      <select class="form-select" id="gender" formControlName="gender"
+        [ngClass]="{'is-invalid': travelerForm.get('gender')?.invalid && travelerForm.get('gender')?.touched}">
+        <option *ngFor="let option of genderOptions" [value]="option.value">
+          {{ option.label }}
+        </option>
+      </select>
+      <div class="invalid-feedback">
+        El género es obligatorio
       </div>
     </div>
-  
-    <!-- Documentos -->
-    <div formArrayName="documents" class="mt-4">
-      <h6 class="mb-3">Documento de identidad</h6>
-      
+    <div class="col-md-6">
+      <label for="birthDate" class="form-label">Fecha de nacimiento <span class="text-danger">*</span></label>
+      <input type="date" class="form-control" id="birthDate" formControlName="dateOfBirth"
+        [ngClass]="{'is-invalid': travelerForm.get('dateOfBirth')?.invalid && travelerForm.get('dateOfBirth')?.touched}"
+        [min]="getDateConstraints(travelerForm.get('travelerType')?.value).min"
+        [max]="getDateConstraints(travelerForm.get('travelerType')?.value).max">
+      <div class="invalid-feedback">
+        La fecha de nacimiento es obligatoria y debe ser válida para el tipo de pasajero
+      </div>
+    </div>
+  </div>
+
+  <!-- Información de contacto (solo para el pasajero principal) -->
+  <div *ngIf="isPrimaryTraveler" formGroupName="contact" class="mt-4 mb-3">
+    <h6 class="mb-3">Información de contacto</h6>
+
+    <div class="mb-3">
+      <label for="email" class="form-label">Correo electrónico <span class="text-danger">*</span></label>
+      <input type="email" class="form-control" id="email" formControlName="emailAddress"
+        [ngClass]="{'is-invalid': travelerForm.get('contact')?.get('emailAddress')?.invalid && travelerForm.get('contact')?.get('emailAddress')?.touched}">
+      <div class="invalid-feedback">
+        Ingrese un correo electrónico válido
+      </div>
+    </div>
+
+    <!-- Teléfono -->
+    <div class="row" formArrayName="phones">
       <div formGroupName="0">
-        <div class="row mb-3">
-          <div class="col-md-6 mb-3 mb-md-0">
-            <label for="documentType" class="form-label">Tipo de documento <span class="text-danger">*</span></label>
-            <select 
-              class="form-select" 
-              id="documentType" 
-              formControlName="documentType"
-              [ngClass]="{'is-invalid': travelerForm.get('documents')?.get('0')?.get('documentType')?.invalid && travelerForm.get('documents')?.get('0')?.get('documentType')?.touched}"
-            >
-              <option *ngFor="let type of documentTypes" [value]="type.value">
-                {{ type.label }}
-              </option>
-            </select>
-            <div class="invalid-feedback">
-              El tipo de documento es obligatorio
+        <div class="row">
+          <div class="col-md-4 mb-3">
+            <label for="phoneCode" class="form-label">Código de país <span class="text-danger">*</span></label>
+            <div class="input-group">
+              <span class="input-group-text">+</span>
+              <input type="text" class="form-control" id="phoneCode" formControlName="countryCallingCode"
+                [ngClass]="{'is-invalid': travelerForm.get('contact')?.get('phones')?.get('0')?.get('countryCallingCode')?.invalid && travelerForm.get('contact')?.get('phones')?.get('0')?.get('countryCallingCode')?.touched}"
+                (input)="filterCountries($event)" list="phoneCodeList">
+              <datalist id="phoneCodeList">
+                <option *ngFor="let country of filteredCountries" [value]="country.phoneCode">
+                  +{{ country.phoneCode }} ({{ country.name }})
+                </option>
+              </datalist>
+              <div class="invalid-feedback">
+                El código de país es obligatorio
+              </div>
             </div>
           </div>
-          <div class="col-md-6">
-            <label for="documentNumber" class="form-label">Número de documento <span class="text-danger">*</span></label>
-            <input 
-              type="text" 
-              class="form-control" 
-              id="documentNumber" 
-              formControlName="number"
-              [ngClass]="{'is-invalid': travelerForm.get('documents')?.get('0')?.get('number')?.invalid && travelerForm.get('documents')?.get('0')?.get('number')?.touched}"
-            >
+          <div class="col-md-8 mb-3">
+            <label for="phoneNumber" class="form-label">Número de teléfono <span class="text-danger">*</span></label>
+            <input type="tel" class="form-control" id="phoneNumber" formControlName="number"
+              [ngClass]="{'is-invalid': travelerForm.get('contact')?.get('phones')?.get('0')?.get('number')?.invalid && travelerForm.get('contact')?.get('phones')?.get('0')?.get('number')?.touched}">
             <div class="invalid-feedback">
-              El número de documento es obligatorio
+              El número de teléfono es obligatorio
             </div>
           </div>
         </div>
-  
-        <div class="row mb-3">
-          <div class="col-md-6 mb-3 mb-md-0">
-            <label for="nationality" class="form-label">Nacionalidad <span class="text-danger">*</span></label>
-            <input 
-              type="text" 
-              class="form-control" 
-              id="nationality" 
-              formControlName="nationality"
-              (input)="filterCountries($event)"
-              [ngClass]="{'is-invalid': travelerForm.get('documents')?.get('0')?.get('nationality')?.invalid && travelerForm.get('documents')?.get('0')?.get('nationality')?.touched}"
-              list="countryList1"
-            >
-            <datalist id="countryList1">
-              <option *ngFor="let country of filteredCountries" [value]="country.cca2">
-                {{ country.name }} ({{ country.cca2 }})
-              </option>
-            </datalist>
-            <div class="invalid-feedback">
-              La nacionalidad es obligatoria
-            </div>
-          </div>
-          <div class="col-md-6">
-            <label for="issuanceCountry" class="form-label">País de emisión <span class="text-danger">*</span></label>
-            <input 
-              type="text" 
-              class="form-control" 
-              id="issuanceCountry" 
-              formControlName="issuanceCountry"
-              (input)="filterCountries($event)"
-              [ngClass]="{'is-invalid': travelerForm.get('documents')?.get('0')?.get('issuanceCountry')?.invalid && travelerForm.get('documents')?.get('0')?.get('issuanceCountry')?.touched}"
-              list="countryList2"
-            >
-            <datalist id="countryList2">
-              <option *ngFor="let country of filteredCountries" [value]="country.cca2">
-                {{ country.name }} ({{ country.cca2 }})
-              </option>
-            </datalist>
-            <div class="invalid-feedback">
-              El país de emisión es obligatorio
-            </div>
-          </div>
-        </div>
-  
-        <!-- <div class="mb-3">
-          <label for="expiryDate" class="form-label">Fecha de vencimiento <span class="text-danger">*</span></label>
-          <input 
-            type="date" 
-            class="form-control" 
-            id="expiryDate" 
-            formControlName="expiryDate"
-            [ngClass]="{'is-invalid': travelerForm.get('documents')?.get('0')?.get('expiryDate')?.invalid && travelerForm.get('documents')?.get('0')?.get('expiryDate')?.touched}"
-            [min]="formatDateForInput(today)"
-          >
-          <div class="invalid-feedback">
-            La fecha de vencimiento es obligatoria y debe ser posterior a la fecha actual
-          </div>
-        </div> -->
       </div>
     </div>
-  </form>
+  </div>
+
+  <!-- Documentos -->
+  <div formArrayName="documents" class="mt-4">
+    <h6 class="mb-3">Documento de identidad</h6>
+
+    <div formGroupName="0">
+      <div class="row mb-3">
+        <div class="col-md-6 mb-3 mb-md-0">
+          <label for="documentType" class="form-label">Tipo de documento <span class="text-danger">*</span></label>
+          <select class="form-select" id="documentType" formControlName="documentType"
+            [ngClass]="{'is-invalid': travelerForm.get('documents')?.get('0')?.get('documentType')?.invalid && travelerForm.get('documents')?.get('0')?.get('documentType')?.touched}">
+            <option *ngFor="let type of documentTypes" [value]="type.value">
+              {{ type.label }}
+            </option>
+          </select>
+          <div class="invalid-feedback">
+            El tipo de documento es obligatorio
+          </div>
+        </div>
+        <div class="col-md-6">
+          <label for="documentNumber" class="form-label">Número de documento <span class="text-danger">*</span></label>
+          <input type="text" class="form-control" id="documentNumber" formControlName="number"
+            [ngClass]="{'is-invalid': travelerForm.get('documents')?.get('0')?.get('number')?.invalid && travelerForm.get('documents')?.get('0')?.get('number')?.touched}">
+          <div class="invalid-feedback">
+            El número de documento es obligatorio
+          </div>
+        </div>
+      </div>
+
+      <div class="row mb-3">
+        <div class="col-md-6 mb-3 mb-md-0">
+          <label for="nationality" class="form-label">Nacionalidad <span class="text-danger">*</span></label>
+          <input type="text" class="form-control" id="nationality" formControlName="nationality"
+            (input)="filterCountries($event)"
+            [ngClass]="{'is-invalid': travelerForm.get('documents')?.get('0')?.get('nationality')?.invalid && travelerForm.get('documents')?.get('0')?.get('nationality')?.touched}"
+            list="countryList1">
+          <datalist id="countryList1">
+            <option *ngFor="let country of filteredCountries" [value]="country.cca2">
+              {{ country.name }} ({{ country.cca2 }})
+            </option>
+          </datalist>
+          <div class="invalid-feedback">
+            La nacionalidad es obligatoria
+          </div>
+        </div>
+        <div class="col-md-6">
+          <label for="issuanceCountry" class="form-label">País de emisión <span class="text-danger">*</span></label>
+          <input type="text" class="form-control" id="issuanceCountry" formControlName="issuanceCountry"
+            (input)="filterCountries($event)"
+            [ngClass]="{'is-invalid': travelerForm.get('documents')?.get('0')?.get('issuanceCountry')?.invalid && travelerForm.get('documents')?.get('0')?.get('issuanceCountry')?.touched}"
+            list="countryList2">
+          <datalist id="countryList2">
+            <option *ngFor="let country of filteredCountries" [value]="country.cca2">
+              {{ country.name }} ({{ country.cca2 }})
+            </option>
+          </datalist>
+          <div class="invalid-feedback">
+            El país de emisión es obligatorio
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</form>

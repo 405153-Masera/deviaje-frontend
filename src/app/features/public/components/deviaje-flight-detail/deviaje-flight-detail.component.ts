@@ -4,7 +4,6 @@ import {
   Input,
   OnDestroy,
   OnInit,
-  Pipe,
 } from '@angular/core';
 import {
   FlightOffer,

@@ -7,6 +7,7 @@ import { CommonModule } from '@angular/common';
 import { FlightBookingDto, FlightOfferDto, PaymentDto, TravelerDto } from '../../models/bookings';
 import { DeviajeTravelerFormComponent } from "../deviaje-traveler-form/deviaje-traveler-form.component";
 import { DeviajePaymentsFormComponent } from "../deviaje-payments-form/deviaje-payments-form.component";
+import { AuthService } from '../../../../core/auth/services/auth.service';
 
 @Component({
   selector: 'app-deviaje-flight-booking',
@@ -20,11 +21,13 @@ export class DeviajeFlightBookingComponent implements OnInit {
   private router = inject(Router);
   private route = inject(ActivatedRoute);
   private bookingService = inject(BookingService);
+  private authService = inject(AuthService);
   readonly flightUtils = inject(FlightUtilsService);
 
   flightOffer: FlightOfferDto | null = null;
   selectedOffer: FlightOfferDto | null = null;
   searchParams: any;
+  currentUser: any = null;
   
   isLoading = false;
   isVerifying = false;
@@ -62,8 +65,17 @@ export class DeviajeFlightBookingComponent implements OnInit {
   
   ngOnInit(): void {
     // Obtener los datos del vuelo seleccionado del state del router
+    //this.authService.currentUser.subscribe(user => {
+      //this.currentUser = user;
+    //});
+
+    // Obtener los datos del vuelo seleccionado del state del router
     const navigation = this.router.getCurrentNavigation();
-    const state = navigation?.extras.state || window.history.state;
+    let state: any;
+
+    if(typeof window !== 'undefined') {
+      state = window.history.state;
+     }
 
     if (state && state.flightOffer) {
       this.flightOffer = state.flightOffer;
@@ -134,10 +146,8 @@ export class DeviajeFlightBookingComponent implements OnInit {
       const travelerForm = this.fb.group({
         id: [String(i + 1)],
         dateOfBirth: ['', Validators.required],
-        name: this.fb.group({
-          firstName: ['', Validators.required],
-          lastName: ['', Validators.required]
-        }),
+        firstName: ['', Validators.required], // Cambiado: firstName directamente en el grupo principal
+        lastName: ['', Validators.required],
         gender: ['MALE', Validators.required],
         travelerType: [travelerType],
         contact: this.fb.group({
@@ -171,6 +181,10 @@ export class DeviajeFlightBookingComponent implements OnInit {
       // Validar el paso actual antes de avanzar
       if (this.validateCurrentStep()) {
         this.currentStep++;
+         console.log('Avanzando al paso:', this.currentStep);
+      } else {
+        console.log('Validación fallida para el paso:', this.currentStep);
+        this.errorMessage = 'Por favor, complete todos los campos requeridos correctamente.';
       }
     }
   }
@@ -292,7 +306,10 @@ export class DeviajeFlightBookingComponent implements OnInit {
       const travelerData: TravelerDto = {
         id: traveler.id,
         dateOfBirth: traveler.dateOfBirth,
-        name: traveler.name,
+        name: {
+        firstName: traveler.firstName, 
+        lastName: traveler.lastName   
+       },
         gender: traveler.gender
       };
       

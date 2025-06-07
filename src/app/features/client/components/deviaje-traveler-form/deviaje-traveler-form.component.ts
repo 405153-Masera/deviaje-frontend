@@ -5,6 +5,7 @@ import {
   AbstractControl,
   FormGroup,
   ReactiveFormsModule,
+  ValidationErrors,
 } from '@angular/forms';
 
 @Component({
@@ -55,34 +56,39 @@ export class DeviajeTravelerFormComponent implements OnInit {
 
   loadCountries(): void {
     this.isLoading = true;
-    this.http.get('https://restcountries.com/v3.1/all').subscribe({
-      next: (data: any) => {
-        // Filtrar solo los campos necesarios y usar el nombre en español
-        this.countries = data
-          .map((country: any) => ({
-            name: country.translations.spa?.common || country.name.common,
-            cca2: country.cca2,
-            phoneCode: country.idd?.root
-              ? country.idd.root.replace('+', '')
-              : '',
-          }))
-          .sort((a: Country, b: Country) => a.name.localeCompare(b.name));
+    this.http
+      .get(
+        'https://restcountries.com/v3.1/all?fields=name,cca2,idd,translations'
+      )
+      .subscribe({
+        next: (data: any) => {
+          // Filtrar solo los campos necesarios y usar el nombre en español
+          this.countries = data
+            .map((country: any) => ({
+              name: country.translations.spa?.common || country.name.common,
+              cca2: country.cca2,
+              phoneCode: country.idd?.root
+                ? country.idd.root.replace('+', '')
+                : '',
+            }))
+            .filter((country: Country) => country.cca2 && country.name)
+            .sort((a: Country, b: Country) => a.name.localeCompare(b.name));
 
-        this.filteredCountries = [...this.countries];
-        this.isLoading = false;
-      },
-      error: () => {
-        this.isLoading = false;
-        // Países de fallback en caso de error
-        this.countries = [
-          { name: 'Argentina', cca2: 'AR', phoneCode: '54' },
-          { name: 'España', cca2: 'ES', phoneCode: '34' },
-          { name: 'Estados Unidos', cca2: 'US', phoneCode: '1' },
-          { name: 'México', cca2: 'MX', phoneCode: '52' },
-        ];
-        this.filteredCountries = [...this.countries];
-      },
-    });
+          this.filteredCountries = [...this.countries];
+          this.isLoading = false;
+        },
+        error: () => {
+          this.isLoading = false;
+          // Países de fallback en caso de error
+          this.countries = [
+            { name: 'Argentina', cca2: 'AR', phoneCode: '54' },
+            { name: 'España', cca2: 'ES', phoneCode: '34' },
+            { name: 'Estados Unidos', cca2: 'US', phoneCode: '1' },
+            { name: 'México', cca2: 'MX', phoneCode: '52' },
+          ];
+          this.filteredCountries = [...this.countries];
+        },
+      });
   }
 
   filterCountries(event: Event): void {
@@ -188,6 +194,29 @@ export class DeviajeTravelerFormComponent implements OnInit {
       min: this.formatDateForInput(minDate),
       max: this.formatDateForInput(maxDate),
     };
+  }
+
+  //METODOS PARA ERRORES DE VALIDACION
+  shouldShowError(fieldName: string): boolean {
+    const field = this.travelerForm.get(fieldName);
+    return !!(
+      field &&
+      field.invalid &&
+      (field.dirty || field.touched)
+    );
+  }
+
+  getFieldErrors(fieldName: string): ValidationErrors | null {
+    const field = this.travelerForm.get(fieldName);
+    return field ? field.errors : null;
+  }
+
+  onValidate(fieldName: string) {
+    const control = this.travelerForm.get(fieldName);
+    return {
+      'is-invalid': control?.invalid && (control?.dirty || control?.touched),
+      'is-valid': control?.valid
+    }
   }
 }
 
