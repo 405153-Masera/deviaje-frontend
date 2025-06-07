@@ -1,8 +1,11 @@
 <form [formGroup]="travelerForm">
   <!-- Datos personales -->
+
   <div class="row mb-3">
-    <div class="col-md-6">
+    <div class="col-md-6 mb-3 mb-md-0">
       <label for="firstName" class="form-label">Nombre <span class="text-danger">*</span></label>
+      <small class="text-muted d-block">Indica el nombre tal y como figura en el pasaporte</small>
+
       <input type="text" class="form-control" id="firstName" formControlName="firstName"
         [ngClass]="onValidate('firstName')">
 
@@ -14,6 +17,8 @@
 
     <div class="col-md-6">
       <label for="lastName" class="form-label">Apellido <span class="text-danger">*</span></label>
+      <small class="text-muted d-block">Indica el apellido tal y como figura en el pasaporte</small>
+
       <input type="text" class="form-control" id="lastName" formControlName="lastName"
         [ngClass]="onValidate('lastName')">
       <div *ngIf="shouldShowError('lastName')" class="invalid-feedback d-block">
@@ -43,6 +48,89 @@
         [max]="getDateConstraints(travelerForm.get('travelerType')?.value).max">
       <div class="invalid-feedback">
         La fecha de nacimiento es obligatoria y debe ser válida para el tipo de pasajero
+      </div>
+    </div>
+  </div>
+
+  <!-- Documentos -->
+  <div formArrayName="documents" class="mt-4">
+    <h6 class="mb-3">Datos del Pasaporte</h6>
+
+    <div formGroupName="0">
+      <div class="row mb-3">
+
+        <div class="col-md-6 mb-3 mb-md-0">
+          <label for="documentNumber" class="form-label">Número de documento <span class="text-danger">*</span></label>
+          <input type="text" class="form-control" id="documentNumber" formControlName="number"
+            [ngClass]="{'is-invalid': travelerForm.get('documents')?.get('0')?.get('number')?.invalid && travelerForm.get('documents')?.get('0')?.get('number')?.touched}">
+          <div class="invalid-feedback">
+            El número de documento es obligatorio
+          </div>
+        </div>
+
+        <div class="col-md-6">
+          <label for="nationality" class="form-label">Nacionalidad <span class="text-danger">*</span></label>
+          <input type="text" class="form-control" id="nationality" formControlName="nationality"
+            (input)="filterCountries($event)"
+            [ngClass]="{'is-invalid': travelerForm.get('documents')?.get('0')?.get('nationality')?.invalid && travelerForm.get('documents')?.get('0')?.get('nationality')?.touched}"
+            list="countryList1">
+          <datalist id="countryList1">
+            <option *ngFor="let country of filteredCountries" [value]="country.cca2">
+              {{ country.name }} ({{ country.cca2 }})
+            </option>
+          </datalist>
+          <div class="invalid-feedback">
+            La nacionalidad es obligatoria
+          </div>
+        </div>
+      </div>
+
+      <div class="row mb-3">
+
+        <div class="col-md-6">
+          <label for="issuanceCountry" class="form-label">País de emisión <span class="text-danger">*</span></label>
+          <input type="text" class="form-control" id="issuanceCountry" formControlName="issuanceCountry"
+            (input)="filterCountries($event)"
+            [ngClass]="{'is-invalid': travelerForm.get('documents')?.get('0')?.get('issuanceCountry')?.invalid && travelerForm.get('documents')?.get('0')?.get('issuanceCountry')?.touched}"
+            list="countryList2">
+          <datalist id="countryList2">
+            <option *ngFor="let country of filteredCountries" [value]="country.cca2">
+              {{ country.name }} ({{ country.cca2 }})
+            </option>
+          </datalist>
+          <div class="invalid-feedback">
+            El país de emisión es obligatorio
+          </div>
+        </div>
+
+        <div class="col-md-6">
+          <label class="form-label">Fecha de caducidad <span class="text-danger">*</span></label>
+          <div class="d-flex gap-2">
+            <!-- Día -->
+            <div class="col-2">
+              <input type="text" class="form-control" id="expiryDay" placeholder="DD">
+            </div>
+
+            <!-- Selector de mes -->
+            <div class="col-4">
+              <select class="form-select" id="expiryMonth">
+                <option value="" disabled selected>MM</option>
+                <option *ngFor="let month of getMonths()" [value]="month.value">
+                  {{ month.label }}
+                </option>
+              </select>
+            </div>
+
+            <!-- Año -->
+            <div class="col-3">
+              <input  type="text" class="form-control" id="expiryYear" placeholder="AAAA">
+            </div>
+            
+          </div>
+          <div *ngIf="shouldShowError('documents.0.expiryDate')" class="invalid-feedback d-block">
+            La fecha de caducidad es obligatoria
+          </div>
+        </div>
       </div>
     </div>
   </div>
@@ -88,69 +176,6 @@
             <div class="invalid-feedback">
               El número de teléfono es obligatorio
             </div>
-          </div>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <!-- Documentos -->
-  <div formArrayName="documents" class="mt-4">
-    <h6 class="mb-3">Documento de identidad</h6>
-
-    <div formGroupName="0">
-      <div class="row mb-3">
-        <div class="col-md-6 mb-3 mb-md-0">
-          <label for="documentType" class="form-label">Tipo de documento <span class="text-danger">*</span></label>
-          <select class="form-select" id="documentType" formControlName="documentType"
-            [ngClass]="{'is-invalid': travelerForm.get('documents')?.get('0')?.get('documentType')?.invalid && travelerForm.get('documents')?.get('0')?.get('documentType')?.touched}">
-            <option *ngFor="let type of documentTypes" [value]="type.value">
-              {{ type.label }}
-            </option>
-          </select>
-          <div class="invalid-feedback">
-            El tipo de documento es obligatorio
-          </div>
-        </div>
-        <div class="col-md-6">
-          <label for="documentNumber" class="form-label">Número de documento <span class="text-danger">*</span></label>
-          <input type="text" class="form-control" id="documentNumber" formControlName="number"
-            [ngClass]="{'is-invalid': travelerForm.get('documents')?.get('0')?.get('number')?.invalid && travelerForm.get('documents')?.get('0')?.get('number')?.touched}">
-          <div class="invalid-feedback">
-            El número de documento es obligatorio
-          </div>
-        </div>
-      </div>
-
-      <div class="row mb-3">
-        <div class="col-md-6 mb-3 mb-md-0">
-          <label for="nationality" class="form-label">Nacionalidad <span class="text-danger">*</span></label>
-          <input type="text" class="form-control" id="nationality" formControlName="nationality"
-            (input)="filterCountries($event)"
-            [ngClass]="{'is-invalid': travelerForm.get('documents')?.get('0')?.get('nationality')?.invalid && travelerForm.get('documents')?.get('0')?.get('nationality')?.touched}"
-            list="countryList1">
-          <datalist id="countryList1">
-            <option *ngFor="let country of filteredCountries" [value]="country.cca2">
-              {{ country.name }} ({{ country.cca2 }})
-            </option>
-          </datalist>
-          <div class="invalid-feedback">
-            La nacionalidad es obligatoria
-          </div>
-        </div>
-        <div class="col-md-6">
-          <label for="issuanceCountry" class="form-label">País de emisión <span class="text-danger">*</span></label>
-          <input type="text" class="form-control" id="issuanceCountry" formControlName="issuanceCountry"
-            (input)="filterCountries($event)"
-            [ngClass]="{'is-invalid': travelerForm.get('documents')?.get('0')?.get('issuanceCountry')?.invalid && travelerForm.get('documents')?.get('0')?.get('issuanceCountry')?.touched}"
-            list="countryList2">
-          <datalist id="countryList2">
-            <option *ngFor="let country of filteredCountries" [value]="country.cca2">
-              {{ country.name }} ({{ country.cca2 }})
-            </option>
-          </datalist>
-          <div class="invalid-feedback">
-            El país de emisión es obligatorio
           </div>
         </div>
       </div>

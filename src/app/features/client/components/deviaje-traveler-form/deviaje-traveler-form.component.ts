@@ -196,14 +196,46 @@ export class DeviajeTravelerFormComponent implements OnInit {
     };
   }
 
+  // Obtener los meses del año
+  getMonths(): { value: string; label: string }[] {
+    return [
+      { value: '01', label: 'Enero' },
+      { value: '02', label: 'Febrero' },
+      { value: '03', label: 'Marzo' },
+      { value: '04', label: 'Abril' },
+      { value: '05', label: 'Mayo' },
+      { value: '06', label: 'Junio' },
+      { value: '07', label: 'Julio' },
+      { value: '08', label: 'Agosto' },
+      { value: '09', label: 'Septiembre' },
+      { value: '10', label: 'Octubre' },
+      { value: '11', label: 'Noviembre' },
+      { value: '12', label: 'Diciembre' },
+    ];
+  }
+
+  // Obtener los próximos 15 años para el selector
+  getYears(): string[] {
+    const currentYear = new Date().getFullYear();
+    return Array.from({ length: 15 }, (_, i) => String(currentYear + i));
+  }
+
+  // Actualizar el valor de la fecha de caducidad cuando cambian día, mes o año
+  updateExpiryDate(day: string, month: string, year: string): void {
+    if (day && month && year) {
+      const formattedDate = `${year}-${month}-${day}`;
+      this.travelerForm
+        .get('documents')
+        ?.get('0')
+        ?.get('expiryDate')
+        ?.setValue(formattedDate);
+    }
+  }
+
   //METODOS PARA ERRORES DE VALIDACION
   shouldShowError(fieldName: string): boolean {
     const field = this.travelerForm.get(fieldName);
-    return !!(
-      field &&
-      field.invalid &&
-      (field.dirty || field.touched)
-    );
+    return !!(field && field.invalid && (field.dirty || field.touched));
   }
 
   getFieldErrors(fieldName: string): ValidationErrors | null {
@@ -215,8 +247,8 @@ export class DeviajeTravelerFormComponent implements OnInit {
     const control = this.travelerForm.get(fieldName);
     return {
       'is-invalid': control?.invalid && (control?.dirty || control?.touched),
-      'is-valid': control?.valid
-    }
+      'is-valid': control?.valid,
+    };
   }
 }
 
