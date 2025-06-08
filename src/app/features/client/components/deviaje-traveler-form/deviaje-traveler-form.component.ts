@@ -6,6 +6,7 @@ import {
   FormGroup,
   ReactiveFormsModule,
   ValidationErrors,
+  Validators,
 } from '@angular/forms';
 
 @Component({
@@ -29,6 +30,7 @@ export class DeviajeTravelerFormComponent implements OnInit {
   genderOptions = [
     { value: 'MALE', label: 'Masculino' },
     { value: 'FEMALE', label: 'Femenino' },
+    { value: 'UNSPECIFIED', label: 'Otro' }
   ];
 
   documentTypes = [
@@ -39,19 +41,29 @@ export class DeviajeTravelerFormComponent implements OnInit {
 
   ngOnInit(): void {
     this.loadCountries();
+    this.setupValidations();
+  }
 
-    // Inicializar fecha de nacimiento según el tipo de pasajero
+  setupValidations(): void {
+    // Configurar validaciones según tipo de pasajero
     const travelerType = this.travelerForm.get('travelerType')?.value;
-    if (travelerType === 'ADULT') {
-      // Adulto (mayor de 18 años)
-      this.setDefaultDateOfBirth(30);
-    } else if (travelerType === 'CHILD') {
-      // Niño (entre 2 y 11 años)
-      this.setDefaultDateOfBirth(5);
-    } else if (travelerType === 'INFANT') {
-      // Infante (menor de 2 años)
-      this.setDefaultDateOfBirth(1);
-    }
+
+    // Validar formato de pasaporte (alfanumérico, al menos 6 caracteres)
+    this.travelerForm.get('documents')?.get('0')?.get('number')?.setValidators([
+      Validators.required,
+      Validators.minLength(6),
+      Validators.pattern(/^[A-Z0-9]+$/i)
+    ]);
+
+    // Validar fecha de caducidad (debe ser fecha futura)
+    this.travelerForm.get('documents')?.get('0')?.get('expiryDate')?.setValidators([
+      Validators.required,
+      this.futureDateValidator()
+    ]);
+
+    // Actualizar validaciones
+    this.travelerForm.get('documents')?.get('0')?.get('number')?.updateValueAndValidity();
+    this.travelerForm.get('documents')?.get('0')?.get('expiryDate')?.updateValueAndValidity();
   }
 
   loadCountries(): void {
@@ -91,6 +103,23 @@ export class DeviajeTravelerFormComponent implements OnInit {
       });
   }
 
+  // Validador personalizado para garantizar que la fecha sea futura
+  futureDateValidator() {
+    return (control: AbstractControl): ValidationErrors | null => {
+      if (!control.value) {
+        return null;
+      }
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      const selectedDate = new Date(control.value);
+      
+      if (selectedDate <= today) {
+        return { pastDate: true };
+      }
+      return null;
+    };
+  }
+
   filterCountries(event: Event): void {
     const searchTerm = (event.target as HTMLInputElement).value.toLowerCase();
     if (searchTerm) {
@@ -122,20 +151,6 @@ export class DeviajeTravelerFormComponent implements OnInit {
         ?.get('0')
         ?.get('countryCallingCode')
         ?.setValue(country.phoneCode);
-    }
-  }
-
-  private setDefaultDateOfBirth(yearsAgo: number): void {
-    const today = new Date();
-    const defaultDate = new Date(
-      today.getFullYear() - yearsAgo,
-      today.getMonth(),
-      today.getDate()
-    );
-    const formattedDate = defaultDate.toISOString().split('T')[0]; // formato YYYY-MM-DD
-    const dateOfBirthControl = this.travelerForm.get('dateOfBirth');
-    if (dateOfBirthControl) {
-      dateOfBirthControl.setValue(formattedDate);
     }
   }
 
@@ -194,42 +209,6 @@ export class DeviajeTravelerFormComponent implements OnInit {
       min: this.formatDateForInput(minDate),
       max: this.formatDateForInput(maxDate),
     };
-  }
-
-  // Obtener los meses del año
-  getMonths(): { value: string; label: string }[] {
-    return [
-      { value: '01', label: 'Enero' },
-      { value: '02', label: 'Febrero' },
-      { value: '03', label: 'Marzo' },
-      { value: '04', label: 'Abril' },
-      { value: '05', label: 'Mayo' },
-      { value: '06', label: 'Junio' },
-      { value: '07', label: 'Julio' },
-      { value: '08', label: 'Agosto' },
-      { value: '09', label: 'Septiembre' },
-      { value: '10', label: 'Octubre' },
-      { value: '11', label: 'Noviembre' },
-      { value: '12', label: 'Diciembre' },
-    ];
-  }
-
-  // Obtener los próximos 15 años para el selector
-  getYears(): string[] {
-    const currentYear = new Date().getFullYear();
-    return Array.from({ length: 15 }, (_, i) => String(currentYear + i));
-  }
-
-  // Actualizar el valor de la fecha de caducidad cuando cambian día, mes o año
-  updateExpiryDate(day: string, month: string, year: string): void {
-    if (day && month && year) {
-      const formattedDate = `${year}-${month}-${day}`;
-      this.travelerForm
-        .get('documents')
-        ?.get('0')
-        ?.get('expiryDate')
-        ?.setValue(formattedDate);
-    }
   }
 
   //METODOS PARA ERRORES DE VALIDACION
