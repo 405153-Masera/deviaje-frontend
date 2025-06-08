@@ -7,7 +7,6 @@ export interface FlightBookingDto {
   branchId?: number;
   flightOffer: FlightOfferDto;
   travelers: TravelerDto[];
-  ticketingAgreement: TicketingAgreementDto;
 }
 
 export interface FlightOfferDto extends FlightOffer {
