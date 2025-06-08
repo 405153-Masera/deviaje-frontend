@@ -89,7 +89,6 @@ export class DeviajeFlightBookingComponent implements OnInit {
     //});
 
     // Obtener los datos del vuelo seleccionado del state del router
-    const navigation = this.router.getCurrentNavigation();
     let state: any;
 
     if (typeof window !== 'undefined') {
@@ -201,7 +200,7 @@ export class DeviajeFlightBookingComponent implements OnInit {
             expiryDate: ['', Validators.required],
             issuanceCountry: ['', Validators.required],
             nationality: ['', Validators.required],
-            holder: [i === 0],
+            holder: true,
           }),
         ]),
       });
@@ -279,10 +278,6 @@ export class DeviajeFlightBookingComponent implements OnInit {
         clientId: 1, // Este valor debería venir de la sesión del usuario
         flightOffer: this.selectedOffer,
         travelers: this.prepareTravelersData(),
-        ticketingAgreement: {
-          option: 'DELAY_TO_CANCEL',
-          delay: '6D',
-        },
       };
 
       // Preparar los datos del pago
@@ -357,14 +352,13 @@ export class DeviajeFlightBookingComponent implements OnInit {
           lastName: traveler.lastName,
         },
         gender: traveler.gender,
+        documents : traveler.documents
       };
 
       // Agregar datos de contacto solo para el primer pasajero (titular)
       if (index === 0) {
         travelerData.contact = traveler.contact;
-        travelerData.documents = traveler.documents;
       }
-
       travelersData.push(travelerData);
     });
 

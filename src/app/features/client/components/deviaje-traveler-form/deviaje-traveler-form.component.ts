@@ -8,6 +8,7 @@ import {
   ValidationErrors,
   Validators,
 } from '@angular/forms';
+import { ValidatorsService } from '../../../../shared/services/validators.service';
 
 @Component({
   selector: 'app-deviaje-traveler-form',
@@ -21,6 +22,7 @@ export class DeviajeTravelerFormComponent implements OnInit {
   @Input() isPrimaryTraveler: boolean = false;
 
   private http = inject(HttpClient);
+  private validatorsService = inject(ValidatorsService);
 
   countries: Country[] = [];
   filteredCountries: Country[] = [];
@@ -30,7 +32,7 @@ export class DeviajeTravelerFormComponent implements OnInit {
   genderOptions = [
     { value: 'MALE', label: 'Masculino' },
     { value: 'FEMALE', label: 'Femenino' },
-    { value: 'UNSPECIFIED', label: 'Otro' }
+    { value: 'UNSPECIFIED', label: 'Otro' },
   ];
 
   documentTypes = [
@@ -49,21 +51,61 @@ export class DeviajeTravelerFormComponent implements OnInit {
     const travelerType = this.travelerForm.get('travelerType')?.value;
 
     // Validar formato de pasaporte (alfanumérico, al menos 6 caracteres)
-    this.travelerForm.get('documents')?.get('0')?.get('number')?.setValidators([
-      Validators.required,
-      Validators.minLength(6),
-      Validators.pattern(/^[A-Z0-9]+$/i)
-    ]);
+    this.travelerForm
+      .get('documents')
+      ?.get('0')
+      ?.get('number')
+      ?.setValidators([
+        Validators.required,
+        Validators.minLength(6),
+        Validators.pattern(/^[A-Z0-9]+$/i),
+      ]);
 
     // Validar fecha de caducidad (debe ser fecha futura)
-    this.travelerForm.get('documents')?.get('0')?.get('expiryDate')?.setValidators([
-      Validators.required,
-      this.futureDateValidator()
-    ]);
+    this.travelerForm
+      .get('documents')
+      ?.get('0')
+      ?.get('expiryDate')
+      ?.setValidators([Validators.required, this.futureDateValidator()]);
+
+    this.setupPhoneValidation();
 
     // Actualizar validaciones
-    this.travelerForm.get('documents')?.get('0')?.get('number')?.updateValueAndValidity();
-    this.travelerForm.get('documents')?.get('0')?.get('expiryDate')?.updateValueAndValidity();
+    this.travelerForm
+      .get('documents')
+      ?.get('0')
+      ?.get('number')
+      ?.updateValueAndValidity();
+    this.travelerForm
+      .get('documents')
+      ?.get('0')
+      ?.get('expiryDate')
+      ?.updateValueAndValidity();
+  }
+
+  setupPhoneValidation(): void {
+    const phoneControl = this.travelerForm
+      .get('contact')
+      ?.get('phones')
+      ?.get('0')
+      ?.get('number');
+
+    if (phoneControl) {
+      phoneControl.setValidators([
+        Validators.required,
+        this.validatorsService.validatePhoneNumber(),
+      ]);
+
+      // Revalidar cuando cambie el código de país
+      this.travelerForm
+        .get('contact')
+        ?.get('phones')
+        ?.get('0')
+        ?.get('countryCallingCode')
+        ?.valueChanges.subscribe(() => {
+          phoneControl.updateValueAndValidity();
+        });
+    }
   }
 
   loadCountries(): void {
@@ -76,14 +118,27 @@ export class DeviajeTravelerFormComponent implements OnInit {
         next: (data: any) => {
           // Filtrar solo los campos necesarios y usar el nombre en español
           this.countries = data
-            .map((country: any) => ({
-              name: country.translations.spa?.common || country.name.common,
-              cca2: country.cca2,
-              phoneCode: country.idd?.root
-                ? country.idd.root.replace('+', '')
-                : '',
-            }))
-            .filter((country: Country) => country.cca2 && country.name)
+            .map((country: any) => {
+              
+              // Concatenar root + primer suffix para obtener código completo
+              let phoneCode = '';
+              if (country.idd?.root && country.idd?.suffixes?.length > 0) {
+                // Tomar solo el primer suffix (para países con múltiples códigos)
+                phoneCode =
+                  country.idd.root.replace('+', '') + country.idd.suffixes[0];
+              }
+
+              return {
+                name: country.translations.spa?.common || country.name.common,
+                cca2: country.cca2,
+                phoneCode: phoneCode, // Ahora será "54" en lugar de "5"
+                displayCode: phoneCode ? `+${phoneCode}` : '', // Para mostrar en UI
+              };
+            })
+            .filter(
+              (country: Country) =>
+                country.cca2 && country.name && country.phoneCode
+            )
             .sort((a: Country, b: Country) => a.name.localeCompare(b.name));
 
           this.filteredCountries = [...this.countries];
@@ -93,11 +148,11 @@ export class DeviajeTravelerFormComponent implements OnInit {
           this.isLoading = false;
           // Países de fallback en caso de error
           this.countries = [
-            { name: 'Argentina', cca2: 'AR', phoneCode: '54' },
-            { name: 'España', cca2: 'ES', phoneCode: '34' },
-            { name: 'Estados Unidos', cca2: 'US', phoneCode: '1' },
-            { name: 'México', cca2: 'MX', phoneCode: '52' },
-          ];
+          { name: 'Argentina', cca2: 'AR', phoneCode: '54', displayCode: '+54' },
+          { name: 'España', cca2: 'ES', phoneCode: '34', displayCode: '+34' },
+          { name: 'Estados Unidos', cca2: 'US', phoneCode: '1', displayCode: '+1' },
+          { name: 'México', cca2: 'MX', phoneCode: '52', displayCode: '+52' },
+        ];
           this.filteredCountries = [...this.countries];
         },
       });
@@ -112,7 +167,7 @@ export class DeviajeTravelerFormComponent implements OnInit {
       const today = new Date();
       today.setHours(0, 0, 0, 0);
       const selectedDate = new Date(control.value);
-      
+
       if (selectedDate <= today) {
         return { pastDate: true };
       }
@@ -234,5 +289,6 @@ export class DeviajeTravelerFormComponent implements OnInit {
 interface Country {
   name: string;
   cca2: string;
-  phoneCode?: string;
+  phoneCode: string;
+  displayCode: string;
 }

@@ -7,7 +7,9 @@ import {
   AbstractControl,
   AsyncValidatorFn,
   ValidationErrors,
+  ValidatorFn,
 } from '@angular/forms';
+import { isValidPhoneNumber } from 'libphonenumber-js';
 
 @Injectable({
   providedIn: 'root',
@@ -60,20 +62,6 @@ export class ValidatorsService {
     };
   }
 
-  checkPassportAvailability(passportNumber: string): Observable<boolean> {
-    if (!passportNumber) {
-      return of(true);
-    }
-
-    return this.http
-      .get<{ isUnique: boolean }>(
-        `${this.apiUrl}/passportNumber?passportNumber=${encodeURIComponent(
-          passportNumber
-        )}`
-      )
-      .pipe(map((response) => response.isUnique));
-  }
-
   validateUniquePassport(): AsyncValidatorFn {
     return (control: AbstractControl): Observable<ValidationErrors | null> => {
       const passportNumber = control.value;
@@ -86,11 +74,63 @@ export class ValidatorsService {
           `${this.apiUrl}/passportNumber?passportNumber=${control.value}`
         )
         .pipe(
-          map((response) => (response.isUnique ? null : { passportTaken: true })),
+          map((response) =>
+            response.isUnique ? null : { passportTaken: true }
+          ),
           catchError(() => {
             return of({ serverError: true });
           })
         );
     };
   }
+
+  validatePassportFormat(): ValidatorFn {
+    return (control: AbstractControl): ValidationErrors | null => {
+      const passportNumber = control.value;
+
+      if (!passportNumber) {
+        return null;
+      }
+
+      //Solo alfanuméricos, sin espacios ni guiones
+      const passportFormatRegex = /^[A-Za-z0-9]{3,20}$/;
+      if (!passportFormatRegex.test(passportNumber)) {
+        return { invalidPassportFormat: { value: passportNumber } };
+      }
+
+      return null;
+    };
+  }
+
+  // Versión mejorada más dinámica
+validatePhoneNumber(): ValidatorFn {
+  return (control: AbstractControl): ValidationErrors | null => {
+    const phoneNumber = control.value;
+
+    if (!phoneNumber) {
+      return null;
+    }
+
+    // Obtener el código de país del mismo FormGroup
+    const parent = control.parent;
+    const countryCode = parent?.get('countryCallingCode')?.value;
+
+    if (!countryCode) {
+      return { missingCountryCode: true };
+    }
+
+    try {
+      // Construir el número completo con el código de país
+      const fullNumber = `+${countryCode}${phoneNumber}`;
+      
+      if (!isValidPhoneNumber(fullNumber)) {
+        return { invalidPhoneNumber: { value: phoneNumber } };
+      }
+    } catch (error) {
+      return { phoneValidationError: true };
+    }
+
+    return null;
+  };
+}
 }
