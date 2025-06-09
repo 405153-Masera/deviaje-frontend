@@ -143,7 +143,7 @@
                             <i class="bi bi-person-vcard"></i>
                         </span>
                         <input type="text" class="form-control" id="payerDni" formControlName="payerDni"
-                            placeholder="12345678" maxlength="8"
+                            placeholder="12345678" maxlength="8" (input)="formatDni($event)"
                             [ngClass]="{'is-invalid': paymentForm.get('payerDni')?.invalid && paymentForm.get('payerDni')?.touched}"
                             [disabled]="!isSDKLoaded">
                         <div class="invalid-feedback">
