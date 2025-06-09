@@ -68,8 +68,9 @@ export class DeviajeTravelerFormComponent implements OnInit {
       ?.get('expiryDate')
       ?.setValidators([Validators.required, this.futureDateValidator()]);
 
-    this.setupPhoneValidation();
-
+    if (this.isPrimaryTraveler) {
+      this.setupPhoneValidation();
+    }
     // Actualizar validaciones
     this.travelerForm
       .get('documents')
@@ -84,6 +85,11 @@ export class DeviajeTravelerFormComponent implements OnInit {
   }
 
   setupPhoneValidation(): void {
+    
+    if (!this.isPrimaryTraveler) {
+      return;
+    }
+    
     const phoneControl = this.travelerForm
       .get('contact')
       ?.get('phones')

@@ -1,6 +1,7 @@
 import { CommonModule } from '@angular/common';
-import { Component, Input, OnInit } from '@angular/core';
+import { Component, EventEmitter, inject, Input, OnInit, Output } from '@angular/core';
 import { AbstractControl, FormGroup, ReactiveFormsModule } from '@angular/forms';
+import { MercadoPagoService } from '../../../../shared/services/mercado-pago.service';
 
 @Component({
   selector: 'app-deviaje-payments-form',
@@ -13,16 +14,27 @@ export class DeviajePaymentsFormComponent implements OnInit {
   @Input() paymentForm: FormGroup | null = null;
   @Input() amount: string = '0';
   @Input() currency: string = 'USD';
+  @Output() tokenGenerated = new EventEmitter<string>();
   
+  private mercadoPagoService = inject(MercadoPagoService);
+
   // Banderas para mostrar la tarjeta según el primer dígito
   cardType: string = '';
   cardTypeIcon: string = '';
   showCardPreview: boolean = true;
+  isProcessingToken: boolean = false;
 
   // Variables para la vista previa de la tarjeta
   previewCardNumber: string = '•••• •••• •••• ••••';
   previewCardHolder: string = 'NOMBRE DEL TITULAR';
   previewCardExpiry: string = 'MM/YY';
+  
+   // Tipos de identificación para Argentina (Mercado Pago)
+  identificationTypes: any[] = [
+    { id: 'DNI', name: 'DNI', min_length: 7, max_length: 8 },
+    { id: 'CUIL', name: 'CUIL', min_length: 11, max_length: 11 },
+    { id: 'CUIT', name: 'CUIT', min_length: 11, max_length: 11 }
+  ];
   
   ngOnInit(): void {
     if (this.paymentForm) {

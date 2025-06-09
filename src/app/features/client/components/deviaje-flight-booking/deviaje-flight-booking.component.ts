@@ -33,9 +33,17 @@ import { AuthService } from '../../../../core/auth/services/auth.service';
   styleUrl: './deviaje-flight-booking.component.scss',
 })
 export class DeviajeFlightBookingComponent implements OnInit {
+  //Datos para la sessionStorage
+  private readonly BOOKING_STATE_KEY = 'flight_booking_state';
+  private readonly FORM_DATA_KEY = 'flight_booking_form_data';
+  private readonly CURRENT_STEP_KEY = 'flight_booking_current_step';
+  private isReloadedSession = false; // Indica si la sesión se recargó. para diferenciar de la primera carga
+
   private fb = inject(FormBuilder);
   private router = inject(Router);
   private route = inject(ActivatedRoute);
+
+  //Servicios para reserva, autenticacion y utilidades
   private bookingService = inject(BookingService);
   private authService = inject(AuthService);
   readonly flightUtils = inject(FlightUtilsService);
@@ -83,34 +91,20 @@ export class DeviajeFlightBookingComponent implements OnInit {
   }
 
   ngOnInit(): void {
-    // Obtener los datos del vuelo seleccionado del state del router
     //this.authService.currentUser.subscribe(user => {
     //this.currentUser = user;
     //});
 
-    // Obtener los datos del vuelo seleccionado del state del router
-    let state: any;
+    // Verificar y cargar si hay datos persistidos en sessionStorage
+    this.loadPersistedState();
 
-    if (typeof window !== 'undefined') {
-      state = window.history.state;
+    // Si no hay datos persistidos, cargar desde el state del router
+    if (!this.isReloadedSession) {
+      this.loadFromRouterState();
     }
 
-    if (state && state.flightOffer) {
-      this.flightOffer = state.flightOffer;
-      this.selectedOffer = state.flightOffer;
-      this.searchParams = state.searchParams;
-
-      // Verificar disponibilidad y precio actual de la oferta
-      if (this.flightOffer) {
-        this.verifyFlightOffer(this.flightOffer);
-      }
-
-      // Inicializar el formulario con los viajeros
-      this.initializeTravelersForm();
-    } else {
-      // Si no hay datos, redirigir a la página de búsqueda
-      this.router.navigate(['/home/flight/search']);
-    }
+     // Configurar la suscripción para guardar cambios automáticamente
+    this.setupFormPersistence();
   }
 
   verifyFlightOffer(offer: FlightOfferDto): void {
@@ -131,6 +125,8 @@ export class DeviajeFlightBookingComponent implements OnInit {
             .get('payment')
             ?.get('currency')
             ?.setValue(verifiedOffer.price.currency);
+
+             this.saveBookingState();
         } else {
           this.errorMessage =
             'La oferta de vuelo ya no está disponible. Por favor, realice una nueva búsqueda.';
@@ -180,19 +176,20 @@ export class DeviajeFlightBookingComponent implements OnInit {
         lastName: ['', Validators.required],
         gender: ['MALE', Validators.required],
         travelerType: [travelerType],
-        contact: this.fb.group({
-          emailAddress: [
-            i === 0 ? '' : null,
-            i === 0 ? [Validators.required, Validators.email] : [],
-          ],
-          phones: this.fb.array([
-            this.fb.group({
-              deviceType: ['MOBILE'],
-              countryCallingCode: ['', i === 0 ? Validators.required : null],
-              number: ['', i === 0 ? Validators.required : null],
-            }),
-          ]),
-        }),
+        ...(i === 0
+          ? {
+              contact: this.fb.group({
+                emailAddress: ['', [Validators.required, Validators.email]],
+                phones: this.fb.array([
+                  this.fb.group({
+                    deviceType: ['MOBILE'],
+                    countryCallingCode: ['', Validators.required],
+                    number: ['', Validators.required],
+                  }),
+                ]),
+              }),
+            }
+          : {}),
         documents: this.fb.array([
           this.fb.group({
             documentType: ['PASSPORT'],
@@ -214,6 +211,7 @@ export class DeviajeFlightBookingComponent implements OnInit {
       // Validar el paso actual antes de avanzar
       if (this.validateCurrentStep()) {
         this.currentStep++;
+        this.saveCurrentStep(); // Guardar el paso actual en sessionStorage
         console.log('Avanzando al paso:', this.currentStep);
       } else {
         console.log('Validación fallida para el paso:', this.currentStep);
@@ -226,6 +224,7 @@ export class DeviajeFlightBookingComponent implements OnInit {
   previousStep(): void {
     if (this.currentStep > 1) {
       this.currentStep--;
+      this.saveCurrentStep(); // Guardar el paso actual en sessionStorage
     }
   }
 
@@ -312,6 +311,10 @@ export class DeviajeFlightBookingComponent implements OnInit {
               this.showSuccessMessage = true;
               this.bookingReference = response.booking?.id?.toString() || '';
               // Navegar a la página de confirmación o mostrar un mensaje de éxito
+
+              // Limpiar los datos persistidos después del éxito
+              this.clearPersistedState();
+
               setTimeout(() => {
                 this.router.navigate(['/bookings'], {
                   queryParams: { reference: this.bookingReference },
@@ -339,6 +342,7 @@ export class DeviajeFlightBookingComponent implements OnInit {
 
   prepareTravelersData(): TravelerDto[] {
     const travelersData: TravelerDto[] = [];
+    const primaryContact = this.travelers.at(0)?.get('contact')?.value;
 
     this.travelers.controls.forEach((travelerControl, index) => {
       const traveler = travelerControl.value;
@@ -352,19 +356,146 @@ export class DeviajeFlightBookingComponent implements OnInit {
           lastName: traveler.lastName,
         },
         gender: traveler.gender,
-        documents : traveler.documents
+        documents: traveler.documents,
       };
 
-      // Agregar datos de contacto solo para el primer pasajero (titular)
-      if (index === 0) {
-        travelerData.contact = traveler.contact;
+      if (primaryContact) {
+        travelerData.contact = {
+          emailAddress: primaryContact.emailAddress,
+          phones: primaryContact.phones.map((phone: any) => ({
+            deviceType: phone.deviceType || 'MOBILE',
+            countryCallingCode: phone.countryCallingCode,
+            number: phone.number,
+          })),
+        };
       }
+
       travelersData.push(travelerData);
     });
 
     return travelersData;
   }
 
+  //METODOS PRIVADOS PARA GUARDAR LA SESION
+  private loadPersistedState(): void {
+    try {
+      // Cargar el paso actual
+      const savedStep = sessionStorage.getItem(this.CURRENT_STEP_KEY);
+      if (savedStep) {
+        this.currentStep = parseInt(savedStep, 10);
+        this.isReloadedSession = true;
+      }
+
+      // Cargar los datos del estado de la reserva
+      const savedState = sessionStorage.getItem(this.BOOKING_STATE_KEY);
+      if (savedState) {
+        const state = JSON.parse(savedState);
+        this.flightOffer = state.flightOffer;
+        this.selectedOffer = state.selectedOffer;
+        this.searchParams = state.searchParams;
+        this.isReloadedSession = true;
+      }
+
+      // Cargar los datos del formulario
+      const savedFormData = sessionStorage.getItem(this.FORM_DATA_KEY);
+      if (savedFormData) {
+        const formData = JSON.parse(savedFormData);
+
+        // Primero inicializar la estructura del formulario
+        if (this.searchParams) {
+          this.initializeTravelersForm();
+        }
+
+        // Luego cargar los valores guardados
+        setTimeout(() => {
+          this.mainForm.patchValue(formData);
+        }, 100);
+
+        this.isReloadedSession = true;
+      }
+    } catch (error) {
+      console.error('Error al cargar estado persistido:', error);
+      this.clearPersistedState();
+    }
+  }
+
+  private loadFromRouterState(): void {
+    let state: any;
+
+    if (typeof window !== 'undefined') {
+      state = window.history.state;
+    }
+
+    if (state && state.flightOffer) {
+      this.flightOffer = state.flightOffer;
+      this.selectedOffer = state.flightOffer;
+      this.searchParams = state.searchParams;
+
+      // Guardar el estado inicial
+      this.saveBookingState();
+
+      // Verificar disponibilidad y precio solo en la primera carga
+      if (this.flightOffer) {
+        this.verifyFlightOffer(this.flightOffer);
+      }
+
+      // Inicializar el formulario con los viajeros
+      this.initializeTravelersForm();
+    } else {
+      // Si no hay datos en ningún lado, redirigir a la página de búsqueda
+      this.router.navigate(['/home/flight/search']);
+    }
+  }
+
+   private setupFormPersistence(): void {
+    // Suscribirse a cambios en el formulario para guardar automáticamente
+    this.mainForm.valueChanges.subscribe(() => {
+      this.saveFormData();
+    });
+  }
+
+  private saveBookingState(): void {
+    try {
+      const state = {
+        flightOffer: this.flightOffer,
+        selectedOffer: this.selectedOffer,
+        searchParams: this.searchParams,
+        timestamp: Date.now(),
+      };
+      sessionStorage.setItem(this.BOOKING_STATE_KEY, JSON.stringify(state));
+    } catch (error) {
+      console.error('Error al guardar estado de la reserva:', error);
+    }
+  }
+
+  private saveFormData(): void {
+    try {
+      const formData = this.mainForm.value;
+      sessionStorage.setItem(this.FORM_DATA_KEY, JSON.stringify(formData));
+    } catch (error) {
+      console.error('Error al guardar datos del formulario:', error);
+    }
+  }
+
+  private saveCurrentStep(): void {
+    try {
+      sessionStorage.setItem(this.CURRENT_STEP_KEY, this.currentStep.toString());
+    } catch (error) {
+      console.error('Error al guardar paso actual:', error);
+    }
+  }
+
+  private clearPersistedState(): void {
+    try {
+      sessionStorage.removeItem(this.BOOKING_STATE_KEY);
+      sessionStorage.removeItem(this.FORM_DATA_KEY);
+      sessionStorage.removeItem(this.CURRENT_STEP_KEY);
+    } catch (error) {
+      console.error('Error al limpiar estado persistido:', error);
+    }
+  }
+
+  // Estos metodos los puedo borrar son para ver errores en consola
   validateTravelersData(): boolean {
     // Marcar todos los campos como tocados para mostrar errores
     this.markFormGroupTouched(this.travelers);
@@ -435,5 +566,13 @@ export class DeviajeFlightBookingComponent implements OnInit {
         }
       }
     });
+  }
+
+  // Método para permitir al usuario limpiar manualmente los datos persistidos
+  clearFormData(): void {
+    this.clearPersistedState();
+    this.currentStep = 1;
+    this.mainForm.reset();
+    this.initializeTravelersForm();
   }
 }
