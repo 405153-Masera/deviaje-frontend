@@ -57,8 +57,8 @@ export interface PaymentDto {
 
 export interface PayerDto {
   email: string;
-  firstName: string;
-  lastName: string;
+  firstName?: string;
+  lastName?: string;
   identification?: string;
   identificationType?: string;
 }

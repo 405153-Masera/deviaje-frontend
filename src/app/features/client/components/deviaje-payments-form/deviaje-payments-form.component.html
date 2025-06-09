@@ -134,18 +134,32 @@
                     </div>
                 </div>
 
-                <!-- Información de DNI del pasajero -->
                 <div class="mb-3">
-                    <label class="form-label">Documento del titular</label>
+                    <label for="payerDni" class="form-label">
+                        Documento del titular <span class="text-danger">*</span>
+                    </label>
                     <div class="input-group">
                         <span class="input-group-text">
                             <i class="bi bi-person-vcard"></i>
                         </span>
-                        <input type="text" class="form-control" [value]="getDocumentNumber() || 'No disponible'"
-                            readonly>
+                        <input type="text" class="form-control" id="payerDni" formControlName="payerDni"
+                            placeholder="12345678" maxlength="8"
+                            [ngClass]="{'is-invalid': paymentForm.get('payerDni')?.invalid && paymentForm.get('payerDni')?.touched}"
+                            [disabled]="!isSDKLoaded">
+                        <div class="invalid-feedback">
+                            <div *ngIf="paymentForm.get('payerDni')?.errors?.['required']">
+                                El DNI es obligatorio
+                            </div>
+                            <div *ngIf="paymentForm.get('payerDni')?.errors?.['pattern']">
+                                Ingrese un DNI válido (solo números, 7-8 dígitos)
+                            </div>
+                            <div *ngIf="paymentForm.get('payerDni')?.errors?.['minlength']">
+                                El DNI debe tener al menos 7 dígitos
+                            </div>
+                        </div>
                     </div>
                     <small class="form-text text-muted">
-                        Este documento corresponde al primer pasajero (titular de la reserva)
+                        DNI argentino del titular de la tarjeta (sin puntos ni guiones)
                     </small>
                 </div>
 

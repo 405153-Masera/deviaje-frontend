@@ -77,6 +77,10 @@ export class DeviajeFlightBookingComponent implements OnInit, OnDestroy {
       amount: [0, Validators.required],
       currency: ['USD', Validators.required],
       paymentToken: [''],
+      payerDni: ['', [
+        Validators.required, 
+        Validators.pattern(/^\d{7,8}$/),
+        Validators.minLength(7),]],
     }),
   });
 
@@ -319,14 +323,8 @@ export class DeviajeFlightBookingComponent implements OnInit, OnDestroy {
         payer: {
           email: this.travelers.at(0)?.get('contact')?.get('emailAddress')
             ?.value,
-          firstName: this.travelers.at(0)?.get('firstName')?.value,
-          lastName: this.travelers.at(0)?.get('lastName')?.value,
-          identification: this.travelers
-            .at(0)
-            ?.get('documents')
-            ?.get('0')
-            ?.get('number')?.value,
-          identificationType: 'PASSPORT',
+          identification: this.mainForm.get('payment')?.get('payerDni')?.value,
+          identificationType: 'DNI',
         },
       };
 
@@ -360,7 +358,6 @@ export class DeviajeFlightBookingComponent implements OnInit, OnDestroy {
               (error.message || 'Inténtelo nuevamente');
           },
         });
-
     } catch (error: any) {
       this.isLoading = false;
       this.errorMessage = error.message || 'Error al procesar el pago';
