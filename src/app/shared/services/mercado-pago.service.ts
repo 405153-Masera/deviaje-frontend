@@ -1,7 +1,7 @@
 import { Injectable, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { environment } from '../enviroments/enviroment';
-import { Observable, from } from 'rxjs';
+import { Observable, firstValueFrom, from } from 'rxjs';
 
 declare global {
   interface Window {
@@ -25,15 +25,21 @@ export class MercadoPagoService {
    */
   async initializeMercadoPago(): Promise<void> {
     try {
-      const config = await this.getPaymentConfig().toPromise();
-      
+      const config = await firstValueFrom(this.getPaymentConfig());
       if (!window.MercadoPago) {
         await this.loadSDK();
       }
-      this.mp = new window.MercadoPago(config.publicKey, {
-        locale: 'es-AR'
-      });
-      console.log('Mercado Pago SDK inicializado correctamente');
+     
+       // Verificar que config no sea undefined antes de usarlo
+      if (config && config.publicKey) {
+        this.mp = new window.MercadoPago(config.publicKey, {
+          locale: 'es-AR'
+        });
+        console.log('Mercado Pago SDK inicializado correctamente');
+      } else {
+        throw new Error('No se pudo obtener la clave pública de MercadoPago');
+      }
+
     } catch (error) {
       console.error('Error al inicializar Mercado Pago:', error);
       throw error;
@@ -57,11 +63,13 @@ export class MercadoPagoService {
     });
   }
 
-  /**
+/**
    * Obtiene la configuración de pagos desde el backend
    */
   getPaymentConfig(): Observable<MercadoPagoConfig> {
-    return this.http.get<MercadoPagoConfig>(${environment.apiDeviajeBookings}/api/payments/config);
+    // Corregir la construcción de la URL - usar concatenación normal
+    const url = `${environment.apiDeviajeBookings}/api/payments/config`;
+    return this.http.get<MercadoPagoConfig>(url);
   }
 
   /**

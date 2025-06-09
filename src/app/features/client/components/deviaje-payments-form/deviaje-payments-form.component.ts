@@ -14,7 +14,6 @@ export class DeviajePaymentsFormComponent implements OnInit, OnDestroy {
   @Input() paymentForm: FormGroup | null = null;
   @Input() amount: string = '0';
   @Input() currency: string = 'USD';
-  //@Input() travelerData: any = null; // Datos del primer pasajero para obtener el DNI
   
   private mercadoPagoService = inject(MercadoPagoService);
 
@@ -33,7 +32,7 @@ export class DeviajePaymentsFormComponent implements OnInit, OnDestroy {
   previewCardHolder: string = 'NOMBRE DEL TITULAR';
   previewCardExpiry: string = 'MM/YY';
 
-  ngOnInit(): void {
+  async ngOnInit(): Promise<void> {
     if (this.paymentForm) {
       // Actualizar la cantidad y moneda en el formulario
       this.paymentForm.get('amount')?.setValue(parseFloat(this.amount));
@@ -284,5 +283,10 @@ export class DeviajePaymentsFormComponent implements OnInit, OnDestroy {
            this.getDocumentNumber() !== null;
   }
 
+  // Obtener el número de documento del formulario
+  getDocumentNumber(): string | null {
+    if (!this.paymentForm) return null;
+    return this.paymentForm.get('documentNumber')?.value || null;
+  }
 }
 
