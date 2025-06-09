@@ -77,10 +77,14 @@ export class DeviajeFlightBookingComponent implements OnInit, OnDestroy {
       amount: [0, Validators.required],
       currency: ['USD', Validators.required],
       paymentToken: [''],
-      payerDni: ['', [
-        Validators.required, 
-        Validators.pattern(/^\d{7,8}$/),
-        Validators.minLength(7),]],
+      payerDni: [
+        '',
+        [
+          Validators.required,
+          Validators.pattern(/^\d{7,8}$/),
+          Validators.minLength(7),
+        ],
+      ],
     }),
   });
 
@@ -222,10 +226,37 @@ export class DeviajeFlightBookingComponent implements OnInit, OnDestroy {
     }
   }
 
-  nextStep(): void {
+  async nextStep(): Promise<void> {
     if (this.currentStep < this.totalSteps) {
       // Validar el paso actual antes de avanzar
       if (this.validateCurrentStep()) {
+        if (this.currentStep === 2) {
+          // Generar el token de pago antes de avanzar al paso 3
+          if (!this.paymentComponent) {
+            this.errorMessage = 'El componente de pago no está disponible';
+            console.error('paymentComponent es undefined');
+            return;
+          }
+          try {
+            const paymentToken =
+              await this.paymentComponent.requestPaymentToken();
+            if (!paymentToken) {
+              this.errorMessage = 'No se pudo generar el token de pago';
+              return;
+            }
+            // Guardar el token en el formulario
+            this.mainForm
+              .get('payment')
+              ?.get('paymentToken')
+              ?.setValue(paymentToken);
+            console.log('Token de pago generado en paso 2:', paymentToken);
+          } catch (error: any) {
+            this.errorMessage =
+              error.message || 'Error al generar el token de pago';
+            console.error('Error al generar token:', error);
+            return;
+          }
+        }
         this.currentStep++;
         this.saveCurrentStep(); // Guardar el paso actual en sessionStorage
         console.log('Avanzando al paso:', this.currentStep);
@@ -295,14 +326,19 @@ export class DeviajeFlightBookingComponent implements OnInit, OnDestroy {
       return;
     }
 
+    const paymentToken = this.mainForm
+      .get('payment')
+      ?.get('paymentToken')?.value;
+    if (!paymentToken) {
+      this.errorMessage =
+        'Error: Token de pago no disponible. Regrese al paso anterior.';
+      return;
+    }
+
     this.isLoading = true;
     this.errorMessage = '';
 
     try {
-      const paymentToken = await this.paymentComponent.requestPaymentToken();
-      if (!paymentToken) {
-        throw new Error('No se pudo generar el token de pago');
-      }
       console.log('Token de pago generado:', paymentToken);
 
       // Preparar los datos de la reserva

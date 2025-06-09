@@ -258,19 +258,6 @@ export class DeviajePaymentsFormComponent implements OnInit, OnDestroy {
         identificationType: 'DNI', 
         identificationNumber: documentNumber 
       };
-
-      // Validar datos con Mercado Pago
-      const validation = this.mercadoPagoService.validateCardData({
-        cardNumber: cardData.cardNumber,
-        expirationMonth: cardData.expirationMonth,
-        expirationYear: cardData.expirationYear,
-        securityCode: cardData.securityCode,
-      });
-
-      if (!validation.isValid) {
-        throw new Error(validation.errors.join(', '));
-      }
-
       // Generar token
       const token = await this.mercadoPagoService.createCardToken(cardData);
 

@@ -201,7 +201,7 @@
                     <tbody>
                       <tr *ngFor="let travelerForm of travelers.controls; let i = index">
                         <td>{{ i + 1 }}</td>
-                        <td>{{ travelerForm.get('name')?.get('firstName')?.value }} {{ travelerForm.get('name')?.get('lastName')?.value }}</td>
+                        <td>{{ travelerForm.get('firstName')?.value }} {{ travelerForm.get('lastName')?.value }}</td>
                         <td *ngIf="travelerForm.get('documents')?.get('0')?.get('number')?.value">
                           {{ travelerForm.get('documents')?.get('0')?.get('documentType')?.value }}: 
                           {{ travelerForm.get('documents')?.get('0')?.get('number')?.value }}
@@ -261,14 +261,6 @@
                   </div>
                 </div>
               </div>
-            </div>
-
-            <!-- Términos y condiciones -->
-            <div class="form-check mb-4">
-              <input class="form-check-input" type="checkbox" id="acceptTerms" checked>
-              <label class="form-check-label" for="acceptTerms">
-                Acepto los <a href="#" target="_blank">términos y condiciones</a> y las <a href="#" target="_blank">políticas de privacidad</a>
-              </label>
             </div>
           </div>
         </form>

@@ -81,6 +81,8 @@ export class MercadoPagoService {
     expirationMonth: string;
     expirationYear: string;
     securityCode: string;
+    identificationType?: string;
+    identificationNumber?: string;
   }): Promise<string> {
     if (!this.mp) {
       throw new Error('SDK no inicializado');
@@ -92,7 +94,9 @@ export class MercadoPagoService {
         cardholderName: cardData.cardholderName,
         cardExpirationMonth: cardData.expirationMonth,
         cardExpirationYear: cardData.expirationYear,
-        securityCode: cardData.securityCode
+        securityCode: cardData.securityCode,
+        identificationType: cardData.identificationType,
+        identificationNumber: cardData.identificationNumber
       });
 
       if (token.error) {
@@ -106,32 +110,4 @@ export class MercadoPagoService {
     }
   }
 
-  /**
-   * Valida los datos básicos de la tarjeta
-   */
-  validateCardData(cardData: {
-    cardNumber: string;
-    expirationMonth: string;
-    expirationYear: string;
-    securityCode: string;
-  }): { isValid: boolean; errors: string[] } {
-    const errors: string[] = [];
-
-    if (!this.mp.validateCardNumber(cardData.cardNumber)) {
-      errors.push('Número de tarjeta inválido');
-    }
-
-    if (!this.mp.validateExpiryDate(cardData.expirationMonth, cardData.expirationYear)) {
-      errors.push('Fecha de expiración inválida');
-    }
-
-    if (!this.mp.validateSecurityCode(cardData.securityCode)) {
-      errors.push('Código de seguridad inválido');
-    }
-
-    return {
-      isValid: errors.length === 0,
-      errors
-    };
-  }
 }
