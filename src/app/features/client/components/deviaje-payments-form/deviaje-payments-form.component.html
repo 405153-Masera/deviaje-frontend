@@ -1,4 +1,21 @@
 <div *ngIf="paymentForm" class="payment-section">
+    <!-- Alerta de error del SDK o token -->
+    <div *ngIf="tokenError" class="alert alert-danger mb-3" role="alert">
+        <i class="bi bi-exclamation-triangle-fill me-2"></i>
+        {{ tokenError }}
+        <button type="button" class="btn-close" aria-label="Close" (click)="tokenError = ''"></button>
+    </div>
+
+    <!-- Indicador de carga del SDK -->
+    <div *ngIf="!isSDKLoaded" class="alert alert-info mb-3" role="alert">
+        <div class="d-flex align-items-center">
+            <div class="spinner-border spinner-border-sm me-2" role="status">
+                <span class="visually-hidden">Cargando...</span>
+            </div>
+            Cargando sistema de pagos seguro...
+        </div>
+    </div>
+
     <div class="row">
         <!-- Vista previa de la tarjeta -->
         <div class="col-lg-5 mb-4 mb-lg-0">
@@ -38,91 +55,136 @@
         <!-- Formulario de pago -->
         <div class="col-lg-7">
             <form [formGroup]="paymentForm">
+                <!-- Número de tarjeta -->
                 <div class="mb-3">
-                    <label for="cardNumber" class="form-label">Número de tarjeta <span
-                            class="text-danger">*</span></label>
+                    <label for="cardNumber" class="form-label">
+                        Número de tarjeta <span class="text-danger">*</span>
+                    </label>
                     <div class="input-group">
-                        <span class="input-group-text"><i class="bi" [ngClass]="cardTypeIcon"></i></span>
+                        <span class="input-group-text">
+                            <i class="bi" [ngClass]="cardTypeIcon || 'bi-credit-card'"></i>
+                        </span>
                         <input type="text" class="form-control" id="cardNumber" formControlName="cardNumber"
-                            placeholder="Número de tarjeta" (input)="formatCardNumber($event)"
+                            placeholder="1234 5678 9012 3456" (input)="formatCardNumber($event)"
                             [ngClass]="{'is-invalid': paymentForm.get('cardNumber')?.invalid && paymentForm.get('cardNumber')?.touched}"
-                            maxlength="16">
+                            maxlength="16" [disabled]="!isSDKLoaded">
                         <div class="invalid-feedback">
-                            Ingrese un número de tarjeta válido (16 dígitos)
+                            Ingrese un número de tarjeta válido
                         </div>
                     </div>
                 </div>
 
+                <!-- Nombre del titular -->
                 <div class="mb-3">
-                    <label for="cardholderName" class="form-label">Nombre del titular <span
-                            class="text-danger">*</span></label>
+                    <label for="cardholderName" class="form-label">
+                        Nombre del titular <span class="text-danger">*</span>
+                    </label>
                     <input type="text" class="form-control" id="cardholderName" formControlName="cardholderName"
                         placeholder="Nombre como aparece en la tarjeta"
-                        [ngClass]="{'is-invalid': paymentForm.get('cardholderName')?.invalid && paymentForm.get('cardholderName')?.touched}">
+                        [ngClass]="{'is-invalid': paymentForm.get('cardholderName')?.invalid && paymentForm.get('cardholderName')?.touched}"
+                        [disabled]="!isSDKLoaded">
                     <div class="invalid-feedback">
                         El nombre del titular es obligatorio
                     </div>
                 </div>
 
                 <div class="row">
+                    <!-- Fecha de vencimiento -->
                     <div class="col-md-6 mb-3">
-                        <label for="expiryDate" class="form-label">Fecha de vencimiento <span
-                                class="text-danger">*</span></label>
+                        <label for="expiryDate" class="form-label">
+                            Fecha de vencimiento <span class="text-danger">*</span>
+                        </label>
                         <input type="text" class="form-control" id="expiryDate" formControlName="expiryDate"
                             placeholder="MM/YY" (input)="formatExpiryDate($event)"
                             [ngClass]="{'is-invalid': paymentForm.get('expiryDate')?.invalid && paymentForm.get('expiryDate')?.touched}"
-                            maxlength="5">
+                            maxlength="5" [disabled]="!isSDKLoaded">
                         <div class="invalid-feedback">
                             Ingrese una fecha de vencimiento válida (MM/YY)
                         </div>
                     </div>
 
+                    <!-- Código de seguridad -->
                     <div class="col-md-6 mb-3">
-                        <label for="cvv" class="form-label">Código de seguridad <span
-                                class="text-danger">*</span></label>
+                        <label for="cvv" class="form-label">
+                            Código de seguridad <span class="text-danger">*</span>
+                        </label>
                         <div class="input-group">
-                            <input type="text" class="form-control" id="cvv" formControlName="cvv" placeholder="CVV"
+                            <input type="text" class="form-control" id="cvv" formControlName="cvv" placeholder="123"
                                 (input)="formatCvv($event)"
                                 [ngClass]="{'is-invalid': paymentForm.get('cvv')?.invalid && paymentForm.get('cvv')?.touched}"
-                                maxlength="4" (focus)="flipCard(true)" (blur)="flipCard(false)">
+                                maxlength="4" (focus)="flipCard(true)" (blur)="flipCard(false)"
+                                [disabled]="!isSDKLoaded">
                             <span class="input-group-text">
                                 <i class="bi bi-question-circle" data-bs-toggle="tooltip" data-bs-placement="top"
                                     title="Código de 3 o 4 dígitos en la parte posterior de su tarjeta"></i>
                             </span>
                             <div class="invalid-feedback">
-                                Ingrese un código de seguridad válido (3 o 4 dígitos)
+                                Ingrese un código de seguridad válido
                             </div>
                         </div>
                     </div>
                 </div>
 
-                <div class="row">
-                    <div class="col-md-6 mb-3">
-                        <label for="amount" class="form-label">Monto</label>
-                        <div class="input-group">
-                            <span class="input-group-text">{{ currency }}</span>
-                            <input type="text" class="form-control" id="amount" [value]="amount" readonly>
+                <!-- Monto a pagar (solo lectura) -->
+                <div class="mb-3">
+                    <label for="amount" class="form-label">Monto a pagar</label>
+                    <div class="input-group">
+                        <span class="input-group-text">{{ currency }}</span>
+                        <input type="text" class="form-control" id="amount" [value]="amount" readonly>
+                    </div>
+                </div>
+
+                <!-- Información de DNI del pasajero -->
+                <div class="mb-3">
+                    <label class="form-label">Documento del titular</label>
+                    <div class="input-group">
+                        <span class="input-group-text">
+                            <i class="bi bi-person-vcard"></i>
+                        </span>
+                        <input type="text" class="form-control" [value]="getDocumentNumber() || 'No disponible'"
+                            readonly>
+                    </div>
+                    <small class="form-text text-muted">
+                        Este documento corresponde al primer pasajero (titular de la reserva)
+                    </small>
+                </div>
+
+                <!-- Estado del token -->
+                <div *ngIf="isGeneratingToken" class="mb-3">
+                    <div class="alert alert-info" role="alert">
+                        <div class="d-flex align-items-center">
+                            <div class="spinner-border spinner-border-sm me-2" role="status">
+                                <span class="visually-hidden">Generando token...</span>
+                            </div>
+                            Procesando datos de la tarjeta de forma segura...
                         </div>
                     </div>
+                </div>
 
-                    <div class="col-md-6 mb-3">
-                        <label for="installments" class="form-label">Cuotas</label>
-                        <select class="form-select" id="installments">
-                            <option value="1" selected>1 cuota</option>
-                            <option value="3">3 cuotas</option>
-                            <option value="6">6 cuotas</option>
-                            <option value="12">12 cuotas</option>
-                        </select>
+                <!-- Información de seguridad -->
+                <div class="alert alert-info mt-3">
+                    <div class="d-flex align-items-start">
+                        <i class="bi bi-shield-check me-2 mt-1"></i>
+                        <div>
+                            <strong>Pago 100% seguro</strong><br>
+                            <small>
+                                Todos los pagos son procesados de manera segura a través de Mercado Pago.
+                                Sus datos están protegidos con encriptación de nivel bancario.
+                            </small>
+                        </div>
                     </div>
                 </div>
 
-                <div class="alert alert-info mt-3">
-                    <i class="bi bi-info-circle-fill me-2"></i>
-                    Todos los pagos son procesados de manera segura a través de Mercado Pago.
+                <!-- Indicador de validación del formulario -->
+                <div *ngIf="isSDKLoaded && paymentForm.valid" class="alert alert-success">
+                    <i class="bi bi-check-circle-fill me-2"></i>
+                    Formulario completado correctamente. Listo para procesar el pago.
                 </div>
 
+                <!-- Campos ocultos -->
                 <input type="hidden" formControlName="amount">
                 <input type="hidden" formControlName="currency">
+                <input type="hidden" formControlName="paymentToken">
             </form>
         </div>
     </div>

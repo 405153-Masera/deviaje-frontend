@@ -1,4 +1,4 @@
-import { Component, inject, OnInit } from '@angular/core';
+import { Component, inject, OnDestroy, OnInit, ViewChild } from '@angular/core';
 import {
   FormArray,
   FormBuilder,
@@ -32,7 +32,10 @@ import { AuthService } from '../../../../core/auth/services/auth.service';
   templateUrl: './deviaje-flight-booking.component.html',
   styleUrl: './deviaje-flight-booking.component.scss',
 })
-export class DeviajeFlightBookingComponent implements OnInit {
+export class DeviajeFlightBookingComponent implements OnInit, OnDestroy {
+  @ViewChild(DeviajePaymentsFormComponent)
+  paymentComponent!: DeviajePaymentsFormComponent;
+
   //Datos para la sessionStorage
   private readonly BOOKING_STATE_KEY = 'flight_booking_state';
   private readonly FORM_DATA_KEY = 'flight_booking_form_data';
@@ -73,6 +76,7 @@ export class DeviajeFlightBookingComponent implements OnInit {
       cvv: ['', [Validators.required, Validators.pattern(/^\d{3,4}$/)]],
       amount: [0, Validators.required],
       currency: ['USD', Validators.required],
+      paymentToken: [''],
     }),
   });
 
@@ -96,15 +100,23 @@ export class DeviajeFlightBookingComponent implements OnInit {
     //});
 
     // Verificar y cargar si hay datos persistidos en sessionStorage
-    this.loadPersistedState();
-
+    if (typeof window !== 'undefined') {
+      this.loadPersistedState();
+    }
     // Si no hay datos persistidos, cargar desde el state del router
     if (!this.isReloadedSession) {
       this.loadFromRouterState();
     }
 
-     // Configurar la suscripción para guardar cambios automáticamente
+    // Configurar la suscripción para guardar cambios automáticamente
     this.setupFormPersistence();
+  }
+
+  ngOnDestroy(): void {
+    // Limpiar datos de sessionStorage cuando se destruye el componente
+    if (typeof window !== 'undefined') {
+      this.clearPersistedState();
+    }
   }
 
   verifyFlightOffer(offer: FlightOfferDto): void {
@@ -126,7 +138,7 @@ export class DeviajeFlightBookingComponent implements OnInit {
             ?.get('currency')
             ?.setValue(verifiedOffer.price.currency);
 
-             this.saveBookingState();
+          this.saveBookingState();
         } else {
           this.errorMessage =
             'La oferta de vuelo ya no está disponible. Por favor, realice una nueva búsqueda.';
@@ -267,10 +279,27 @@ export class DeviajeFlightBookingComponent implements OnInit {
     });
   }
 
-  submitBooking(): void {
-    if (this.mainForm.valid && this.selectedOffer) {
-      this.isLoading = true;
-      this.errorMessage = '';
+  async submitBooking(): Promise<void> {
+    if (!this.selectedOffer) {
+      this.errorMessage = 'No hay una oferta de vuelo seleccionada';
+      return;
+    }
+
+    // Validar que el formulario básico esté completo
+    if (!this.validateCurrentStep()) {
+      this.errorMessage = 'Complete todos los campos correctamente';
+      return;
+    }
+
+    this.isLoading = true;
+    this.errorMessage = '';
+
+    try {
+      const paymentToken = await this.paymentComponent.requestPaymentToken();
+      if (!paymentToken) {
+        throw new Error('No se pudo generar el token de pago');
+      }
+      console.log('Token de pago generado:', paymentToken);
 
       // Preparar los datos de la reserva
       const bookingData: FlightBookingDto = {
@@ -283,15 +312,15 @@ export class DeviajeFlightBookingComponent implements OnInit {
       const paymentData: PaymentDto = {
         amount: this.mainForm.get('payment')?.get('amount')?.value,
         currency: this.mainForm.get('payment')?.get('currency')?.value,
-        paymentMethod: 'CREDIT_CARD',
-        paymentToken: 'simulated_token_' + Date.now(), // Simulado para este ejemplo
+        paymentMethod: 'credit_card',
+        paymentToken: paymentToken,
         installments: 1,
         description: 'Reserva de vuelo',
         payer: {
           email: this.travelers.at(0)?.get('contact')?.get('emailAddress')
             ?.value,
-          firstName: this.travelers.at(0)?.get('name')?.get('firstName')?.value,
-          lastName: this.travelers.at(0)?.get('name')?.get('lastName')?.value,
+          firstName: this.travelers.at(0)?.get('firstName')?.value,
+          lastName: this.travelers.at(0)?.get('lastName')?.value,
           identification: this.travelers
             .at(0)
             ?.get('documents')
@@ -301,7 +330,6 @@ export class DeviajeFlightBookingComponent implements OnInit {
         },
       };
 
-      // Enviar la reserva al servicio
       this.bookingService
         .createFlightBooking(bookingData, paymentData)
         .subscribe({
@@ -332,11 +360,11 @@ export class DeviajeFlightBookingComponent implements OnInit {
               (error.message || 'Inténtelo nuevamente');
           },
         });
-    } else {
-      // El formulario no es válido, marcar todos los campos como tocados
-      this.markFormGroupTouched(this.mainForm);
-      this.errorMessage =
-        'Por favor, complete todos los campos obligatorios correctamente.';
+
+    } catch (error: any) {
+      this.isLoading = false;
+      this.errorMessage = error.message || 'Error al procesar el pago';
+      console.error('Error en submitBooking:', error);
     }
   }
 
@@ -447,7 +475,7 @@ export class DeviajeFlightBookingComponent implements OnInit {
     }
   }
 
-   private setupFormPersistence(): void {
+  private setupFormPersistence(): void {
     // Suscribirse a cambios en el formulario para guardar automáticamente
     this.mainForm.valueChanges.subscribe(() => {
       this.saveFormData();
@@ -479,7 +507,10 @@ export class DeviajeFlightBookingComponent implements OnInit {
 
   private saveCurrentStep(): void {
     try {
-      sessionStorage.setItem(this.CURRENT_STEP_KEY, this.currentStep.toString());
+      sessionStorage.setItem(
+        this.CURRENT_STEP_KEY,
+        this.currentStep.toString()
+      );
     } catch (error) {
       console.error('Error al guardar paso actual:', error);
     }
@@ -566,13 +597,5 @@ export class DeviajeFlightBookingComponent implements OnInit {
         }
       }
     });
-  }
-
-  // Método para permitir al usuario limpiar manualmente los datos persistidos
-  clearFormData(): void {
-    this.clearPersistedState();
-    this.currentStep = 1;
-    this.mainForm.reset();
-    this.initializeTravelersForm();
   }
 }

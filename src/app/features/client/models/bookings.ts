@@ -2,7 +2,7 @@ import { FlightOffer } from "../../../shared/models/flights";
 
 // DTOs para reserva de vuelos
 export interface FlightBookingDto {
-  clientId: number;
+  clientId?: number;
   agentId?: number;
   branchId?: number;
   flightOffer: FlightOfferDto;
@@ -11,11 +11,6 @@ export interface FlightBookingDto {
 
 export interface FlightOfferDto extends FlightOffer {
   // Extiende el modelo existente para mantener compatibilidad
-}
-
-export interface TicketingAgreementDto {
-  option: string;
-  delay: string;
 }
 
 export interface TravelerDto {
@@ -57,6 +52,7 @@ export interface PaymentDto {
   installments: number;
   description?: string;
   payer?: PayerDto;
+  issuerId?: string; // Opcional para MercadoPago
 }
 
 export interface PayerDto {
@@ -69,7 +65,7 @@ export interface PayerDto {
 
 // DTOs para reserva de hoteles
 export interface HotelBookingDto {
-  clientId: number;
+  clientId?: number;
   agentId?: number;
   branchId?: number;
   holder: HolderDto;
@@ -109,4 +105,47 @@ export interface BookingResponseDto {
   };
   detailedError?: string;
   failureReason?: string;
+}
+
+
+// DTOs específicos para MercadoPago
+export interface MercadoPagoTokenRequest {
+  cardNumber: string;
+  cardholderName: string;
+  expirationMonth: string;
+  expirationYear: string;
+  securityCode: string;
+  identificationType?: string;
+  identificationNumber?: string;
+}
+
+export interface MercadoPagoTokenResponse {
+  id: string;
+  public_key: string;
+  card_id?: string;
+  luhn_validation?: boolean;
+  status: string;
+  date_used?: string;
+  card_number_length: number;
+  date_created: string;
+  first_six_digits: string;
+  last_four_digits: string;
+  security_code_length: number;
+  expiration_month: number;
+  expiration_year: number;
+  date_last_updated: string;
+  date_due: string;
+  live_mode: boolean;
+  cardholder?: {
+    name: string;
+    identification?: {
+      number: string;
+      type: string;
+    };
+  };
+}
+
+export interface MercadoPagoValidationResult {
+  isValid: boolean;
+  errors: string[];
 }

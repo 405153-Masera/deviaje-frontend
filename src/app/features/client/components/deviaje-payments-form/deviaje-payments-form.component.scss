@@ -1,6 +1,8 @@
 @import '../../../../../assets/styles/variables';
 
+// Contenedor principal del formulario de pago
 .payment-section {
+  // Vista previa de la tarjeta
   .card-preview {
     position: relative;
     width: 100%;
@@ -24,7 +26,7 @@
       width: 100%;
       height: 100%;
       border-radius: $border-radius-lg;
-      transition: all 0.5s ease;
+      transition: $transition-slow;
       backface-visibility: hidden;
       box-shadow: $box-shadow;
       overflow: hidden;
@@ -38,134 +40,195 @@
     .card-back {
       transform: rotateY(-180deg);
     }
-    
-    .card-bg {
-      width: 100%;
-      height: 100%;
-      padding: 20px;
-      background: linear-gradient(135deg, #4b6cb7, #182848);
-      border-radius: $border-radius-lg;
-      position: relative;
+  }
+}
+
+// Fondo de la tarjeta con diferentes tipos
+.card-bg {
+  width: 100%;
+  height: 100%;
+  padding: 20px;
+  background: linear-gradient(135deg, #4b6cb7, #182848);
+  border-radius: $border-radius-lg;
+  position: relative;
+  color: white;
+  
+  &.visa {
+    background: linear-gradient(135deg, #1a2980, #26d0ce);
+  }
+  
+  &.mastercard {
+    background: linear-gradient(135deg, #f46b45, #eea849);
+  }
+  
+  &.amex {
+    background: linear-gradient(135deg, #7b4397, #dc2430);
+  }
+}
+
+// Chip de la tarjeta
+.card-chip {
+  width: 50px;
+  height: 40px;
+  background: linear-gradient(to bottom, #ccc, #999);
+  border-radius: 8px;
+  margin-bottom: 20px;
+  position: relative;
+  
+  &:before {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 30px;
+    height: 20px;
+    background: linear-gradient(to bottom, #ddd, #aaa);
+    border-radius: 4px;
+  }
+}
+
+// Logo de la tarjeta
+.card-logo {
+  position: absolute;
+  top: 20px;
+  right: 20px;
+  width: 60px;
+  height: 40px;
+  
+  &.visa:after {
+    content: 'VISA';
+    position: absolute;
+    font-size: 18px;
+    font-weight: bold;
+    color: white;
+  }
+  
+  &.mastercard:after {
+    content: 'MASTERCARD';
+    position: absolute;
+    font-size: 12px;
+    font-weight: bold;
+    color: white;
+  }
+  
+  &.amex:after {
+    content: 'AMEX';
+    position: absolute;
+    font-size: 18px;
+    font-weight: bold;
+    color: white;
+  }
+}
+
+// Número de la tarjeta
+.card-number {
+  font-size: 20px;
+  color: white;
+  letter-spacing: 2px;
+  margin-bottom: 20px;
+  font-family: 'Courier New', monospace;
+}
+
+// Información de la tarjeta
+.card-info {
+  display: flex;
+  justify-content: space-between;
+  font-size: 14px;
+  color: white;
+  
+  .label {
+    font-size: 10px;
+    opacity: 0.7;
+    margin-bottom: 5px;
+    text-transform: uppercase;
+  }
+  
+  .value {
+    letter-spacing: 1px;
+    font-weight: 500;
+  }
+}
+
+// Banda magnética (parte trasera)
+.card-band {
+  position: absolute;
+  top: 40px;
+  width: 100%;
+  height: 40px;
+  background-color: rgba(0, 0, 0, 0.6);
+  left: 0;
+}
+
+// CVV (parte trasera)
+.card-cvv {
+  position: absolute;
+  top: 90px;
+  right: 30px;
+  background-color: white;
+  width: 80%;
+  height: 40px;
+  border-radius: 5px;
+  padding: 10px;
+  box-sizing: border-box;
+  
+  .label {
+    font-size: 10px;
+    color: #555;
+    margin-bottom: 2px;
+    text-transform: uppercase;
+  }
+  
+  .value {
+    font-size: 18px;
+    letter-spacing: 2px;
+    color: #333;
+    font-family: 'Courier New', monospace;
+  }
+}
+
+// Estados de carga y validación
+.payment-loading {
+  background: linear-gradient(90deg, 
+    rgba($primary-color, 0.1) 0%, 
+    rgba($primary-color, 0.3) 50%, 
+    rgba($primary-color, 0.1) 100%);
+  background-size: 200% 100%;
+  animation: shimmer 1.5s ease-in-out infinite;
+}
+
+@keyframes shimmer {
+  0% {
+    background-position: -200% 0;
+  }
+  100% {
+    background-position: 200% 0;
+  }
+}
+
+// Indicadores de validación específicos para pagos
+.payment-valid {
+  border-color: $secondary-color;
+  box-shadow: 0 0 0 0.2rem rgba($secondary-color, 0.25);
+}
+
+.payment-invalid {
+  border-color: $tertiary-color;
+  box-shadow: 0 0 0 0.2rem rgba($tertiary-color, 0.25);
+}
+
+// Responsive para móviles
+@include mobile {
+  .payment-section {
+    .card-preview {
+      height: 180px;
       
-      &.visa {
-        background: linear-gradient(135deg, #1a2980, #26d0ce);
+      .card-number {
+        font-size: 16px;
       }
       
-      &.mastercard {
-        background: linear-gradient(135deg, #f46b45, #eea849);
-      }
-      
-      &.amex {
-        background: linear-gradient(135deg, #7b4397, #dc2430);
-      }
-    }
-    
-    .card-chip {
-      width: 50px;
-      height: 40px;
-      background: linear-gradient(to bottom, #ccc, #999);
-      border-radius: 8px;
-      margin-bottom: 20px;
-      position: relative;
-      
-      &:before {
-        content: '';
-        position: absolute;
-        top: 50%;
-        left: 50%;
-        transform: translate(-50%, -50%);
-        width: 30px;
-        height: 20px;
-        background: linear-gradient(to bottom, #ddd, #aaa);
-        border-radius: 4px;
-      }
-    }
-    
-    .card-logo {
-      position: absolute;
-      top: 20px;
-      right: 20px;
-      width: 60px;
-      height: 40px;
-      
-      &.visa:after {
-        content: 'VISA';
-        position: absolute;
-        font-size: 18px;
-        font-weight: bold;
-        color: white;
-      }
-      
-      &.mastercard:after {
-        content: 'MASTERCARD';
-        position: absolute;
+      .card-info {
         font-size: 12px;
-        font-weight: bold;
-        color: white;
-      }
-      
-      &.amex:after {
-        content: 'AMEX';
-        position: absolute;
-        font-size: 18px;
-        font-weight: bold;
-        color: white;
-      }
-    }
-    
-    .card-number {
-      font-size: 20px;
-      color: white;
-      letter-spacing: 2px;
-      margin-bottom: 20px;
-    }
-    
-    .card-info {
-      display: flex;
-      justify-content: space-between;
-      font-size: 14px;
-      color: white;
-      
-      .label {
-        font-size: 10px;
-        opacity: 0.7;
-        margin-bottom: 5px;
-      }
-      
-      .value {
-        letter-spacing: 1px;
-      }
-    }
-    
-    .card-band {
-      position: absolute;
-      top: 40px;
-      width: 100%;
-      height: 40px;
-      background-color: rgba(0, 0, 0, 0.6);
-      left: 0;
-    }
-    
-    .card-cvv {
-      position: absolute;
-      top: 90px;
-      right: 30px;
-      background-color: white;
-      width: 80%;
-      height: 40px;
-      border-radius: 5px;
-      padding: 10px;
-      box-sizing: border-box;
-      
-      .label {
-        font-size: 10px;
-        color: #555;
-        margin-bottom: 2px;
-      }
-      
-      .value {
-        font-size: 18px;
-        letter-spacing: 2px;
       }
     }
   }
