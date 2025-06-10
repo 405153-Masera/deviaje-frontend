@@ -1,15 +1,12 @@
 import { CommonModule } from '@angular/common';
 import {
   Component,
-  EventEmitter,
   inject,
   Input,
   OnDestroy,
   OnInit,
-  Output,
 } from '@angular/core';
 import {
-  AbstractControl,
   FormGroup,
   ReactiveFormsModule,
 } from '@angular/forms';
@@ -79,8 +76,8 @@ export class DeviajePaymentsFormComponent implements OnInit, OnDestroy {
 
     // Suscribirse a cambios en los campos para actualizar la vista previa
     this.paymentForm.get('cardNumber')?.valueChanges.subscribe((value) => {
-      this.updateCardType(value);
       this.updateCardNumberPreview(value);
+      this.updateCardType(value);
     });
 
     this.paymentForm.get('cardholderName')?.valueChanges.subscribe((value) => {
@@ -94,28 +91,44 @@ export class DeviajePaymentsFormComponent implements OnInit, OnDestroy {
     });
   }
 
-  // Detectar el tipo de tarjeta según el primer dígito
-  updateCardType(cardNumber: string): void {
-    if (!cardNumber) {
+  // Detectar el tipo de tarjeta usando el SDK de Mercado Pago
+  async updateCardType(cardNumber: string): Promise<void> {
+    if (!cardNumber || cardNumber.length < 6) {
       this.cardType = '';
       this.cardTypeIcon = '';
       return;
     }
 
-    const firstDigit = cardNumber.charAt(0);
-
-    if (firstDigit === '4') {
-      this.cardType = 'visa';
-      this.cardTypeIcon = 'bi-credit-card';
-    } else if (['5', '2'].includes(firstDigit)) {
-      this.cardType = 'mastercard';
-      this.cardTypeIcon = 'bi-credit-card-2-front';
-    } else if (['3'].includes(firstDigit)) {
-      this.cardType = 'amex';
-      this.cardTypeIcon = 'bi-credit-card-fill';
-    } else {
+    try {
+      const paymentMethodId = await this.mercadoPagoService.getPaymentMethod(
+        cardNumber
+      );
+      console.log('Método de pago detectado:', paymentMethodId);
+      switch (paymentMethodId) {
+        case 'visa':
+          this.cardType = 'visa';
+          this.cardTypeIcon = 'bi-credit-card';
+          break;
+        case 'master':
+          this.cardType = 'mastercard';
+          this.cardTypeIcon = 'bi-credit-card-2-front';
+          break;
+        case 'amex':
+          this.cardType = 'amex';
+          this.cardTypeIcon = 'bi-credit-card-fill';
+          break;
+        default:
+          this.cardType = '';
+          this.cardTypeIcon = 'bi-credit-card';
+      }
+    } catch (error) {
+      console.error('Error al detectar tipo de tarjeta:', error);
       this.cardType = '';
       this.cardTypeIcon = 'bi-credit-card';
+      this.paymentForm
+        ?.get('cardNumber')
+        ?.setErrors({ invalidPaymentMethod: true });
+      this.tokenError = 'No se pudo identificar el tipo de tarjeta';
     }
   }
 
@@ -165,8 +178,8 @@ export class DeviajePaymentsFormComponent implements OnInit, OnDestroy {
     this.paymentForm.get('cardNumber')?.setValue(value, { emitEvent: false });
 
     // Actualizar la vista previa manualmente
-    this.updateCardType(value);
     this.updateCardNumberPreview(value);
+    this.updateCardType(value);
   }
 
   // Formatear la fecha de vencimiento mientras se escribe (MM/YY)
@@ -255,8 +268,8 @@ export class DeviajePaymentsFormComponent implements OnInit, OnDestroy {
         expirationMonth: month,
         expirationYear: `20${year}`, // Convertir YY a YYYY
         securityCode: formValues.cvv,
-        identificationType: 'DNI', 
-        identificationNumber: documentNumber 
+        identificationType: 'DNI',
+        identificationNumber: documentNumber,
       };
       // Generar token
       const token = await this.mercadoPagoService.createCardToken(cardData);

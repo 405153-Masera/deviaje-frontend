@@ -2,12 +2,34 @@
   <nav>
     <ul>
       @for (item of menuItems; track $index) {
-        <li>
-          <a [routerLink]="item.route" [class.selected]="item.isSelected" [class.search]="item.icon === 'search'"
-            (click)="selectMenuItem(item)">
-            <img src="../../../../assets/icons/{{ item.icon }}.png" alt="{{ item.label }}">
-            <span>{{ item.label }}</span>
-          </a>
+        <li [class.has-submenu]="hasSubItems(item)">
+          @if (hasSubItems(item)) {
+            <div class="menu-item" [class.selected]="item.isSelected" (click)="toggleSubMenu(item)">
+              <div class="menu-header">
+                <img src="../../../../assets/icons/{{ item.icon }}.png" alt="{{ item.label }}">
+                <span>{{ item.label }}</span>
+              </div>
+              <i class="bi" [class.bi-chevron-down]="!item.isExpanded" [class.bi-chevron-up]="item.isExpanded"></i>
+            </div>
+            @if (item.isExpanded) {
+              <ul class="submenu">
+                @for (subItem of item.subItems; track $index) {
+                  <li>
+                    <a [routerLink]="subItem.route" (click)="selectMenuItem(item)">
+                      <img *ngIf="subItem.icon" src="../../../../assets/icons/{{ subItem.icon }}.png" alt="{{ subItem.label }}">
+                      <span>{{ subItem.label }}</span>
+                    </a>
+                  </li>
+                }
+              </ul>
+            }
+          } @else {
+            <a [routerLink]="item.route" [class.selected]="item.isSelected" [class.search]="item.icon === 'search'"
+              (click)="selectMenuItem(item)">
+              <img src="../../../../assets/icons/{{ item.icon }}.png" alt="{{ item.label }}">
+              <span>{{ item.label }}</span>
+            </a>
+          }
         </li>
       }
     </ul>

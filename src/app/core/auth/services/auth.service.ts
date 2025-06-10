@@ -12,6 +12,19 @@ import {
   SignupRequest,
 } from '../models/jwt-models';
 
+
+export interface User {
+  id: number;
+  username: string;
+  email: string;
+  roles: string[];
+  firstName?: string;
+  lastName?: string;
+  avatar?: string;
+  // Campo para el rol activo actualmente seleccionado
+  activeRole?: string;
+}
+
 @Injectable({
   providedIn: 'root',
 })
@@ -41,9 +54,20 @@ export class AuthService {
       const user = localStorage.getItem('user');
       const token = localStorage.getItem('token');
       const expirationDate = localStorage.getItem('expiration');
+      const activeRole = localStorage.getItem('activeRole');
 
       if (user && token && expirationDate) {
         const parsedUser = JSON.parse(user);
+
+         // Añadir el rol activo si existe
+        if (activeRole && parsedUser.roles.includes(activeRole)) {
+          parsedUser.activeRole = activeRole;
+        } else if (parsedUser.roles.length > 0) {
+          // Si no hay rol activo guardado o no es válido, usar el primer rol disponible
+          parsedUser.activeRole = this.getHighestPriorityRole(parsedUser.roles);
+          localStorage.setItem('activeRole', parsedUser.activeRole);
+        }
+
         const expirationTime =
           new Date(expirationDate).getTime() - new Date().getTime();
 
@@ -78,6 +102,44 @@ export class AuthService {
     }
   }
 
+   // Método para cambiar el rol activo del usuario
+  switchActiveRole(role: string): void {
+    const currentUser = this.currentUserSubject.value;
+    
+    if (currentUser && currentUser.roles.includes(role)) {
+      currentUser.activeRole = role;
+      localStorage.setItem('activeRole', role);
+      this.currentUserSubject.next(currentUser);
+      
+      // Redirigir a la página principal del rol seleccionado
+      this.navigateToRoleHome(role);
+    }
+  }
+  
+  // Método para obtener el rol activo actual
+  getActiveRole(): string | null {
+    const currentUser = this.currentUserSubject.value;
+    return currentUser?.activeRole || null;
+  }
+
+   // Método para navegar a la página principal según el rol
+  private navigateToRoleHome(role: string): void {
+    this.router.navigate(['/home']);
+  }
+
+    // Método para obtener el rol de mayor prioridad
+  private getHighestPriorityRole(roles: string[]): string {
+    const priorityOrder = ['ADMINISTRADOR', 'AGENTE', 'CLIENTE'];
+    
+    for (const role of priorityOrder) {
+      if (roles.includes(role)) {
+        return role;
+      }
+    }
+    
+    return roles[0]; // Devolver el primer rol si ninguno coincide con la prioridad
+  }
+
   forgotPassword(
     forgotPasswordRequest: ForgotPasswordRequest
   ): Observable<MessageResponse> {
@@ -101,6 +163,7 @@ export class AuthService {
     localStorage.removeItem('token');
     localStorage.removeItem('refreshToken');
     localStorage.removeItem('expiration');
+    localStorage.removeItem('activeRole');
     this.currentUserSubject.next(null);
 
     if (this.tokenExpirationTimer) {
@@ -118,17 +181,25 @@ export class AuthService {
     localStorage.setItem('refreshToken', jwtResponse.refreshToken);
     localStorage.setItem('expiration', expirationDate.toISOString());
 
-    const user = {
+    // Determinar el rol activo basado en la prioridad
+    const activeRole = this.getHighestPriorityRole(jwtResponse.roles);
+    localStorage.setItem('activeRole', activeRole);
+
+    const user: User = {
       id: jwtResponse.id,
       username: jwtResponse.username,
       email: jwtResponse.email,
       roles: jwtResponse.roles,
+      activeRole: activeRole
     };
 
     localStorage.setItem('user', JSON.stringify(user));
     this.currentUserSubject.next(user);
 
     this.autoLogout(3600 * 1000);
+
+     // Redirigir según el rol activo
+    this.navigateToRoleHome(activeRole);
   }
 
   private autoLogout(expirationDuration: number): void {
@@ -147,6 +218,15 @@ export class AuthService {
       return false;
     }
     return user.roles.includes(role);
+  }
+
+   // Método para verificar si el rol activo es uno específico
+  isActiveRole(role: string): boolean {
+    const user = this.currentUserSubject.value;
+    if (!user || !user.activeRole) {
+      return false;
+    }
+    return user.activeRole === role;
   }
 
   getToken(): string | null {

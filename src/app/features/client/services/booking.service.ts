@@ -22,6 +22,7 @@ export class BookingService {
       .pipe(
         map(response => {
           if (response && response.data && response.data.flightOffers && response.data.flightOffers.length > 0) {
+            console.log('Precio del vuelo verificado:', response.data.flightOffers[0]);
             return response.data.flightOffers[0];
           }
           return null;

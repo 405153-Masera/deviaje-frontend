@@ -1,11 +1,10 @@
-@import '../../../../assets/styles/variables';
+@import "../../../../assets/styles/variables";
 
 :host {
-  position: absolute;
-  left: 0;
+  display: block;
 }
 
-*{
+* {
   margin: 0;
   padding: 0;
   box-sizing: border-box;
@@ -25,15 +24,65 @@
   overflow-y: auto;
   background-color: #151922;
   transition: width 0.5s ease;
-  
+
   &.menu-toggle {
     width: $sidebar-expanded-width;
   }
-  
+
   li {
     list-style: none;
+
+    &.has-submenu {
+      .menu-item {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 0.9rem 0.7rem;
+        margin: 0 0.5rem;
+        border-radius: 0.5rem;
+        cursor: pointer;
+        color: $navbar-text-color;
+        transition: $transition-normal;
+
+        &:hover {
+          background-color: $navbar-background-hover;
+        }
+
+        &.selected {
+          color: $navbar-text-selected-color;
+          background-color: $navbar-background-selected;
+        }
+
+        .menu-header {
+          display: flex;
+          align-items: center;
+          gap: 1.3rem;
+        }
+
+        i {
+          margin-right: 0.5rem;
+          font-size: 0.8rem;
+        }
+      }
+
+      .submenu {
+        margin-left: 1rem;
+        padding-left: 1rem;
+        border-left: 1px solid rgba(255, 255, 255, 0.1);
+
+        li {
+          margin: 0.5rem 0;
+        }
+
+        a {
+          padding: 0.7rem;
+          font-size: 0.9rem;
+          opacity: 0.9;
+        }
+      }
+    }
   }
-  
+
   a {
     display: flex;
     align-items: center;
@@ -45,23 +94,23 @@
     white-space: nowrap;
     overflow: hidden;
     color: $navbar-text-color;
-    
+
     &:hover {
       background-color: $navbar-background-hover;
     }
-    
+
     &.selected {
       color: $navbar-text-selected-color;
       background-color: $navbar-background-selected;
     }
-    
+
     &.search {
       padding: 1rem 0.7rem;
       border-bottom: 1px solid $navbar-border-color;
       margin-bottom: 0.2rem;
     }
   }
-  
+
   img {
     width: 1.6rem;
   }
@@ -71,5 +120,10 @@
 @include mobile {
   .sidebar {
     width: 0;
+
+    &.menu-toggle {
+      width: 100%;
+      max-width: 300px;
+    }
   }
 }

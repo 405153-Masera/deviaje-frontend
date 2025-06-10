@@ -67,7 +67,7 @@ export class DeviajeFlightBookingComponent implements OnInit, OnDestroy {
   mainForm: FormGroup = this.fb.group({
     travelers: this.fb.array([]),
     payment: this.fb.group({
-      cardNumber: ['', [Validators.required, Validators.pattern(/^\d{16}$/)]],
+      cardNumber: ['', [Validators.required]], // Validators.pattern(/^\d{16}$/)
       cardholderName: ['', Validators.required],
       expiryDate: [
         '',
@@ -85,7 +85,7 @@ export class DeviajeFlightBookingComponent implements OnInit, OnDestroy {
           Validators.minLength(7),
         ],
       ],
-    }),
+    })
   });
 
   get travelers(): FormArray {
@@ -125,11 +125,13 @@ export class DeviajeFlightBookingComponent implements OnInit, OnDestroy {
     if (typeof window !== 'undefined') {
       this.clearPersistedState();
     }
+    this.isReloadedSession = false; // Resetear el estado de recarga
   }
 
   verifyFlightOffer(offer: FlightOfferDto): void {
     this.isVerifying = true;
     this.errorMessage = '';
+    console.log('Verificando oferta de vuelo:', offer);
 
     this.bookingService.verifyFlightOfferPrice(offer).subscribe({
       next: (verifiedOffer) => {
@@ -137,6 +139,10 @@ export class DeviajeFlightBookingComponent implements OnInit, OnDestroy {
         if (verifiedOffer) {
           this.selectedOffer = verifiedOffer;
           // Actualizar el precio en el formulario de pago
+          console.log(
+            'Oferta verificada y seleccionada:',
+            verifiedOffer
+          );
           this.mainForm
             .get('payment')
             ?.get('amount')
@@ -335,6 +341,7 @@ export class DeviajeFlightBookingComponent implements OnInit, OnDestroy {
       return;
     }
 
+
     this.isLoading = true;
     this.errorMessage = '';
 
@@ -348,11 +355,15 @@ export class DeviajeFlightBookingComponent implements OnInit, OnDestroy {
         travelers: this.prepareTravelersData(),
       };
 
+      console.log(
+        'DNI DEL PAGADOR:',
+        this.mainForm.get('payment')?.get('payerDni')?.value
+      );
       // Preparar los datos del pago
       const paymentData: PaymentDto = {
         amount: this.mainForm.get('payment')?.get('amount')?.value,
         currency: this.mainForm.get('payment')?.get('currency')?.value,
-        paymentMethod: 'credit_card',
+        paymentMethod: 'master',
         paymentToken: paymentToken,
         installments: 1,
         description: 'Reserva de vuelo',

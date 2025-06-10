@@ -40,13 +40,3 @@ export interface ResetPasswordRequest {
 export interface MessageResponse {
   message: string;
 }
-
-export interface User {
-  id: number;
-  username: string;
-  email: string;
-  roles: string[];
-  firstName?: string;
-  lastName?: string;
-  avatar?: string;
-}

@@ -39,8 +39,8 @@ export const roleGuard: CanActivateFn = (route, state) => {
     return false;
   }
 
-  // Redireccionar al login si no está autenticado
-  router.navigate(['/auth/login'], {
+   // Si el usuario no está autenticado, redirigir al login
+  router.navigate(['/user/login'], {
     queryParams: { returnUrl: state.url },
   });
   return false;

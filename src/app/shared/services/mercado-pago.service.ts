@@ -14,7 +14,7 @@ export interface MercadoPagoConfig {
 }
 
 @Injectable({
-  providedIn: 'root'
+  providedIn: 'root',
 })
 export class MercadoPagoService {
   private readonly http = inject(HttpClient);
@@ -29,17 +29,16 @@ export class MercadoPagoService {
       if (!window.MercadoPago) {
         await this.loadSDK();
       }
-     
-       // Verificar que config no sea undefined antes de usarlo
+
+      // Verificar que config no sea undefined antes de usarlo
       if (config && config.publicKey) {
         this.mp = new window.MercadoPago(config.publicKey, {
-          locale: 'es-AR'
+          locale: 'es-AR',
         });
         console.log('Mercado Pago SDK inicializado correctamente');
       } else {
         throw new Error('No se pudo obtener la clave pública de MercadoPago');
       }
-
     } catch (error) {
       console.error('Error al inicializar Mercado Pago:', error);
       throw error;
@@ -58,12 +57,13 @@ export class MercadoPagoService {
       const script = document.createElement('script');
       script.src = 'https://sdk.mercadopago.com/js/v2';
       script.onload = () => resolve();
-      script.onerror = () => reject(new Error('Error al cargar SDK de Mercado Pago'));
+      script.onerror = () =>
+        reject(new Error('Error al cargar SDK de Mercado Pago'));
       document.head.appendChild(script);
     });
   }
 
-/**
+  /**
    * Obtiene la configuración de pagos desde el backend
    */
   getPaymentConfig(): Observable<MercadoPagoConfig> {
@@ -95,8 +95,6 @@ export class MercadoPagoService {
         cardExpirationMonth: cardData.expirationMonth,
         cardExpirationYear: cardData.expirationYear,
         securityCode: cardData.securityCode,
-        identificationType: cardData.identificationType,
-        identificationNumber: cardData.identificationNumber
       });
 
       if (token.error) {
@@ -110,4 +108,40 @@ export class MercadoPagoService {
     }
   }
 
+  /**
+   * Obtiene el método de pago basado en el número de tarjeta
+   */
+  async getPaymentMethod(cardNumber: string): Promise<string> {
+    if (!this.mp) {
+      throw new Error('SDK no inicializado');
+    }
+
+    try {
+      const paymentMethods = await this.mp.getPaymentMethods({
+        bin: cardNumber.slice(0, 6),
+      });
+      if (
+        !paymentMethods ||
+        !paymentMethods.results ||
+        paymentMethods.results.length === 0
+      ) {
+        throw new Error(
+          'No se encontraron métodos de pago para el BIN proporcionado'
+        );
+      }
+
+      const paymentMethod = paymentMethods.results[0];
+      if (paymentMethods.results.length > 1) {
+        console.warn(
+          'Múltiples métodos de pago encontrados para el BIN:',
+          cardNumber.slice(0, 6)
+        );
+      }
+
+      return paymentMethod.id; // Ejemplo: 'master' para el BIN 503175
+    } catch (error) {
+      console.error('Error al obtener método de pago:', error);
+      throw error;
+    }
+  }
 }

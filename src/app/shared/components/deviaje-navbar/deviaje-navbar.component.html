@@ -13,12 +13,34 @@
       <img src="" alt="DeViaje Logo" class="logo">
       <span class="name">DeViaje</span>
     </div>
+
+    <!-- Selector de rol para usuarios con múltiples roles -->
+    <div *ngIf="isAuthenticated && hasMultipleRoles()" class="role-selector">
+      <div class="current-role" (click)="toggleRoleMenu()" #roleMenuTrigger>
+        <span class="role-badge">{{ getRoleName(currentRole) }}</span>
+        <i class="bi" [ngClass]="isRoleMenuOpen ? 'bi-chevron-up' : 'bi-chevron-down'"></i>
+      </div>
+      <div class="role-dropdown" [class.show]="isRoleMenuOpen">
+        <div class="role-dropdown-header">Cambiar rol</div>
+        <div class="role-dropdown-items">
+          @for (role of availableRoles; track $index) {
+          <div class="role-item" [class.active]="role === currentRole" (click)="switchRole(role)">
+            <i class="bi" [ngClass]="role === 'ADMINISTRADOR' ? 'bi-shield-lock' : 
+                                       role === 'AGENTE' ? 'bi-briefcase' : 
+                                       role === 'GERENTE' ? 'bi-bar-chart' : 'bi-person'"></i>
+            <span>{{ getRoleName(role) }}</span>
+          </div>
+          }
+        </div>
+      </div>
+    </div>
   </div>
 
   <div class="right">
     <a href="#" class="icons-header">
       <img src="../../../../assets/icons/question.png" alt="question">
     </a>
+
     <ng-container *ngIf="isAuthenticated">
       <a href="#" class="icons-header">
         <img src="../../../../assets/icons/notificacion.png" alt="notification">
@@ -34,6 +56,28 @@
           <a class="dropdown-item" routerLink="/bookings">
             <i class="bi bi-calendar-check"></i> Mis Reservas
           </a>
+          <div class="dropdown-divider"></div>
+          <a class="dropdown-item" (click)="logout()">
+            <i class="bi bi-box-arrow-right"></i> Cerrar Sesión
+          </a>
+        </div>
+      </div>
+      <div class="dropdown user-dropdown">
+        <a class="user-menu" (click)="toggleUserMenu()" #userMenuTrigger>
+          <img [src]="userAvatarUrl || '../../../../assets/icons/user-default.png'" alt="User" class="user">
+          <span class="user-name d-none d-md-inline">{{ userName }}</span>
+          <i class="bi" [ngClass]="isUserMenuOpen ? 'bi-chevron-up' : 'bi-chevron-down'"></i>
+        </a>
+        <div class="dropdown-menu" [class.show]="isUserMenuOpen">
+          <a class="dropdown-item" routerLink="/profile">
+            <i class="bi bi-person"></i> Mi Perfil
+          </a>
+
+          <!-- Solo mostrar opción de membresía para clientes -->
+          <a *ngIf="userRoles.includes('CLIENTE')" class="dropdown-item" routerLink="/membership">
+            <i class="bi bi-award"></i> Membresía
+          </a>
+
           <div class="dropdown-divider"></div>
           <a class="dropdown-item" (click)="logout()">
             <i class="bi bi-box-arrow-right"></i> Cerrar Sesión
