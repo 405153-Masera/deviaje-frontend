@@ -49,79 +49,70 @@ export class AuthService {
 
   // ================== INICIALIZACIÓN ==================
 
- // Agrega estos logs TEMPORALES en tu AuthService actual:
+  // Agrega estos logs TEMPORALES en tu AuthService actual:
 
-private initializeAuthState(): void {
-  console.log('🔍 === INVESTIGANDO PROBLEMA ===');
-  
-  if (typeof localStorage !== 'undefined') {
-    // 1. ¿Qué hay en localStorage?
-    const token = localStorage.getItem('token');
-    const userString = localStorage.getItem('user');
-    const activeRole = localStorage.getItem('activeRole');
-    const expiration = localStorage.getItem('expiration');
-    
-    console.log('📦 CONTENIDO de localStorage:', {
-      token: token,
-      userString: userString,
-      activeRole: activeRole,
-      expiration: expiration
-    });
-    
-    // 2. ¿Se puede parsear el usuario?
-    let user = null;
-    try {
-      user = userString ? JSON.parse(userString) : null;
-      console.log('👤 Usuario parseado:', user);
-    } catch (e) {
-      console.error('❌ Error parseando usuario:', e);
-    }
-    
-    // 3. ¿El token es válido?
-    if (token && user) {
-      console.log('✅ Token y usuario existen');
-      
-      // Verificar expiración paso a paso
-      const expirationDate = expiration ? new Date(expiration) : null;
-      const now = new Date();
-      
-      console.log('⏰ Verificación de expiración:', {
-        expirationString: expiration,
-        expirationDate: expirationDate,
-        now: now,
-        isValid: expirationDate ? now < expirationDate : false
+  private initializeAuthState(): void {
+    console.log('🔍 === INVESTIGANDO PROBLEMA ===');
+
+    if (typeof localStorage !== 'undefined') {
+      // 1. ¿Qué hay en localStorage?
+      const token = localStorage.getItem('token');
+      const userString = localStorage.getItem('user');
+      const activeRole = localStorage.getItem('activeRole');
+      const expiration = localStorage.getItem('expiration');
+
+      console.log('📦 CONTENIDO de localStorage:', {
+        token: token,
+        userString: userString,
+        activeRole: activeRole,
+        expiration: expiration,
       });
-      
-      const isValid = this.isTokenValid();
-      console.log('🔐 ¿Token válido?', isValid);
-      
-      if (isValid) {
-        console.log('✅ Todo OK - Debería restaurar sesión');
-        this.currentUserSubject.next(user);
-        this.isAuthenticatedSubject.next(true);
-        this.activeRoleSubject.next(activeRole);
+
+      // 2. ¿Se puede parsear el usuario?
+      let user = null;
+      try {
+        user = userString ? JSON.parse(userString) : null;
+        console.log('👤 Usuario parseado:', user);
+      } catch (e) {
+        console.error('❌ Error parseando usuario:', e);
+      }
+
+      // 3. ¿El token es válido?
+      if (token && user) {
+        console.log('✅ Token y usuario existen');
+
+        // Verificar expiración paso a paso
+        const expirationDate = expiration ? new Date(expiration) : null;
+        const now = new Date();
+
+        console.log('⏰ Verificación de expiración:', {
+          expirationString: expiration,
+          expirationDate: expirationDate,
+          now: now,
+          isValid: expirationDate ? now < expirationDate : false,
+        });
+
+        const isValid = this.isTokenValid();
+        console.log('🔐 ¿Token válido?', isValid);
+
+        if (isValid) {
+          console.log('✅ Todo OK - Debería restaurar sesión');
+          this.currentUserSubject.next(user);
+          this.isAuthenticatedSubject.next(true);
+          this.activeRoleSubject.next(activeRole);
+        } else {
+          console.log('❌ Token inválido - Limpiando sesión');
+          this.clearSession();
+        }
       } else {
-        console.log('❌ Token inválido - Limpiando sesión');
-        this.clearSession();
+        console.log('❌ No hay token o usuario');
+        console.log('Token existe:', !!token);
+        console.log('Usuario existe:', !!user);
       }
     } else {
-      console.log('❌ No hay token o usuario');
-      console.log('Token existe:', !!token);
-      console.log('Usuario existe:', !!user);
+      console.log('❌ localStorage no disponible');
     }
-  } else {
-    console.log('❌ localStorage no disponible');
   }
-  
-  // 4. ¿Cuál es el estado final?
-  setTimeout(() => {
-    console.log('📊 ESTADO FINAL:', {
-      isAuthenticated: this.isAuthenticatedSubject.value,
-      currentUser: this.currentUserSubject.value,
-      activeRole: this.activeRoleSubject.value
-    });
-  }, 100);
-}
 
   private isTokenValid(): boolean {
     const expiration = this.getTokenExpiration();
