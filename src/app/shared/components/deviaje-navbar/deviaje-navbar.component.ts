@@ -12,7 +12,7 @@ import {
 } from '@angular/core';
 import { RouterModule } from '@angular/router';
 import { Subscription } from 'rxjs';
-import { AuthService } from '../../../core/auth/services/auth.service';
+import { AuthService, User } from '../../../core/auth/services/auth.service';
 
 @Component({
   selector: 'app-deviaje-navbar',
@@ -21,9 +21,10 @@ import { AuthService } from '../../../core/auth/services/auth.service';
   templateUrl: './deviaje-navbar.component.html',
   styleUrl: './deviaje-navbar.component.scss',
 })
-export class DeviajeNavbarComponent implements OnInit {
+export class DeviajeNavbarComponent implements OnInit, OnDestroy {
 
   private readonly authService: AuthService = inject(AuthService);
+  private subscription = new Subscription();
 
   @Output() toggleSidebar = new EventEmitter<void>();
   @ViewChild('userMenuTrigger') userMenuTrigger!: ElementRef;
@@ -33,31 +34,46 @@ export class DeviajeNavbarComponent implements OnInit {
   isUserMenuOpen: boolean = false;
   isRoleMenuOpen: boolean = false;
 
-  ngOnInit(): void {
+  // Estado reactivo
+  isAuthenticated: boolean = false;
+  currentUser: User | null = null;
+  currentRole: string = '';
+  userRoles: string[] = [];
 
+  ngOnInit(): void {
+    // Suscribirse a los cambios de estado de autenticación
+    this.subscription.add(
+      this.authService.isAuthenticated$.subscribe(isAuth => {
+        this.isAuthenticated = isAuth;
+      })
+    );
+
+    // Suscribirse a los cambios del usuario actual
+    this.subscription.add(
+      this.authService.currentUser$.subscribe(user => {
+        this.currentUser = user;
+        this.userRoles = user?.roles || [];
+      })
+    );
+
+    // Suscribirse a los cambios del rol activo
+    this.subscription.add(
+      this.authService.activeRole$.subscribe(role => {
+        this.currentRole = role || '';
+      })
+    );
   }
 
-   get isAuthenticated(): boolean {
-    return this.authService.isAuthenticated();
+  ngOnDestroy(): void {
+    this.subscription.unsubscribe();
   }
 
   get userAvatarUrl(): string | null {
-    const user = this.authService.getUser();
-    return user?.avatar || null;
+    return this.currentUser?.avatar || null;
   }
 
   get userName(): string | null {
-    const user = this.authService.getUser();
-    return user?.firstName || user?.username || null;
-  }
-
-  get userRoles(): string[] {
-    const user = this.authService.getUser();
-    return user?.roles || [];
-  }
-
-  get currentRole(): string {
-    return this.authService.getActiveRole() || '';
+    return this.currentUser?.firstName || this.currentUser?.username || null;
   }
 
   get availableRoles(): string[] {
@@ -91,8 +107,6 @@ export class DeviajeNavbarComponent implements OnInit {
   logout(): void {
     this.authService.logout().subscribe(() => {
       this.isUserMenuOpen = false;
-      // Forzar actualización del componente
-      this.forceUpdate();
     });
   }
 
@@ -113,13 +127,6 @@ export class DeviajeNavbarComponent implements OnInit {
         return role;
     }
   }
-
-   // Método para forzar actualización del componente después de cambios
-  private forceUpdate(): void {
-    // Pequeño truco para forzar la detección de cambios
-    setTimeout(() => {}, 0);
-  }
-
 
   // Cerrar el menú de usuario al hacer clic fuera
   @HostListener('document:click', ['$event'])

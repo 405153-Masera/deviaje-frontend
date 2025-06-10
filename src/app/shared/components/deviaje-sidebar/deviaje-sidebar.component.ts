@@ -1,8 +1,9 @@
-import { Component, Input, OnInit, inject } from '@angular/core';
+import { Component, Input, OnInit, OnDestroy, inject } from '@angular/core';
 import { MenuItem } from '../../models/menu-item';
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
 import { AuthService } from '../../../core/auth/services/auth.service';
+import { Subscription } from 'rxjs';
 
 @Component({
   selector: 'app-deviaje-sidebar',
@@ -11,9 +12,15 @@ import { AuthService } from '../../../core/auth/services/auth.service';
   templateUrl: './deviaje-sidebar.component.html',
   styleUrl: './deviaje-sidebar.component.scss',
 })
-export class DeviajeSidebarComponent implements OnInit {
+export class DeviajeSidebarComponent implements OnInit, OnDestroy {
   private readonly authService = inject(AuthService);
+  private subscription = new Subscription();
+  
   @Input() isOpen = false;
+
+  // Estado reactivo
+  isAuthenticated: boolean = false;
+  currentUserRole: string = 'GUEST';
 
   guestMenuItems: MenuItem[] = [
     { icon: 'home', label: 'Inicio', route: '/home', isSelected: false },
@@ -149,35 +156,40 @@ export class DeviajeSidebarComponent implements OnInit {
       isSelected: false,
     },
   ];
-  //#EDE4E4 color de los iconos
-
-  constructor() {}
 
   ngOnInit(): void {
-    // Inicializar con el menú correcto
-    this.updateMenuItems();
+    // Suscribirse a los cambios de estado de autenticación
+    this.subscription.add(
+      this.authService.isAuthenticated$.subscribe(isAuth => {
+        this.isAuthenticated = isAuth;
+        this.updateCurrentRole();
+      })
+    );
+
+    // Suscribirse a los cambios del rol activo
+    this.subscription.add(
+      this.authService.activeRole$.subscribe(role => {
+        this.updateCurrentRole();
+      })
+    );
+  }
+
+  ngOnDestroy(): void {
+    this.subscription.unsubscribe();
   }
 
   get menuItems(): MenuItem[] {
-    this.updateMenuItems(); // Actualizar en cada acceso
     return this.getCurrentMenuItems();
   }
 
-  get isAuthenticated(): boolean {
-    return this.authService.isAuthenticated();
-  }
-
-  get currentUserRole(): string {
+  private updateCurrentRole(): void {
     if (!this.isAuthenticated) {
-      return 'GUEST';
+      this.currentUserRole = 'GUEST';
+      return;
     }
 
     const activeRole = this.authService.getActiveRole();
-    return activeRole || this.getHighestPriorityRole();
-  }
-
-  private updateMenuItems(): void {
-    // Este método se llama en el getter para asegurar que siempre esté actualizado
+    this.currentUserRole = activeRole || this.getHighestPriorityRole();
   }
 
   private getCurrentMenuItems(): MenuItem[] {
@@ -215,6 +227,7 @@ export class DeviajeSidebarComponent implements OnInit {
     currentItems.forEach((menuItem) => (menuItem.isSelected = false));
     item.isSelected = true;
   }
+
   // Verificar si un ítem del menú tiene subitems
   hasSubItems(item: MenuItem): boolean {
     return !!item.subItems && item.subItems.length > 0;

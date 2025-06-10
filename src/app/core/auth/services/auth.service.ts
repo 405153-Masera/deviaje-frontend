@@ -1,6 +1,6 @@
 import { HttpClient } from '@angular/common/http';
 import { inject, Injectable } from '@angular/core';
-import { catchError, Observable, of, tap } from 'rxjs';
+import { BehaviorSubject, catchError, Observable, of, tap } from 'rxjs';
 import { environment } from '../../../shared/enviroments/enviroment';
 import { Router } from '@angular/router';
 import {
@@ -33,8 +33,44 @@ export class AuthService {
   private apiUrl = `${environment.apiDeviajeAuth}`;
   private tokenExpirationTimer: any;
 
+  // BehaviorSubjects para estado reactivo
+  private currentUserSubject = new BehaviorSubject<User | null>(null);
+  private isAuthenticatedSubject = new BehaviorSubject<boolean>(false);
+  private activeRoleSubject = new BehaviorSubject<string | null>(null);
+
+  // Observables públicos
+  public currentUser$ = this.currentUserSubject.asObservable();
+  public isAuthenticated$ = this.isAuthenticatedSubject.asObservable();
+  public activeRole$ = this.activeRoleSubject.asObservable();
+
   constructor() {
-    this.checkTokenExpiration();
+    this.initializeAuthState();
+  }
+
+  // ================== INICIALIZACIÓN ==================
+
+  private initializeAuthState(): void {
+    if (typeof localStorage !== 'undefined') {
+      const token = localStorage.getItem('token');
+      const user = this.getStoredUser();
+      const activeRole = localStorage.getItem('activeRole');
+      
+      if (token && user && this.isTokenValid()) {
+        this.currentUserSubject.next(user);
+        this.isAuthenticatedSubject.next(true);
+        this.activeRoleSubject.next(activeRole);
+        this.checkTokenExpiration();
+      } else {
+        this.clearSession();
+      }
+    }
+  }
+
+  private isTokenValid(): boolean {
+    const expiration = this.getTokenExpiration();
+    if (!expiration) return false;
+    
+    return new Date() < expiration;
   }
 
   // ================== MÉTODOS PRINCIPALES ==================
@@ -128,10 +164,15 @@ export class AuthService {
   saveUser(user: User): void {
     if (typeof localStorage !== 'undefined') {
       localStorage.setItem('user', JSON.stringify(user));
+      this.currentUserSubject.next(user);
     }
   }
 
   getUser(): User | null {
+    return this.currentUserSubject.value;
+  }
+
+  private getStoredUser(): User | null {
     if (typeof localStorage !== 'undefined') {
       const user = localStorage.getItem('user');
       return user ? JSON.parse(user) : null;
@@ -144,6 +185,7 @@ export class AuthService {
   saveActiveRole(role: string): void {
     if (typeof localStorage !== 'undefined') {
       localStorage.setItem('activeRole', role);
+      this.activeRoleSubject.next(role);
       
       // También actualizar el usuario guardado
       const user = this.getUser();
@@ -155,10 +197,7 @@ export class AuthService {
   }
 
   getActiveRole(): string | null {
-    if (typeof localStorage !== 'undefined') {
-      return localStorage.getItem('activeRole');
-    }
-    return null;
+    return this.activeRoleSubject.value;
   }
 
   switchActiveRole(role: string): void {
@@ -182,20 +221,7 @@ export class AuthService {
   // ================== MÉTODOS DE AUTENTICACIÓN ==================
 
   isAuthenticated(): boolean {
-    const token = this.getToken();
-    const expiration = this.getTokenExpiration();
-    
-    if (!token || !expiration) {
-      return false;
-    }
-
-    // Verificar si el token no ha expirado
-    if (new Date() >= expiration) {
-      this.clearSession();
-      return false;
-    }
-
-    return true;
+    return this.isAuthenticatedSubject.value;
   }
 
   // ================== MÉTODOS PRIVADOS ==================
@@ -223,6 +249,9 @@ export class AuthService {
 
     this.saveUser(user);
 
+    // Actualizar estado de autenticación
+    this.isAuthenticatedSubject.next(true);
+
     // Configurar auto-logout
     this.autoLogout(3600 * 1000);
 
@@ -238,6 +267,11 @@ export class AuthService {
       localStorage.removeItem('expiration');
       localStorage.removeItem('activeRole');
     }
+
+    // Actualizar estado reactivo
+    this.currentUserSubject.next(null);
+    this.isAuthenticatedSubject.next(false);
+    this.activeRoleSubject.next(null);
 
     if (this.tokenExpirationTimer) {
       clearTimeout(this.tokenExpirationTimer);
@@ -292,10 +326,7 @@ export class AuthService {
     return {
       getValue: () => this.getUser(),
       subscribe: (callback: (user: User | null) => void) => {
-        // Llamar inmediatamente con el valor actual
-        callback(this.getUser());
-        // Retornar un objeto que simule una subscription
-        return { unsubscribe: () => {} };
+        return this.currentUser$.subscribe(callback);
       }
     };
   }
