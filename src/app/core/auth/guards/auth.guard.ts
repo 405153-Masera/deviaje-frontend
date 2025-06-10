@@ -10,7 +10,7 @@ export const authGuard: CanActivateFn = (route, state) => {
     return true;
   }
 
-  router.navigate(['/auth/login'], {
+  router.navigate(['/user/login'], {
     queryParams: { returnUrl: state.url },
   });
   return false;
@@ -22,26 +22,26 @@ export const roleGuard: CanActivateFn = (route, state) => {
 
   const requiredRoles = route.data['roles'] as Array<string>;
 
-  if (authService.isAuthenticated()) {
-    if (!requiredRoles || requiredRoles.length === 0) {
-      return true; // No se requieren roles específicos
-    }
-
-    // Verificar cada rol requerido
-    for (const role of requiredRoles) {
-      if (authService.hasRole(role)) {
-        return true;
-      }
-    }
-
-    // Si no tiene ninguno de los roles requeridos, redireccionar a página de acceso denegado
-    router.navigate(['/access-denied']);
+  if (!authService.isAuthenticated()) {
+    // Si no está autenticado, redirigir al login
+    router.navigate(['/user/login'], {
+      queryParams: { returnUrl: state.url },
+    });
     return false;
   }
 
-   // Si el usuario no está autenticado, redirigir al login
-  router.navigate(['/user/login'], {
-    queryParams: { returnUrl: state.url },
-  });
+  if (!requiredRoles || requiredRoles.length === 0) {
+    return true; // No se requieren roles específicos
+  }
+
+  // Verificar cada rol requerido
+  for (const role of requiredRoles) {
+    if (authService.hasRole(role)) {
+      return true;
+    }
+  }
+
+  // Si no tiene ninguno de los roles requeridos, redireccionar a página de acceso denegado
+  router.navigate(['/access-denied']);
   return false;
 };

@@ -151,57 +151,70 @@ export class DeviajeSidebarComponent implements OnInit {
   ];
   //#EDE4E4 color de los iconos
 
-  menuItems: MenuItem[] = [];
-  currentUserRole: string = '';
-  isAuthenticated: boolean = false;
-
   constructor() {}
 
   ngOnInit(): void {
-    // Suscribirse a cambios en el usuario actual
-    this.authService.currentUser.subscribe((user) => {
-      this.isAuthenticated = !!user;
-
-      // Determinar el rol del usuario
-      if (this.isAuthenticated) {
-        const activeRole =
-          user.activeRole || this.getHighestPriorityRole(user.roles);
-
-        if (activeRole === 'ADMINISTRADOR') {
-          this.currentUserRole = 'ADMINISTRADOR';
-          this.menuItems = this.adminMenuItems;
-        } else if (activeRole === 'AGENTE') {
-          this.currentUserRole = 'AGENTE';
-          this.menuItems = this.agentMenuItems;
-        } else {
-          this.currentUserRole = 'CLIENTE';
-          this.menuItems = this.clientMenuItems;
-        }
-      } else {
-        this.currentUserRole = 'GUEST';
-        this.menuItems = this.guestMenuItems;
-      }
-    });
+    // Inicializar con el menú correcto
+    this.updateMenuItems();
   }
 
-  // Agregar este método al final de la clase
-  private getHighestPriorityRole(roles: string[]): string {
+  get menuItems(): MenuItem[] {
+    this.updateMenuItems(); // Actualizar en cada acceso
+    return this.getCurrentMenuItems();
+  }
+
+  get isAuthenticated(): boolean {
+    return this.authService.isAuthenticated();
+  }
+
+  get currentUserRole(): string {
+    if (!this.isAuthenticated) {
+      return 'GUEST';
+    }
+
+    const activeRole = this.authService.getActiveRole();
+    return activeRole || this.getHighestPriorityRole();
+  }
+
+  private updateMenuItems(): void {
+    // Este método se llama en el getter para asegurar que siempre esté actualizado
+  }
+
+  private getCurrentMenuItems(): MenuItem[] {
+    switch (this.currentUserRole) {
+      case 'ADMINISTRADOR':
+        return this.adminMenuItems;
+      case 'AGENTE':
+        return this.agentMenuItems;
+      case 'CLIENTE':
+        return this.clientMenuItems;
+      default:
+        return this.guestMenuItems;
+    }
+  }
+
+  private getHighestPriorityRole(): string {
+    const user = this.authService.getUser();
+    if (!user || !user.roles) {
+      return 'GUEST';
+    }
+
     const priorityOrder = ['ADMINISTRADOR', 'AGENTE', 'CLIENTE'];
 
     for (const role of priorityOrder) {
-      if (roles.includes(role)) {
+      if (user.roles.includes(role)) {
         return role;
       }
     }
 
-    return roles[0];
+    return user.roles[0] || 'GUEST';
   }
 
   selectMenuItem(item: MenuItem): void {
-    this.menuItems.forEach((menuItem) => (menuItem.isSelected = false));
+    const currentItems = this.getCurrentMenuItems();
+    currentItems.forEach((menuItem) => (menuItem.isSelected = false));
     item.isSelected = true;
   }
-
   // Verificar si un ítem del menú tiene subitems
   hasSubItems(item: MenuItem): boolean {
     return !!item.subItems && item.subItems.length > 0;

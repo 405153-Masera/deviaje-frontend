@@ -21,47 +21,47 @@ import { AuthService } from '../../../core/auth/services/auth.service';
   templateUrl: './deviaje-navbar.component.html',
   styleUrl: './deviaje-navbar.component.scss',
 })
-export class DeviajeNavbarComponent implements OnInit, OnDestroy {
-  private subscription: Subscription = new Subscription();
+export class DeviajeNavbarComponent implements OnInit {
+
   private readonly authService: AuthService = inject(AuthService);
 
   @Output() toggleSidebar = new EventEmitter<void>();
   @ViewChild('userMenuTrigger') userMenuTrigger!: ElementRef;
   @ViewChild('roleMenuTrigger') roleMenuTrigger!: ElementRef;
 
-  isAuthenticated: boolean = false;
-  userAvatarUrl: string | null = null;
-  userName: string | null = null;
-  userRoles: string[] = [];
   isSidebarOpen: boolean = false;
   isUserMenuOpen: boolean = false;
   isRoleMenuOpen: boolean = false;
-  currentRole: string = '';
-  availableRoles: string[] = [];
 
   ngOnInit(): void {
-    this.subscription.add(
-      this.authService.currentUser.subscribe((user) => {
-        this.isAuthenticated = !!user;
-        this.userAvatarUrl = user?.avatar || null;
-        this.userName = user?.firstName || user?.username || null;
 
-        if (user && user.roles) {
-          this.userRoles = user.roles;
-          this.availableRoles = [...user.roles];
-          this.currentRole =
-            user.activeRole || this.getHighestPriorityRole(user.roles);
-        } else {
-          this.userRoles = [];
-          this.availableRoles = [];
-          this.currentRole = '';
-        }
-      })
-    );
   }
 
-  ngOnDestroy(): void {
-    this.subscription.unsubscribe();
+   get isAuthenticated(): boolean {
+    return this.authService.isAuthenticated();
+  }
+
+  get userAvatarUrl(): string | null {
+    const user = this.authService.getUser();
+    return user?.avatar || null;
+  }
+
+  get userName(): string | null {
+    const user = this.authService.getUser();
+    return user?.firstName || user?.username || null;
+  }
+
+  get userRoles(): string[] {
+    const user = this.authService.getUser();
+    return user?.roles || [];
+  }
+
+  get currentRole(): string {
+    return this.authService.getActiveRole() || '';
+  }
+
+  get availableRoles(): string[] {
+    return this.userRoles;
   }
 
   onToggleSidebar() {
@@ -84,18 +84,16 @@ export class DeviajeNavbarComponent implements OnInit, OnDestroy {
   }
 
   switchRole(role: string): void {
-    this.currentRole = role;
     this.isRoleMenuOpen = false;
-    // Actualizar rol activo en el servicio
     this.authService.switchActiveRole(role);
   }
 
   logout(): void {
-    this.subscription.add(
-      this.authService.logout().subscribe(() => {
-        this.isUserMenuOpen = false;
-      })
-    );
+    this.authService.logout().subscribe(() => {
+      this.isUserMenuOpen = false;
+      // Forzar actualización del componente
+      this.forceUpdate();
+    });
   }
 
   hasMultipleRoles(): boolean {
@@ -116,6 +114,13 @@ export class DeviajeNavbarComponent implements OnInit, OnDestroy {
     }
   }
 
+   // Método para forzar actualización del componente después de cambios
+  private forceUpdate(): void {
+    // Pequeño truco para forzar la detección de cambios
+    setTimeout(() => {}, 0);
+  }
+
+
   // Cerrar el menú de usuario al hacer clic fuera
   @HostListener('document:click', ['$event'])
   onDocumentClick(event: MouseEvent): void {
@@ -134,18 +139,5 @@ export class DeviajeNavbarComponent implements OnInit, OnDestroy {
     ) {
       this.isRoleMenuOpen = false;
     }
-  }
-
-  // Agregar este método al final de la clase
-  private getHighestPriorityRole(roles: string[]): string {
-    const priorityOrder = ['ADMINISTRADOR', 'AGENTE', 'CLIENTE'];
-
-    for (const role of priorityOrder) {
-      if (roles.includes(role)) {
-        return role;
-      }
-    }
-
-    return roles[0];
   }
 }
