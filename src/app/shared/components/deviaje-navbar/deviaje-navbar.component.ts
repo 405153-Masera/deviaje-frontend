@@ -49,15 +49,8 @@ export class DeviajeNavbarComponent implements OnInit, OnDestroy {
         if (user && user.roles) {
           this.userRoles = user.roles;
           this.availableRoles = [...user.roles];
-
-          // Establecer rol por defecto
-          if (this.userRoles.includes('ADMINISTRADOR')) {
-            this.currentRole = 'ADMINISTRADOR';
-          } else if (this.userRoles.includes('AGENTE')) {
-            this.currentRole = 'AGENTE';
-          } else if (this.userRoles.includes('CLIENTE')) {
-            this.currentRole = 'CLIENTE';
-          }
+          this.currentRole =
+            user.activeRole || this.getHighestPriorityRole(user.roles);
         } else {
           this.userRoles = [];
           this.availableRoles = [];
@@ -93,8 +86,8 @@ export class DeviajeNavbarComponent implements OnInit, OnDestroy {
   switchRole(role: string): void {
     this.currentRole = role;
     this.isRoleMenuOpen = false;
-    // Aquí podrías implementar la lógica para cambiar la vista según el rol
-    // Por ejemplo, navegar a diferentes dashboards
+    // Actualizar rol activo en el servicio
+    this.authService.switchActiveRole(role);
   }
 
   logout(): void {
@@ -111,11 +104,15 @@ export class DeviajeNavbarComponent implements OnInit, OnDestroy {
 
   // Obtener el nombre amigable del rol
   getRoleName(role: string): string {
-    switch(role) {
-      case 'ADMINISTRADOR': return 'Administrador';
-      case 'AGENTE': return 'Agente de Viajes';
-      case 'CLIENTE': return 'Cliente';
-      default: return role;
+    switch (role) {
+      case 'ADMINISTRADOR':
+        return 'Administrador';
+      case 'AGENTE':
+        return 'Agente de Viajes';
+      case 'CLIENTE':
+        return 'Cliente';
+      default:
+        return role;
     }
   }
 
@@ -130,9 +127,25 @@ export class DeviajeNavbarComponent implements OnInit, OnDestroy {
     }
 
     // Cerrar menú de roles si se hace clic fuera
-    if (this.roleMenuTrigger && this.roleMenuTrigger.nativeElement && 
-        !this.roleMenuTrigger.nativeElement.contains(event.target)) {
+    if (
+      this.roleMenuTrigger &&
+      this.roleMenuTrigger.nativeElement &&
+      !this.roleMenuTrigger.nativeElement.contains(event.target)
+    ) {
       this.isRoleMenuOpen = false;
     }
+  }
+
+  // Agregar este método al final de la clase
+  private getHighestPriorityRole(roles: string[]): string {
+    const priorityOrder = ['ADMINISTRADOR', 'AGENTE', 'CLIENTE'];
+
+    for (const role of priorityOrder) {
+      if (roles.includes(role)) {
+        return role;
+      }
+    }
+
+    return roles[0];
   }
 }

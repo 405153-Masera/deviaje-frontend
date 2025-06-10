@@ -164,10 +164,13 @@ export class DeviajeSidebarComponent implements OnInit {
 
       // Determinar el rol del usuario
       if (this.isAuthenticated) {
-        if (user.roles.includes('ADMINISTRADOR')) {
+        const activeRole =
+          user.activeRole || this.getHighestPriorityRole(user.roles);
+
+        if (activeRole === 'ADMINISTRADOR') {
           this.currentUserRole = 'ADMINISTRADOR';
           this.menuItems = this.adminMenuItems;
-        } else if (user.roles.includes('AGENTE')) {
+        } else if (activeRole === 'AGENTE') {
           this.currentUserRole = 'AGENTE';
           this.menuItems = this.agentMenuItems;
         } else {
@@ -179,6 +182,19 @@ export class DeviajeSidebarComponent implements OnInit {
         this.menuItems = this.guestMenuItems;
       }
     });
+  }
+
+  // Agregar este método al final de la clase
+  private getHighestPriorityRole(roles: string[]): string {
+    const priorityOrder = ['ADMINISTRADOR', 'AGENTE', 'CLIENTE'];
+
+    for (const role of priorityOrder) {
+      if (roles.includes(role)) {
+        return role;
+      }
+    }
+
+    return roles[0];
   }
 
   selectMenuItem(item: MenuItem): void {
