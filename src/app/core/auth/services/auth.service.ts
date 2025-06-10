@@ -49,27 +49,84 @@ export class AuthService {
 
   // ================== INICIALIZACIÓN ==================
 
-  private initializeAuthState(): void {
-    if (typeof localStorage !== 'undefined') {
-      const token = localStorage.getItem('token');
-      const user = this.getStoredUser();
-      const activeRole = localStorage.getItem('activeRole');
+ // Agrega estos logs TEMPORALES en tu AuthService actual:
+
+private initializeAuthState(): void {
+  console.log('🔍 === INVESTIGANDO PROBLEMA ===');
+  
+  if (typeof localStorage !== 'undefined') {
+    // 1. ¿Qué hay en localStorage?
+    const token = localStorage.getItem('token');
+    const userString = localStorage.getItem('user');
+    const activeRole = localStorage.getItem('activeRole');
+    const expiration = localStorage.getItem('expiration');
+    
+    console.log('📦 CONTENIDO de localStorage:', {
+      token: token,
+      userString: userString,
+      activeRole: activeRole,
+      expiration: expiration
+    });
+    
+    // 2. ¿Se puede parsear el usuario?
+    let user = null;
+    try {
+      user = userString ? JSON.parse(userString) : null;
+      console.log('👤 Usuario parseado:', user);
+    } catch (e) {
+      console.error('❌ Error parseando usuario:', e);
+    }
+    
+    // 3. ¿El token es válido?
+    if (token && user) {
+      console.log('✅ Token y usuario existen');
       
-      if (token && user && this.isTokenValid()) {
+      // Verificar expiración paso a paso
+      const expirationDate = expiration ? new Date(expiration) : null;
+      const now = new Date();
+      
+      console.log('⏰ Verificación de expiración:', {
+        expirationString: expiration,
+        expirationDate: expirationDate,
+        now: now,
+        isValid: expirationDate ? now < expirationDate : false
+      });
+      
+      const isValid = this.isTokenValid();
+      console.log('🔐 ¿Token válido?', isValid);
+      
+      if (isValid) {
+        console.log('✅ Todo OK - Debería restaurar sesión');
         this.currentUserSubject.next(user);
         this.isAuthenticatedSubject.next(true);
         this.activeRoleSubject.next(activeRole);
-        this.checkTokenExpiration();
       } else {
+        console.log('❌ Token inválido - Limpiando sesión');
         this.clearSession();
       }
+    } else {
+      console.log('❌ No hay token o usuario');
+      console.log('Token existe:', !!token);
+      console.log('Usuario existe:', !!user);
     }
+  } else {
+    console.log('❌ localStorage no disponible');
   }
+  
+  // 4. ¿Cuál es el estado final?
+  setTimeout(() => {
+    console.log('📊 ESTADO FINAL:', {
+      isAuthenticated: this.isAuthenticatedSubject.value,
+      currentUser: this.currentUserSubject.value,
+      activeRole: this.activeRoleSubject.value
+    });
+  }, 100);
+}
 
   private isTokenValid(): boolean {
     const expiration = this.getTokenExpiration();
     if (!expiration) return false;
-    
+
     return new Date() < expiration;
   }
 
@@ -103,14 +160,18 @@ export class AuthService {
     }
   }
 
-  forgotPassword(forgotPasswordRequest: ForgotPasswordRequest): Observable<MessageResponse> {
+  forgotPassword(
+    forgotPasswordRequest: ForgotPasswordRequest
+  ): Observable<MessageResponse> {
     return this.http.post<MessageResponse>(
       `${this.apiUrl}/forgot-password`,
       forgotPasswordRequest
     );
   }
 
-  resetPassword(resetPasswordRequest: ResetPasswordRequest): Observable<MessageResponse> {
+  resetPassword(
+    resetPasswordRequest: ResetPasswordRequest
+  ): Observable<MessageResponse> {
     return this.http.post<MessageResponse>(
       `${this.apiUrl}/reset-password`,
       resetPasswordRequest
@@ -186,7 +247,7 @@ export class AuthService {
     if (typeof localStorage !== 'undefined') {
       localStorage.setItem('activeRole', role);
       this.activeRoleSubject.next(role);
-      
+
       // También actualizar el usuario guardado
       const user = this.getUser();
       if (user) {
@@ -297,7 +358,7 @@ export class AuthService {
     if (this.tokenExpirationTimer) {
       clearTimeout(this.tokenExpirationTimer);
     }
-    
+
     this.tokenExpirationTimer = setTimeout(() => {
       this.logout().subscribe();
     }, expirationDuration);
@@ -327,7 +388,7 @@ export class AuthService {
       getValue: () => this.getUser(),
       subscribe: (callback: (user: User | null) => void) => {
         return this.currentUser$.subscribe(callback);
-      }
+      },
     };
   }
 }
