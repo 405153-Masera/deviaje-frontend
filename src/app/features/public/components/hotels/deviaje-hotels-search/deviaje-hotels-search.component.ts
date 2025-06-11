@@ -12,9 +12,7 @@ import { Router } from '@angular/router';
 import { DeviajeCalendarComponent } from '../../../../../shared/components/deviaje-calendar/deviaje-calendar.component';
 import { DeviajeCityInputComponent } from '../../../../../shared/components/deviaje-city-input/deviaje-city-input.component';
 import { CityDto } from '../../../../../shared/models/locations';
-import { HotelService } from '../../../../../shared/services/hotel.service';
 import {
-  HotelOffersRequest,
   HotelSearchRequest,
 } from '../../../../../shared/models/hotels';
 import { DeviajeRoomGuestSelectComponent } from '../../../../../shared/components/deviaje-room-guest-select/deviaje-room-guest-select.component';

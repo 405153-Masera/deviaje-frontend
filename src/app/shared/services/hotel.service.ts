@@ -2,7 +2,7 @@ import { HttpClient } from '@angular/common/http';
 import { inject, Injectable } from '@angular/core';
 import { environment } from '../../shared/enviroments/enviroment';
 import { catchError, map, Observable, throwError } from 'rxjs';
-import { HotelSearchRequest, HotelOffersRequest, HotelOffer, HotelSearchResponse, HotelResponseDto } from '../models/hotels';
+import { HotelSearchRequest, HotelSearchResponse, HotelResponseDto } from '../models/hotels';
 
 @Injectable({
   providedIn: 'root'

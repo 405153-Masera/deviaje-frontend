@@ -26,17 +26,6 @@ export interface HotelSearchRequest {
   language?: string;
 }
 
-export interface HotelOffersRequest {
-  hotelIds: string[];
-  checkInDate: string;
-  checkOutDate: string;
-  adults: number;
-  roomQuantity?: number;
-  currency?: string;
-  priceRange?: string;
-  boardType?: string[];
-}
-
 export interface HotelSearchResponse {
   hotels: {
     hotels: HotelSearchResponse.Hotel[];
@@ -69,15 +58,32 @@ export namespace HotelSearchResponse {
     rateType: string;
     net: number;
     discount?: number;
+    // Nuevas propiedades agregadas
+    adults?: number;
+    children?: number;
+    childrenAges?: string; // Edades separadas por comas "10,8"
+    rooms?: number;
+    allotment?: number;
+    rateCommentsId?: string;
+    paymentType?: string;
+    packaging?: boolean;
+    offers?: Offer[];
+    // Propiedades existentes
     cancellationPolicies?: CancellationPolicy[];
     boardCode?: string;
     boardName?: string;
     taxes?: Tax[];
   }
 
+  export interface Offer {
+    code: string;
+    name: string;
+    amount: string | number; // Puede venir como string negativo "-63.95"
+  }
+
   export interface CancellationPolicy {
     amount: string;
-    from: string;
+    from: string; // ISO date string
   }
 
   export interface Tax {
@@ -87,154 +93,7 @@ export namespace HotelSearchResponse {
   }
 }
 
-export interface HotelOffer {
-  type: string;
-  hotel: Hotel;
-  available: boolean;
-  offers: Offer[];
-  self: string;
-}
-
-export interface Hotel {
-  type: string;
-  hotelId: string;
-  chainCode: string;
-  dupeId: string;
-  name: string;
-  rating: string;
-  cityCode: string;
-  latitude: number;
-  longitude: number;
-  address: HotelAddress;
-  contact: HotelContact;
-  description: HotelDescription;
-  amenities: string[];
-  media: HotelMedia[];
-}
-
-export interface HotelAddress {
-  lines: string[];
-  postalCode: string;
-  cityName: string;
-  countryCode: string;
-  stateCode?: string;
-}
-
-export interface HotelContact {
-  phone: string;
-  fax: string;
-  email: string;
-}
-
-export interface HotelDescription {
-  text: string;
-  lang: string;
-}
-
-export interface HotelMedia {
-  uri: string;
-  category: string;
-}
-
-export interface Offer {
-  id: string;
-  checkInDate: string;
-  checkOutDate: string;
-  rateCode: string;
-  rateFamilyEstimated: RateFamily;
-  room: Room;
-  guests: Guests;
-  price: Price;
-  policies: Policies;
-  self: string;
-}
-
-export interface RateFamily {
-  code: string;
-  type: string;
-}
-
-export interface Room {
-  name?: string;
-  type: string;
-  typeEstimated: RoomTypeEstimated;
-  description: RoomDescription;
-}
-
-export interface RoomTypeEstimated {
-  category: string;
-  beds: number;
-  bedType: string;
-}
-
-export interface RoomDescription {
-  text: string;
-  lang: string;
-}
-
-export interface Guests {
-  adults: number;
-  childAges: number[];
-}
-
-export interface Price {
-  currency: string;
-  base: string;
-  total: string;
-  taxes: Tax[];
-  variations: PriceVariation;
-}
-
-export interface Tax {
-  code: string;
-  amount: string;
-  currency: string;
-  included: boolean;
-}
-
-export interface PriceVariation {
-  average: PriceDetail;
-  changes: PriceChange[];
-}
-
-export interface PriceDetail {
-  base: string;
-  total: string;
-}
-
-export interface PriceChange {
-  startDate: string;
-  endDate: string;
-  base: string;
-  total: string;
-}
-
-export interface Policies {
-  guarantee: GuaranteePolicy;
-  paymentType: string;
-  cancellation: CancellationPolicy;
-  refundable: Refundable;
-}
-
-export interface Refundable {
-  cancellationRefund: string;
-}
-
-export interface GuaranteePolicy {
-  acceptedPayments: AcceptedPayment;
-}
-
-export interface AcceptedPayment {
-  creditCards: string[];
-  methods: string[];
-}
-
-export interface CancellationPolicy {
-  type: string;
-  amount: string;
-  deadline: string;
-}
-
+// Resto de interfaces existentes se mantienen igual...
 export interface HotelResponseDto {
   code: string;
   name: string;
@@ -263,16 +122,4 @@ export interface HotelResponseDto {
     order?: number;
     visualOrder?: string;
   }[];
-}
-
-export interface RoomOffer {
-  id: string;
-  roomType: string;
-  description: string;
-  bedType: string;
-  price: number;
-  currency: string;
-  cancellationPolicy: string;
-  boardType: string;
-  maxOccupancy: number;
 }
