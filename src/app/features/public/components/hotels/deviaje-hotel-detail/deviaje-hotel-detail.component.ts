@@ -14,7 +14,8 @@ import { FormsModule } from '@angular/forms';
   selector: 'app-deviaje-hotel-detail',
   standalone: true,
   imports: [CommonModule, RouterModule, FormsModule],
-  templateUrl: './deviaje-hotel-detail.component.html',
+  import { Rate } from './../../../../../shared/models/hotels';
+templateUrl: './deviaje-hotel-detail.component.html',
   styleUrl: './deviaje-hotel-detail.component.scss',
 })
 export class DeviajeHotelDetailComponent implements OnInit, OnDestroy {
@@ -170,12 +171,11 @@ export class DeviajeHotelDetailComponent implements OnInit, OnDestroy {
   // Navegar a booking con datos simples
   this.router.navigate(['/hotels/booking'], {
     state: {
-      hotel: this.hotel,
-      room: this.selectedRoom,
-      rate: this.selectedRate,
-      searchParams: this.searchParams,
-      totalPrice: this.getRateNet(this.selectedRate),
-      totalNights: this.getNightsCount()
+      hotelDetails: this.hotelDetails, //este para sacar las imagenes y el nombre del hotel
+      nameRoom: this.selectedRoom.name, // Nombre de la habitación
+      rate: this.selectedRate,    // Tarifa seleccionada
+      rateKey: this.selectedRate.rateKey, // Clave de la tarifa
+      recheck: this.selectedRate.rateType === 'RECHECK', // Indica si es una tarifa RECHECK
     }
   });
 }
