@@ -136,18 +136,25 @@ export class AuthService {
       .pipe(tap((response) => this.handleAuthentication(response)));
   }
 
-  logout(): Observable<MessageResponse> {
-    if (this.isAuthenticated()) {
-      return this.http.post<MessageResponse>(`${this.apiUrl}/logout`, {}).pipe(
-        tap(() => this.clearSession()),
-        catchError((error) => {
-          this.clearSession();
-          return of({ message: 'Sesión cerrada localmente' });
-        })
-      );
+  logout(): Observable<any> {
+    const userId = this.getUser()?.id;
+
+    if (userId) {
+      return this.http
+        .post<MessageResponse>(`${this.apiUrl}/auth/logout`, { userId })
+        .pipe(
+          tap(() => {
+            this.clearSession(); // Ya maneja la redirección inteligente
+          }),
+          catchError((error) => {
+            console.error('Error during logout:', error);
+            this.clearSession(); // Limpiar sesión aunque falle el servidor
+            return of({ message: 'Sesión cerrada localmente', success: true });
+          })
+        );
     } else {
       this.clearSession();
-      return of({ message: 'Sesión cerrada' });
+      return of({ message: 'Sesión cerrada', success: true });
     }
   }
 
@@ -342,6 +349,8 @@ export class AuthService {
   }
 
   private clearSession(): void {
+    const currentUrl = this.router.url;
+
     if (typeof localStorage !== 'undefined') {
       localStorage.removeItem('user');
       localStorage.removeItem('token');
@@ -359,8 +368,16 @@ export class AuthService {
       clearTimeout(this.tokenExpirationTimer);
       this.tokenExpirationTimer = null;
     }
+    const isPublicPage = currentUrl.startsWith('/home');
 
-    this.router.navigate(['/home']);
+    if (!isPublicPage) {
+      // Solo redirigir si estamos en página que requiere auth
+      console.log('Logout: redirigiendo desde página privada al home');
+      this.router.navigate(['/home']);
+    } else {
+      console.log('Logout: permaneciendo en página pública:', currentUrl);
+      // No redirigir, solo los componentes se actualizarán reactivamente
+    }
   }
 
   private checkTokenExpiration(): void {
