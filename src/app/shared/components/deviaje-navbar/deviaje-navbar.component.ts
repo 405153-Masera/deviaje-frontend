@@ -22,7 +22,6 @@ import { AuthService, User } from '../../../core/auth/services/auth.service';
   styleUrl: './deviaje-navbar.component.scss',
 })
 export class DeviajeNavbarComponent implements OnInit, OnDestroy {
-
   private readonly authService: AuthService = inject(AuthService);
   private subscription = new Subscription();
 
@@ -43,14 +42,14 @@ export class DeviajeNavbarComponent implements OnInit, OnDestroy {
   ngOnInit(): void {
     // Suscribirse a los cambios de estado de autenticación
     this.subscription.add(
-      this.authService.isAuthenticated$.subscribe(isAuth => {
+      this.authService.isAuthenticated$.subscribe((isAuth) => {
         this.isAuthenticated = isAuth;
       })
     );
 
     // Suscribirse a los cambios del usuario actual
     this.subscription.add(
-      this.authService.currentUser$.subscribe(user => {
+      this.authService.currentUser$.subscribe((user) => {
         this.currentUser = user;
         this.userRoles = user?.roles || [];
       })
@@ -58,7 +57,7 @@ export class DeviajeNavbarComponent implements OnInit, OnDestroy {
 
     // Suscribirse a los cambios del rol activo
     this.subscription.add(
-      this.authService.activeRole$.subscribe(role => {
+      this.authService.activeRole$.subscribe((role) => {
         this.currentRole = role || '';
       })
     );
@@ -101,7 +100,10 @@ export class DeviajeNavbarComponent implements OnInit, OnDestroy {
 
   switchRole(role: string): void {
     this.isRoleMenuOpen = false;
-    this.authService.switchActiveRole(role);
+    this.authService.changeActiveRoleWithoutRedirect(role);
+
+    // No hay navegación aquí - los componentes se actualizarán automáticamente
+    console.log(`Cambiando a rol: ${role} sin redirección`);
   }
 
   logout(): void {

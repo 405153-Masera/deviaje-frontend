@@ -232,6 +232,29 @@ export class AuthService {
     return null;
   }
 
+  /**
+   * Cambiar rol activo SIN redirigir - solo actualiza la vista
+   * @param role Nuevo rol activo
+   */
+  changeActiveRoleWithoutRedirect(role: string): void {
+    const currentUser = this.currentUserSubject.value;
+
+    if (!currentUser || !currentUser.roles.includes(role)) {
+      console.error('Usuario no tiene permiso para cambiar a rol:', role);
+      return;
+    }
+
+    // Actualizar localStorage
+    if (typeof localStorage !== 'undefined') {
+      localStorage.setItem('activeRole', role);
+    }
+
+    // Actualizar estado reactivo - esto disparará todos los componentes suscritos
+    this.activeRoleSubject.next(role);
+
+    console.log(`Rol cambiado a: ${role} (sin redirección)`);
+  }
+
   // ================== MÉTODOS DE ROLES ==================
 
   saveActiveRole(role: string): void {
@@ -270,6 +293,13 @@ export class AuthService {
     return activeRole === role;
   }
 
+  // También agregar este método helper para los componentes:
+  /**
+   * Obtener el valor actual del usuario de forma síncrona (para compatibilidad)
+   */
+  getCurrentUserValue(): User | null {
+    return this.currentUserSubject.value;
+  }
   // ================== MÉTODOS DE AUTENTICACIÓN ==================
 
   isAuthenticated(): boolean {
