@@ -15,7 +15,7 @@
              alt="{{ hotelDetails?.name }}" 
              class="img-fluid rounded"
              style="width: 80px; height: 60px; object-fit: cover;"
-             onImageError($event)>
+             (error)="onImageError($event)">
       </div>
       
       <!-- Información principal -->

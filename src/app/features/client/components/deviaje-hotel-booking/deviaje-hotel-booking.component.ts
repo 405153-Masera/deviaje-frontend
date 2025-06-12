@@ -164,6 +164,7 @@ export class DeviajeHotelBookingComponent implements OnInit, OnDestroy {
     if (this.recheck) {
       this.verifyRateAvailability();
     } else {
+      this.setupTravelersForm();
       this.setupPaymentAmount();
     }
   }
