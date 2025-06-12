@@ -41,8 +41,13 @@
               <div>
                 <h1 class="hotel-title">{{ hotel.name }}</h1>
                 <div class="hotel-stars mb-2">
+                  @if (getCategoryStars(hotel.categoryName || '') > 0) {
                   @for (i of [1, 2, 3, 4, 5]; track i) {
-                  <i class="bi bi-star-fill" [class.text-warning]="i <= getCategoryStars(hotel.categoryCode || '')"></i>
+                  <i class="bi bi-star-fill" [class.text-warning]="i <= getCategoryStars(hotel.categoryName || '')"
+                    [class.text-muted]="i > getCategoryStars(hotel.categoryName || '')"></i>
+                  }
+                  } @else {
+                  <span class="badge bg-secondary">{{ hotel.categoryName }}</span>
                   }
                 </div>
                 <p class="hotel-location">
@@ -194,28 +199,28 @@
     </div>
 
     <!-- Barra de reserva flotante -->
-        @if (selectedRoom && selectedRate && !inPackageMode) {
-          <div class="booking-bar">
-            <div class="container">
-              <div class="row align-items-center">
-                <div class="col-md-7">
-                  <div class="selection-summary">
-                    <div class="room-name">{{ selectedRoom.name }}</div>
-                    <div class="rate-detail">{{ selectedRate.boardName || 'Solo habitación' }}</div>
-                  </div>
-                </div>
-                <div class="col-md-3 text-md-end">
-                  <div class="booking-price">{{ formatPrice(getRateNet(selectedRate), searchParams?.currency) }}</div>
-                </div>
-                <div class="col-md-2 text-md-end">
-                  <button class="btn btn-primary w-100" (click)="bookHotel()">
-                    Reservar
-                  </button>
-                </div>
-              </div>
+    @if (selectedRoom && selectedRate && !inPackageMode) {
+    <div class="booking-bar">
+      <div class="container">
+        <div class="row align-items-center">
+          <div class="col-md-7">
+            <div class="selection-summary">
+              <div class="room-name">{{ selectedRoom.name }}</div>
+              <div class="rate-detail">{{ selectedRate.boardName || 'Solo habitación' }}</div>
             </div>
           </div>
-        }
+          <div class="col-md-3 text-md-end">
+            <div class="booking-price">{{ formatPrice(getRateNet(selectedRate), searchParams?.currency) }}</div>
+          </div>
+          <div class="col-md-2 text-md-end">
+            <button class="btn btn-primary w-100" (click)="bookHotel()">
+              Reservar
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+    }
     }
   </div>
 </div>

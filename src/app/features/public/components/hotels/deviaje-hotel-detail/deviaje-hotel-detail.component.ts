@@ -14,8 +14,7 @@ import { FormsModule } from '@angular/forms';
   selector: 'app-deviaje-hotel-detail',
   standalone: true,
   imports: [CommonModule, RouterModule, FormsModule],
-  import { Rate } from './../../../../../shared/models/hotels';
-templateUrl: './deviaje-hotel-detail.component.html',
+  templateUrl: './deviaje-hotel-detail.component.html',
   styleUrl: './deviaje-hotel-detail.component.scss',
 })
 export class DeviajeHotelDetailComponent implements OnInit, OnDestroy {
@@ -163,22 +162,25 @@ export class DeviajeHotelDetailComponent implements OnInit, OnDestroy {
   }
 
   bookHotel(): void {
-  if (!this.selectedRoom || !this.selectedRate) {
-    this.errorMessage = 'Debe seleccionar una habitación y tarifa antes de continuar.';
-    return;
-  }
-  
-  // Navegar a booking con datos simples
-  this.router.navigate(['/hotels/booking'], {
-    state: {
-      hotelDetails: this.hotelDetails, //este para sacar las imagenes y el nombre del hotel
-      nameRoom: this.selectedRoom.name, // Nombre de la habitación
-      rate: this.selectedRate,    // Tarifa seleccionada
-      rateKey: this.selectedRate.rateKey, // Clave de la tarifa
-      recheck: this.selectedRate.rateType === 'RECHECK', // Indica si es una tarifa RECHECK
+    if (!this.selectedRoom || !this.selectedRate) {
+      this.errorMessage =
+        'Debe seleccionar una habitación y tarifa antes de continuar.';
+      return;
     }
-  });
-}
+
+    // Navegar a booking con datos simples
+    this.router.navigate(['/home/hotels/booking'], {
+      state: {
+        hotelDetails: this.hotelDetails,
+        hotel: this.hotel, // ⭐ PARA categoryName y categoryCode
+        nameRoom: this.selectedRoom.name,
+        rate: this.selectedRate,
+        rateKey: this.selectedRate.rateKey,
+        recheck: this.selectedRate.rateType === 'RECHECK',
+        searchParams: this.searchParams, // ⭐ PARA fechas y calcular noches
+      },
+    });
+  }
 
   selectRoom(room: HotelSearchResponse.Room): void {
     this.selectedRoom = room;
@@ -187,26 +189,6 @@ export class DeviajeHotelDetailComponent implements OnInit, OnDestroy {
 
   selectRate(rate: HotelSearchResponse.Rate): void {
     this.selectedRate = rate;
-  }
-
-  async checkRateAvailability(rateKey: string): Promise<void> {
-    this.isLoading = true;
-
-    try {
-      const response = await this.hotelService.checkRates(rateKey).toPromise();
-
-      if (!response) {
-        this.errorMessage = 'Esta tarifa ya no está disponible.';
-      } else {
-        // Actualizar con los datos validados
-        this.selectedRate = { ...this.selectedRate!, ...response };
-      }
-    } catch (error) {
-      console.error('Error al validar tarifa:', error);
-      this.errorMessage = 'Error al validar la tarifa.';
-    } finally {
-      this.isLoading = false;
-    }
   }
 
   nextImage(): void {
@@ -300,8 +282,17 @@ export class DeviajeHotelDetailComponent implements OnInit, OnDestroy {
     return 'Habitación';
   }
 
-  getCategoryStars(categoryCode: string): number {
-    // Implementar lógica de estrellas
-    return parseInt(categoryCode) || 3;
+  getCategoryStars(categoryName: string): number {
+    if (!categoryName) return 0;
+
+    // Si contiene "ESTRELLAS", extraer número
+    if (categoryName.includes('ESTRELLAS')) {
+      const starsMatch = categoryName.match(/(\d+)\s*ESTRELLAS?/i);
+      if (starsMatch) {
+        return parseInt(starsMatch[1]);
+      }
+    }
+
+    return 0; // Para otros tipos
   }
 }

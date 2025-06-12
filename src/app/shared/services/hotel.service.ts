@@ -55,19 +55,4 @@ export class HotelService {
         })
       );
   }
-
-  /**
-   * Crea una reserva de hotel
-   * @param bookingRequest Datos de la reserva
-   * @returns Observable con la confirmación de la reserva
-   */
-  createBooking(bookingRequest: any): Observable<any> {
-    return this.http.post<any>(`${this.url}/booking`, bookingRequest)
-      .pipe(
-        catchError(error => {
-          console.error('Error al crear reserva:', error);
-          return throwError(() => new Error('Error al crear reserva: ' + (error.message || 'Error desconocido')));
-        })
-      );
-  }
 }

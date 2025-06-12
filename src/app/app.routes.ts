@@ -13,6 +13,7 @@ import { DeviajeFlightBookingComponent } from './features/client/components/devi
 import { DeviajeForgotPasswordComponent } from './shared/components/deviaje-forgot-password/deviaje-forgot-password.component';
 import { DeviajeResetPasswordComponent } from './shared/components/deviaje-reset-password/deviaje-reset-password.component';
 import { DeviajeAccessDeniedComponent } from './features/public/components/deviaje-accessdenied/deviaje-accessdenied.component';
+import { DeviajeHotelBookingComponent } from './features/client/components/deviaje-hotel-booking/deviaje-hotel-booking.component';
 
 export const routes: Routes = [
 
@@ -33,7 +34,8 @@ export const routes: Routes = [
       { path: 'hotels/search', component: DeviajeHotelsSearchComponent },
       { path: 'hotels/results', component: DeviajeHotelsResultsComponent },
       { path: 'hotels/detail/:code', component: DeviajeHotelDetailComponent },
-      { path: 'flight/booking', component: DeviajeFlightBookingComponent }
+      { path: 'flight/booking', component: DeviajeFlightBookingComponent },
+      { path: 'hotels/booking', component: DeviajeHotelBookingComponent }, // Reutilizando el componente para reservas de hoteles
     ]
   },
   // Rutas que requieren autenticación 
