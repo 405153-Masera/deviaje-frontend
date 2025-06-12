@@ -11,11 +11,7 @@
     <div class="row">
       <!-- Imagen del hotel -->
       <div class="col-auto">
-        <img [src]="getHotelImage()" 
-             alt="{{ hotelDetails?.name }}" 
-             class="img-fluid rounded"
-             style="width: 80px; height: 60px; object-fit: cover;"
-             (error)="onImageError($event)">
+        
       </div>
       
       <!-- Información principal -->
@@ -45,6 +41,11 @@
               <i class="bi bi-geo-alt me-1"></i>
               {{ getHotelLocation() }}
             </small>
+
+            <img [src]="getHotelMainImage()" 
+             alt="{{ hotelDetails?.name }}" 
+             class="img-fluid rounded"
+             style="width: 100px; height: 90px; object-fit: cover;">
           </div>
           
           <!-- Columna 2: Fechas -->

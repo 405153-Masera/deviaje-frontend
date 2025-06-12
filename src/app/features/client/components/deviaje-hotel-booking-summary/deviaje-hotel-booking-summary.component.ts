@@ -21,12 +21,21 @@ export class DeviajeHotelBookingSummaryComponent {
   @Input() searchParams: HotelSearchRequest | null = null;
 
   // Obtener imagen del hotel
-  getHotelImage(): string {
-    if (this.hotelDetails?.images && this.hotelDetails.images.length > 0) {
-      return this.hotelDetails.images[0].path;
+    getHotelMainImage(): string {
+    if (
+      this.hotelDetails &&
+      this.hotelDetails.images &&
+      this.hotelDetails.images.length > 0
+    ) {
+      const imagePath = this.hotelDetails.images[0]?.path;
+      if (imagePath) {
+        return `http://photos.hotelbeds.com/giata/bigger/${imagePath}`;
+      }
     }
-    return `https://via.placeholder.com/300x200?text=${encodeURIComponent(
-      this.hotelDetails?.name || 'Hotel'
+
+    // Si no hay imágenes disponibles, devolver una imagen genérica
+    return `https://via.placeholder.com/800x500?text=${encodeURIComponent(
+      this.hotel?.name || 'Hotel'
     )}`;
   }
 
@@ -34,7 +43,7 @@ export class DeviajeHotelBookingSummaryComponent {
   getHotelLocation(): string {
     const city = this.hotelDetails?.city || '';
     const country = this.hotelDetails?.country?.name || '';
-    const zoneName = (this.hotelDetails as any)?.zoneName || '';
+    const zoneName = this.hotelDetails?.zone;
 
     let location = '';
     if (city && country) {
