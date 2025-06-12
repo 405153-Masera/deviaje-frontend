@@ -2,7 +2,6 @@ import { CommonModule } from '@angular/common';
 import { Component, inject, OnDestroy, OnInit, ViewChild } from '@angular/core';
 import {
   FormBuilder,
-  FormControl,
   FormGroup,
   ReactiveFormsModule,
   Validators,
@@ -12,9 +11,7 @@ import { Router } from '@angular/router';
 import { DeviajeCalendarComponent } from '../../../../../shared/components/deviaje-calendar/deviaje-calendar.component';
 import { DeviajeCityInputComponent } from '../../../../../shared/components/deviaje-city-input/deviaje-city-input.component';
 import { CityDto } from '../../../../../shared/models/locations';
-import {
-  HotelSearchRequest,
-} from '../../../../../shared/models/hotels';
+import { HotelSearchRequest } from '../../../../../shared/models/hotels';
 import { DeviajeRoomGuestSelectComponent } from '../../../../../shared/components/deviaje-room-guest-select/deviaje-room-guest-select.component';
 
 @Component({
@@ -65,7 +62,7 @@ export class DeviajeHotelsSearchComponent implements OnInit, OnDestroy {
       type: string;
       age: number;
     }>;
-  }> = [{ rooms: 1, adults: 2, children: 0 }];
+  }> = [{ rooms: 1, adults: 1, children: 0 }];
 
   // Variables para fechas
   checkInDate: Date | null = null;
@@ -166,32 +163,30 @@ export class DeviajeHotelsSearchComponent implements OnInit, OnDestroy {
 
     this.isLoading = true;
 
-    // Crear estructura de ocupaciones
-    const occupancies = this.occupancies.map((room) => {
-      const occupancy: any = {
-        rooms: room.rooms,
-        adults: room.adults,
-        children: room.children,
-      };
+    // Crear estructura de ocupaciones - siempre 1 habitación
+    const occupancy: any = {
+      rooms: 1, // SIEMPRE 1
+      adults: this.occupancies[0].adults,
+      children: this.occupancies[0].children,
+    };
 
-      // Solo agregar paxes si hay niños
-      if (room.children > 0 && room.paxes) {
-        occupancy.paxes = room.paxes.map((pax) => ({
+    // Solo agregar paxes si hay niños
+    if (this.occupancies[0].children > 0 && this.occupancies[0].paxes) {
+      occupancy.paxes = this.occupancies[0].paxes
+        .filter((pax) => pax.type === 'CH')
+        .map((pax) => ({
           type: pax.type,
           age: pax.age,
         }));
-      }
+    }
 
-      return occupancy;
-    });
-
-    // Crear solicitud completa
+    // Crear solicitud completa - array con 1 elemento
     const searchParams: HotelSearchRequest = {
       stay: {
         checkIn: this.formSearch.get('checkInDate')?.value,
         checkOut: this.formSearch.get('checkOutDate')?.value,
       },
-      occupancies: occupancies,
+      occupancies: [occupancy], // Array con 1 ocupación
       destination: {
         code: this.formSearch.get('destination')?.value.iataCode,
       },

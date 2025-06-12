@@ -3,8 +3,7 @@
 
   <div class="selector-trigger" (click)="toggleDropdown($event)">
     <i class="bi bi-person me-2"></i>
-    <span>{{ getTotalRooms() }} {{ getTotalRooms() === 1 ? 'habitación' : 'habitaciones' }}, {{ getTotalGuests() }}
-      huéspedes</span>
+    <span>{{ getTotalGuests() }} huéspedes</span>
     <i class="bi bi-chevron-down dropdown-icon" [class.rotate]="isDropdownOpen"></i>
   </div>
 
@@ -13,13 +12,6 @@
     <div class="rooms-container">
       @for (room of occupancies; track $index) {
       <div class="room-section">
-        <div class="room-header d-flex justify-content-between align-items-center mb-3">
-          <h6 class="mb-0">Habitación {{ $index + 1 }}</h6>
-          @if (occupancies.length > 1) {
-          <button type="button" class="btn-close" (click)="removeRoom($index)"></button>
-          }
-        </div>
-
         <!-- Adultos -->
         <div class="dropdown-search-row">
           <div class="option-row">
@@ -80,14 +72,6 @@
         }
       </div>
       }
-
-      <!-- Botón para agregar habitación -->
-      <div class="add-room-button mt-3">
-        <button type="button" class="btn btn-outline w-100" [disabled]="occupancies.length >= 4" (click)="addRoom()">
-          <i class="bi bi-plus-circle me-2"></i> Agregar habitación
-        </button>
-      </div>
-
       <!-- Botón para aplicar configuración -->
       <div class="d-flex justify-content-end mt-3">
         <button type="button" class="btn btn-apply" (click)="applyChanges()">

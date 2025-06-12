@@ -21,7 +21,7 @@ import { FormsModule } from '@angular/forms';
 export class DeviajeRoomGuestSelectComponent implements OnInit {
   private readonly elementRef: ElementRef = inject(ElementRef);
 
-  @Input() label: string = 'Habitaciones y huéspedes';
+  @Input() label: string = 'Huéspedes';
 
   @Input() occupancies: Array<{
     rooms: number;
@@ -63,9 +63,7 @@ export class DeviajeRoomGuestSelectComponent implements OnInit {
 
   ngOnInit(): void {
     // Asegurarse de que siempre hay al menos una habitación
-    if (!this.occupancies || this.occupancies.length === 0) {
-      this.occupancies = [{ rooms: 1, adults: 1, children: 0 }];
-    }
+    this.occupancies = [{ rooms: 1, adults: 1, children: 0 }];
 
     // Asegurarse de que los paxes estén inicializados correctamente
     this.validatePaxes();
@@ -84,18 +82,6 @@ export class DeviajeRoomGuestSelectComponent implements OnInit {
     this.validatePaxes();
     this.occupanciesChanged.emit(this.occupancies);
     this.closeDropdown();
-  }
-
-  addRoom(): void {
-    if (this.occupancies.length < 4) {
-      this.occupancies.push({ rooms: 1, adults: 1, children: 0 });
-    }
-  }
-
-  removeRoom(index: number): void {
-    if (this.occupancies.length > 1) {
-      this.occupancies.splice(index, 1);
-    }
   }
 
   updateAdults(roomIndex: number, increment: boolean): void {
@@ -158,11 +144,6 @@ export class DeviajeRoomGuestSelectComponent implements OnInit {
         room.paxes = [];
       }
 
-      // Asegurarse de que hay un pax para cada adulto
-      while (room.paxes.filter((p) => p.type === 'AD').length < room.adults) {
-        room.paxes.push({ type: 'AD', age: 30 }); // Edad por defecto para adultos
-      }
-
       // Asegurarse de que hay un pax para cada niño
       while (room.paxes.filter((p) => p.type === 'CH').length < room.children) {
         room.paxes.push({ type: 'CH', age: 8 }); // Edad por defecto para niños
@@ -177,7 +158,7 @@ export class DeviajeRoomGuestSelectComponent implements OnInit {
   }
 
   getTotalRooms(): number {
-    return this.occupancies.length;
+    return 1;
   }
 
   getTotalGuests(): number {

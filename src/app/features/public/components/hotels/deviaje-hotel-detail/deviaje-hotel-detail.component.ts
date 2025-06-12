@@ -10,16 +10,6 @@ import {
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 
-interface RoomSelection {
-  roomIndex: number;
-  adults: number;
-  children: number;
-  childrenAges?: number[];
-  selectedRate: HotelSearchResponse.Rate | null;
-  availableRates: HotelSearchResponse.Rate[];
-  isValidating: boolean;
-}
-
 @Component({
   selector: 'app-deviaje-hotel-detail',
   standalone: true,
@@ -43,8 +33,9 @@ export class DeviajeHotelDetailComponent implements OnInit, OnDestroy {
   hotelDetails: HotelResponseDto | null = null;
   searchParams: HotelSearchRequest | null = null;
 
-  // Nueva estructura para manejar múltiples habitaciones
-  roomSelections: RoomSelection[] = [];
+  // Restaurar variables originales
+  selectedRoom: HotelSearchResponse.Room | null = null;
+  selectedRate: HotelSearchResponse.Rate | null = null;
 
   // Estado
   isLoading: boolean = false;
@@ -58,7 +49,6 @@ export class DeviajeHotelDetailComponent implements OnInit, OnDestroy {
     if (this.inPackageMode && this.packageSearchParams) {
       // Modo paquete
       this.searchParams = this.packageSearchParams;
-      this.initializeRoomSelections();
     } else {
       // Modo normal
       this.route.paramMap.subscribe((params) => {
@@ -68,7 +58,6 @@ export class DeviajeHotelDetailComponent implements OnInit, OnDestroy {
           if (window.history.state.hotel) {
             this.hotel = window.history.state.hotel;
             this.searchParams = window.history.state.searchParams;
-            this.initializeRoomSelections();
             this.loadHotelDetails();
           } else {
             this.router.navigate(['/home/hotels/search']);
@@ -82,46 +71,6 @@ export class DeviajeHotelDetailComponent implements OnInit, OnDestroy {
 
   ngOnDestroy(): void {
     this.subscription.unsubscribe();
-  }
-
-  initializeRoomSelections(): void {
-    if (!this.searchParams?.occupancies) return;
-
-    this.roomSelections = this.searchParams.occupancies.map(
-      (occupancy, index) => ({
-        roomIndex: index,
-        adults: occupancy.adults,
-        children: occupancy.children || 0,
-        childrenAges:
-          occupancy.paxes?.filter((p) => p.type === 'CH').map((p) => p.age) ||
-          [],
-        selectedRate: null,
-        availableRates: this.getAvailableRatesForOccupancy(occupancy),
-        isValidating: false,
-      })
-    );
-  }
-
-  getAvailableRatesForOccupancy(occupancy: any): HotelSearchResponse.Rate[] {
-    if (!this.hotel?.rooms) return [];
-
-    const availableRates: HotelSearchResponse.Rate[] = [];
-
-    for (const room of this.hotel.rooms) {
-      if (room.rates) {
-        const matchingRates = room.rates.filter((rate) => {
-          const rateAdults = this.getRateAdults(rate);
-          const rateChildren = this.getRateChildren(rate);
-          return (
-            rateAdults === occupancy.adults &&
-            rateChildren === (occupancy.children || 0)
-          );
-        });
-        availableRates.push(...matchingRates);
-      }
-    }
-
-    return availableRates;
   }
 
   loadHotelDetails(): void {
@@ -146,95 +95,6 @@ export class DeviajeHotelDetailComponent implements OnInit, OnDestroy {
       })
     );
   }
-
-  onRateSelectionChange(roomIndex: number, event: Event): void {
-    const target = event.target as HTMLSelectElement;
-    const rateKey = target.value;
-
-    if (!rateKey) {
-      this.roomSelections[roomIndex].selectedRate = null;
-      return;
-    }
-
-    const selectedRate = this.roomSelections[roomIndex].availableRates.find(
-      (r) => r.rateKey === rateKey
-    );
-    if (selectedRate) {
-      this.onRateSelected(roomIndex, selectedRate);
-    }
-  }
-
-  async onRateSelected(
-    roomIndex: number,
-    rate: HotelSearchResponse.Rate
-  ): Promise<void> {
-    const roomSelection = this.roomSelections[roomIndex];
-    roomSelection.selectedRate = rate;
-
-    // Si es RECHECK, validar disponibilidad
-    if (rate.rateType === 'RECHECK') {
-      roomSelection.isValidating = true;
-
-      try {
-        const response = await this.hotelService
-          .checkRates(rate.rateKey)
-          .toPromise();
-
-        if (!response) {
-          // Si no está disponible, remover del select
-          roomSelection.availableRates = roomSelection.availableRates.filter(
-            (r) => r.rateKey !== rate.rateKey
-          );
-          roomSelection.selectedRate = null;
-          this.errorMessage = `La tarifa seleccionada para la habitación ${
-            roomIndex + 1
-          } ya no está disponible.`;
-        } else {
-          // Actualizar con los datos validados
-          roomSelection.selectedRate = { ...rate, ...response };
-        }
-      } catch (error) {
-        console.error('Error al validar tarifa:', error);
-        roomSelection.availableRates = roomSelection.availableRates.filter(
-          (r) => r.rateKey !== rate.rateKey
-        );
-        roomSelection.selectedRate = null;
-        this.errorMessage = `Error al validar la tarifa para la habitación ${
-          roomIndex + 1
-        }.`;
-      } finally {
-        roomSelection.isValidating = false;
-      }
-    }
-  }
-
-  canProceedToBooking(): boolean {
-    return this.roomSelections.every(
-      (room) => room.selectedRate !== null && !room.isValidating
-    );
-  }
-
-  getTotalPrice(): number {
-    return this.roomSelections.reduce((total, room) => {
-      return total + this.getRateNet(room.selectedRate);
-    }, 0);
-  }
-
-  getRoomDescription(roomSelection: RoomSelection): string {
-    let description = `${roomSelection.adults} adulto${
-      roomSelection.adults > 1 ? 's' : ''
-    }`;
-    if (roomSelection.children > 0) {
-      description += `, ${roomSelection.children} niño${
-        roomSelection.children > 1 ? 's' : ''
-      }`;
-      if (roomSelection.childrenAges && roomSelection.childrenAges.length > 0) {
-        description += ` (${roomSelection.childrenAges.join(', ')} años)`;
-      }
-    }
-    return description;
-  }
-
   // Métodos auxiliares para acceder a propiedades de Rate de forma segura
   getRateOffers(rate: HotelSearchResponse.Rate | null): any[] {
     return (rate as any)?.offers || [];
@@ -302,23 +162,52 @@ export class DeviajeHotelDetailComponent implements OnInit, OnDestroy {
   }
 
   bookHotel(): void {
-    if (!this.canProceedToBooking()) {
-      this.errorMessage =
-        'Debe seleccionar una opción para todas las habitaciones antes de continuar.';
-      return;
+  if (!this.selectedRoom || !this.selectedRate) {
+    this.errorMessage = 'Debe seleccionar una habitación y tarifa antes de continuar.';
+    return;
+  }
+  
+  // Navegar a booking con datos simples
+  this.router.navigate(['/hotels/booking'], {
+    state: {
+      hotel: this.hotel,
+      room: this.selectedRoom,
+      rate: this.selectedRate,
+      searchParams: this.searchParams,
+      totalPrice: this.getRateNet(this.selectedRate),
+      totalNights: this.getNightsCount()
     }
+  });
+}
 
-    // Navegar a booking con todas las habitaciones seleccionadas
-    this.router.navigate(['/hotels/booking'], {
-      state: {
-        hotel: this.hotel,
-        roomSelections: this.roomSelections,
-        searchParams: this.searchParams,
-        totalPrice: this.getTotalPrice(),
-      },
-    });
+  selectRoom(room: HotelSearchResponse.Room): void {
+    this.selectedRoom = room;
+    this.selectedRate = null;
   }
 
+  selectRate(rate: HotelSearchResponse.Rate): void {
+    this.selectedRate = rate;
+  }
+
+  async checkRateAvailability(rateKey: string): Promise<void> {
+    this.isLoading = true;
+
+    try {
+      const response = await this.hotelService.checkRates(rateKey).toPromise();
+
+      if (!response) {
+        this.errorMessage = 'Esta tarifa ya no está disponible.';
+      } else {
+        // Actualizar con los datos validados
+        this.selectedRate = { ...this.selectedRate!, ...response };
+      }
+    } catch (error) {
+      console.error('Error al validar tarifa:', error);
+      this.errorMessage = 'Error al validar la tarifa.';
+    } finally {
+      this.isLoading = false;
+    }
+  }
 
   nextImage(): void {
     if (!this.hotelDetails || !this.hotelDetails.images) {
@@ -396,6 +285,19 @@ export class DeviajeHotelDetailComponent implements OnInit, OnDestroy {
     return `https://via.placeholder.com/600x400?text=${encodeURIComponent(
       hotel.name || 'Hotel'
     )}`;
+  }
+
+  getRoomNameForRate(rate: HotelSearchResponse.Rate): string {
+    if (!this.hotel?.rooms) return 'Habitación';
+
+    // Buscar la habitación que contiene esta tarifa
+    for (const room of this.hotel.rooms) {
+      if (room.rates && room.rates.some((r) => r.rateKey === rate.rateKey)) {
+        return room.name || 'Habitación';
+      }
+    }
+
+    return 'Habitación';
   }
 
   getCategoryStars(categoryCode: string): number {
