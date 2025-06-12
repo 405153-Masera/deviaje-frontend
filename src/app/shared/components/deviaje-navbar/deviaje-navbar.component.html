@@ -71,7 +71,7 @@
     </ng-container>
 
     <ng-container *ngIf="!isAuthenticated">
-      <a routerLink="/user/login" class="auth-btn login-btn">
+      <a (click)="goToLogin()" class="auth-btn login-btn">
         <i class="bi bi-box-arrow-in-right"></i> Iniciar Sesión
       </a>
       <a routerLink="/user/signup" class="auth-btn signup-btn">

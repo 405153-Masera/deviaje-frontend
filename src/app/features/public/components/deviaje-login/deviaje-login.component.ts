@@ -10,6 +10,7 @@ import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { AuthService } from '../../../../core/auth/services/auth.service';
 import { LoginRequest } from '../../../../core/auth/models/jwt-models';
 import { CommonModule } from '@angular/common';
+import { NavigationService } from '../../../../shared/services/navigation.service';
 
 @Component({
   selector: 'app-deviaje-login',
@@ -23,6 +24,7 @@ export class DeviajeLoginComponent implements OnInit {
   private route: ActivatedRoute = inject(ActivatedRoute);
   private router: Router = inject(Router);
   private authService: AuthService = inject(AuthService);
+  private navigationService: NavigationService = inject(NavigationService);
 
   loading = false;
   submitted = false;
@@ -35,32 +37,38 @@ export class DeviajeLoginComponent implements OnInit {
     password: ['', Validators.required],
   });
 
-  // EN TU deviaje-login.component.ts
-
   constructor() {
-    // Obtener la URL de retorno de los parámetros de la ruta
-    const returnUrlFromQuery = this.route.snapshot.queryParams['returnUrl'];
-
-    if (returnUrlFromQuery) {
-      // Si hay returnUrl en query params, usarlo
-      this.returnUrl = returnUrlFromQuery;
-      console.log('ReturnUrl desde queryParams:', this.returnUrl);
+  const returnUrlFromQuery = this.route.snapshot.queryParams['returnUrl'];
+  
+  if (returnUrlFromQuery) {
+    // Caso 1: Viene de guard con queryParams (prioridad máxima)
+    this.returnUrl = returnUrlFromQuery;
+    console.log('🎯 ReturnUrl desde queryParams:', this.returnUrl);
+  } else {
+    // Caso 2: Leer desde localStorage
+    const savedReturnUrl = typeof localStorage !== 'undefined' 
+      ? localStorage.getItem('loginReturnUrl') 
+      : null;
+    
+    if (savedReturnUrl) {
+      this.returnUrl = savedReturnUrl;
+      console.log('💾 ReturnUrl desde localStorage:', this.returnUrl);
+      
+      // Limpiar localStorage después de usarlo
+      localStorage.removeItem('loginReturnUrl');
     } else {
-      // Si no hay query params, intentar obtener la URL anterior del historial
-      const previousUrl = document.referrer;
-
-      if (previousUrl && previousUrl.includes(window.location.origin)) {
-        // Extraer solo la parte de la ruta (sin dominio)
-        const url = new URL(previousUrl);
-        this.returnUrl = url.pathname;
-        console.log('ReturnUrl desde referrer:', this.returnUrl);
-      } else {
-        // Último fallback
-        this.returnUrl = '/home';
-        console.log('ReturnUrl fallback:', this.returnUrl);
-      }
+      // Caso 3: Fallback
+      this.returnUrl = '/home';
+      console.log('🎯 ReturnUrl fallback');
     }
   }
+
+  console.log('🏗️ LOGIN CONSTRUCTOR FINAL:', {
+    queryReturnUrl: returnUrlFromQuery,
+    savedReturnUrl: typeof localStorage !== 'undefined' ? localStorage.getItem('loginReturnUrl') : null,
+    finalReturnUrl: this.returnUrl
+  });
+}
 
   ngOnInit(): void {
     // Redirigir si ya está autenticado

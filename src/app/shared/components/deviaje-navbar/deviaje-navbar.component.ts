@@ -10,7 +10,7 @@ import {
   Output,
   ViewChild,
 } from '@angular/core';
-import { RouterModule } from '@angular/router';
+import { Router, RouterModule } from '@angular/router';
 import { Subscription } from 'rxjs';
 import { AuthService, User } from '../../../core/auth/services/auth.service';
 
@@ -24,6 +24,7 @@ import { AuthService, User } from '../../../core/auth/services/auth.service';
 export class DeviajeNavbarComponent implements OnInit, OnDestroy {
   private readonly authService: AuthService = inject(AuthService);
   private subscription = new Subscription();
+  private readonly router: Router = inject(Router);
 
   @Output() toggleSidebar = new EventEmitter<void>();
   @ViewChild('userMenuTrigger') userMenuTrigger!: ElementRef;
@@ -110,6 +111,18 @@ export class DeviajeNavbarComponent implements OnInit, OnDestroy {
     this.authService.logout().subscribe(() => {
       this.isUserMenuOpen = false;
     });
+  }
+
+  goToLogin(): void {
+    const currentUrl = this.router.url;
+
+    // Guardar la URL actual en localStorage
+    if (typeof localStorage !== 'undefined') {
+      localStorage.setItem('loginReturnUrl', currentUrl);
+    }
+
+    console.log('💾 Guardado en localStorage - returnUrl:', currentUrl);
+    this.router.navigate(['/user/login']);
   }
 
   hasMultipleRoles(): boolean {

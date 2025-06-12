@@ -343,9 +343,6 @@ export class AuthService {
 
     // Configurar auto-logout
     this.autoLogout(3600 * 1000);
-
-    // Redirigir según el rol activo
-    this.navigateToRoleHome(activeRole);
   }
 
   private clearSession(): void {
