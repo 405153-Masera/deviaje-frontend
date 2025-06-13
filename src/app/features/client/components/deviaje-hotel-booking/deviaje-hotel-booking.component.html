@@ -1,15 +1,14 @@
 <div class="container py-4">
   <!-- Verificando disponibilidad -->
-  @if (isVerifying) {
-    <div class="text-center py-5">
-      <div class="spinner-border text-primary mb-3" role="status">
-        <span class="visually-hidden">Verificando...</span>
-      </div>
-      <h5>Verificando disponibilidad de la tarifa...</h5>
-      <p class="text-muted">Un momento por favor</p>
+  <div *ngIf="isVerifying" class="text-center py-5">
+    <div class="spinner-border text-primary mb-3" role="status">
+      <span class="visually-hidden">Verificando...</span>
     </div>
-  } 
-    
+    <h5>Verificando disponibilidad de la tarifa...</h5>
+    <p class="text-muted">Un momento por favor</p>
+  </div>
+  
+  <div *ngIf="!isVerifying">
     <!-- Resumen del Hotel -->
     <app-deviaje-hotel-booking-summary
       [hotelDetails]="hotelDetails"
@@ -40,81 +39,83 @@
       
       <div class="card-body">
         <!-- Mensaje de error -->
-        @if (errorMessage) {
-          <div class="alert alert-danger">
-            <i class="bi bi-exclamation-triangle me-2"></i>
-            {{ errorMessage }}
-          </div>
-        }
+        <div *ngIf="errorMessage" class="alert alert-danger">
+          <i class="bi bi-exclamation-triangle me-2"></i>
+          {{ errorMessage }}
+        </div>
 
-        <form [formGroup]="mainForm">
+        <!-- Mensaje de éxito -->
+        <div *ngIf="showSuccessMessage" class="alert alert-success text-center">
+          <i class="bi bi-check-circle-fill me-2"></i>
+          <h5 class="mb-2">¡Reserva confirmada!</h5>
+          <p class="mb-2">Su reserva ha sido procesada exitosamente.</p>
+          <p class="mb-0"><strong>Referencia:</strong> {{ bookingReference }}</p>
+          <small class="text-muted">Será redirigido automáticamente en unos segundos...</small>
+        </div>
+
+        <form [formGroup]="mainForm" *ngIf="!showSuccessMessage">
           
-          <!-- PASO 1: Información del Pasajero y Contacto -->
-          @if (currentStep === 1) {
+          <!-- PASO 1: Información del Huésped y Contacto -->
+          <div *ngIf="currentStep === 1">
+            <h5 class="card-title mb-4">Información del huésped</h5>
             
             <!-- Selección de tipo de reserva (solo para agentes) -->
-            @if (showUserSelection) {
-              <div class="card mb-4">
-                <div class="card-header bg-info text-white">
-                  <h6 class="mb-0">
-                    <i class="bi bi-person-check me-2"></i>
-                    Tipo de reserva
-                  </h6>
-                </div>
-                <div class="card-body">
-                  <div class="row">
-                    <div class="col-md-6">
-                      <div class="form-check">
-                        <input class="form-check-input" type="radio" 
-                               [checked]="isGuestBooking" 
-                               (change)="onBookingTypeChange(true)"
-                               id="guestBooking">
-                        <label class="form-check-label" for="guestBooking">
-                          <strong>Reserva para invitado</strong>
-                          <br><small class="text-muted">Cliente no registrado</small>
-                        </label>
-                      </div>
-                    </div>
-                    <div class="col-md-6">
-                      <div class="form-check">
-                        <input class="form-check-input" type="radio" 
-                               [checked]="!isGuestBooking" 
-                               (change)="onBookingTypeChange(false)"
-                               id="userBooking">
-                        <label class="form-check-label" for="userBooking">
-                          <strong>Reserva para usuario registrado</strong>
-                          <br><small class="text-muted">Buscar cliente existente</small>
-                        </label>
-                      </div>
+            <div *ngIf="showUserSelection" class="card mb-4">
+              <div class="card-header bg-info text-white">
+                <h6 class="mb-0">
+                  <i class="bi bi-person-check me-2"></i>
+                  Tipo de reserva
+                </h6>
+              </div>
+              <div class="card-body">
+                <div class="row">
+                  <div class="col-md-6">
+                    <div class="form-check">
+                      <input class="form-check-input" type="radio" 
+                             [checked]="isGuestBooking" 
+                             (change)="onBookingTypeChange(true)"
+                             id="guestBooking">
+                      <label class="form-check-label" for="guestBooking">
+                        <strong>Reserva para invitado</strong>
+                        <br><small class="text-muted">Cliente no registrado</small>
+                      </label>
                     </div>
                   </div>
-                  
-                  <!-- Búsqueda de usuario (cuando no es guest booking) -->
-                  @if (!isGuestBooking) {
-                    <div class="mt-3">
-                      <label class="form-label">Buscar cliente por nombre de usuario</label>
-                      <div class="input-group">
-                        <input type="text" class="form-control" 
-                               placeholder="Nombre de usuario del cliente"
-                               #userSearchInput>
-                        <button class="btn btn-outline-secondary" type="button"
-                                (click)="onUserSelected(userSearchInput.value)">
-                          <i class="bi bi-search"></i> Buscar
-                        </button>
-                      </div>
-                      @if (selectedClientId) {
-                        <div class="alert alert-success mt-2">
-                          <i class="bi bi-check-circle me-2"></i>
-                          Cliente seleccionado (ID: {{ selectedClientId }})
-                        </div>
-                      }
+                  <div class="col-md-6">
+                    <div class="form-check">
+                      <input class="form-check-input" type="radio" 
+                             [checked]="!isGuestBooking" 
+                             (change)="onBookingTypeChange(false)"
+                             id="userBooking">
+                      <label class="form-check-label" for="userBooking">
+                        <strong>Reserva para usuario registrado</strong>
+                        <br><small class="text-muted">Buscar cliente existente</small>
+                      </label>
                     </div>
-                  }
+                  </div>
+                </div>
+                
+                <!-- Búsqueda de usuario (cuando no es guest booking) -->
+                <div *ngIf="!isGuestBooking" class="mt-3">
+                  <label class="form-label">Buscar cliente por nombre de usuario</label>
+                  <div class="input-group">
+                    <input type="text" class="form-control" 
+                           placeholder="Nombre de usuario del cliente"
+                           #userSearchInput>
+                    <button class="btn btn-outline-secondary" type="button"
+                            (click)="onUserSelected(userSearchInput.value)">
+                      <i class="bi bi-search"></i> Buscar
+                    </button>
+                  </div>
+                  <div *ngIf="selectedClientId" class="alert alert-success mt-2">
+                    <i class="bi bi-check-circle me-2"></i>
+                    Cliente seleccionado (ID: {{ selectedClientId }})
+                  </div>
                 </div>
               </div>
-            }
+            </div>
             
-            <!-- Información del Pasajero Principal -->
+            <!-- Información del Huésped Principal -->
             <div class="card mb-4">
               <div class="card-header bg-primary text-white">
                 <h6 class="mb-0">
@@ -124,161 +125,154 @@
               </div>
               <div class="card-body">
                 <div formArrayName="travelers">
-                  @for (travelerForm of travelers.controls; track $index) {
-                    <div [formGroupName]="$index">
-                      <div class="row">
-                        <div class="col-md-6 mb-3">
-                          <label class="form-label">Nombre <span class="text-danger">*</span></label>
-                          <input type="text" class="form-control" 
-                                 formControlName="firstName"
-                                 [class.is-invalid]="travelerForm.get('firstName')?.invalid && travelerForm.get('firstName')?.touched"
-                                 placeholder="Nombre">
-                          <div class="invalid-feedback">
-                            El nombre es obligatorio
-                          </div>
-                        </div>
-                        <div class="col-md-6 mb-3">
-                          <label class="form-label">Apellido <span class="text-danger">*</span></label>
-                          <input type="text" class="form-control" 
-                                 formControlName="lastName"
-                                 [class.is-invalid]="travelerForm.get('lastName')?.invalid && travelerForm.get('lastName')?.touched"
-                                 placeholder="Apellido">
-                          <div class="invalid-feedback">
-                            El apellido es obligatorio
-                          </div>
-                        </div>
-                      </div>
+                  <div *ngFor="let travelerForm of travelers.controls; let i = index" [formGroupName]="i">
+                    <app-deviaje-traveler-form 
+                      [travelerForm]="getTravelerFormGroup(i)" 
+                      [isPrimaryTraveler]="true"
+                      mode="hotel">
+                    </app-deviaje-traveler-form>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- PASO 2: Información de pago -->
+          <div *ngIf="currentStep === 2">
+            <h5 class="card-title mb-4">Información de pago</h5>
+            <div *ngIf="mainForm.get('payment')">
+              <app-deviaje-payments-form 
+                [paymentForm]="paymentFormGroup" 
+                [amount]="rate.net || '0'" 
+                [currency]="searchParams?.currency || 'EUR'">
+              </app-deviaje-payments-form>
+            </div>
+          </div>
+
+          <!-- PASO 3: Confirmación de la reserva -->
+          <div *ngIf="currentStep === 3">
+            <h5 class="card-title mb-4">Confirmación de la reserva</h5>
+            
+            <div class="alert alert-info">
+              <i class="bi bi-info-circle-fill me-2"></i>
+              Por favor revisa la información antes de confirmar la reserva.
+            </div>
+
+            <!-- Resumen de la reserva -->
+            <div class="row">
+              <!-- Información del hotel -->
+              <div class="col-md-6">
+                <div class="card mb-3">
+                  <div class="card-header bg-light">
+                    <h6 class="mb-0">Detalles del hotel</h6>
+                  </div>
+                  <div class="card-body">
+                    <h6>{{ hotelDetails?.name || 'Hotel' }}</h6>
+                    <p class="text-muted mb-2">{{ nameRoom }}</p>
+                    <small class="text-muted">
+                      <i class="bi bi-calendar-check me-1"></i>
+                      Check-in: {{ searchParams?.stay?.checkIn | date:'dd/MM/yyyy' }}
+                    </small><br>
+                    <small class="text-muted">
+                      <i class="bi bi-calendar-x me-1"></i>
+                      Check-out: {{ searchParams?.stay?.checkOut | date:'dd/MM/yyyy' }}
+                    </small>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Información del huésped -->
+              <div class="col-md-6">
+                <div class="card mb-3">
+                  <div class="card-header bg-light">
+                    <h6 class="mb-0">Información del huésped</h6>
+                  </div>
+                  <div class="card-body">
+                    <div *ngFor="let traveler of travelers.controls; let i = index">
+                      <p class="mb-1">
+                        <strong>{{ traveler.get('firstName')?.value }} {{ traveler.get('lastName')?.value }}</strong>
+                      </p>
+                      <small class="text-muted">
+                        Email: {{ traveler.get('contact')?.get('emailAddress')?.value }}
+                      </small><br>
+                      <small class="text-muted">
+                        Teléfono: {{ traveler.get('contact')?.get('phones')?.get('0')?.get('number')?.value }}
+                      </small>
                     </div>
-                  }
+                  </div>
                 </div>
               </div>
             </div>
 
-            <!-- Información de Contacto -->
-            <div class="card mb-4">
-              <div class="card-header bg-secondary text-white">
-                <h6 class="mb-0">
-                  <i class="bi bi-telephone me-2"></i>
-                  Información de contacto
-                </h6>
-              </div>
-              <div class="card-body" formGroupName="contact">
-                <div class="row">
-                  <div class="col-md-6 mb-3">
-                    <label class="form-label">Email <span class="text-danger">*</span></label>
-                    <input type="email" class="form-control" 
-                           formControlName="email"
-                           [class.is-invalid]="mainForm.get('contact')?.get('email')?.invalid && mainForm.get('contact')?.get('email')?.touched"
-                           placeholder="correo@ejemplo.com">
-                    <div class="invalid-feedback">
-                      Ingrese un email válido
-                    </div>
-                  </div>
-                  <div class="col-md-6 mb-3">
-                    <label class="form-label">Teléfono <span class="text-danger">*</span></label>
-                    <input type="tel" class="form-control" 
-                           formControlName="phone"
-                           [class.is-invalid]="mainForm.get('contact')?.get('phone')?.invalid && mainForm.get('contact')?.get('phone')?.touched"
-                           placeholder="+54 11 1234-5678">
-                    <div class="invalid-feedback">
-                      El teléfono es obligatorio
-                    </div>
-                  </div>
-                </div>
-                <div class="alert alert-info">
-                  <i class="bi bi-info-circle me-2"></i>
-                  <small>Esta información será utilizada para confirmaciones y contacto sobre su reserva.</small>
-                </div>
-              </div>
-            </div>
-          }
-
-          <!-- PASO 2: Pago -->
-          @if (currentStep === 2) {
-            <div class="card mb-4">
+            <!-- Resumen de precios -->
+            <div class="card">
               <div class="card-header bg-success text-white">
                 <h6 class="mb-0">
                   <i class="bi bi-credit-card me-2"></i>
-                  Información de pago
+                  Resumen de precios
                 </h6>
               </div>
               <div class="card-body">
-                <!-- <app-deviaje-payments-form aca fijate bien como se implementa en flight booking
-                  [paymentForm]="mainForm.get('payment')"
-                  [amount]="mainForm.get('payment')?.get('amount')?.value || 0"
-                  [currency]="mainForm.get('payment')?.get('currency')?.value || 'EUR'">
-                </app-deviaje-payments-form> -->
-              </div>
-            </div>
-          }
-
-          <!-- PASO 3: Confirmación -->
-          @if (currentStep === 3 && showSuccessMessage) {
-            <div class="text-center py-5">
-              <div class="mb-4">
-                <i class="bi bi-check-circle-fill text-success" style="font-size: 4rem;"></i>
-              </div>
-              <h3 class="text-success mb-3">¡Reserva confirmada!</h3>
-              <p class="lead mb-4">Tu reserva se ha procesado exitosamente</p>
-              
-              @if (bookingReference) {
-                <div class="alert alert-info">
-                  <strong>Número de reserva:</strong> {{ bookingReference }}
+                <div class="d-flex justify-content-between align-items-center">
+                  <span class="fs-5">Total a pagar:</span>
+                  <span class="fs-4 fw-bold text-success">
+                    {{ rate.net| currency:(searchParams?.currency || 'EUR'):'symbol':'1.2-2' }}
+                  </span>
                 </div>
-              }
-              
-              <div class="d-flex gap-3 justify-content-center">
-                <button type="button" class="btn btn-primary" (click)="goToBookings()">
-                  <i class="bi bi-list-ul me-2"></i>
-                  Ver mis reservas
-                </button>
-                <button type="button" class="btn btn-outline-primary" (click)="goToSearch()">
-                  <i class="bi bi-search me-2"></i>
-                  Nueva búsqueda
-                </button>
               </div>
             </div>
-          }
+          </div>
 
+          <!-- Botones de navegación -->
+          <div class="d-flex justify-content-between mt-4">
+            <div>
+              <button *ngIf="currentStep > 1 && !showSuccessMessage" 
+                      type="button" 
+                      class="btn btn-secondary me-2" 
+                      (click)="previousStep()">
+                <i class="bi bi-arrow-left me-1"></i>
+                Anterior
+              </button>
+              <button *ngIf="currentStep === 1" 
+                      type="button" 
+                      class="btn btn-outline-secondary" 
+                      (click)="goToSearch()">
+                <i class="bi bi-search me-1"></i>
+                Nueva búsqueda
+              </button>
+            </div>
+            
+            <div>
+              <button *ngIf="currentStep < totalSteps && !showSuccessMessage" 
+                      type="button" 
+                      class="btn btn-primary" 
+                      (click)="nextStep()"
+                      [disabled]="!validateCurrentStep()">
+                Continuar
+                <i class="bi bi-arrow-right ms-1"></i>
+              </button>
+              
+              <button *ngIf="currentStep === totalSteps && !showSuccessMessage" 
+                      type="button" 
+                      class="btn btn-success" 
+                      (click)="submitBooking()"
+                      [disabled]="isLoading">
+                <span *ngIf="isLoading" class="spinner-border spinner-border-sm me-2"></span>
+                <i *ngIf="!isLoading" class="bi bi-check-circle me-1"></i>
+                {{ isLoading ? 'Procesando...' : 'Confirmar reserva' }}
+              </button>
+
+              <button *ngIf="showSuccessMessage" 
+                      type="button" 
+                      class="btn btn-primary" 
+                      (click)="goToBookings()">
+                <i class="bi bi-list-ul me-1"></i>
+                Ver mis reservas
+              </button>
+            </div>
+          </div>
         </form>
       </div>
-      
-      <!-- Botones de navegación -->
-      @if (currentStep < 3 || !showSuccessMessage) {
-        <div class="card-footer bg-light">
-          <div class="d-flex justify-content-between">
-            <button type="button" class="btn btn-outline-secondary" 
-                    [disabled]="currentStep === 1" 
-                    (click)="previousStep()">
-              <i class="bi bi-arrow-left me-2"></i>
-              Anterior
-            </button>
-            
-            @if (currentStep < 2) {
-              <button type="button" class="btn btn-primary" 
-                      [disabled]="!validateCurrentStep()"
-                      (click)="nextStep()" ><!--(click)="submitBooking()" falta esto--> 
-                Siguiente
-                <i class="bi bi-arrow-right ms-2"></i>
-              </button>
-            } @else if (currentStep === 2) {
-              <button type="button" class="btn btn-success" 
-                      [disabled]="isLoading || !validateCurrentStep()"> 
-                @if (isLoading) {
-                  <span class="spinner-border spinner-border-sm me-2" role="status"></span>
-                  Procesando...
-                } @else {
-                  <i class="bi bi-credit-card me-2"></i>
-                  Confirmar reserva
-                }
-              </button>
-            }
-          </div>
-        </div>
-      }
     </div>
- 
+  </div>
 </div>
-
-
-<!--(click)="submitBooking()" -->
