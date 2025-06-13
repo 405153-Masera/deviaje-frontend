@@ -20,7 +20,7 @@
 
     <!-- Proceso de Reserva -->
     <div class="card">
-      <div class="card-header bg-light">
+      <div class="card-header bg-primary text-white">
         <div class="d-flex justify-content-between align-items-center">
           <h5 class="mb-0">Proceso de reserva</h5>
           <div class="d-flex align-items-center">
@@ -57,7 +57,7 @@
           
           <!-- PASO 1: Información del Huésped y Contacto -->
           <div *ngIf="currentStep === 1">
-            <h5 class="card-title mb-4">Información del huésped</h5>
+            <h5 class="card-title mb-4">Información de los húespedes</h5>
             
             <!-- Selección de tipo de reserva (solo para agentes) -->
             <div *ngIf="showUserSelection" class="card mb-4">

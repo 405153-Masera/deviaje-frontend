@@ -107,6 +107,22 @@ export class DeviajeHotelBookingComponent implements OnInit, OnDestroy {
     this.loadBookingData();
     this.loadCurrentUser();
     this.initializeBookingFlow();
+
+    this.subscription.add(
+      this.authService.activeRole$.subscribe((role) => {
+        console.log('Active role:', role);
+        this.userRole = role || '';
+        this.checkRoleAccess(); // Nuevo método
+      })
+    );
+  }
+
+  private checkRoleAccess(): void {
+    if (this.userRole === 'ADMINISTRADOR') {
+      // Redirigir al admin, no permitir acceso
+      this.router.navigate(['/home']);
+      return;
+    }
   }
 
   ngOnDestroy(): void {
@@ -123,7 +139,10 @@ export class DeviajeHotelBookingComponent implements OnInit, OnDestroy {
       this.nameRoom = state.nameRoom || '';
       this.rate = state.rate;
       this.rateKey = state.rateKey || '';
+      console.log('Rate key:', this.rateKey);
       this.recheck = state.recheck || false;
+      console.log('Rate:', state.recheck);
+      console.log('Recheck status:', this.recheck);
       this.searchParams = state.searchParams;
 
       console.log('Booking data loaded:', state);
@@ -156,27 +175,40 @@ export class DeviajeHotelBookingComponent implements OnInit, OnDestroy {
 
   // Setup booking flow based on user role
   setupBookingBasedOnRole(): void {
-    if (!this.isLoggedIn) {
-      // Usuario no logueado - reserva como invitado
-      this.isGuestBooking = true;
-      this.showUserSelection = false;
-      this.setupTravelersForm();
-    } else if (this.userRole === 'CLIENTE') {
-      // Cliente logueado - auto-llenar datos
-      this.isGuestBooking = false;
-      this.selectedClientId = this.currentUser.id;
-      this.showUserSelection = false;
-      this.setupTravelersForm();
-      this.prefillUserData();
-    } else if (
-      this.userRole === 'AGENTE' ||
-      this.userRole === 'ADMINISTRADOR'
-    ) {
-      // Agente/Admin - mostrar opciones
-      this.showUserSelection = true;
-      this.setupTravelersForm();
-    }
+
+    console.log('Setting up booking based on role:', this.userRole);
+  if (this.userRole === 'ADMINISTRADOR') {
+    this.router.navigate(['/home']);
+    return;
   }
+
+  console.log('Usuario logueado:', this.isLoggedIn);
+  
+  if (!this.isLoggedIn) {
+    // Usuario no logueado - reserva como invitado
+    this.isGuestBooking = true;
+    this.showUserSelection = false;
+    this.setupTravelersForm();
+  } else if (this.userRole === 'CLIENTE') {
+    // Cliente logueado - NO mostrar selector, auto-llenar
+    this.isGuestBooking = false;
+    this.selectedClientId = this.currentUser.id;
+    this.showUserSelection = false; // CLIENTE no ve selector
+    this.setupTravelersForm();
+    this.prefillUserData();
+    this.loadUserDataFromBackend(); // Nuevo método
+  } else if (this.userRole === 'AGENTE') {
+    // Solo AGENTE ve el selector
+    this.showUserSelection = true;
+    this.setupTravelersForm();
+  }
+}
+
+// Agregar método para cargar datos del backend
+private loadUserDataFromBackend(): void {
+  // TODO: Llamar al getUserById del backend para auto-llenar
+  console.log('Loading user data for client:', this.currentUser.id);
+}
 
   // Initialize booking flow
   initializeBookingFlow(): void {
