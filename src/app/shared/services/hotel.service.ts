@@ -40,19 +40,4 @@ export class HotelService {
         })
       );
   }
-
-  /**
-   * Verifica la disponibilidad y precio de una tarifa
-   * @param rateKey Clave de la tarifa a verificar
-   * @returns Observable con la información actualizada de la tarifa
-   */
-  checkRates(rateKey: string): Observable<any> {
-    return this.http.get<any>(`${this.url}/checkrates/${rateKey}`)
-      .pipe(
-        catchError(error => {
-          console.error('Error al verificar tarifa:', error);
-          return throwError(() => new Error('Error al verificar tarifa: ' + (error.message || 'Esta tarifa ya no está disponible')));
-        })
-      );
-  }
 }

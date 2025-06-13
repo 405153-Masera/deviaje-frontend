@@ -44,6 +44,12 @@ export class DeviajeHotelBookingComponent implements OnInit, OnDestroy {
   @ViewChild(DeviajePaymentsFormComponent)
   paymentComponent!: DeviajePaymentsFormComponent;
 
+  //Datos para sessionStorage
+  private readonly BOOKING_STATE_KEY = 'hotel_booking_state';
+  private readonly FORM_DATA_KEY = 'hotel_booking_form_data';
+  private readonly CURRENT_STEP_KEY = 'hotel_booking_current_step';
+  private isReloadedSession = false;
+
   // Injected services
   private readonly fb = inject(FormBuilder);
   private readonly router = inject(Router);
@@ -98,35 +104,136 @@ export class DeviajeHotelBookingComponent implements OnInit, OnDestroy {
       ],
       cvv: ['', [Validators.required, Validators.pattern(/^\d{3,4}$/)]],
       amount: [0, Validators.required],
-      currency: ['USD', Validators.required],
+      currency: ['ARS', Validators.required],
       paymentToken: [''],
+      payerDni: [
+        '',
+        [
+          Validators.required,
+          Validators.pattern(/^\d{7,8}$/),
+          Validators.minLength(7),
+        ],
+      ],
     }),
   });
 
   ngOnInit(): void {
-    this.loadBookingData();
+    if (typeof window !== 'undefined') {
+      this.loadPersistedState();
+    }
+
+    // Si no hay datos persistidos, cargar desde el state del router
+    if (!this.isReloadedSession) {
+      this.loadBookingData();
+    }
+
     this.loadCurrentUser();
     this.initializeBookingFlow();
 
+    this.setupFormPersistence();
+  }
+
+  ngOnDestroy(): void {
+    // CAMBIAR: Limpiar datos de sessionStorage cuando se destruye el componente
+    if (typeof window !== 'undefined') {
+      this.clearPersistedState();
+    }
+    this.subscription.unsubscribe();
+    this.isReloadedSession = false;
+  }
+
+  // ===== MÉTODOS DE PERSISTENCIA (copiados de flight booking) =====
+
+  private loadPersistedState(): void {
+    try {
+      // Cargar el paso actual
+      const savedStep = sessionStorage.getItem(this.CURRENT_STEP_KEY);
+      if (savedStep) {
+        this.currentStep = parseInt(savedStep, 10);
+        this.isReloadedSession = true;
+      }
+
+      // Cargar los datos del estado de la reserva
+      const savedState = sessionStorage.getItem(this.BOOKING_STATE_KEY);
+      if (savedState) {
+        const state = JSON.parse(savedState);
+        this.hotelDetails = state.hotelDetails;
+        this.hotel = state.hotel;
+        this.nameRoom = state.nameRoom;
+        this.rate = state.rate;
+        this.rateKey = state.rateKey;
+        this.recheck = state.recheck;
+        this.searchParams = state.searchParams;
+
+        console.log('Hotel booking state restored from sessionStorage');
+      }
+
+      // Cargar los datos del formulario
+      const savedFormData = sessionStorage.getItem(this.FORM_DATA_KEY);
+      if (savedFormData) {
+        const formData = JSON.parse(savedFormData);
+        this.mainForm.patchValue(formData);
+        console.log('Hotel booking form data restored from sessionStorage');
+      }
+    } catch (error) {
+      console.error('Error al cargar estado persistido:', error);
+    }
+  }
+
+  private saveBookingState(): void {
+    try {
+      const state = {
+        hotelDetails: this.hotelDetails,
+        hotel: this.hotel,
+        nameRoom: this.nameRoom,
+        rate: this.rate,
+        rateKey: this.rateKey,
+        recheck: this.recheck,
+        searchParams: this.searchParams,
+      };
+      sessionStorage.setItem(this.BOOKING_STATE_KEY, JSON.stringify(state));
+    } catch (error) {
+      console.error('Error al guardar estado de reserva:', error);
+    }
+  }
+
+  private setupFormPersistence(): void {
+    // Guardar cambios del formulario automáticamente
     this.subscription.add(
-      this.authService.activeRole$.subscribe((role) => {
-        console.log('Active role:', role);
-        this.userRole = role || '';
-        this.checkRoleAccess(); // Nuevo método
+      this.mainForm.valueChanges.subscribe(() => {
+        this.saveFormData();
       })
     );
   }
 
-  private checkRoleAccess(): void {
-    if (this.userRole === 'ADMINISTRADOR') {
-      // Redirigir al admin, no permitir acceso
-      this.router.navigate(['/home']);
-      return;
+  private saveFormData(): void {
+    try {
+      const formData = this.mainForm.value;
+      sessionStorage.setItem(this.FORM_DATA_KEY, JSON.stringify(formData));
+    } catch (error) {
+      console.error('Error al guardar datos del formulario:', error);
     }
   }
 
-  ngOnDestroy(): void {
-    this.subscription.unsubscribe();
+  private saveCurrentStep(): void {
+    try {
+      sessionStorage.setItem(
+        this.CURRENT_STEP_KEY,
+        this.currentStep.toString()
+      );
+    } catch (error) {
+      console.error('Error al guardar paso actual:', error);
+    }
+  }
+
+  private clearPersistedState(): void {
+    try {
+      sessionStorage.removeItem(this.BOOKING_STATE_KEY);
+      sessionStorage.removeItem(this.FORM_DATA_KEY);
+      sessionStorage.removeItem(this.CURRENT_STEP_KEY);
+    } catch (error) {
+      console.error('Error al limpiar estado persistido:', error);
+    }
   }
 
   // Load data from router state
@@ -140,7 +247,7 @@ export class DeviajeHotelBookingComponent implements OnInit, OnDestroy {
       this.rate = state.rate;
       this.rateKey = state.rateKey || '';
       console.log('Rate key:', this.rateKey);
-      this.recheck = state.recheck || false;
+      this.recheck = state.recheck;
       console.log('Rate:', state.recheck);
       console.log('Recheck status:', this.recheck);
       this.searchParams = state.searchParams;
@@ -159,56 +266,68 @@ export class DeviajeHotelBookingComponent implements OnInit, OnDestroy {
         next: (user) => {
           this.currentUser = user;
           this.isLoggedIn = !!user;
-          this.userRole = user?.roles?.[0] || '';
 
-          console.log('Usuario sellecionado:', user);
-          this.setupBookingBasedOnRole();
+          console.log('Usuario selecionado:', user);
         },
         error: (error) => {
           console.log('Usuario no logueado');
           this.isLoggedIn = false;
-          this.setupBookingBasedOnRole();
         },
+      })
+    );
+
+    this.subscription.add(
+      this.authService.activeRole$.subscribe((role) => {
+        console.log('Active role changed to:', role);
+        this.userRole = role || '';
+        this.setupBookingBasedOnRole(); // Actualizar vista cuando cambie el rol
       })
     );
   }
 
   // Setup booking flow based on user role
   setupBookingBasedOnRole(): void {
-
     console.log('Setting up booking based on role:', this.userRole);
-  if (this.userRole === 'ADMINISTRADOR') {
-    this.router.navigate(['/home']);
-    return;
+    if (this.userRole === 'ADMINISTRADOR') {
+      this.router.navigate(['/home']);
+      return;
+    }
+
+    console.log('Usuario logueado:', this.isLoggedIn);
+
+    if (!this.isLoggedIn) {
+      // Usuario no logueado - reserva como invitado
+      this.isGuestBooking = true;
+      this.showUserSelection = false;
+      this.setupTravelersForm();
+    } else if (this.userRole === 'CLIENTE') {
+      // Cliente logueado - NO mostrar selector, auto-llenar
+      this.isGuestBooking = false;
+      this.selectedClientId = this.currentUser.id;
+      this.showUserSelection = false; // CLIENTE no ve selector
+      this.setupTravelersForm();
+      this.prefillUserData();
+      this.loadUserDataFromBackend(); // Nuevo método
+    } else if (this.userRole === 'AGENTE') {
+      // Solo AGENTE ve el selector
+      this.showUserSelection = true;
+      this.isGuestBooking = true;
+      this.setupTravelersForm();
+    }
+
+    console.log(
+      'Updated flags - showUserSelection:',
+      this.showUserSelection,
+      'isGuestBooking:',
+      this.isGuestBooking
+    );
   }
 
-  console.log('Usuario logueado:', this.isLoggedIn);
-  
-  if (!this.isLoggedIn) {
-    // Usuario no logueado - reserva como invitado
-    this.isGuestBooking = true;
-    this.showUserSelection = false;
-    this.setupTravelersForm();
-  } else if (this.userRole === 'CLIENTE') {
-    // Cliente logueado - NO mostrar selector, auto-llenar
-    this.isGuestBooking = false;
-    this.selectedClientId = this.currentUser.id;
-    this.showUserSelection = false; // CLIENTE no ve selector
-    this.setupTravelersForm();
-    this.prefillUserData();
-    this.loadUserDataFromBackend(); // Nuevo método
-  } else if (this.userRole === 'AGENTE') {
-    // Solo AGENTE ve el selector
-    this.showUserSelection = true;
-    this.setupTravelersForm();
+  // Agregar método para cargar datos del backend
+  private loadUserDataFromBackend(): void {
+    // TODO: Llamar al getUserById del backend para auto-llenar
+    console.log('Loading user data for client:', this.currentUser.id);
   }
-}
-
-// Agregar método para cargar datos del backend
-private loadUserDataFromBackend(): void {
-  // TODO: Llamar al getUserById del backend para auto-llenar
-  console.log('Loading user data for client:', this.currentUser.id);
-}
 
   // Initialize booking flow
   initializeBookingFlow(): void {
@@ -226,10 +345,44 @@ private loadUserDataFromBackend(): void {
     this.errorMessage = '';
 
     this.subscription.add(
-      this.bookingService.checkHotelRate(this.rateKey).subscribe({
+      this.bookingService.checkRates(this.rateKey).subscribe({
         next: (response) => {
           console.log('Rate verification successful:', response);
           this.isVerifying = false;
+          this.setupPaymentAmount();
+
+          if (
+            response &&
+            response.hotel &&
+            response.hotel.rooms &&
+            response.hotel.rooms.length > 0
+          ) {
+            const room = response.hotel.rooms[0];
+            if (room.rates && room.rates.length > 0) {
+              const newRate = room.rates[0];
+
+              // Verificar si el precio cambió
+              const oldPrice = this.rate?.net || 0;
+              const newPrice = parseFloat(newRate.net) || 0;
+
+              if (oldPrice !== newPrice) {
+                console.log('Price changed from', oldPrice, 'to', newPrice);
+
+                // Crear nuevo objeto rate con la estructura correcta
+                this.rate = {
+                  ...this.rate,
+                  net: newPrice,
+                  rateKey: newRate.rateKey
+                };
+
+                // Actualizar el precio en el formulario
+                this.setupPaymentAmount();
+              } else {
+                console.log('Price confirmed:', newPrice);
+              }
+            }
+          }
+          // Continuar con el flujo normal
           this.setupPaymentAmount();
         },
         error: (error) => {
@@ -355,12 +508,17 @@ private loadUserDataFromBackend(): void {
   // Setup payment amount
   setupPaymentAmount(): void {
     if (this.rate) {
-      const net = (this.rate as any)?.net || 0;
+      const net = parseFloat(this.rate.net as any) || 0;
       this.mainForm.get('payment')?.patchValue({
         amount: net,
-        currency: this.searchParams?.currency || 'EUR',
+        currency: this.searchParams?.currency || 'USD',
       });
     }
+
+    //console.log('Payment amount set to:', net, this.searchParams?.currency || 'EUR');
+
+    // Guardar estado actualizado
+    this.saveBookingState();
   }
 
   // Getters for form arrays
@@ -369,20 +527,58 @@ private loadUserDataFromBackend(): void {
   }
 
   // Navigation between steps
-  nextStep(): void {
-    if (this.validateCurrentStep()) {
-      this.currentStep++;
+  async nextStep(): Promise<void> {
+    if (this.currentStep < this.totalSteps) {
+      // Validar el paso actual antes de avanzar
+      if (this.validateCurrentStep()) {
+        if (this.currentStep === 2) {
+          // Generar el token de pago antes de avanzar al paso 3
+          if (!this.paymentComponent) {
+            this.errorMessage = 'El componente de pago no está disponible';
+            console.error('paymentComponent es undefined');
+            return;
+          }
+          try {
+            const paymentToken =
+              await this.paymentComponent.requestPaymentToken();
+            if (!paymentToken) {
+              this.errorMessage = 'No se pudo generar el token de pago';
+              return;
+            }
+            // Guardar el token en el formulario
+            this.mainForm
+              .get('payment')
+              ?.get('paymentToken')
+              ?.setValue(paymentToken);
+            console.log('Token de pago generado en paso 2:', paymentToken);
+          } catch (error: any) {
+            this.errorMessage =
+              error.message || 'Error al generar el token de pago';
+            console.error('Error al generar token:', error);
+            return;
+          }
+        }
+        this.currentStep++;
+        this.saveCurrentStep(); // Guardar el paso actual en sessionStorage
+        console.log('Avanzando al paso:', this.currentStep);
+      } else {
+        console.log('Validación fallida para el paso:', this.currentStep);
+        this.errorMessage =
+          'Por favor, complete todos los campos requeridos correctamente.';
+      }
     }
   }
 
   previousStep(): void {
     if (this.currentStep > 1) {
       this.currentStep--;
+      this.saveCurrentStep(); // AGREGAR
     }
   }
 
   // Validation for current step
   validateCurrentStep(): boolean {
+    console.log('Validating step:', this.currentStep);
     switch (this.currentStep) {
       case 1: // Travelers and contact
         return this.validateTravelersAndContact();
@@ -394,17 +590,57 @@ private loadUserDataFromBackend(): void {
   }
 
   validateTravelersAndContact(): boolean {
+    console.log('=== VALIDATING TRAVELERS AND CONTACT ===');
+
     // Mark travelers as touched
-    this.travelers.controls.forEach((control) => {
-      control.markAllAsTouched();
+    this.travelers.controls.forEach((control, index) => {
+      if (control) {
+        control.markAllAsTouched();
+        console.log(`Traveler ${index} valid:`, control.valid);
+
+        if (control instanceof FormGroup) {
+          const errors = this.getFormGroupErrors(control);
+          if (errors) {
+            console.log(`Traveler ${index} errors:`, errors);
+          }
+        }
+      }
     });
 
-    // Mark contact as touched
-    this.mainForm.get('contact')?.markAllAsTouched();
+    console.log('Travelers array valid:', this.travelers.valid);
+    console.log('Travelers array errors:', this.travelers.errors);
 
-    return (
-      (this.travelers.valid && this.mainForm.get('contact')?.valid) || false
-    );
+    const isValid = this.travelers.valid;
+    console.log('Final validation result:', isValid);
+
+    return isValid;
+  }
+
+  // Agregar este método helper para mostrar errores detallados
+  private getFormGroupErrors(formGroup: FormGroup): any {
+    if (!formGroup) return null;
+
+    let formErrors: any = {};
+
+    Object.keys(formGroup.controls).forEach((key) => {
+      const control = formGroup.get(key);
+      if (!control) return;
+
+      const controlErrors = control.errors;
+      if (controlErrors) {
+        formErrors[key] = controlErrors;
+      }
+
+      // Si es un FormGroup anidado, obtener sus errores también
+      if (control instanceof FormGroup) {
+        const nestedErrors = this.getFormGroupErrors(control);
+        if (nestedErrors && Object.keys(nestedErrors).length > 0) {
+          formErrors[key + '_nested'] = nestedErrors;
+        }
+      }
+    });
+
+    return Object.keys(formErrors).length > 0 ? formErrors : null;
   }
 
   validatePayment(): boolean {
@@ -545,7 +781,7 @@ private loadUserDataFromBackend(): void {
     const paymentData = this.mainForm.get('payment')?.value;
 
     return {
-      amount: paymentData.amount,
+      amount: parseFloat(paymentData.amount) || 0,
       currency: paymentData.currency,
       paymentMethod: 'mercado_pago',
       paymentToken: paymentToken,

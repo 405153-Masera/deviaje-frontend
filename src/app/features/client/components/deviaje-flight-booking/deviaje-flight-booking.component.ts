@@ -19,6 +19,7 @@ import {
 import { DeviajeTravelerFormComponent } from '../deviaje-traveler-form/deviaje-traveler-form.component';
 import { DeviajePaymentsFormComponent } from '../deviaje-payments-form/deviaje-payments-form.component';
 import { AuthService } from '../../../../core/auth/services/auth.service';
+import { Subscription } from 'rxjs';
 
 @Component({
   selector: 'app-deviaje-flight-booking',
@@ -50,6 +51,7 @@ export class DeviajeFlightBookingComponent implements OnInit, OnDestroy {
   private bookingService = inject(BookingService);
   private authService = inject(AuthService);
   readonly flightUtils = inject(FlightUtilsService);
+  subscription = new Subscription();
 
   flightOffer: FlightOfferDto | null = null;
   selectedOffer: FlightOfferDto | null = null;
@@ -63,6 +65,13 @@ export class DeviajeFlightBookingComponent implements OnInit, OnDestroy {
   showSuccessMessage = false;
   bookingReference = '';
   errorMessage = '';
+  isLoggedIn: boolean = false;
+  userRole: string = '';
+
+  // User selection for agents (AGREGAR ESTAS VARIABLES)
+  showUserSelection = false;
+  selectedClientId: string | null = null;
+  isGuestBooking = true;
 
   mainForm: FormGroup = this.fb.group({
     travelers: this.fb.array([]),
@@ -75,7 +84,7 @@ export class DeviajeFlightBookingComponent implements OnInit, OnDestroy {
       ],
       cvv: ['', [Validators.required, Validators.pattern(/^\d{3,4}$/)]],
       amount: [0, Validators.required],
-      currency: ['USD', Validators.required],
+      currency: ['ARS', Validators.required],
       paymentToken: [''],
       payerDni: [
         '',
@@ -85,7 +94,7 @@ export class DeviajeFlightBookingComponent implements OnInit, OnDestroy {
           Validators.minLength(7),
         ],
       ],
-    })
+    }),
   });
 
   get travelers(): FormArray {
@@ -103,10 +112,6 @@ export class DeviajeFlightBookingComponent implements OnInit, OnDestroy {
   }
 
   ngOnInit(): void {
-    //this.authService.currentUser.subscribe(user => {
-    //this.currentUser = user;
-    //});
-
     // Verificar y cargar si hay datos persistidos en sessionStorage
     if (typeof window !== 'undefined') {
       this.loadPersistedState();
@@ -115,6 +120,9 @@ export class DeviajeFlightBookingComponent implements OnInit, OnDestroy {
     if (!this.isReloadedSession) {
       this.loadFromRouterState();
     }
+
+    // AGREGAR: Cargar usuario actual y roles
+    this.loadCurrentUser();
 
     // Configurar la suscripción para guardar cambios automáticamente
     this.setupFormPersistence();
@@ -126,6 +134,111 @@ export class DeviajeFlightBookingComponent implements OnInit, OnDestroy {
       this.clearPersistedState();
     }
     this.isReloadedSession = false; // Resetear el estado de recarga
+    this.subscription.unsubscribe(); // Limpiar suscripciones
+  }
+
+  // Load current user and determine role (AGREGAR MÉTODO COMPLETO)
+  loadCurrentUser(): void {
+    // Suscribirse al usuario actual
+    this.subscription.add(
+      this.authService.currentUser$.subscribe({
+        next: (user) => {
+          this.currentUser = user;
+          this.isLoggedIn = !!user;
+          console.log('Flight booking - Usuario:', user);
+          this.setupBookingBasedOnRole();
+        },
+        error: (error) => {
+          console.log('Flight booking - No user logged in');
+          this.isLoggedIn = false;
+          this.setupBookingBasedOnRole();
+        },
+      })
+    );
+
+    // Suscribirse a cambios de rol activo
+    this.subscription.add(
+      this.authService.activeRole$.subscribe((role) => {
+        console.log('Flight booking - Active role changed to:', role);
+        this.userRole = role || '';
+        this.setupBookingBasedOnRole();
+      })
+    );
+  }
+
+  // Setup booking flow based on user role (AGREGAR MÉTODO COMPLETO)
+  setupBookingBasedOnRole(): void {
+    console.log('Flight booking - Setting up based on role:', this.userRole);
+
+    // BLOQUEAR ADMINISTRADOR
+    if (this.userRole === 'ADMINISTRADOR') {
+      this.router.navigate(['/admin']);
+      return;
+    }
+
+    if (!this.isLoggedIn) {
+      // Usuario no logueado - reserva como invitado
+      this.isGuestBooking = true;
+      this.showUserSelection = false;
+    } else if (this.userRole === 'CLIENTE') {
+      // Cliente logueado - NO mostrar selector, auto-llenar
+      this.isGuestBooking = false;
+      this.selectedClientId = this.currentUser?.id;
+      this.showUserSelection = false; // CLIENTE no ve selector
+      this.prefillUserData();
+    } else if (this.userRole === 'AGENTE') {
+      // Solo AGENTE ve el selector
+      this.showUserSelection = true;
+      this.isGuestBooking = true; // Por defecto invitado
+    }
+
+    console.log(
+      'Flight booking - Updated flags - showUserSelection:',
+      this.showUserSelection,
+      'isGuestBooking:',
+      this.isGuestBooking
+    );
+  }
+
+  // Agent functions - User selection (AGREGAR MÉTODOS)
+  onBookingTypeChange(isGuest: boolean): void {
+    this.isGuestBooking = isGuest;
+    this.selectedClientId = null;
+  }
+
+  onUserSelected(clientId: string): void {
+    this.selectedClientId = clientId;
+    this.isGuestBooking = false;
+    console.log('Flight booking - Selected client ID:', clientId);
+  }
+
+  // Prefill user data for logged clients (AGREGAR MÉTODO)
+  prefillUserData(): void {
+    if (this.currentUser && this.userRole === 'CLIENTE') {
+      // Auto-llenar datos del primer pasajero con datos del usuario
+      const firstTraveler = this.travelers.at(0) as FormGroup;
+      if (firstTraveler) {
+        firstTraveler.patchValue({
+          firstName: this.currentUser.firstName || '',
+          lastName: this.currentUser.lastName || '',
+        });
+
+        // Auto-llenar contacto
+        const contactGroup = firstTraveler.get('contact') as FormGroup;
+        if (contactGroup) {
+          contactGroup.patchValue({
+            emailAddress: this.currentUser.email || '',
+          });
+
+          const phonesArray = contactGroup.get('phones') as FormArray;
+          if (phonesArray && phonesArray.length > 0) {
+            phonesArray.at(0)?.patchValue({
+              number: this.currentUser.phone || '',
+            });
+          }
+        }
+      }
+    }
   }
 
   verifyFlightOffer(offer: FlightOfferDto): void {
@@ -139,10 +252,7 @@ export class DeviajeFlightBookingComponent implements OnInit, OnDestroy {
         if (verifiedOffer) {
           this.selectedOffer = verifiedOffer;
           // Actualizar el precio en el formulario de pago
-          console.log(
-            'Oferta verificada y seleccionada:',
-            verifiedOffer
-          );
+          console.log('Oferta verificada y seleccionada:', verifiedOffer);
           this.mainForm
             .get('payment')
             ?.get('amount')
@@ -341,7 +451,6 @@ export class DeviajeFlightBookingComponent implements OnInit, OnDestroy {
       return;
     }
 
-
     this.isLoading = true;
     this.errorMessage = '';
 
@@ -350,7 +459,8 @@ export class DeviajeFlightBookingComponent implements OnInit, OnDestroy {
 
       // Preparar los datos de la reserva
       const bookingData: FlightBookingDto = {
-        clientId: 1, // Este valor debería venir de la sesión del usuario
+        clientId: this.getClientId(), // CAMBIAR ESTA LÍNEA
+        agentId: this.getAgentId(), // AGREGAR ESTA LÍNEA
         flightOffer: this.selectedOffer,
         travelers: this.prepareTravelersData(),
       };
@@ -410,6 +520,26 @@ export class DeviajeFlightBookingComponent implements OnInit, OnDestroy {
       this.errorMessage = error.message || 'Error al procesar el pago';
       console.error('Error en submitBooking:', error);
     }
+  }
+
+  private getClientId(): number | undefined {
+    if (this.userRole === 'CLIENTE' && !this.isGuestBooking) {
+      return this.currentUser?.id;
+    } else if (
+      this.userRole === 'AGENTE' &&
+      !this.isGuestBooking &&
+      this.selectedClientId
+    ) {
+      return parseInt(this.selectedClientId);
+    }
+    return undefined; // Para invitados
+  }
+
+  private getAgentId(): number | undefined {
+    if (this.userRole === 'AGENTE') {
+      return this.currentUser?.id;
+    }
+    return undefined;
   }
 
   prepareTravelersData(): TravelerDto[] {

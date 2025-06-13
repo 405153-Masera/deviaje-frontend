@@ -3,13 +3,15 @@
   <div *ngIf="errorMessage" class="alert alert-danger alert-dismissible fade show" role="alert">
     <i class="bi bi-exclamation-triangle-fill me-2"></i>
     {{ errorMessage }}
-    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close" (click)="errorMessage = ''"></button>
+    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"
+      (click)="errorMessage = ''"></button>
   </div>
 
   <!-- Alerta de éxito -->
   <div *ngIf="showSuccessMessage" class="alert alert-success" role="alert">
     <i class="bi bi-check-circle-fill me-2"></i>
-    <strong>¡Reserva exitosa!</strong> Tu reserva ha sido procesada correctamente. Número de referencia: {{ bookingReference }}
+    <strong>¡Reserva exitosa!</strong> Tu reserva ha sido procesada correctamente. Número de referencia: {{
+    bookingReference }}
     <div class="mt-2">
       Redirigiendo a la página de tus reservas...
       <div class="spinner-border spinner-border-sm ms-2" role="status">
@@ -40,7 +42,8 @@
           <div class="d-flex justify-content-between align-items-center mb-3">
             <div class="text-center">
               <div class="fw-bold fs-5">{{ selectedOffer.itineraries[0].segments[0].departure.iataCode }}</div>
-              <div class="small text-muted">{{ flightUtils.formatTime(selectedOffer.itineraries[0].segments[0].departure.at) }}</div>
+              <div class="small text-muted">{{
+                flightUtils.formatTime(selectedOffer.itineraries[0].segments[0].departure.at) }}</div>
             </div>
             <div class="flight-line position-relative flex-grow-1 mx-3">
               <div class="text-center text-muted small">
@@ -52,8 +55,12 @@
               </div>
             </div>
             <div class="text-center">
-              <div class="fw-bold fs-5">{{ selectedOffer.itineraries[0].segments[selectedOffer.itineraries[0].segments.length-1].arrival.iataCode }}</div>
-              <div class="small text-muted">{{ flightUtils.formatTime(selectedOffer.itineraries[0].segments[selectedOffer.itineraries[0].segments.length-1].arrival.at) }}</div>
+              <div class="fw-bold fs-5">{{
+                selectedOffer.itineraries[0].segments[selectedOffer.itineraries[0].segments.length-1].arrival.iataCode
+                }}</div>
+              <div class="small text-muted">{{
+                flightUtils.formatTime(selectedOffer.itineraries[0].segments[selectedOffer.itineraries[0].segments.length-1].arrival.at)
+                }}</div>
             </div>
           </div>
 
@@ -63,11 +70,13 @@
             <div class="d-flex justify-content-between align-items-center mb-3">
               <div class="text-center">
                 <div class="fw-bold fs-5">{{ selectedOffer.itineraries[1].segments[0].departure.iataCode }}</div>
-                <div class="small text-muted">{{ flightUtils.formatTime(selectedOffer.itineraries[1].segments[0].departure.at) }}</div>
+                <div class="small text-muted">{{
+                  flightUtils.formatTime(selectedOffer.itineraries[1].segments[0].departure.at) }}</div>
               </div>
               <div class="flight-line position-relative flex-grow-1 mx-3">
                 <div class="text-center text-muted small">
-                  {{ flightUtils.minutesToString(flightUtils.durationToMinutes(selectedOffer.itineraries[1].duration)) }}
+                  {{ flightUtils.minutesToString(flightUtils.durationToMinutes(selectedOffer.itineraries[1].duration))
+                  }}
                 </div>
                 <hr class="flight-path">
                 <div class="text-center text-muted small">
@@ -75,8 +84,12 @@
                 </div>
               </div>
               <div class="text-center">
-                <div class="fw-bold fs-5">{{ selectedOffer.itineraries[1].segments[selectedOffer.itineraries[1].segments.length-1].arrival.iataCode }}</div>
-                <div class="small text-muted">{{ flightUtils.formatTime(selectedOffer.itineraries[1].segments[selectedOffer.itineraries[1].segments.length-1].arrival.at) }}</div>
+                <div class="fw-bold fs-5">{{
+                  selectedOffer.itineraries[1].segments[selectedOffer.itineraries[1].segments.length-1].arrival.iataCode
+                  }}</div>
+                <div class="small text-muted">{{
+                  flightUtils.formatTime(selectedOffer.itineraries[1].segments[selectedOffer.itineraries[1].segments.length-1].arrival.at)
+                  }}</div>
               </div>
             </div>
           </div>
@@ -85,10 +98,9 @@
         <div class="col-md-6">
           <h6 class="mb-3">Aerolínea</h6>
           <div class="d-flex align-items-center mb-4">
-            <img [src]="'https://www.gstatic.com/flights/airline_logos/70px/' + selectedOffer.validatingAirlineCodes[0] + '.png'" 
-                 alt="Airline" 
-                 class="me-3" 
-                 style="height: 40px; width: auto;">
+            <img
+              [src]="'https://www.gstatic.com/flights/airline_logos/70px/' + selectedOffer.validatingAirlineCodes[0] + '.png'"
+              alt="Airline" class="me-3" style="height: 40px; width: auto;">
             <div>
               <div class="fw-bold">{{ flightUtils.getAirlineName(selectedOffer.validatingAirlineCodes[0]) }}</div>
               <div class="small text-muted">{{ selectedOffer.validatingAirlineCodes[0] }}</div>
@@ -98,8 +110,10 @@
           <h6 class="mb-3">Precio</h6>
           <div class="d-flex justify-content-between align-items-center">
             <div>
-              <div class="fw-bold fs-4">{{ selectedOffer.price.total | currency:(selectedOffer.price.currency || 'USD') }}</div>
-              <div class="small text-muted">Precio total para {{ selectedOffer.travelerPricings.length }} pasajero(s)</div>
+              <div class="fw-bold fs-4">{{ selectedOffer.price.total | currency:(selectedOffer.price.currency || 'USD')
+                }}</div>
+              <div class="small text-muted">Precio total para {{ selectedOffer.travelerPricings.length }} pasajero(s)
+              </div>
             </div>
             <div>
               <span class="badge bg-success">Confirmado</span>
@@ -119,18 +133,68 @@
           <div class="d-flex align-items-center">
             <span class="me-2">Paso {{ currentStep }} de {{ totalSteps }}</span>
             <div class="progress" style="width: 150px; height: 10px;">
-              <div class="progress-bar" role="progressbar" [style.width]="(currentStep / totalSteps * 100) + '%'" 
-                   [attr.aria-valuenow]="currentStep" aria-valuemin="0" [attr.aria-valuemax]="totalSteps"></div>
+              <div class="progress-bar" role="progressbar" [style.width]="(currentStep / totalSteps * 100) + '%'"
+                [attr.aria-valuenow]="currentStep" aria-valuemin="0" [attr.aria-valuemax]="totalSteps"></div>
             </div>
           </div>
         </div>
       </div>
-      
+
       <div class="card-body">
         <form [formGroup]="mainForm">
           <!-- Paso 1: Información de los pasajeros -->
           <div *ngIf="currentStep === 1">
             <h5 class="card-title mb-4">Información de los pasajeros</h5>
+            <!-- AGREGAR: Selección de tipo de reserva (solo para agentes) -->
+            <div *ngIf="showUserSelection" class="card mb-4">
+              <div class="card-header bg-info text-white">
+                <h6 class="mb-0">
+                  <i class="bi bi-person-check me-2"></i>
+                  Tipo de reserva
+                </h6>
+              </div>
+              <div class="card-body">
+                <div class="row">
+                  <div class="col-md-6">
+                    <div class="form-check">
+                      <input class="form-check-input" type="radio" [checked]="isGuestBooking"
+                        (change)="onBookingTypeChange(true)" id="guestBookingFlight">
+                      <label class="form-check-label" for="guestBookingFlight">
+                        <strong>Reserva para invitado</strong>
+                        <br><small class="text-muted">Cliente no registrado</small>
+                      </label>
+                    </div>
+                  </div>
+                  <div class="col-md-6">
+                    <div class="form-check">
+                      <input class="form-check-input" type="radio" [checked]="!isGuestBooking"
+                        (change)="onBookingTypeChange(false)" id="userBookingFlight">
+                      <label class="form-check-label" for="userBookingFlight">
+                        <strong>Reserva para usuario registrado</strong>
+                        <br><small class="text-muted">Buscar cliente existente</small>
+                      </label>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Búsqueda de usuario (cuando no es guest booking) -->
+                <div *ngIf="!isGuestBooking" class="mt-3">
+                  <label class="form-label">Buscar cliente por nombre de usuario</label>
+                  <div class="input-group">
+                    <input type="text" class="form-control" placeholder="Nombre de usuario del cliente"
+                      #userSearchInput>
+                    <button class="btn btn-outline-secondary" type="button"
+                      (click)="onUserSelected(userSearchInput.value)">
+                      <i class="bi bi-search"></i> Buscar
+                    </button>
+                  </div>
+                  <div *ngIf="selectedClientId" class="alert alert-success mt-2">
+                    <i class="bi bi-check-circle me-2"></i>
+                    Cliente seleccionado (ID: {{ selectedClientId }})
+                  </div>
+                </div>
+              </div>
+            </div>
 
             <div formArrayName="travelers">
               <div *ngFor="let travelerForm of travelers.controls; let i = index" class="mb-4">
@@ -138,23 +202,23 @@
                   <div class="card-header bg-light">
                     <div class="d-flex justify-content-between align-items-center">
                       <h6 class="mb-0">
-                        Pasajero {{ i + 1 }} 
-                        <span class="badge" 
-                              [ngClass]="{
+                        Pasajero {{ i + 1 }}
+                        <span class="badge" [ngClass]="{
                                 'bg-primary': travelerForm.get('travelerType')?.value === 'ADULT',
                                 'bg-info': travelerForm.get('travelerType')?.value === 'CHILD',
                                 'bg-warning': travelerForm.get('travelerType')?.value === 'INFANT'
                               }">
-                          {{ travelerForm.get('travelerType')?.value === 'ADULT' ? 'Adulto' : 
-                             travelerForm.get('travelerType')?.value === 'CHILD' ? 'Niño' : 'Bebé' }}
+                          {{ travelerForm.get('travelerType')?.value === 'ADULT' ? 'Adulto' :
+                          travelerForm.get('travelerType')?.value === 'CHILD' ? 'Niño' : 'Bebé' }}
                         </span>
                         <span *ngIf="i === 0" class="badge bg-secondary ms-2">Titular</span>
                       </h6>
                     </div>
                   </div>
-                  
+
                   <div class="card-body">
-                    <app-deviaje-traveler-form [travelerForm]="getTravelerFormGroup(i)" [isPrimaryTraveler]="i === 0"></app-deviaje-traveler-form>
+                    <app-deviaje-traveler-form [travelerForm]="getTravelerFormGroup(i)"
+                      [isPrimaryTraveler]="i === 0" mode="flight"></app-deviaje-traveler-form>
                   </div>
                 </div>
               </div>
@@ -165,9 +229,7 @@
           <div *ngIf="currentStep === 2">
             <h5 class="card-title mb-4">Información de pago</h5>
             <ng-container *ngIf="mainForm.get('payment')">
-              <app-deviaje-payments-form 
-                [paymentForm]="paymentFormGroup" 
-                [amount]="selectedOffer.price.total || '0'" 
+              <app-deviaje-payments-form [paymentForm]="paymentFormGroup" [amount]="selectedOffer.price.total || '0'"
                 [currency]="selectedOffer.price.currency || 'USD'">
               </app-deviaje-payments-form>
             </ng-container>
@@ -176,12 +238,12 @@
           <!-- Paso 3: Confirmación de la reserva -->
           <div *ngIf="currentStep === 3">
             <h5 class="card-title mb-4">Confirmación de la reserva</h5>
-            
+
             <div class="alert alert-info">
               <i class="bi bi-info-circle-fill me-2"></i>
               Por favor revisa la información antes de confirmar la reserva.
             </div>
-            
+
             <!-- Resumen de pasajeros -->
             <div class="card mb-4">
               <div class="card-header bg-light">
@@ -203,19 +265,18 @@
                         <td>{{ i + 1 }}</td>
                         <td>{{ travelerForm.get('firstName')?.value }} {{ travelerForm.get('lastName')?.value }}</td>
                         <td *ngIf="travelerForm.get('documents')?.get('0')?.get('number')?.value">
-                          {{ travelerForm.get('documents')?.get('0')?.get('documentType')?.value }}: 
+                          {{ travelerForm.get('documents')?.get('0')?.get('documentType')?.value }}:
                           {{ travelerForm.get('documents')?.get('0')?.get('number')?.value }}
                         </td>
                         <td *ngIf="!travelerForm.get('documents')?.get('0')?.get('number')?.value">-</td>
                         <td>
-                          <span class="badge" 
-                                [ngClass]="{
+                          <span class="badge" [ngClass]="{
                                   'bg-primary': travelerForm.get('travelerType')?.value === 'ADULT',
                                   'bg-info': travelerForm.get('travelerType')?.value === 'CHILD',
                                   'bg-warning': travelerForm.get('travelerType')?.value === 'INFANT'
                                 }">
-                            {{ travelerForm.get('travelerType')?.value === 'ADULT' ? 'Adulto' : 
-                               travelerForm.get('travelerType')?.value === 'CHILD' ? 'Niño' : 'Bebé' }}
+                            {{ travelerForm.get('travelerType')?.value === 'ADULT' ? 'Adulto' :
+                            travelerForm.get('travelerType')?.value === 'CHILD' ? 'Niño' : 'Bebé' }}
                           </span>
                         </td>
                       </tr>
@@ -236,7 +297,9 @@
                     <p><strong>Email:</strong> {{ travelers.at(0).get('contact')?.get('emailAddress')?.value }}</p>
                   </div>
                   <div class="col-md-6">
-                    <p><strong>Teléfono:</strong> +{{ travelers.at(0).get('contact')?.get('phones')?.get('0')?.get('countryCallingCode')?.value }} {{ travelers.at(0).get('contact')?.get('phones')?.get('0')?.get('number')?.value }}</p>
+                    <p><strong>Teléfono:</strong> +{{
+                      travelers.at(0).get('contact')?.get('phones')?.get('0')?.get('countryCallingCode')?.value }} {{
+                      travelers.at(0).get('contact')?.get('phones')?.get('0')?.get('number')?.value }}</p>
                   </div>
                 </div>
               </div>
@@ -252,10 +315,12 @@
                   <div class="col-md-6">
                     <p><strong>Método:</strong> Tarjeta de crédito</p>
                     <p><strong>Titular:</strong> {{ mainForm.get('payment')?.get('cardholderName')?.value }}</p>
-                    <p><strong>Número:</strong> **** **** **** {{ mainForm.get('payment')?.get('cardNumber')?.value.substring(12) }}</p>
+                    <p><strong>Número:</strong> **** **** **** {{
+                      mainForm.get('payment')?.get('cardNumber')?.value.substring(12) }}</p>
                   </div>
                   <div class="col-md-6">
-                    <p><strong>Monto total:</strong> {{ selectedOffer.price.total | currency:(selectedOffer.price.currency || 'USD') }}</p>
+                    <p><strong>Monto total:</strong> {{ selectedOffer.price.total |
+                      currency:(selectedOffer.price.currency || 'USD') }}</p>
                     <p><strong>Moneda:</strong> {{ selectedOffer.price.currency }}</p>
                     <p><strong>Cuotas:</strong> 1</p>
                   </div>
@@ -268,24 +333,19 @@
 
       <div class="card-footer">
         <div class="d-flex justify-content-between">
-          <button class="btn btn-outline-secondary" 
-                  [disabled]="currentStep === 1 || isLoading" 
-                  (click)="previousStep()">
+          <button class="btn btn-outline-secondary" [disabled]="currentStep === 1 || isLoading"
+            (click)="previousStep()">
             <i class="bi bi-arrow-left me-1"></i> Anterior
           </button>
-          
+
           <div>
-            <button *ngIf="currentStep < totalSteps" 
-                    class="btn btn-primary" 
-                    [disabled]="isLoading" 
-                    (click)="nextStep()">
+            <button *ngIf="currentStep < totalSteps" class="btn btn-primary" [disabled]="isLoading"
+              (click)="nextStep()">
               Siguiente <i class="bi bi-arrow-right ms-1"></i>
             </button>
-            
-            <button *ngIf="currentStep === totalSteps" 
-                    class="btn btn-success" 
-                    [disabled]="isLoading" 
-                    (click)="submitBooking()">
+
+            <button *ngIf="currentStep === totalSteps" class="btn btn-success" [disabled]="isLoading"
+              (click)="submitBooking()">
               <span *ngIf="!isLoading">Confirmar reserva</span>
               <span *ngIf="isLoading">
                 <span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>

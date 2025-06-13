@@ -53,8 +53,8 @@
   <div *ngIf="mode === 'hotel' && isPrimaryTraveler && travelerForm.get('contact')" formGroupName="contact">
     <h6 class="mb-3">Datos de contacto</h6>
     
-    <div class="row mb-3">
-      <div class="col-md-6 mb-3 mb-md-0">
+    <div class="mb-3">
+      <div class="col mb-3 mb-md-0">
         <label for="emailAddress" class="form-label">Email <span class="text-danger">*</span></label>
         <input type="email" class="form-control" id="emailAddress" formControlName="emailAddress"
           [ngClass]="onValidate('contact.emailAddress')" placeholder="ejemplo@correo.com">
@@ -64,19 +64,49 @@
         </div>
       </div>
 
-      <div class="col-md-6" formArrayName="phones">
-        <div formGroupName="0">
-          <label for="phoneNumber" class="form-label">Teléfono <span class="text-danger">*</span></label>
-          <input type="tel" class="form-control" id="phoneNumber" formControlName="number"
-            [ngClass]="onValidate('contact.phones.0.number')" placeholder="+54 11 1234-5678">
-          <div *ngIf="shouldShowError('contact.phones.0.number')" class="invalid-feedback d-block">
-            <div *ngIf="getFieldErrors('contact.phones.0.number')?.['required']">El teléfono es obligatorio</div>
-            <div *ngIf="getFieldErrors('contact.phones.0.number')?.['pattern']">
-              Ingrese un teléfono válido (7-15 dígitos)
+      <div class="row" formArrayName="phones">
+      <div formGroupName="0">
+        <div class="row">
+
+          <div class="col-md-4 mb-3">
+            <label for="phoneCode" class="form-label">Código de país <span class="text-danger">*</span></label>
+            <div class="input-group">
+              <span class="input-group-text">📞</span>
+              <select class="form-select" id="phoneCode" formControlName="countryCallingCode"
+                [ngClass]="onValidate('contact.phones.0.countryCallingCode')">
+                <option value="" disabled selected>Código</option>
+                <option *ngFor="let country of filteredCountries" [value]="country.phoneCode">
+                  {{ country.name }} ({{ country.displayCode }}) </option>
+              </select>
+              <div *ngIf="shouldShowError('contact.phones.0.countryCallingCode')" class="invalid-feedback d-block">
+                El código de país es obligatorio
+              </div>
+            </div>
+          </div>
+
+          <div class="col-md-8 mb-3">
+            <label for="phoneNumber" class="form-label">Número de teléfono <span class="text-danger">*</span></label>
+            <input type="tel" class="form-control" id="phoneNumber" formControlName="number"
+              [ngClass]="onValidate('contact.phones.0.number')">
+            <div *ngIf="shouldShowError('contact.phones.0.number')" class="invalid-feedback d-block">
+              <div *ngIf="getFieldErrors('contact.phones.0.number')?.['required']">
+                El número de teléfono es obligatorio
+              </div>
+              <div *ngIf="getFieldErrors('contact.phones.0.number')?.['invalidPhoneNumber']">
+                El número de teléfono no es válido para el país seleccionado
+              </div>
+              <div *ngIf="getFieldErrors('contact.phones.0.number')?.['missingCountryCode']">
+                Seleccione primero el código de país
+              </div>
+              <div *ngIf="getFieldErrors('contact.phones.0.number')?.['phoneValidationError']">
+                Error al validar el número de teléfono
+              </div>
             </div>
           </div>
         </div>
       </div>
+    </div>
+      
     </div>
   </div>
 
