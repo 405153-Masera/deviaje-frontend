@@ -783,7 +783,7 @@ export class DeviajeHotelBookingComponent implements OnInit, OnDestroy {
     return {
       amount: parseFloat(paymentData.amount) || 0,
       currency: paymentData.currency,
-      paymentMethod: 'mercado_pago',
+      paymentMethod: 'master',
       paymentToken: paymentToken,
       installments: 1,
       description: 'Reserva de hotel',
