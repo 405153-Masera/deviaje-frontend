@@ -21,6 +21,8 @@ export interface TravelerDto {
     lastName: string;
   };
   gender: string;
+  travelerType?: string; // ADULT, CHILD, INFANT
+  associatedAdultId?: string; // Para vincular infantes con adultos
   contact?: {
     emailAddress: string;
     phones: PhoneDto[];

@@ -546,8 +546,36 @@ export class DeviajeFlightBookingComponent implements OnInit, OnDestroy {
     const travelersData: TravelerDto[] = [];
     const primaryContact = this.travelers.at(0)?.get('contact')?.value;
 
+    const adults: number[] = [];
+    const children: number[] = [];
+    const infants: number[] = [];
+
+    // Categorizar pasajeros por índice
+    this.travelers.controls.forEach((travelerControl, index) => {
+      const travelerType = travelerControl.value.travelerType;
+      if (travelerType === 'ADULT') {
+        adults.push(index);
+      } else if (travelerType === 'CHILD') {
+        children.push(index);
+      } else if (travelerType === 'INFANT') {
+        infants.push(index);
+      }
+    });
+
     this.travelers.controls.forEach((travelerControl, index) => {
       const traveler = travelerControl.value;
+
+      // Determinar el ID del adulto asociado para infantes
+      let associatedAdultId: string | undefined;
+      if (traveler.travelerType === 'INFANT') {
+        // Buscar un adulto disponible usando distribución más equitativa
+        const infantIndexInArray = infants.indexOf(index);
+        const adultIndex = adults[infantIndexInArray % adults.length]; // Distribución circular
+
+        if (adultIndex !== undefined) {
+          associatedAdultId = String(adultIndex + 1); // IDs empiezan en 1
+        }
+      }
 
       // Solo incluir campos necesarios según el tipo de pasajero
       const travelerData: TravelerDto = {
@@ -559,9 +587,12 @@ export class DeviajeFlightBookingComponent implements OnInit, OnDestroy {
         },
         gender: traveler.gender,
         documents: traveler.documents,
+        travelerType: traveler.travelerType,
+        ...(associatedAdultId && { associatedAdultId }),
+
       };
 
-      if (primaryContact) {
+      if (index === 0 && primaryContact) {
         travelerData.contact = {
           emailAddress: primaryContact.emailAddress,
           phones: primaryContact.phones.map((phone: any) => ({
@@ -572,9 +603,35 @@ export class DeviajeFlightBookingComponent implements OnInit, OnDestroy {
         };
       }
 
+      // Incluir documentos para todos los pasajeros
+      if (traveler.documents && traveler.documents.length > 0) {
+        const document = traveler.documents[0];
+        if (document.number) {
+          // Solo si tiene número de documento
+          travelerData.documents = [
+            {
+              documentType: document.documentType || 'PASSPORT',
+              number: document.number,
+              expiryDate: document.expiryDate,
+              issuanceCountry: document.issuanceCountry || 'AR',
+              nationality: document.nationality || 'AR',
+              holder: index === 0, // Solo el primer pasajero es el titular/holder
+            },
+          ];
+        }
+      }
+
       travelersData.push(travelerData);
     });
 
+    console.log('Datos de pasajeros preparados:', travelersData);
+    console.log('Distribución de asociaciones:', {
+      adults: adults.map((i) => `Adulto ${i + 1}`),
+      infants: infants.map((infantIndex, arrayIndex) => {
+        const adultIndex = adults[arrayIndex % adults.length];
+        return `Infante ${infantIndex + 1} → Adulto ${adultIndex + 1}`;
+      }),
+    });
     return travelersData;
   }
 
