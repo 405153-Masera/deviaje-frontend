@@ -107,24 +107,24 @@ export class DeviajeSidebarComponent implements OnInit, OnDestroy {
     {
       icon: 'home',
       label: 'Inicio',
-      route: '/admin/dashboard',
+      route: 'home',
       isSelected: false,
     },
     {
       icon: 'usuarios',
       label: 'Usuarios',
-      route: '/admin/users',
+      route: 'admin/users',
       isSelected: false,
       subItems: [
         {
-          icon: 'agregar-usuario',
+          icon: 'anadir-grupo',
           label: 'Registrar Usuarios',
-          route: '/admin/users/register',
+          route: '/register',
         },
         {
-          icon: 'lista-usuarios',
+          icon: 'cliente',
           label: 'Ver Usuarios',
-          route: '/admin/users/list',
+          route: '/list',
         },
       ],
     },

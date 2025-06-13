@@ -14,17 +14,19 @@ import { DeviajeForgotPasswordComponent } from './shared/components/deviaje-forg
 import { DeviajeResetPasswordComponent } from './shared/components/deviaje-reset-password/deviaje-reset-password.component';
 import { DeviajeAccessDeniedComponent } from './features/public/components/deviaje-accessdenied/deviaje-accessdenied.component';
 import { DeviajeHotelBookingComponent } from './features/client/components/deviaje-hotel-booking/deviaje-hotel-booking.component';
+import { DeviajeChangePasswordComponent } from './shared/components/deviaje-change-password/deviaje-change-password.component';
+import { DeviajeAdminUserRegisterComponent } from './features/admin/components/deviaje-admin-user-register/deviaje-admin-user-register.component';
 
 export const routes: Routes = [
-
   // Ruta principal
   { path: '', redirectTo: '/home', pathMatch: 'full' },
-  
+
   // Rutas públicas para la autenticacion
   { path: 'user/login', component: DeviajeLoginComponent },
   { path: 'user/signup', component: DeviajeSignupComponent },
   { path: 'user/forgot-password', component: DeviajeForgotPasswordComponent },
   { path: 'user/reset-password', component: DeviajeResetPasswordComponent },
+  { path: 'user/change-password', component: DeviajeChangePasswordComponent },
   {
     path: 'home',
     component: DeviajeMainLayoutComponent,
@@ -36,18 +38,19 @@ export const routes: Routes = [
       { path: 'hotels/detail/:code', component: DeviajeHotelDetailComponent },
       { path: 'flight/booking', component: DeviajeFlightBookingComponent },
       { path: 'hotels/booking', component: DeviajeHotelBookingComponent }, // Reutilizando el componente para reservas de hoteles
-    ]
+    ],
   },
-  // Rutas que requieren autenticación 
+  // Rutas que requieren autenticación
   {
     path: 'profile',
     component: DeviajeMainLayoutComponent,
     canActivate: [authGuard],
-    children: [
-      { path: '', component: DeviajeUserProfileComponent }
-    ]
+    children: [{ path: '', component: DeviajeUserProfileComponent },
+       { path: 'user/change-password', component: DeviajeChangePasswordComponent },
+    ],
+    
   },
-  
+
   // Mis reservas (requiere autenticación)
   {
     path: 'bookings',
@@ -55,9 +58,9 @@ export const routes: Routes = [
     canActivate: [authGuard],
     children: [
       //{ path: '', component: DeviajeBookingsComponent }
-    ]
+    ],
   },
-  
+
   // Rutas específicas para administradores
   {
     path: 'admin',
@@ -66,17 +69,17 @@ export const routes: Routes = [
     data: { roles: ['ADMINISTRADOR'] },
     children: [
       { path: '', redirectTo: 'users', pathMatch: 'full' },
-      { 
-        path: 'users', 
+      {
+        path: 'users',
         children: [
           { path: '', redirectTo: 'list', pathMatch: 'full' },
           //{ path: 'list', component: DeviajeUsersListComponent },
-          //{ path: 'register', component: DeviajeUserRegisterComponent },
+          { path: 'register', component: DeviajeAdminUserRegisterComponent },
           //{ path: 'edit/:id', component: DeviajeUserEditComponent },
-        ]
+        ],
       },
-      { 
-        path: 'bookings', 
+      {
+        path: 'bookings',
         children: [
           //{ path: '', redirectTo: 'all', pathMatch: 'full' },
           //{ path: 'all', component: DeviajeBookingsComponent }, // Mismo componente, mostrará diferente contenido
@@ -84,12 +87,12 @@ export const routes: Routes = [
           //{ path: 'hotels', component: DeviajeBookingsComponent }, // Mismo componente con filtro
           //{ path: 'packages', component: DeviajeBookingsComponent }, // Mismo componente con filtro
           //{ path: 'tours', component: DeviajeBookingsComponent }, // Mismo componente con filtro
-        ]
+        ],
       },
       //{ path: 'analytics', component: DeviajeAnalyticsComponent },
-    ]
+    ],
   },
-  
+
   // Rutas específicas para agentes
   {
     path: 'agent',
@@ -100,12 +103,12 @@ export const routes: Routes = [
       { path: '', redirectTo: 'clients', pathMatch: 'full' },
       //{ path: 'clients', component: DeviajeClientsListComponent },
       //{ path: 'clients/:id', component: DeviajeClientDetailComponent },
-    ]
+    ],
   },
-  
+
   // Ruta para acceso denegado
   { path: 'access-denied', component: DeviajeAccessDeniedComponent },
-  
+
   // Ruta de página no encontrada
-  { path: '**', redirectTo: '/home' }
+  { path: '**', redirectTo: '/home' },
 ];

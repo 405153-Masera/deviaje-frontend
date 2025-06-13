@@ -103,34 +103,34 @@ export class ValidatorsService {
   }
 
   // Versión mejorada más dinámica
-validatePhoneNumber(): ValidatorFn {
-  return (control: AbstractControl): ValidationErrors | null => {
-    const phoneNumber = control.value;
+  validatePhoneNumber(): ValidatorFn {
+    return (control: AbstractControl): ValidationErrors | null => {
+      const phoneNumber = control.value;
 
-    if (!phoneNumber) {
-      return null;
-    }
-
-    // Obtener el código de país del mismo FormGroup
-    const parent = control.parent;
-    const countryCode = parent?.get('countryCallingCode')?.value;
-
-    if (!countryCode) {
-      return { missingCountryCode: true };
-    }
-
-    try {
-      // Construir el número completo con el código de país
-      const fullNumber = `+${countryCode}${phoneNumber}`;
-      
-      if (!isValidPhoneNumber(fullNumber)) {
-        return { invalidPhoneNumber: { value: phoneNumber } };
+      if (!phoneNumber) {
+        return null;
       }
-    } catch (error) {
-      return { phoneValidationError: true };
-    }
 
-    return null;
-  };
-}
+      // Obtener el código de país del mismo FormGroup
+      const parent = control.parent;
+      const countryCode = parent?.get('countryCallingCode')?.value;
+
+      if (!countryCode) {
+        return { missingCountryCode: true };
+      }
+
+      try {
+        // Construir el número completo con el código de país
+        const fullNumber = `+${countryCode}${phoneNumber}`;
+
+        if (!isValidPhoneNumber(fullNumber)) {
+          return { invalidPhoneNumber: { value: phoneNumber } };
+        }
+      } catch (error) {
+        return { phoneValidationError: true };
+      }
+
+      return null;
+    };
+  }
 }
