@@ -4,7 +4,7 @@
   <div class="row mb-3">
     <div class="col-md-6 mb-3 mb-md-0">
       <label for="firstName" class="form-label">Nombre <span class="text-danger">*</span></label>
-      <small class="text-muted d-block">Indica el nombre tal y como figura en el pasaporte</small>
+      <small class="text-muted d-block" *ngIf="mode === 'flight'">Indica el nombre tal y como figura en el pasaporte</small>
 
       <input type="text" class="form-control" id="firstName" formControlName="firstName"
         [ngClass]="onValidate('firstName')">
@@ -17,7 +17,7 @@
 
     <div class="col-md-6">
       <label for="lastName" class="form-label">Apellido <span class="text-danger">*</span></label>
-      <small class="text-muted d-block">Indica el apellido tal y como figura en el pasaporte</small>
+      <small class="text-muted d-block" *ngIf="mode === 'flight'">Indica el apellido tal y como figura en el pasaporte</small>
 
       <input type="text" class="form-control" id="lastName" formControlName="lastName"
         [ngClass]="onValidate('lastName')">
@@ -27,7 +27,7 @@
     </div>
   </div>
 
-  <div class="row mb-3">
+  <div class="row mb-3" *ngIf="mode === 'flight'">
 
     <div class="col-md-6 mb-3 mb-md-0">
       <label for="gender" class="form-label">Género <span class="text-danger">*</span></label>
@@ -49,8 +49,39 @@
     </div>
   </div>
 
+  <!-- Datos de contacto para el titular en modo hotel -->
+  <div *ngIf="mode === 'hotel' && isPrimaryTraveler && travelerForm.get('contact')" formGroupName="contact">
+    <h6 class="mb-3">Datos de contacto</h6>
+    
+    <div class="row mb-3">
+      <div class="col-md-6 mb-3 mb-md-0">
+        <label for="emailAddress" class="form-label">Email <span class="text-danger">*</span></label>
+        <input type="email" class="form-control" id="emailAddress" formControlName="emailAddress"
+          [ngClass]="onValidate('contact.emailAddress')" placeholder="ejemplo@correo.com">
+        <div *ngIf="shouldShowError('contact.emailAddress')" class="invalid-feedback d-block">
+          <div *ngIf="getFieldErrors('contact.emailAddress')?.['required']">El email es obligatorio</div>
+          <div *ngIf="getFieldErrors('contact.emailAddress')?.['email']">Ingrese un email válido</div>
+        </div>
+      </div>
+
+      <div class="col-md-6" formArrayName="phones">
+        <div formGroupName="0">
+          <label for="phoneNumber" class="form-label">Teléfono <span class="text-danger">*</span></label>
+          <input type="tel" class="form-control" id="phoneNumber" formControlName="number"
+            [ngClass]="onValidate('contact.phones.0.number')" placeholder="+54 11 1234-5678">
+          <div *ngIf="shouldShowError('contact.phones.0.number')" class="invalid-feedback d-block">
+            <div *ngIf="getFieldErrors('contact.phones.0.number')?.['required']">El teléfono es obligatorio</div>
+            <div *ngIf="getFieldErrors('contact.phones.0.number')?.['pattern']">
+              Ingrese un teléfono válido (7-15 dígitos)
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <!-- Documentos -->
-  <div formArrayName="documents" class="mt-4">
+  <div *ngIf="mode === 'flight'" formArrayName="documents" class="mt-4">
     <h6 class="mb-3">Datos del Pasaporte</h6>
 
     <div formGroupName="0">
@@ -115,7 +146,7 @@
   </div>
 
   <!-- Información de contacto (solo para el pasajero principal) -->
-  <div *ngIf="isPrimaryTraveler" formGroupName="contact" class="mt-4 mb-3">
+  <div *ngIf="mode === 'flight' && isPrimaryTraveler" formGroupName="contact" class="mt-4 mb-3">
     <h6 class="mb-3">Información de contacto</h6>
 
     <div class="mb-3">

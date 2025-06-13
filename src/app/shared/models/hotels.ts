@@ -56,7 +56,7 @@ export namespace HotelSearchResponse {
     rateKey: string;
     rateClass: string;
     rateType: string;
-    net: string;
+    net: number;
     discount?: number;
     // Nuevas propiedades agregadas
     adults?: number;

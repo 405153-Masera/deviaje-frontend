@@ -20,6 +20,7 @@ import { ValidatorsService } from '../../../../shared/services/validators.servic
 export class DeviajeTravelerFormComponent implements OnInit {
   @Input() travelerForm!: FormGroup;
   @Input() isPrimaryTraveler: boolean = false;
+  @Input() mode: 'flight' | 'hotel' = 'flight';
 
   private http = inject(HttpClient);
   private validatorsService = inject(ValidatorsService);

@@ -143,7 +143,7 @@
             <div *ngIf="mainForm.get('payment')">
               <app-deviaje-payments-form 
                 [paymentForm]="paymentFormGroup" 
-                [amount]="rate.net || '0'" 
+                [amount]="(rate.net.toString()) || '0'" 
                 [currency]="searchParams?.currency || 'EUR'">
               </app-deviaje-payments-form>
             </div>
