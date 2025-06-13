@@ -16,6 +16,10 @@ import { DeviajeAccessDeniedComponent } from './features/public/components/devia
 import { DeviajeHotelBookingComponent } from './features/client/components/deviaje-hotel-booking/deviaje-hotel-booking.component';
 import { DeviajeChangePasswordComponent } from './shared/components/deviaje-change-password/deviaje-change-password.component';
 import { DeviajeAdminUserRegisterComponent } from './features/admin/components/deviaje-admin-user-register/deviaje-admin-user-register.component';
+import { DeviajeUsersListComponent } from './features/admin/components/deviaje-users-list/deviaje-users-list.component';
+import { TerminosCondicionesComponent } from './pages/legal/terminos-condiciones/terminos-condiciones.component';
+import { PoliticaPrivacidadComponent } from './pages/legal/politica-privacidad/politica-privacidad.component';
+import { PreguntasFrecuentesComponent } from './pages/legal/preguntas-frecuentes/preguntas-frecuentes.component';
 
 export const routes: Routes = [
   // Ruta principal
@@ -27,6 +31,10 @@ export const routes: Routes = [
   { path: 'user/forgot-password', component: DeviajeForgotPasswordComponent },
   { path: 'user/reset-password', component: DeviajeResetPasswordComponent },
   { path: 'user/change-password', component: DeviajeChangePasswordComponent },
+
+  { path: 'legal/terminos-condiciones', component: TerminosCondicionesComponent },
+  { path: 'legal/politica-privacidad', component: PoliticaPrivacidadComponent },
+  { path: 'legal/preguntas-frecuentes', component: PreguntasFrecuentesComponent },
   {
     path: 'home',
     component: DeviajeMainLayoutComponent,
@@ -73,7 +81,7 @@ export const routes: Routes = [
         path: 'users',
         children: [
           { path: '', redirectTo: 'list', pathMatch: 'full' },
-          //{ path: 'list', component: DeviajeUsersListComponent },
+          { path: 'list', component: DeviajeUsersListComponent },
           { path: 'register', component: DeviajeAdminUserRegisterComponent },
           //{ path: 'edit/:id', component: DeviajeUserEditComponent },
         ],

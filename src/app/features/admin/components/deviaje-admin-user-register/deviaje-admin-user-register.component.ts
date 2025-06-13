@@ -13,7 +13,10 @@ import { CommonModule } from '@angular/common';
 import { Subscription, debounceTime, distinctUntilChanged } from 'rxjs';
 import { AuthService } from '../../../../core/auth/services/auth.service';
 import { ValidatorsService } from '../../../../shared/services/validators.service';
-import { UserRegistrationRequest, UserService } from '../../../../shared/services/user.service';
+import {
+  UserRegistrationRequest,
+  UserService,
+} from '../../../../shared/services/user.service';
 
 @Component({
   selector: 'app-deviaje-admin-user-register',
@@ -37,11 +40,10 @@ export class DeviajeAdminUserRegisterComponent implements OnInit, OnDestroy {
 
   // Opciones para roles
   roleOptions = [
-    { value: 'ADMINISTRADOR', label: 'Administrador' },
-    { value: 'AGENTE', label: 'Agente' },
-    { value: 'CLIENTE', label: 'Cliente' },
+    { value: 'ADMINISTRADOR', label: 'Administrador', id: 1 },
+    { value: 'AGENTE', label: 'Agente', id: 2 },
+    { value: 'CLIENTE', label: 'Cliente', id: 3 }, 
   ];
-
   constructor(
     private formBuilder: FormBuilder,
     private router: Router,
@@ -120,6 +122,17 @@ export class DeviajeAdminUserRegisterComponent implements OnInit, OnDestroy {
     );
   }
 
+  private convertRolesToIds(roleNames: string[]): number[] {
+    return roleNames
+      .map((roleName) => {
+        const role = this.roleOptions.find(
+          (option) => option.value === roleName
+        );
+        return role ? role.id : 0;
+      })
+      .filter((id) => id > 0);
+  }
+
   // Getters para fácil acceso a los controles del formulario
   get f() {
     return this.userForm.controls;
@@ -128,7 +141,11 @@ export class DeviajeAdminUserRegisterComponent implements OnInit, OnDestroy {
   // Helper methods para mostrar errores (copiado exacto del signup)
   shouldShowError(fieldName: string): boolean {
     const field = this.userForm.get(fieldName);
-    return !!(field && field.invalid && (field.dirty || field.touched || this.submitted));
+    return !!(
+      field &&
+      field.invalid &&
+      (field.dirty || field.touched || this.submitted)
+    );
   }
 
   getFieldErrors(fieldName: string): ValidationErrors | null {
@@ -140,12 +157,14 @@ export class DeviajeAdminUserRegisterComponent implements OnInit, OnDestroy {
     const control = this.userForm.get(fieldName);
     return {
       'is-invalid': control?.invalid && (control?.dirty || control?.touched),
-      'is-valid': control?.valid
+      'is-valid': control?.valid,
     };
   }
 
   // Validaciones copiadas exactamente del signup
-  validatePasswordComplexity(control: AbstractControl): ValidationErrors | null {
+  validatePasswordComplexity(
+    control: AbstractControl
+  ): ValidationErrors | null {
     const password = control.value;
 
     if (!password) return null;
@@ -181,7 +200,10 @@ export class DeviajeAdminUserRegisterComponent implements OnInit, OnDestroy {
       }
 
       if (control.value !== matchingControl.value) {
-        matchingControl.setErrors({ ...matchingControl.errors, mustMatch: true });
+        matchingControl.setErrors({
+          ...matchingControl.errors,
+          mustMatch: true,
+        });
         return { mustMatch: true };
       } else {
         // Limpiar solo el error mustMatch, preservar otros errores
@@ -244,13 +266,15 @@ export class DeviajeAdminUserRegisterComponent implements OnInit, OnDestroy {
   // Manejo de roles
   onRoleChange(role: string, event: any): void {
     const roles = this.userForm.get('roles')?.value || [];
-    
+
     if (event.target.checked) {
       if (!roles.includes(role)) {
         this.userForm.get('roles')?.setValue([...roles, role]);
       }
     } else {
-      this.userForm.get('roles')?.setValue(roles.filter((r: string) => r !== role));
+      this.userForm
+        .get('roles')
+        ?.setValue(roles.filter((r: string) => r !== role));
     }
   }
 
@@ -270,19 +294,25 @@ export class DeviajeAdminUserRegisterComponent implements OnInit, OnDestroy {
 
     this.loading = true;
 
+    const roleIds = this.convertRolesToIds(this.f['roles'].value); // ← AQUÍ SE LLAMA
+    const currentUserId = this.authService.getUser()?.id || 1;
+
     const userData: UserRegistrationRequest = {
       username: this.f['username'].value,
       email: this.f['email'].value,
       password: this.f['password'].value,
       firstName: this.f['firstName'].value || undefined,
       lastName: this.f['lastName'].value || undefined,
-      roles: this.f['roles'].value,
+      roleIds: roleIds, // ← Y AQUÍ SE USA EL RESULTADO
+      createdUser: currentUserId,
     };
 
     this.subscription.add(
       this.userService.registerUser(userData).subscribe({
         next: (response) => {
-          this.success = response.message || 'Usuario registrado exitosamente. Se envió un email para cambiar la contraseña.';
+          this.success =
+            response.message ||
+            'Usuario registrado exitosamente. Se envió un email para cambiar la contraseña.';
           this.error = '';
           this.loading = false;
           this.userForm.reset();
@@ -294,7 +324,9 @@ export class DeviajeAdminUserRegisterComponent implements OnInit, OnDestroy {
           }, 3000);
         },
         error: (error) => {
-          this.error = error?.error?.message || 'Error al registrar el usuario. Por favor, inténtalo de nuevo.';
+          this.error =
+            error?.error?.message ||
+            'Error al registrar el usuario. Por favor, inténtalo de nuevo.';
           this.success = '';
           this.loading = false;
         },
@@ -308,7 +340,7 @@ export class DeviajeAdminUserRegisterComponent implements OnInit, OnDestroy {
   }
 
   private markFormGroupTouched(formGroup: FormGroup): void {
-    Object.keys(formGroup.controls).forEach(key => {
+    Object.keys(formGroup.controls).forEach((key) => {
       const control = formGroup.get(key);
       control?.markAsTouched();
 

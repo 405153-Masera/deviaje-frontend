@@ -1,0 +1,39 @@
+// footer.component.scss
+
+footer {
+  margin-top: auto; // Para que el footer se pegue al bottom
+}
+
+// Hover effects para enlaces
+.text-light:hover {
+  color: #0d6efd !important;
+  transition: color 0.3s ease;
+}
+
+// Hover effects para botones de redes sociales
+.btn-link:hover {
+  transform: translateY(-2px);
+  transition: transform 0.3s ease;
+}
+
+// Estilos para iconos de métodos de pago
+.badge {
+  padding: 0.5rem;
+  
+  i {
+    margin: 0;
+  }
+}
+
+// Responsive adjustments
+@media (max-width: 768px) {
+  .col-md-6.text-md-end {
+    text-align: center !important;
+    margin-top: 1rem;
+  }
+  
+  .text-md-end a {
+    display: block;
+    margin-bottom: 0.5rem;
+  }
+}

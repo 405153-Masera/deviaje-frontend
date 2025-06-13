@@ -10,7 +10,8 @@ export interface UserRegistrationRequest {
   password: string;
   firstName?: string;
   lastName?: string;
-  roles: string[];
+   roleIds: number[];     // ✅ Array de números
+  createdUser?: number;  // ✅ Agregado
 }
 
 export interface UserUpdateRequest {

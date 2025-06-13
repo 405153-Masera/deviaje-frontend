@@ -1,0 +1,247 @@
+<div class="container-fluid mt-4" (click)="closeDropdown()">
+    <!-- Header -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center">
+                <h2 class="text-primary mb-0">
+                    <i class="bi bi-people-fill me-2"></i>Gestión de Usuarios
+                </h2>
+                <div class="d-flex gap-2">
+                    <button type="button" class="btn btn-primary" (click)="goToRegisterUser()">
+                        <i class="bi bi-plus-circle me-2"></i>Nuevo Usuario
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Alertas -->
+    <div class="row" *ngIf="success || error">
+        <div class="col-12">
+            <div *ngIf="success" class="alert alert-success alert-dismissible fade show" role="alert">
+                <i class="bi bi-check-circle-fill me-2"></i>
+                {{ success }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"
+                    (click)="success = ''"></button>
+            </div>
+
+            <div *ngIf="error" class="alert alert-danger alert-dismissible fade show" role="alert">
+                <i class="bi bi-exclamation-triangle-fill me-2"></i>
+                {{ error }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"
+                    (click)="error = ''"></button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Filtros -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-body">
+                    <form [formGroup]="filtersForm" class="row g-3 align-items-end">
+                        <!-- Búsqueda -->
+                        <div class="col-md-6">
+                            <label for="search" class="form-label">Buscar</label>
+                            <div class="input-group">
+                                <span class="input-group-text">
+                                    <i class="bi bi-search"></i>
+                                </span>
+                                <input type="text" formControlName="search" class="form-control" id="search"
+                                    placeholder="Buscar por nombre de usuario...">
+                            </div>
+                        </div>
+
+                        <!-- Filtro por rol -->
+                        <div class="col-md-4">
+                            <label for="role" class="form-label">Filtrar por rol</label>
+                            <select formControlName="role" class="form-select" id="role">
+                                <option *ngFor="let option of roleOptions" [value]="option.value">
+                                    {{ option.label }}
+                                </option>
+                            </select>
+                        </div>
+
+                        <!-- Botones de acción -->
+                        <div class="col-md-2">
+                            <div class="d-flex gap-2">
+                                <button type="button" class="btn btn-outline-secondary" (click)="clearFilters()"
+                                    title="Limpiar filtros">
+                                    <i class="bi bi-eraser"></i>
+                                </button>
+                                <button type="button" class="btn btn-outline-primary" (click)="loadUsers()"
+                                    title="Actualizar">
+                                    <i class="bi bi-arrow-clockwise"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Tabla de usuarios -->
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-body">
+                    <!-- Loading spinner -->
+                    <div *ngIf="loading" class="text-center py-5">
+                        <div class="spinner-border text-primary" role="status">
+                            <span class="visually-hidden">Cargando...</span>
+                        </div>
+                        <p class="mt-2 text-muted">Cargando usuarios...</p>
+                    </div>
+
+                    <!-- Información de resultados -->
+                    <div *ngIf="!loading" class="d-flex justify-content-between align-items-center mb-3">
+                        <div class="text-muted">
+                            {{ filteredUsers.length }} usuarios encontrados
+                        </div>
+                        <div class="text-muted">
+                            Mostrando {{ (currentPage - 1) * itemsPerPage + 1 }} -
+                            {{ getMinValue(currentPage * itemsPerPage, totalElements) }}
+                            de {{ totalElements }} usuarios
+                        </div>
+                    </div>
+
+                    <!-- Tabla -->
+                    <div *ngIf="!loading" class="table-responsive">
+                        <table class="table table-hover align-middle">
+                            <thead class="table-light">
+                                <tr>
+                                    <th scope="col">Usuario</th>
+                                    <th scope="col">Email</th>
+                                    <th scope="col">Teléfono</th>
+                                    <th scope="col">Rol</th>
+                                    <th scope="col">Estado</th>
+                                    <th scope="col" class="text-center">Acciones</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr *ngFor="let user of paginatedUsers">
+                                    <!-- Usuario -->
+                                    <td>
+                                        <div class="d-flex align-items-center">
+                                            <div class="bg-primary rounded-circle d-flex align-items-center justify-content-center me-3"
+                                                style="width: 40px; height: 40px;">
+                                                <i class="bi bi-person-fill text-white"></i>
+                                            </div>
+                                            <div>
+                                                <div class="fw-semibold">{{ user.username }}</div>
+                                                <small class="text-muted" *ngIf="user.firstName || user.lastName">
+                                                    {{ user.firstName }} {{ user.lastName }}
+                                                </small>
+                                            </div>
+                                        </div>
+                                    </td>
+
+                                    <!-- Email -->
+                                    <td>
+                                        <span class="font-monospace">{{ user.email }}</span>
+                                    </td>
+
+                                    <!-- Teléfono (placeholder) -->
+                                    <td>
+                                        <span class="text-muted">N/A</span>
+                                    </td>
+
+                                    <!-- Rol -->
+                                    <td>
+                                        <span [ngClass]="getRoleBadgeClass(user.roles)">
+                                            {{ getRoleDisplayName(user.roles) }}
+                                        </span>
+                                    </td>
+
+                                    <!-- Estado -->
+                                    <td>
+                                        <span class="badge" [ngClass]="user.isActive ? 'bg-success' : 'bg-secondary'">
+                                            <i class="bi"
+                                                [ngClass]="user.isActive ? 'bi-check-circle' : 'bi-x-circle'"></i>
+                                            {{ user.isActive ? 'Activo' : 'Inactivo' }}
+                                        </span>
+                                    </td>
+
+                                    <!-- Acciones -->
+                                    <td class="text-center">
+                                        <div class="dropdown">
+                                            <button class="btn btn-outline-secondary btn-sm dropdown-toggle"
+                                                type="button" (click)="toggleDropdown(user.id, $event)"
+                                                [class.show]="openDropdownId === user.id">
+                                                <i class="bi bi-three-dots-vertical"></i>
+                                            </button>
+
+                                            <ul class="dropdown-menu" [class.show]="openDropdownId === user.id">
+                                                <li>
+                                                    <button class="dropdown-item" (click)="viewUser(user)">
+                                                        <i class="bi bi-eye me-2"></i>Ver más
+                                                    </button>
+                                                </li>
+                                                <li>
+                                                    <button class="dropdown-item" (click)="editUser(user)">
+                                                        <i class="bi bi-pencil me-2"></i>Editar
+                                                    </button>
+                                                </li>
+                                                <li>
+                                                    <button class="dropdown-item" (click)="forcePasswordChange(user)">
+                                                        <i class="bi bi-key me-2"></i>Cambiar contraseña
+                                                    </button>
+                                                </li>
+                                                <li>
+                                                    <hr class="dropdown-divider">
+                                                </li>
+                                                <li>
+                                                    <button class="dropdown-item"
+                                                        [ngClass]="user.isActive ? 'text-warning' : 'text-success'"
+                                                        (click)="toggleUserStatus(user)">
+                                                        <i class="bi me-2"
+                                                            [ngClass]="user.isActive ? 'bi-pause-circle' : 'bi-play-circle'"></i>
+                                                        {{ user.isActive ? 'Dar de baja' : 'Activar' }}
+                                                    </button>
+                                                </li>
+                                            </ul>
+                                        </div>
+                                    </td>
+                                </tr>
+
+                                <!-- Mensaje cuando no hay usuarios -->
+                                <tr *ngIf="paginatedUsers.length === 0">
+                                    <td colspan="6" class="text-center py-5 text-muted">
+                                        <i class="bi bi-inbox display-1"></i>
+                                        <p class="mt-3">No se encontraron usuarios</p>
+                                        <button class="btn btn-primary" (click)="clearFilters()">
+                                            Limpiar filtros
+                                        </button>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <!-- Paginación (copiado exacto de flight-results) -->
+                    <nav class="d-flex justify-content-center mt-4" *ngIf="!loading && totalPages > 1">
+                        <ul class="pagination">
+                            <li class="page-item" [class.disabled]="currentPage === 1">
+                                <a class="page-link" (click)="changePage(currentPage - 1)">
+                                    <i class="bi bi-chevron-left"></i>
+                                </a>
+                            </li>
+
+                            <li *ngFor="let page of [].constructor(totalPages); let i = index" class="page-item"
+                                [class.active]="currentPage === i + 1">
+                                <a class="page-link" (click)="changePage(i + 1)">{{ i + 1 }}</a>
+                            </li>
+
+                            <li class="page-item" [class.disabled]="currentPage === totalPages">
+                                <a class="page-link" (click)="changePage(currentPage + 1)">
+                                    <i class="bi bi-chevron-right"></i>
+                                </a>
+                            </li>
+                        </ul>
+                    </nav>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

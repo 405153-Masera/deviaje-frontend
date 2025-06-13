@@ -1,0 +1,233 @@
+<!-- Navegación -->
+<nav class="navbar navbar-expand-lg navbar-dark bg-primary">
+    <div class="container">
+        <a class="navbar-brand" routerLink="/home">
+            <i class="bi bi-airplane me-2"></i>DeViaje
+        </a>
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="navbarNav">
+            <ul class="navbar-nav ms-auto">
+                <li class="nav-item">
+                    <a class="nav-link" routerLink="/home">Inicio</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" routerLink="/legal/terminos-condiciones">Términos</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link active" routerLink="/legal/preguntas-frecuentes">FAQ</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" routerLink="/legal/politica-privacidad">Privacidad</a>
+                </li>
+            </ul>
+        </div>
+    </div>
+</nav>
+
+<!-- Header -->
+<div class="bg-light py-5">
+    <div class="container">
+        <div class="row">
+            <div class="col-lg-8 mx-auto text-center">
+                <h1 class="display-4 fw-bold text-primary mb-3">
+                    <i class="bi bi-question-circle me-3"></i>Preguntas Frecuentes
+                </h1>
+                <p class="lead text-muted">Encuentra respuestas rápidas a las dudas más comunes</p>
+                <p class="text-secondary">
+                    ¿No encuentras lo que buscas? 
+                    <button class="btn btn-link p-0 align-baseline" (click)="openContactEmail()">
+                        Contáctanos
+                    </button>
+                </p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Búsqueda -->
+<div class="container py-4">
+    <div class="row justify-content-center">
+        <div class="col-lg-6">
+            <div class="input-group input-group-lg">
+                <span class="input-group-text bg-primary text-white">
+                    <i class="bi bi-search"></i>
+                </span>
+                <input 
+                    type="text" 
+                    class="form-control" 
+                    placeholder="Buscar en preguntas frecuentes..." 
+                    [(ngModel)]="searchTerm"
+                    (input)="onSearch()">
+                <button 
+                    class="btn btn-outline-secondary" 
+                    type="button" 
+                    (click)="clearSearch()"
+                    [disabled]="!searchTerm"
+                    title="Limpiar búsqueda">
+                    <i class="bi bi-x-lg"></i>
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Contenido Principal -->
+<div class="container pb-5">
+    <div class="row">
+        <div class="col-lg-10 mx-auto">
+
+            <!-- Categorías de navegación -->
+            <div class="row mb-4">
+                <div class="col-12">
+                    <nav class="nav nav-pills nav-fill flex-column flex-sm-row">
+                        <button 
+                            *ngFor="let category of categories"
+                            class="nav-link"
+                            [class.active]="activeCategory === category.id"
+                            (click)="setActiveCategory(category.id)">
+                            <i class="{{ category.icon }} me-2"></i>{{ category.name }}
+                        </button>
+                    </nav>
+                </div>
+            </div>
+
+            <!-- Contenido de las FAQs -->
+            <div class="faq-content">
+                
+                <!-- Mensaje cuando no hay resultados -->
+                <div *ngIf="filteredFAQs.length === 0" class="text-center py-5">
+                    <i class="bi bi-search display-1 text-muted mb-3"></i>
+                    <h3 class="text-muted">No se encontraron resultados</h3>
+                    <p class="text-secondary">Intenta con otros términos de búsqueda o selecciona otra categoría</p>
+                    <button class="btn btn-primary" (click)="clearSearch()">
+                        <i class="bi bi-arrow-clockwise me-2"></i>Limpiar búsqueda
+                    </button>
+                </div>
+
+                <!-- Lista de FAQs -->
+                <div *ngIf="filteredFAQs.length > 0" class="accordion" id="faqAccordion">
+                    <div 
+                        *ngFor="let faq of filteredFAQs; let i = index" 
+                        class="accordion-item mb-3">
+                        <h2 class="accordion-header">
+                            <button 
+                                class="accordion-button collapsed"
+                                [class.show]="i === 0"
+                                type="button" 
+                                data-bs-toggle="collapse" 
+                                [attr.data-bs-target]="'#' + faq.id"
+                                [attr.aria-expanded]="i === 0"
+                                [attr.aria-controls]="faq.id">
+                                <i class="{{ faq.icon }} text-primary me-2"></i>
+                                {{ faq.question }}
+                            </button>
+                        </h2>
+                        <div 
+                            [id]="faq.id" 
+                            class="accordion-collapse collapse"
+                            [class.show]="i === 0"
+                            data-bs-parent="#faqAccordion">
+                            <div class="accordion-body">
+                                <p>{{ faq.answer }}</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+
+            <!-- Sección de contacto directo -->
+            <div class="card mt-5 border-primary">
+                <div class="card-header bg-primary text-white">
+                    <h4 class="card-title mb-0">
+                        <i class="bi bi-envelope me-2"></i>¿No encontraste lo que buscabas?
+                    </h4>
+                </div>
+                <div class="card-body">
+                    <p class="lead">Estamos aquí para ayudarte. Contáctanos directamente:</p>
+                    
+                    <div class="row">
+                        <div class="col-md-6">
+                            <h6 class="text-primary">Canales de Contacto</h6>
+                            <ul class="list-unstyled">
+                                <li class="mb-2">
+                                    <i class="bi bi-telephone text-primary me-2"></i>
+                                    <strong>Teléfono:</strong> 
+                                    <a href="tel:08108106863" class="text-decoration-none">0810-810-6863</a>
+                                </li>
+                                <li class="mb-2">
+                                    <i class="bi bi-envelope text-primary me-2"></i>
+                                    <strong>Email:</strong> 
+                                    <button class="btn btn-link p-0 align-baseline" (click)="openContactEmail()">
+                                        soporte&#64;deviaje.com
+                                    </button>
+                                </li>
+                                <li class="mb-2">
+                                    <i class="bi bi-whatsapp text-success me-2"></i>
+                                    <strong>WhatsApp:</strong> 
+                                    <a href="https://wa.me/5491155710504" target="_blank" class="text-decoration-none">
+                                        +54 9 11 5571-0504
+                                    </a>
+                                </li>
+                                <li class="mb-2">
+                                    <i class="bi bi-geo-alt text-primary me-2"></i>
+                                    <strong>Dirección:</strong> Córdoba, Argentina
+                                </li>
+                            </ul>
+                        </div>
+                        <div class="col-md-6">
+                            <h6 class="text-success">Horarios de Atención</h6>
+                            <ul class="list-unstyled">
+                                <li class="mb-1">
+                                    <i class="bi bi-clock text-success me-2"></i>
+                                    <strong>Lunes a Viernes:</strong> 9:00 - 21:00
+                                </li>
+                                <li class="mb-1">
+                                    <i class="bi bi-clock text-success me-2"></i>
+                                    <strong>Sábados:</strong> 10:00 - 18:00
+                                </li>
+                                <li class="mb-1">
+                                    <i class="bi bi-clock text-success me-2"></i>
+                                    <strong>Domingos:</strong> 10:00 - 16:00
+                                </li>
+                                <li class="mb-1">
+                                    <i class="bi bi-shield-check text-warning me-2"></i>
+                                    <strong>Emergencias 24/7</strong> para huéspedes
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
+
+                    <div class="row mt-4">
+                        <div class="col-12">
+                            <div class="alert alert-success">
+                                <i class="bi bi-heart me-2"></i>
+                                <strong>¡Tu experiencia es importante para nosotros!</strong> 
+                                Respondemos todas las consultas en un máximo de 24 horas y estamos comprometidos con brindarte el mejor servicio.
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+<!-- Footer -->
+<footer class="bg-dark text-white py-4">
+    <div class="container">
+        <div class="row">
+            <div class="col-md-6">
+                <p class="mb-0">&copy; 2025 DeViaje. Todos los derechos reservados.</p>
+            </div>
+            <div class="col-md-6 text-md-end">
+                <a routerLink="/legal/terminos-condiciones" class="text-white me-3">Términos</a>
+                <a routerLink="/legal/politica-privacidad" class="text-white me-3">Privacidad</a>
+                <a routerLink="/legal/preguntas-frecuentes" class="text-white">FAQ</a>
+            </div>
+        </div>
+    </div>
+</footer>
