@@ -185,6 +185,9 @@ export class DeviajeFlightsSearchComponent implements OnInit, OnDestroy {
       adults: this.formSearch.get('adults')?.value!,
     };
 
+    const originCity = this.formSearch.get('origin')?.value;
+    const destinationCity = this.formSearch.get('destination')?.value;
+
     // Añade condicionalmente los campos opcionales
     if (
       this.tripType === 'roundtrip' &&
@@ -222,7 +225,7 @@ export class DeviajeFlightsSearchComponent implements OnInit, OnDestroy {
     }
 
     this.router.navigate(['/home/flight/results'], {
-      state: { searchParams }
+      state: { searchParams, originCity, destinationCity }
     });
     this.isLoading = false;
   }

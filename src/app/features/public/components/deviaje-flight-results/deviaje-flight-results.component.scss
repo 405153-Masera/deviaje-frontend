@@ -1,5 +1,10 @@
 @import "../../../../../assets/styles/variables";
 
+.no-uppercase {
+  text-transform: none !important;
+}
+
+
 // Panel de filtros lateral
 .filters-panel {
   background-color: white;

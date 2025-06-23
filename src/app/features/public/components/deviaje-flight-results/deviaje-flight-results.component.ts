@@ -3,40 +3,50 @@ import {
   FlightOffer,
   FlightSearchRequest,
 } from '../../../../shared/models/flights';
-import { ActivatedRoute, Router, RouterModule } from '@angular/router';
+import { Router, RouterModule } from '@angular/router';
 import { CommonModule } from '@angular/common';
-import { FormsModule} from '@angular/forms';
+import { FormsModule } from '@angular/forms';
 import { FlightUtilsService } from '../../../../shared/services/flight-utils.service';
 import { FlightService } from '../../../../shared/services/flight.service';
 import { Subscription } from 'rxjs';
-import { DeviajeFlightDetailComponent } from "../deviaje-flight-detail/deviaje-flight-detail.component";
+import { DeviajeFlightDetailComponent } from '../deviaje-flight-detail/deviaje-flight-detail.component';
+import { CityDto } from '../../../../shared/models/locations';
 
 @Component({
   selector: 'app-deviaje-flight-results',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterModule, DeviajeFlightDetailComponent],
+  imports: [
+    CommonModule,
+    FormsModule,
+    RouterModule,
+    DeviajeFlightDetailComponent,
+  ],
   templateUrl: './deviaje-flight-results.component.html',
   styleUrl: './deviaje-flight-results.component.scss',
 })
 export class DeviajeFlightResultsComponent implements OnInit, OnDestroy {
-  
   private readonly router: Router = inject(Router);
-  private readonly route: ActivatedRoute = inject(ActivatedRoute);
   subscription: Subscription = new Subscription();
   private readonly flightService: FlightService = inject(FlightService);
   readonly flightUtils: FlightUtilsService = inject(FlightUtilsService);
 
   flightOffers: FlightOffer[] = [];
   searchParams?: FlightSearchRequest;
+  originCity: CityDto | null = null;
+  destinationCity: CityDto | null = null;
   sortOption: string = 'price_asc';
   filteredOffers: FlightOffer[] = [];
 
   Math = Math;
 
   // Propiedades para manejar los filtros
-  priceRange: { min: number; max: number; current: number } = { min: 0, max: 10000, current:10000 };
-  availableAirlines: string[] = []; 
-  availableCabins: string[] = []; 
+  priceRange: { min: number; max: number; current: number } = {
+    min: 0,
+    max: 10000,
+    current: 10000,
+  };
+  availableAirlines: string[] = [];
+  availableCabins: string[] = [];
   selectedAirlines: string[] = [];
   selectedCabins: string[] = [];
   directFlightsOnly: boolean = false;
@@ -56,49 +66,29 @@ export class DeviajeFlightResultsComponent implements OnInit, OnDestroy {
   showFilters: boolean = false;
 
   ngOnInit(): void {
-
-    if(typeof window !== 'undefined') {
+    if (typeof window !== 'undefined') {
       const state = window.history.state;
 
-      if(state && state.searchParams){
+      if (state && state.searchParams) {
         this.searchParams = state.searchParams;
+        this.originCity = state.originCity;
+        this.destinationCity = state.destinationCity;
 
-        if(state.flightOffers){
-          this.flightOffers = state.flightOffers;
-
-          try {
-            localStorage.setItem('flightSearchParams', JSON.stringify(this.searchParams));
-            localStorage.setItem('flightSearchResults', JSON.stringify(this.flightOffers));
-            localStorage.setItem('flightSearchTimestamp', Date.now().toString());
-          } catch (e) {
-            console.warn('No se pudo guardar en localStorage:', e);
-          }
-  
-          this.initializeFilters();
-          this.applyFilters();
-        } else {
-          this.searchFlights();
-        }
-        
+        this.searchFlights();
       } else {
-
         try {
           const storedParams = localStorage.getItem('flightSearchParams');
-          const storedResults = localStorage.getItem('flightSearchResults');
-          const timestamp = localStorage.getItem('flightSearchTimestamp');
-          
-          // Verificar si los datos tienen menos de 5 minutos de antigüedad
-          const isDataFresh = timestamp && (Date.now() - parseInt(timestamp)) < 10 * 60 * 1000;
-          
-          if (storedParams && storedResults && isDataFresh) {
+          const storedOriginCity = localStorage.getItem('cityOrigin');
+          const storedDestinationCity = localStorage.getItem('cityDestination');
+
+          if (storedParams) {
             this.searchParams = JSON.parse(storedParams) as FlightSearchRequest;
-            this.flightOffers = JSON.parse(storedResults) as FlightOffer[];
-            
-            this.initializeFilters();
-            this.applyFilters();
-          } else if (storedParams) {
-            // Si los datos son viejos pero tenemos los parámetros, hacemos una nueva búsqueda
-            this.searchParams = JSON.parse(storedParams) as FlightSearchRequest;
+            this.originCity = storedOriginCity
+              ? JSON.parse(storedOriginCity)
+              : null;
+            this.destinationCity = storedDestinationCity
+              ? JSON.parse(storedDestinationCity)
+              : null;
             this.searchFlights();
           } else {
             // Si no hay datos, redirigimos a la búsqueda
@@ -109,14 +99,10 @@ export class DeviajeFlightResultsComponent implements OnInit, OnDestroy {
           this.router.navigate(['/home/flight/search']);
         }
       }
-    } else {
-      // Si estamos en SSR, esperamos a que se cargue en el cliente
-      console.log('Ejecutando en SSR, esperando carga en cliente');
-    }   
+    }
   }
 
   searchFlights(): void {
-
     this.isLoading = true;
 
     this.subscription.add(
@@ -127,16 +113,18 @@ export class DeviajeFlightResultsComponent implements OnInit, OnDestroy {
           this.flightUtils.extractBrandedFaresFromOffers(flightOffers);
 
           try {
-            localStorage.setItem('flightSearchResults', JSON.stringify(flightOffers));
-            localStorage.setItem('flightSearchTimestamp', Date.now().toString());
+            localStorage.setItem(
+              'flightSearchParams',
+              JSON.stringify(this.searchParams)
+            );
+            localStorage.setItem('cityOrigin', JSON.stringify(this.originCity));
+            localStorage.setItem(
+              'cityDestination',
+              JSON.stringify(this.destinationCity)
+            );
           } catch (e) {
             console.warn('No se pudo guardar en localStorage:', e);
           }
-
-          this.router.navigate([], {
-            relativeTo: this.route,
-            state: { flightOffers: flightOffers, searchParams: this.searchParams }
-          });
 
           this.initializeFilters();
           this.applyFilters();
@@ -159,7 +147,6 @@ export class DeviajeFlightResultsComponent implements OnInit, OnDestroy {
 
   initializeFilters(): void {
     if (this.flightOffers.length > 0) {
-
       // Aca inicializamos el rango de precios
       const prices = this.flightOffers.map((offer) =>
         parseFloat(offer.price.total)
@@ -176,7 +163,7 @@ export class DeviajeFlightResultsComponent implements OnInit, OnDestroy {
         );
       });
       this.availableAirlines = Array.from(airlines);
-      this.selectedAirlines = [...this.availableAirlines];
+      this.selectedAirlines = [];
 
       // Aca inicializo las travel class segun las ofertas de vuelos
       const cabins = new Set<string>();
@@ -197,12 +184,14 @@ export class DeviajeFlightResultsComponent implements OnInit, OnDestroy {
         }
       });
       this.availableCabins = Array.from(cabins);
-      this.selectedCabins = [...this.availableCabins];
+      this.selectedCabins = [];
 
-       // Aca establezco la duración máxima
-       const durations = this.flightOffers.map(offer => this.flightUtils.getItineraryDurationMinutes(offer));
-       this.maxDuration = Math.max(...durations);
-       this.filteredOffers = [...this.flightOffers];
+      // Aca establezco la duración máxima
+      const durations = this.flightOffers.map((offer) =>
+        this.flightUtils.getItineraryDurationMinutes(offer)
+      );
+      this.maxDuration = Math.max(...durations);
+      this.filteredOffers = [...this.flightOffers];
     }
   }
 
@@ -210,20 +199,35 @@ export class DeviajeFlightResultsComponent implements OnInit, OnDestroy {
     this.isLoading = true;
 
     // Verificar si hay alguna aerolínea o cabina seleccionada
-    const hasAirlinesSelected = this.selectedAirlines.length > 0;
-    const hasCabinsSelected = this.selectedCabins.length > 0;
-  
-    // Si no hay ninguna aerolínea o cabina seleccionada, mostrar mensaje de "No hay resultados"
-    if ((!hasAirlinesSelected && this.availableAirlines.length > 0) || 
-        (!hasCabinsSelected && this.availableCabins.length > 0)) {
-      this.filteredOffers = [];
+    // const hasAirlinesSelected = this.selectedAirlines.length > 0;
+    // const hasCabinsSelected = this.selectedCabins.length > 0;
+
+    // // Si no hay ninguna aerolínea o cabina seleccionada, mostrar mensaje de "No hay resultados"
+    // if (
+    //   (!hasAirlinesSelected && this.availableAirlines.length > 0) ||
+    //   (!hasCabinsSelected && this.availableCabins.length > 0)
+    // ) {
+    //   this.filteredOffers = [];
+    //   this.sortResults();
+    //   this.currentPage = 1;
+    //   this.isLoading = false;
+    //   return;
+    // }
+
+    let filtered = [...this.flightOffers];
+
+    if (
+      this.selectedAirlines.length === 0 &&
+      this.selectedCabins.length === 0 &&
+      !this.directFlightsOnly &&
+      this.priceRange.current === this.priceRange.max
+    ) {
+      this.filteredOffers = [...this.flightOffers];
       this.sortResults();
       this.currentPage = 1;
       this.isLoading = false;
       return;
     }
-
-    let filtered = [...this.flightOffers];
 
     // Filtrar por precio
     filtered = filtered.filter((offer) => {
@@ -253,26 +257,29 @@ export class DeviajeFlightResultsComponent implements OnInit, OnDestroy {
       );
     }
 
-     // Filtrar por cabinas seleccionadas
+    // Filtrar por cabinas seleccionadas
     if (this.selectedCabins.length > 0) {
-      filtered = filtered.filter(offer => {
+      filtered = filtered.filter((offer) => {
         if (!offer.travelerPricings || offer.travelerPricings.length === 0) {
           return false;
         }
-        
+
         // Comprobar si alguna de las cabinas del vuelo está en las seleccionadas
         for (const pricing of offer.travelerPricings) {
-          if (!pricing.fareDetailsBySegment || pricing.fareDetailsBySegment.length === 0) {
+          if (
+            !pricing.fareDetailsBySegment ||
+            pricing.fareDetailsBySegment.length === 0
+          ) {
             continue;
           }
-          
+
           for (const segment of pricing.fareDetailsBySegment) {
             if (segment.cabin && this.selectedCabins.includes(segment.cabin)) {
               return true;
             }
           }
         }
-        
+
         return false;
       });
     }
@@ -284,27 +291,32 @@ export class DeviajeFlightResultsComponent implements OnInit, OnDestroy {
 
   toggleSelectedFilters(): void {
     // Obtener referencias a todos los checkboxes
-    const airlineCheckboxes = document.querySelectorAll('input[id^="airline-"]');
+    const airlineCheckboxes = document.querySelectorAll(
+      'input[id^="airline-"]'
+    );
     const cabinCheckboxes = document.querySelectorAll('input[id^="cabin-"]');
-    
+
     // Actualizar el array de aerolíneas seleccionadas
     this.selectedAirlines = Array.from(airlineCheckboxes)
       .filter((checkbox: any) => checkbox.checked)
       .map((checkbox: any) => checkbox.id.replace('airline-', ''));
-    
+
     // Actualizar el array de cabinas seleccionadas
     this.selectedCabins = Array.from(cabinCheckboxes)
       .filter((checkbox: any) => checkbox.checked)
       .map((checkbox: any) => checkbox.id.replace('cabin-', ''));
-    
+
     // Actualizar el filtro de vuelos directos
-    this.directFlightsOnly = (document.getElementById('direct-flights') as HTMLInputElement)?.checked || false;
+    this.directFlightsOnly =
+      (document.getElementById('direct-flights') as HTMLInputElement)
+        ?.checked || false;
   }
 
   sortResults(): void {
     switch (this.sortOption) {
       case 'price_asc':
-        this.filteredOffers.sort( //depende de (a, b)
+        this.filteredOffers.sort(
+          //depende de (a, b)
           (a, b) => parseFloat(a.price.total) - parseFloat(b.price.total)
         );
         break;
@@ -412,7 +424,7 @@ export class DeviajeFlightResultsComponent implements OnInit, OnDestroy {
     this.selectedFlightForDetail = offer;
     this.showDetailModal = true;
   }
-  
+
   closeDetailModal(): void {
     this.showDetailModal = false;
     this.selectedFlightForDetail = null;
@@ -429,9 +441,12 @@ export class DeviajeFlightResultsComponent implements OnInit, OnDestroy {
     if (!offer.travelerPricings || offer.travelerPricings.length === 0) {
       return false;
     }
-    
+
     for (const pricing of offer.travelerPricings) {
-      if (pricing.fareDetailsBySegment && pricing.fareDetailsBySegment.length > 0) {
+      if (
+        pricing.fareDetailsBySegment &&
+        pricing.fareDetailsBySegment.length > 0
+      ) {
         for (const segment of pricing.fareDetailsBySegment) {
           if (segment.cabin) {
             return true;
@@ -439,7 +454,7 @@ export class DeviajeFlightResultsComponent implements OnInit, OnDestroy {
         }
       }
     }
-    
+
     return false;
   }
 
@@ -448,11 +463,14 @@ export class DeviajeFlightResultsComponent implements OnInit, OnDestroy {
     if (!offer.travelerPricings || offer.travelerPricings.length === 0) {
       return 'ECONOMY';
     }
-    
+
     const cabins = new Set<string>();
-    
+
     for (const pricing of offer.travelerPricings) {
-      if (pricing.fareDetailsBySegment && pricing.fareDetailsBySegment.length > 0) {
+      if (
+        pricing.fareDetailsBySegment &&
+        pricing.fareDetailsBySegment.length > 0
+      ) {
         for (const segment of pricing.fareDetailsBySegment) {
           if (segment.cabin) {
             cabins.add(segment.cabin);
@@ -460,16 +478,16 @@ export class DeviajeFlightResultsComponent implements OnInit, OnDestroy {
         }
       }
     }
-    
+
     // Priorizar las cabinas en este orden
     const priority = ['FIRST', 'BUSINESS', 'PREMIUM_ECONOMY', 'ECONOMY'];
-    
+
     for (const cabin of priority) {
       if (cabins.has(cabin)) {
         return cabin;
       }
     }
-    
+
     return 'ECONOMY';
   }
 }
