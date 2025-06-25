@@ -8,6 +8,8 @@ import {
   HotelSearchRequest,
   HotelSearchResponse,
 } from '../../../../../shared/models/hotels';
+import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
+import { CityDto } from '../../../../../shared/models/locations';
 
 @Component({
   selector: 'app-deviaje-hotels-results',
@@ -18,8 +20,8 @@ import {
 })
 export class DeviajeHotelsResultsComponent implements OnInit {
   private readonly router: Router = inject(Router);
-  private readonly hotelService: HotelService = inject(HotelService);
-
+  hotelService: HotelService = inject(HotelService);
+  private sanitizer: DomSanitizer = inject(DomSanitizer);
   subscription: Subscription = new Subscription();
 
   // Input para cuando se utiliza como componente dentro de paquetes
@@ -29,6 +31,8 @@ export class DeviajeHotelsResultsComponent implements OnInit {
   // Resultados y filtros
   searchResults: HotelSearchResponse | null = null;
   filteredHotels: HotelSearchResponse.Hotel[] = [];
+  destinationCity: CityDto | null = null;
+
   // Por:
   categoryFilters = [
     { value: '5', label: '5 estrellas' },
@@ -70,12 +74,10 @@ export class DeviajeHotelsResultsComponent implements OnInit {
 
         if (state && state.searchParams) {
           this.searchParams = state.searchParams;
-
-          if (state.searchResults) {
-            this.processSearchResults(state.searchResults);
-          } else {
-            this.searchHotels();
-          }
+          this.destinationCity = state.destination;
+          
+          this.searchHotels();
+          
         } else {
           this.tryLoadFromStorage();
         }
@@ -113,12 +115,8 @@ export class DeviajeHotelsResultsComponent implements OnInit {
                 JSON.stringify(this.searchParams)
               );
               localStorage.setItem(
-                'hotelSearchResults',
-                JSON.stringify(response)
-              );
-              localStorage.setItem(
-                'hotelSearchTimestamp',
-                Date.now().toString()
+                'destination',
+                JSON.stringify(this.destinationCity)
               );
             } catch (e) {
               console.warn('No se pudo guardar en localStorage:', e);
@@ -139,22 +137,14 @@ export class DeviajeHotelsResultsComponent implements OnInit {
   private tryLoadFromStorage(): void {
     try {
       const storedParams = localStorage.getItem('hotelSearchParams');
-      const storedResults = localStorage.getItem('hotelSearchResults');
-      const timestamp = localStorage.getItem('hotelSearchTimestamp');
+      const storedDestination = localStorage.getItem('destination');
 
-      // Verificar si los datos tienen menos de 10 minutos
-      const isDataFresh =
-        timestamp && Date.now() - parseInt(timestamp) < 10 * 60 * 1000;
-
-      if (storedParams && storedResults && isDataFresh) {
+      if (storedParams) {
         this.searchParams = JSON.parse(storedParams);
-        this.processSearchResults(JSON.parse(storedResults));
-      } else if (storedParams) {
-        // Si los datos son viejos pero tenemos parámetros, hacer nueva búsqueda
-        this.searchParams = JSON.parse(storedParams);
+        this.destinationCity = storedDestination ? JSON.parse(storedDestination) : null;
+        
         this.searchHotels();
       } else {
-        // Si no hay datos, redirigir a búsqueda
         this.router.navigate(['/home/hotels/search']);
       }
     } catch (e) {
@@ -182,30 +172,37 @@ export class DeviajeHotelsResultsComponent implements OnInit {
   private initializeFilters(hotels: HotelSearchResponse.Hotel[]): void {
     // Rango de precios
     const prices = hotels.map((hotel) => hotel.minRate || 0);
-    this.priceRange.min = Math.floor(Math.min(...prices));
-    this.priceRange.max = Math.ceil(Math.max(...prices));
+    this.priceRange.min = this.hotelService.convertToArs(Math.floor(Math.min(...prices)));
+    this.priceRange.max = this.hotelService.convertToArs(Math.ceil(Math.max(...prices)));
     this.priceRange.current = this.priceRange.max;
-    this.selectedCategories = this.categoryFilters.map((cat) => cat.value);
+    this.selectedCategories = [];
   }
 
   applyFilters(): void {
+    this.isLoading = true;
+
+    let filtered = [...this.searchResults?.hotels?.hotels || []];
+
     if (
-      !this.searchResults ||
-      !this.searchResults.hotels ||
-      !this.searchResults.hotels.hotels
+      this.selectedCategories.length === 0 &&
+      this.priceRange.current === this.priceRange.max
     ) {
+      this.filteredHotels = [...this.searchResults?.hotels?.hotels || []];
+      this.sortResults();
+      this.currentPage = 1;
+      this.isLoading = false;
       return;
     }
 
     // Filtrar por precio
-    this.filteredHotels = this.searchResults.hotels.hotels.filter((hotel) => {
-      const price = hotel.minRate || 0;
-      return price >= this.priceRange.min && price <= this.priceRange.max;
+    filtered = filtered.filter((hotel) => {
+      const price = this.hotelService.convertToArs(hotel.minRate);
+      return price >= this.priceRange.min && price <= this.priceRange.current;
     });
 
     // Filtrar por categorías seleccionadas
     if (this.selectedCategories && this.selectedCategories.length > 0) {
-      this.filteredHotels = this.filteredHotels.filter((hotel) => {
+      filtered = filtered.filter((hotel) => {
         const stars = this.getCategoryStars(hotel.categoryName || '');
 
         return this.selectedCategories.some((category) => {
@@ -217,11 +214,10 @@ export class DeviajeHotelsResultsComponent implements OnInit {
       });
     }
 
-    // Aplicar ordenación
+    this.filteredHotels = filtered;
     this.sortResults();
-
-    // Reset paginación
     this.currentPage = 1;
+    this.isLoading = false;
   }
 
   sortResults(): void {
@@ -265,7 +261,7 @@ export class DeviajeHotelsResultsComponent implements OnInit {
     // Aplicar filtros después del cambio
     this.applyFilters();
   }
-  
+
   getCategoryStars(categoryName: string): number {
     if (!categoryName) return 0;
 
@@ -317,6 +313,9 @@ export class DeviajeHotelsResultsComponent implements OnInit {
 
   // Métodos para mostrar detalles
   showHotelDetails(hotel: HotelSearchResponse.Hotel): void {
+
+    console.log('desde resultaados', this.searchParams?.occupancies);
+     // Depura
     if (this.inPackageMode) {
       // En modo paquete, mostrar modal
       this.selectedHotelForDetail = hotel;
@@ -368,19 +367,29 @@ export class DeviajeHotelsResultsComponent implements OnInit {
     )}`;
   }
 
+  // NUEVO: Obtener URL de Google Maps para el hotel
+  getGoogleMapsUrl(hotel: HotelSearchResponse.Hotel): SafeResourceUrl {
+    // Si el hotel tiene coordenadas, usarlas
+    if (
+      hotel.latitude &&
+      hotel.longitude
+    ) {
+      const lat = hotel.latitude;
+      const lng = hotel.longitude;
+      return this.sanitizer.bypassSecurityTrustResourceUrl(`https://www.google.com/maps/embed/v1/place?key=AIzaSyDeOCIAAqkNEW-62wQUIdKXsNKbgMDOMs0&q=${lat},${lng}&zoom=15`);
+    }
+
+    // Si no tiene coordenadas, buscar por nombre y ubicación
+    const query = encodeURIComponent(
+      `${hotel.name} ${hotel.destinationCode || ''}`
+    );
+    return this.sanitizer.bypassSecurityTrustResourceUrl(`https://www.google.com/maps/embed/v1/search?key=AIzaSyDeOCIAAqkNEW-62wQUIdKXsNKbgMDOMs0&q=${query}`);
+  }
+
   // Seleccionar un hotel (para modo paquete)
   selectHotel(hotel: HotelSearchResponse.Hotel): void {
     // Emitir evento para seleccionar este hotel en el paquete
     // Implementar lógica específica para el modo de paquete
-  }
-
-  // Formatear precio para mostrar
-  formatPrice(price: number, currency: string = 'USD'): string {
-    return new Intl.NumberFormat('es-AR', {
-      style: 'currency',
-      currency: currency,
-      minimumFractionDigits: 2,
-    }).format(price);
   }
 
   // Obtener el número total de habitaciones de la búsqueda actual

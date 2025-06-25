@@ -128,7 +128,7 @@
                   <div *ngFor="let travelerForm of travelers.controls; let i = index" [formGroupName]="i">
                     <app-deviaje-traveler-form 
                       [travelerForm]="getTravelerFormGroup(i)" 
-                      [isPrimaryTraveler]="true"
+                      [isPrimaryTraveler]="i === 0"
                       mode="hotel">
                     </app-deviaje-traveler-form>
                   </div>

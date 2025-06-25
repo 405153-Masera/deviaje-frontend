@@ -65,11 +65,13 @@ export class BookingService {
   // Crear una reserva de vuelo con pago
   createFlightBooking(
     bookingData: FlightBookingDto,
-    paymentData: PaymentDto
+    paymentData: PaymentDto,
+    pricesDto?: any // AGREGADO
   ): Observable<BookingResponseDto> {
     const bookAndPayRequest = {
       bookingRequest: bookingData,
       paymentRequest: paymentData,
+      prices: pricesDto // AGREGADO
     };
 
     return this.http
@@ -154,5 +156,9 @@ export class BookingService {
           });
         })
       );
+  }
+
+  convertToArs(price: number): number {
+    return price * 1250;
   }
 }

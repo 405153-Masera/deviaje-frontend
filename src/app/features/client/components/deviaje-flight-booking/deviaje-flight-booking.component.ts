@@ -20,6 +20,8 @@ import { DeviajeTravelerFormComponent } from '../deviaje-traveler-form/deviaje-t
 import { DeviajePaymentsFormComponent } from '../deviaje-payments-form/deviaje-payments-form.component';
 import { AuthService } from '../../../../core/auth/services/auth.service';
 import { Subscription } from 'rxjs';
+import { DeviajeFlightBookingSummaryComponent } from "../deviaje-flight-booking-summary/deviaje-flight-booking-summary.component";
+import { DeviajePriceDetailsComponent } from "../deviaje-price-details/deviaje-price-details.component";
 
 @Component({
   selector: 'app-deviaje-flight-booking',
@@ -29,7 +31,9 @@ import { Subscription } from 'rxjs';
     ReactiveFormsModule,
     DeviajeTravelerFormComponent,
     DeviajePaymentsFormComponent,
-  ],
+    DeviajeFlightBookingSummaryComponent,
+    DeviajePriceDetailsComponent
+],
   templateUrl: './deviaje-flight-booking.component.html',
   styleUrl: './deviaje-flight-booking.component.scss',
 })
@@ -52,6 +56,8 @@ export class DeviajeFlightBookingComponent implements OnInit, OnDestroy {
   private authService = inject(AuthService);
   readonly flightUtils = inject(FlightUtilsService);
   subscription = new Subscription();
+
+  @ViewChild(DeviajePriceDetailsComponent) priceDetailsComponent!: DeviajePriceDetailsComponent;
 
   flightOffer: FlightOfferDto | null = null;
   selectedOffer: FlightOfferDto | null = null;
@@ -457,6 +463,8 @@ export class DeviajeFlightBookingComponent implements OnInit, OnDestroy {
     try {
       console.log('Token de pago generado:', paymentToken);
 
+      const pricesDto = this.priceDetailsComponent?.getPricesDto() || null;
+
       // Preparar los datos de la reserva
       const bookingData: FlightBookingDto = {
         clientId: this.getClientId(), // CAMBIAR ESTA LÍNEA
@@ -486,7 +494,7 @@ export class DeviajeFlightBookingComponent implements OnInit, OnDestroy {
       };
 
       this.bookingService
-        .createFlightBooking(bookingData, paymentData)
+        .createFlightBooking(bookingData, paymentData, pricesDto)
         .subscribe({
           next: (response) => {
             this.isLoading = false;

@@ -30,99 +30,23 @@
     </div>
   </div>
 
-  <!-- Panel de información del vuelo -->
-  <div class="card mb-4" *ngIf="selectedOffer && !isVerifying">
-    <div class="card-header bg-primary text-white">
-      <h5 class="mb-0">Detalles del vuelo</h5>
-    </div>
-    <div class="card-body">
-      <div class="row">
-        <div class="col-md-6">
-          <h6 class="mb-3">Origen y destino</h6>
-          <div class="d-flex justify-content-between align-items-center mb-3">
-            <div class="text-center">
-              <div class="fw-bold fs-5">{{ selectedOffer.itineraries[0].segments[0].departure.iataCode }}</div>
-              <div class="small text-muted">{{
-                flightUtils.formatTime(selectedOffer.itineraries[0].segments[0].departure.at) }}</div>
-            </div>
-            <div class="flight-line position-relative flex-grow-1 mx-3">
-              <div class="text-center text-muted small">
-                {{ flightUtils.minutesToString(flightUtils.durationToMinutes(selectedOffer.itineraries[0].duration)) }}
-              </div>
-              <hr class="flight-path">
-              <div class="text-center text-muted small">
-                {{ flightUtils.getStopsLabel(selectedOffer.itineraries[0].segments) }}
-              </div>
-            </div>
-            <div class="text-center">
-              <div class="fw-bold fs-5">{{
-                selectedOffer.itineraries[0].segments[selectedOffer.itineraries[0].segments.length-1].arrival.iataCode
-                }}</div>
-              <div class="small text-muted">{{
-                flightUtils.formatTime(selectedOffer.itineraries[0].segments[selectedOffer.itineraries[0].segments.length-1].arrival.at)
-                }}</div>
-            </div>
-          </div>
+ <!-- Panel de información del vuelo -->
+<ng-container *ngIf="selectedOffer && !isVerifying">
+  <app-deviaje-flight-booking-summary 
+    [flightOffer]="selectedOffer"
+    [title]="'Detalles del vuelo'"
+  >
+  </app-deviaje-flight-booking-summary>
 
-          <!-- Vuelo de regreso (si aplica) -->
-          <div *ngIf="selectedOffer.itineraries.length > 1" class="mt-4">
-            <hr>
-            <div class="d-flex justify-content-between align-items-center mb-3">
-              <div class="text-center">
-                <div class="fw-bold fs-5">{{ selectedOffer.itineraries[1].segments[0].departure.iataCode }}</div>
-                <div class="small text-muted">{{
-                  flightUtils.formatTime(selectedOffer.itineraries[1].segments[0].departure.at) }}</div>
-              </div>
-              <div class="flight-line position-relative flex-grow-1 mx-3">
-                <div class="text-center text-muted small">
-                  {{ flightUtils.minutesToString(flightUtils.durationToMinutes(selectedOffer.itineraries[1].duration))
-                  }}
-                </div>
-                <hr class="flight-path">
-                <div class="text-center text-muted small">
-                  {{ flightUtils.getStopsLabel(selectedOffer.itineraries[1].segments) }}
-                </div>
-              </div>
-              <div class="text-center">
-                <div class="fw-bold fs-5">{{
-                  selectedOffer.itineraries[1].segments[selectedOffer.itineraries[1].segments.length-1].arrival.iataCode
-                  }}</div>
-                <div class="small text-muted">{{
-                  flightUtils.formatTime(selectedOffer.itineraries[1].segments[selectedOffer.itineraries[1].segments.length-1].arrival.at)
-                  }}</div>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <div class="col-md-6">
-          <h6 class="mb-3">Aerolínea</h6>
-          <div class="d-flex align-items-center mb-4">
-            <img
-              [src]="'https://www.gstatic.com/flights/airline_logos/70px/' + selectedOffer.validatingAirlineCodes[0] + '.png'"
-              alt="Airline" class="me-3" style="height: 40px; width: auto;">
-            <div>
-              <div class="fw-bold">{{ flightUtils.getAirlineName(selectedOffer.validatingAirlineCodes[0]) }}</div>
-              <div class="small text-muted">{{ selectedOffer.validatingAirlineCodes[0] }}</div>
-            </div>
-          </div>
-
-          <h6 class="mb-3">Precio</h6>
-          <div class="d-flex justify-content-between align-items-center">
-            <div>
-              <div class="fw-bold fs-4">{{ selectedOffer.price.total | currency:(selectedOffer.price.currency || 'USD')
-                }}</div>
-              <div class="small text-muted">Precio total para {{ selectedOffer.travelerPricings.length }} pasajero(s)
-              </div>
-            </div>
-            <div>
-              <span class="badge bg-success">Confirmado</span>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-  </div>
+  <app-deviaje-price-details
+    #priceDetailsComponent
+    [mode]="'FLIGHT'"
+    [flightPrice]="selectedOffer.price"
+    [currency]="selectedOffer.price.currency || 'ARS'"
+    [passengerCount]="selectedOffer.travelerPricings.length"
+    >
+  </app-deviaje-price-details>
+</ng-container>
 
   <!-- Formulario principal -->
   <div *ngIf="selectedOffer && !isVerifying && !showSuccessMessage">
@@ -217,8 +141,8 @@
                   </div>
 
                   <div class="card-body">
-                    <app-deviaje-traveler-form [travelerForm]="getTravelerFormGroup(i)"
-                      [isPrimaryTraveler]="i === 0" mode="flight"></app-deviaje-traveler-form>
+                    <app-deviaje-traveler-form [travelerForm]="getTravelerFormGroup(i)" [isPrimaryTraveler]="i === 0"
+                      mode="flight"></app-deviaje-traveler-form>
                   </div>
                 </div>
               </div>

@@ -28,9 +28,9 @@ import { ControlValueAccessor, NG_VALUE_ACCESSOR } from '@angular/forms';
     {
       provide: NG_VALUE_ACCESSOR,
       useExisting: forwardRef(() => DeviajeCityInputComponent),
-      multi: true
-    }
-  ]
+      multi: true,
+    },
+  ],
 })
 export class DeviajeCityInputComponent
   implements OnInit, OnDestroy, ControlValueAccessor
@@ -43,12 +43,13 @@ export class DeviajeCityInputComponent
   @Input() label: string = '';
   @Input() placeholder: string = 'Ciudad';
   @Input() icon: string = 'bi bi-geo-alt';
+  @Input() mode: 'flight' | 'hotel' = 'flight';
 
   displayValue: string = '';
   cities: CityDto[] = [];
   isLoading: boolean = false;
   isSuggestionsOpen: boolean = false;
-  isDisabled: boolean = false; 
+  isDisabled: boolean = false;
 
   private readonly cityService: CityService = inject(CityService);
   private citySearch = new Subject<string>();
@@ -62,9 +63,16 @@ export class DeviajeCityInputComponent
           this.isLoading = true;
           return term.length < 2
             ? of([])
-            : this.cityService.searchCities(term).pipe(
+            : this.mode === 'flight'
+            ? this.cityService.searchCities(term).pipe(
                 catchError((error) => {
                   console.error('Error al buscar ciudades:', error);
+                  return of([]);
+                })
+              )
+            : this.cityService.searchHotelCities(term).pipe(
+                catchError((error) => {
+                  console.error('Error al buscar ciudades de hotel:', error);
                   return of([]);
                 })
               );
@@ -110,7 +118,6 @@ export class DeviajeCityInputComponent
   closeDropdown(): void {
     this.isSuggestionsOpen = false;
   }
-
 
   //Se llama cuando en el formulario se establece un valor inicial
   writeValue(value: CityDto | null): void {

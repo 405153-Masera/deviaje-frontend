@@ -84,6 +84,21 @@
     }
   }
 
+  // Estilos para Google Maps
+  .hotel-map-container {
+    width: 100%;
+    height: 200px;
+    border-radius: 8px;
+    overflow: hidden;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  }
+
+  .hotel-map {
+    width: 100%;
+    height: 100%;
+    border: none;
+  }
+
   @include mobile {
     .card-body {
       .price-booking {

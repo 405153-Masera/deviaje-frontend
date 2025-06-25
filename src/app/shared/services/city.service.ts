@@ -11,12 +11,18 @@ export class CityService {
   private readonly http: HttpClient = inject(HttpClient);
   private url = `${environment.apiDeviajeSearches}/flights/cities`;
 
-  
   searchCities(keyword: string): Observable<CityDto[]> {
-    let params: any = {keyword};
-    return this.http.get<CityDto[]>(`${this.url}`, {params});
+    let params: any = { keyword };
+    return this.http.get<CityDto[]>(`${this.url}`, { params });
   }
-  
+
+  searchHotelCities(keyword: string): Observable<CityDto[]> {
+    let params: any = { keyword };
+    return this.http.get<CityDto[]>(
+      `${environment.apiDeviajeSearches}/hotels/content/destinations`, { params }
+    );
+  }
+
   searchLocations(keyword: string): Observable<Location[]> {
     if (!keyword || keyword.length < 2) {
       return of([]);

@@ -198,22 +198,6 @@ export class DeviajeFlightResultsComponent implements OnInit, OnDestroy {
   applyFilters(): void {
     this.isLoading = true;
 
-    // Verificar si hay alguna aerolínea o cabina seleccionada
-    // const hasAirlinesSelected = this.selectedAirlines.length > 0;
-    // const hasCabinsSelected = this.selectedCabins.length > 0;
-
-    // // Si no hay ninguna aerolínea o cabina seleccionada, mostrar mensaje de "No hay resultados"
-    // if (
-    //   (!hasAirlinesSelected && this.availableAirlines.length > 0) ||
-    //   (!hasCabinsSelected && this.availableCabins.length > 0)
-    // ) {
-    //   this.filteredOffers = [];
-    //   this.sortResults();
-    //   this.currentPage = 1;
-    //   this.isLoading = false;
-    //   return;
-    // }
-
     let filtered = [...this.flightOffers];
 
     if (

@@ -39,7 +39,7 @@ export class DeviajeSidebarComponent implements OnInit, OnDestroy {
     {
       icon: 'vacaciones',
       label: 'Paquetes',
-      route: '/packages',
+      route: '/home/packages/search',
       isSelected: false,
     },
     { icon: 'tours', label: 'Tours', route: '/tours', isSelected: false },
@@ -62,7 +62,7 @@ export class DeviajeSidebarComponent implements OnInit, OnDestroy {
     {
       icon: 'vacaciones',
       label: 'Paquetes',
-      route: '/packages',
+      route: '/home/packages/search',
       isSelected: false,
     },
     { icon: 'tours', label: 'Tours', route: '/tours', isSelected: false },
@@ -91,7 +91,7 @@ export class DeviajeSidebarComponent implements OnInit, OnDestroy {
     {
       icon: 'vacaciones',
       label: 'Paquetes',
-      route: '/packages',
+      route: '/home/packages/search',
       isSelected: false,
     },
     { icon: 'tours', label: 'Tours', route: '/tours', isSelected: false },

@@ -1,0 +1,131 @@
+<div class="card mb-4">
+  <div class="card-header bg-success text-white">
+    <h6 class="mb-0">{{ title }}</h6>
+  </div>
+  <div class="card-body">
+    <ng-container [ngSwitch]="mode">
+      
+      <!-- Modo FLIGHT -->
+      <div *ngSwitchCase="'FLIGHT'">
+        <div class="price-breakdown">
+          <div class="d-flex justify-content-between mb-2">
+            <span>Precio base del vuelo:</span>
+            <span class="fw-semibold">{{ priceBreakdown.basePrice | currency:priceBreakdown.currency }}</span>
+          </div>
+          <div class="d-flex justify-content-between mb-2 text-muted">
+            <span class="ms-3">• Impuestos y tasas:</span>
+            <span>{{ priceBreakdown.taxesFlight | currency:priceBreakdown.currency }}</span>
+          </div>
+          <div class="d-flex justify-content-between mb-2 text-muted">
+            <span class="ms-3">• Comisión (15%):</span>
+            <span>{{ priceBreakdown.commission | currency:priceBreakdown.currency }}</span>
+          </div>
+          <div class="d-flex justify-content-between mb-2 text-muted" *ngIf="priceBreakdown.discount > 0">
+            <span class="ms-3 text-success">• Descuento aplicado:</span>
+            <span class="text-success">-{{ priceBreakdown.discount | currency:priceBreakdown.currency }}</span>
+          </div>
+          <hr>
+          <div class="d-flex justify-content-between">
+            <span class="fw-bold fs-5">Total a pagar:</span>
+            <span class="fw-bold fs-5 text-primary">{{ priceBreakdown.totalAmount | currency:priceBreakdown.currency }}<small class="text-muted"> para {{ passengerCount }} pasajero(s)</small></span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Modo HOTEL -->
+      <div *ngSwitchCase="'HOTEL'">
+        <div class="price-breakdown">
+          <div class="d-flex justify-content-between mb-2">
+            <span>Precio base del hotel:</span>
+            <span class="fw-semibold">{{ priceBreakdown.basePrice | currency:priceBreakdown.currency }}</span>
+          </div>
+          <div class="d-flex justify-content-between mb-2 text-muted" *ngIf="priceBreakdown.taxesHotel > 0">
+            <span class="ms-3">• Impuestos hoteleros:</span>
+            <span>{{ priceBreakdown.taxesHotel | currency:priceBreakdown.currency }}</span>
+          </div>
+          <div class="d-flex justify-content-between mb-2 text-muted">
+            <span class="ms-3">• Comisión (20%):</span>
+            <span>{{ priceBreakdown.commission | currency:priceBreakdown.currency }}</span>
+          </div>
+          <div class="d-flex justify-content-between mb-2 text-muted" *ngIf="priceBreakdown.discount > 0">
+            <span class="ms-3 text-success">• Descuento aplicado:</span>
+            <span class="text-success">-{{ priceBreakdown.discount | currency:priceBreakdown.currency }}</span>
+          </div>
+          <hr>
+          <div class="d-flex justify-content-between">
+            <span class="fw-bold fs-5">Total a pagar:</span>
+            <span class="fw-bold fs-5 text-primary">{{ priceBreakdown.totalAmount | currency:priceBreakdown.currency }}</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Modo PACKAGE -->
+      <div *ngSwitchCase="'PACKAGE'">
+        <div class="price-breakdown">
+          <!-- Desglose del vuelo -->
+          <div class="mb-3" *ngIf="priceBreakdown.grandTotal > 0">
+            <h6 class="text-primary mb-2">
+              <i class="bi bi-airplane me-2"></i>Vuelo
+            </h6>
+            <div class="d-flex justify-content-between mb-1">
+              <span class="ms-3">Precio base:</span>
+              <span>{{ (priceBreakdown.grandTotal - priceBreakdown.taxesFlight) | currency:priceBreakdown.currency }}</span>
+            </div>
+            <div class="d-flex justify-content-between mb-1 text-muted">
+              <span class="ms-3">• Impuestos y tasas:</span>
+              <span>{{ priceBreakdown.taxesFlight | currency:priceBreakdown.currency }}</span>
+            </div>
+            <div class="d-flex justify-content-between mb-2 fw-semibold">
+              <span class="ms-3">Subtotal vuelo:</span>
+              <span>{{ priceBreakdown.grandTotal | currency:priceBreakdown.currency }}</span>
+            </div>
+          </div>
+
+          <!-- Desglose del hotel -->
+          <div class="mb-3" *ngIf="priceBreakdown.net > 0">
+            <h6 class="text-info mb-2">
+              <i class="bi bi-building me-2"></i>Hotel
+            </h6>
+            <div class="d-flex justify-content-between mb-1">
+              <span class="ms-3">Precio base:</span>
+              <span>{{ (priceBreakdown.net - priceBreakdown.taxesHotel) | currency:priceBreakdown.currency }}</span>
+            </div>
+            <div class="d-flex justify-content-between mb-1 text-muted" *ngIf="priceBreakdown.taxesHotel > 0">
+              <span class="ms-3">• Impuestos hoteleros:</span>
+              <span>{{ priceBreakdown.taxesHotel | currency:priceBreakdown.currency }}</span>
+            </div>
+            <div class="d-flex justify-content-between mb-2 fw-semibold">
+              <span class="ms-3">Subtotal hotel:</span>
+              <span>{{ priceBreakdown.net | currency:priceBreakdown.currency }}</span>
+            </div>
+          </div>
+
+          <hr>
+
+          <!-- Totales del paquete -->
+          <div class="d-flex justify-content-between mb-2">
+            <span>Subtotal paquete:</span>
+            <span class="fw-semibold">{{ (priceBreakdown.grandTotal + priceBreakdown.net) | currency:priceBreakdown.currency }}</span>
+          </div>
+          <div class="d-flex justify-content-between mb-2 text-muted">
+            <span class="ms-3">• Comisión paquete (20%):</span>
+            <span>{{ priceBreakdown.commission | currency:priceBreakdown.currency }}</span>
+          </div>
+          <div class="d-flex justify-content-between mb-2 text-muted" *ngIf="priceBreakdown.discount > 0">
+            <span class="ms-3 text-success">• Descuento aplicado:</span>
+            <span class="text-success">-{{ priceBreakdown.discount | currency:priceBreakdown.currency }}</span>
+          </div>
+          <hr>
+          <div class="d-flex justify-content-between">
+            <span class="fw-bold fs-5">Total a pagar:</span>
+            <span class="fw-bold fs-5 text-primary">{{ priceBreakdown.totalAmount | currency:priceBreakdown.currency }}</span>
+          </div>
+          <div class="text-center mt-2">
+            <small class="text-muted">Paquete completo para {{ passengerCount }} pasajero(s)</small>
+          </div>
+        </div>
+      </div>
+
+    </ng-container>
+  </div>
+</div>

@@ -454,12 +454,16 @@ export class DeviajeHotelBookingComponent implements OnInit, OnDestroy {
     adults: number;
     children: number;
   } {
-    // Ejemplo: 20251015|20251020|W|102|4492|DBT.AS|EB I OP RO|RO||1~1~1|8|P@07...
+    //20251015|20251020|W|102|4492|DBT.AS|EB I OP RO|RO||1~1~1|8|P@07...
+    //20250722|20250730|W|102|1237|DBL.ST-9|ID_B2B_87|RO|B2BNRFESXX|1~2~1|8|N@07~~21a97~-649799810~N~~~NRF~~1165FB142D3F448175079293030205AAUK0167007600040121a97
     const parts = rateKey.split('|');
-    const occupancyPart = parts[10]; // 1~1~1
+    const occupancyPart = parts[9]; // 1~1~1
 
     if (occupancyPart) {
       const [rooms, adults, children] = occupancyPart.split('~').map(Number);
+      
+      console.log("adults:", adults, "children:", children, "rooms:", rooms);
+      
       return {
         rooms: rooms || 1,
         adults: adults || 1,

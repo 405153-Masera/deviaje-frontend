@@ -5,7 +5,7 @@
         <div class="container py-4">
             <div class="row align-items-center">
                 <div class="col-md-8">
-                    <h1 class="results-title">Hoteles en {{ searchParams?.destination?.code }}</h1>
+                    <h1 class="results-title">Hoteles en {{ destinationCity?.name }} ({{destinationCity?.country}})</h1>
                     <div class="travel-info">
                         <span class="travel-dates">
                             <i class="bi bi-calendar3"></i>
@@ -48,11 +48,10 @@
                         <div class="price-range">
                             <div class="price-slider mb-3">
                                 <input type="range" class="form-range" min="{{ priceRange.min }}"
-                                    max="{{ priceRange.max }}" [(ngModel)]="priceRange.max" (change)="applyFilters()">
+                                    max="{{ priceRange.max }}" [(ngModel)]="priceRange.current" (change)="applyFilters()">
                             </div>
                             <div class="price-labels d-flex justify-content-between flex-column">
-                                <span>{{ formatPrice(priceRange.min, searchParams?.currency) }}</span>
-                                <span>{{ formatPrice(priceRange.max, searchParams?.currency) }}</span>
+                                <span>{{ hotelService.convertToArs(priceRange.current) | currency:(searchParams?.currency || 'USD') }}</span>
                             </div>
                         </div>
                     </div>
@@ -97,12 +96,11 @@
                             <div class="price-range">
                                 <div class="price-slider mb-3">
                                     <input type="range" class="form-range" min="{{ priceRange.min }}"
-                                        max="{{ priceRange.max }}" [(ngModel)]="priceRange.max"
+                                        max="{{ priceRange.max }}" [(ngModel)]="priceRange.current"
                                         (change)="applyFilters()">
                                 </div>
                                 <div class="price-labels">
-                                    <span>{{ formatPrice(priceRange.min, searchParams?.currency) }}</span>
-                                    <span>{{ formatPrice(priceRange.max, searchParams?.currency) }}</span>
+                                    <span>{{ hotelService.convertToArs(priceRange.current) | currency:(searchParams?.currency || 'USD') }}</span>
                                 </div>
                             </div>
                         </div>
@@ -192,8 +190,14 @@
                 <div class="hotel-card">
                     <div class="row g-0">
                         <!-- Imagen del hotel -->
-                        <div class="col-md-4 hotel-image">
-                            <img [src]="getHotelImage(hotel)" [alt]="hotel.name" class="img-fluid rounded-start">
+                        <div class="col-md-4">
+                            <!-- Google Maps en lugar de imagen -->
+                            <div class="hotel-map-container">
+                                <iframe [src]="getGoogleMapsUrl(hotel)" class="hotel-map" frameborder="0"
+                                    style="border:0;" allowfullscreen="" loading="lazy"
+                                    referrerpolicy="no-referrer-when-downgrade">
+                                </iframe>
+                            </div>
                         </div>
 
                         <!-- Información del hotel -->
@@ -222,11 +226,10 @@
                                 <!-- Precio y acciones -->
                                 <div class="price-booking mt-3">
                                     <div class="price">
-                                        <div class="price-amount">{{ formatPrice(getMinRoomPrice(hotel),
-                                            searchParams?.currency) }}</div>
                                         <div class="price-details">
-                                            <div class="price-label">Precio por noche</div>
+                                            <div class="price-label">Precio desde</div>
                                         </div>
+                                        <div class="price-amount">{{ hotelService.convertToArs(getMinRoomPrice(hotel)) | currency:(searchParams?.currency || 'USD') }}</div>
                                     </div>
 
                                     <div class="action-buttons">
@@ -329,7 +332,7 @@
                                         </div>
                                     </div>
                                     <div class="text-end">
-                                        <div class="rate-price">{{ formatPrice(rate.net || 0, searchParams?.currency) }}
+                                        <div class="rate-price">{{ hotelService.convertToArs(rate.net) | currency:(searchParams?.currency || 'USD') }}
                                         </div>
                                         <button class="btn btn-sm btn-primary mt-2"
                                             (click)="selectHotel(selectedHotelForDetail)">

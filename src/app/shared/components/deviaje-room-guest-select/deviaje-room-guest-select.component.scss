@@ -57,3 +57,15 @@
     padding: 0.5rem;
   }
 }
+
+// Hacer el dropdown más ancho
+.dropdown-search {
+  min-width: 350px !important; // Aumentar ancho mínimo
+  width: 100% !important;
+}
+
+// Hacer el trigger más ancho también
+.selector-trigger {
+  min-width: 300px;
+  width: 100%;
+}

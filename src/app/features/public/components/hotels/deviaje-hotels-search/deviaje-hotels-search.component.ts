@@ -13,6 +13,7 @@ import { DeviajeCityInputComponent } from '../../../../../shared/components/devi
 import { CityDto } from '../../../../../shared/models/locations';
 import { HotelSearchRequest } from '../../../../../shared/models/hotels';
 import { DeviajeRoomGuestSelectComponent } from '../../../../../shared/components/deviaje-room-guest-select/deviaje-room-guest-select.component';
+import { DateFormatPipe } from '../../../../../shared/pipes/date-format.pipe';
 
 @Component({
   selector: 'app-deviaje-hotels-search',
@@ -23,12 +24,18 @@ import { DeviajeRoomGuestSelectComponent } from '../../../../../shared/component
     ReactiveFormsModule,
     DeviajeCityInputComponent,
     DeviajeRoomGuestSelectComponent,
+    DateFormatPipe
   ],
   templateUrl: './deviaje-hotels-search.component.html',
   styleUrl: './deviaje-hotels-search.component.scss',
 })
 export class DeviajeHotelsSearchComponent implements OnInit, OnDestroy {
-  //private readonly hotelService: HotelService = inject(HotelService);
+
+  private today: Date = new Date();
+  private departureInitialDate: Date = new Date(this.today);
+  private returnInitialDate: Date = new Date(this.today);
+  
+
   private readonly fb: FormBuilder = inject(FormBuilder);
   private readonly router: Router = inject(Router);
   subscription: Subscription = new Subscription();
@@ -40,11 +47,11 @@ export class DeviajeHotelsSearchComponent implements OnInit, OnDestroy {
   formSearch: FormGroup = this.fb.group({
     destination: [null, Validators.required],
     checkInDate: [
-      new Date(new Date().setDate(new Date().getDate() + 1)),
+      this.departureInitialDate,
       Validators.required,
     ],
     checkOutDate: [
-      new Date(new Date().setDate(new Date().getDate() + 7)),
+      this.returnInitialDate,
       Validators.required,
     ],
     currency: ['ARS'],
@@ -74,7 +81,10 @@ export class DeviajeHotelsSearchComponent implements OnInit, OnDestroy {
   // Estado de carga
   isLoading: boolean = false;
 
-  ngOnInit(): void {}
+  ngOnInit(): void {
+    this.departureInitialDate.setDate(this.today.getDate() + 10);
+    this.returnInitialDate.setDate(this.today.getDate() + 17);
+  }
 
   ngOnDestroy(): void {
     this.subscription.unsubscribe();
@@ -102,17 +112,6 @@ export class DeviajeHotelsSearchComponent implements OnInit, OnDestroy {
   closeCalendar(): void {
     this.isCalendarOpen = false;
     this.currentCalendarField = null;
-  }
-
-  formatDisplayDate(date: Date | null): string {
-    if (!date) return '';
-
-    // Formatea la fecha como dd/mm/aaaa
-    const day = date.getDate().toString().padStart(2, '0');
-    const month = (date.getMonth() + 1).toString().padStart(2, '0');
-    const year = date.getFullYear();
-
-    return `${day}/${month}/${year}`;
   }
 
   selectDateRange(range: {
@@ -145,6 +144,7 @@ export class DeviajeHotelsSearchComponent implements OnInit, OnDestroy {
   ): void {
     this.occupancies = occupancies;
   }
+
   getTotalRooms(): number {
     return this.occupancies.length;
   }
@@ -180,6 +180,8 @@ export class DeviajeHotelsSearchComponent implements OnInit, OnDestroy {
         }));
     }
 
+    console.log('Ocupación:', occupancy);
+
     // Crear solicitud completa - array con 1 elemento
     const searchParams: HotelSearchRequest = {
       stay: {
@@ -188,15 +190,17 @@ export class DeviajeHotelsSearchComponent implements OnInit, OnDestroy {
       },
       occupancies: [occupancy], // Array con 1 ocupación
       destination: {
-        code: this.formSearch.get('destination')?.value.iataCode,
+        code: this.formSearch.get('destination')?.value.iataCode
       },
       currency: this.formSearch.get('currency')?.value,
       language: 'CAS',
     };
 
+    const destination = this.formSearch.get('destination')?.value;
+
     // Navegar a la página de resultados
     this.router.navigate(['/home/hotels/results'], {
-      state: { searchParams },
+      state: { searchParams, destination },
     });
 
     this.isLoading = false;

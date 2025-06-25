@@ -20,6 +20,7 @@ import { DeviajeUsersListComponent } from './features/admin/components/deviaje-u
 import { TerminosCondicionesComponent } from './pages/legal/terminos-condiciones/terminos-condiciones.component';
 import { PoliticaPrivacidadComponent } from './pages/legal/politica-privacidad/politica-privacidad.component';
 import { PreguntasFrecuentesComponent } from './pages/legal/preguntas-frecuentes/preguntas-frecuentes.component';
+import { DeviajePackagesSearchComponent } from './features/public/components/deviaje-packages-search/deviaje-packages-search.component';
 
 export const routes: Routes = [
   // Ruta principal
@@ -44,6 +45,7 @@ export const routes: Routes = [
       { path: 'hotels/search', component: DeviajeHotelsSearchComponent },
       { path: 'hotels/results', component: DeviajeHotelsResultsComponent },
       { path: 'hotels/detail/:code', component: DeviajeHotelDetailComponent },
+      { path: 'packages/search', component: DeviajePackagesSearchComponent },
       { path: 'flight/booking', component: DeviajeFlightBookingComponent },
       { path: 'hotels/booking', component: DeviajeHotelBookingComponent }, // Reutilizando el componente para reservas de hoteles
     ],

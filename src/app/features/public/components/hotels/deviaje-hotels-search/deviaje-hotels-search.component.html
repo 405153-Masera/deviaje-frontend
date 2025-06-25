@@ -5,10 +5,10 @@
         </div>
 
         <form [formGroup]="formSearch" (ngSubmit)="searchHotels()" class="search-form">
+            
             <div class="row">
-
                 <div class="col-md mb-2">
-                    <app-deviaje-city-input label="Destino" formControlName="destination"></app-deviaje-city-input>
+                    <app-deviaje-city-input label="Destino" formControlName="destination" mode="hotel"></app-deviaje-city-input>
                     <span class="error-message"
                         [class.visible]="formSearch.get('destination')?.invalid && formSearch.get('destination')?.touched">
                         Por favor seleccione un destino
@@ -16,11 +16,19 @@
                 </div>
 
                 <div class="col-md">
+                    <app-deviaje-room-guest-select [occupancies]="occupancies"
+                        (occupanciesChanged)="handleOccupanciesChanged($event)">
+                    </app-deviaje-room-guest-select>
+                </div>
+            </div>
+
+            <div class="row mb-3">
+                  <div class="col-md">
                     <label class="mb-1" for="checkin">Fecha de entrada</label>
                     <div class="input-with-icon date-input">
                         <i class="bi bi-calendar3"></i>
                         <input id="checkin" type="text" placeholder="dd/mm/aaaa" class="date-picker-trigger"
-                            [value]="formatDisplayDate(checkInDate)" formControlName="checkInDate" readonly
+                            [value]="formSearch.get('checkInDate')?.value | dateFormat" readonly
                             (click)="openCalendar('checkin')" (keydown.enter)="openCalendar('checkin')"
                             (keydown.space)="openCalendar('checkin')">
                     </div>
@@ -35,7 +43,7 @@
                     <div class="input-with-icon date-input">
                         <i class="bi bi-calendar3"></i>
                         <input id="checkout" type="text" placeholder="dd/mm/aaaa" class="date-picker-trigger"
-                            [value]="formatDisplayDate(checkOutDate)" readonly formControlName="checkOutDate"
+                            [value]="formSearch.get('checkOutDate')?.value | dateFormat" readonly 
                             (click)="openCalendar('checkout')" (keydown.enter)="openCalendar('checkout')"
                             (keydown.space)="openCalendar('checkout')">
                     </div>
@@ -44,29 +52,9 @@
                         La fecha de salida es obligatoria
                     </span>
                 </div>
-
             </div>
 
-            <div class="row mb-3">
-                <div class="col-md">
-                    <app-deviaje-room-guest-select [occupancies]="occupancies"
-                        (occupanciesChanged)="handleOccupanciesChanged($event)">
-                    </app-deviaje-room-guest-select>
-                </div>
-
-                <div class="col-md">
-                    <label class="mb-1">Moneda</label>
-                    <div class="input-with-icon">
-                        <i class="bi bi-currency-dollar"></i>
-                        <select formControlName="currency">
-                            <option value="ARS">ARS - Pesos Argentinos</option>
-                            <option value="USD">USD - Dólares</option>
-                            <option value="EUR">EUR - Euros</option>
-                        </select>
-                    </div>
-                </div>
-            </div>
-            <div class="row mt-5">
+            <div class="row mt-3">
                 <div class="col-md d-flex justify-content-end">
                     <button type="button" class="btn-search" (click)="searchHotels()">
                         <span>Buscar hoteles</span>
@@ -84,9 +72,3 @@
     [initialEndDate]="checkOutDate" [showTwoMonths]="true" [showPrices]="false"
     (rangeSelected)="selectDateRange($event)" (closed)="closeCalendar()" #dateCalendar>
 </app-deviaje-calendar>
-
-<!-- Overlay para carga -->
-<div class="search-loading" [class.show]="isLoading">
-    <div class="spinner"></div>
-    <div class="loading-text">Buscando las mejores opciones...</div>
-</div>
