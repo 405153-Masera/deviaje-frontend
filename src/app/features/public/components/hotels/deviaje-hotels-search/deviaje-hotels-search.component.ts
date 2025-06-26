@@ -24,17 +24,15 @@ import { DateFormatPipe } from '../../../../../shared/pipes/date-format.pipe';
     ReactiveFormsModule,
     DeviajeCityInputComponent,
     DeviajeRoomGuestSelectComponent,
-    DateFormatPipe
+    DateFormatPipe,
   ],
   templateUrl: './deviaje-hotels-search.component.html',
   styleUrl: './deviaje-hotels-search.component.scss',
 })
 export class DeviajeHotelsSearchComponent implements OnInit, OnDestroy {
-
   private today: Date = new Date();
   private departureInitialDate: Date = new Date(this.today);
   private returnInitialDate: Date = new Date(this.today);
-  
 
   private readonly fb: FormBuilder = inject(FormBuilder);
   private readonly router: Router = inject(Router);
@@ -43,17 +41,13 @@ export class DeviajeHotelsSearchComponent implements OnInit, OnDestroy {
   @ViewChild('dateCalendar') calendar!: DeviajeCalendarComponent;
   @ViewChild('destinationCityInput')
   destinationCityInput!: DeviajeCityInputComponent;
+  @ViewChild(DeviajeRoomGuestSelectComponent) 
+  roomGuestComponent!: DeviajeRoomGuestSelectComponent;
 
   formSearch: FormGroup = this.fb.group({
     destination: [null, Validators.required],
-    checkInDate: [
-      this.departureInitialDate,
-      Validators.required,
-    ],
-    checkOutDate: [
-      this.returnInitialDate,
-      Validators.required,
-    ],
+    checkInDate: [this.departureInitialDate, Validators.required],
+    checkOutDate: [this.returnInitialDate, Validators.required],
     currency: ['ARS'],
   });
 
@@ -71,7 +65,6 @@ export class DeviajeHotelsSearchComponent implements OnInit, OnDestroy {
     }>;
   }> = [{ rooms: 1, adults: 1, children: 0 }];
 
-  
   // Variables para fechas
   checkInDate: Date | null = null;
   checkOutDate: Date | null = null;
@@ -162,6 +155,10 @@ export class DeviajeHotelsSearchComponent implements OnInit, OnDestroy {
       return;
     }
 
+    if (!this.roomGuestComponent.isFormValid()) {
+      return; // No permitir búsqueda si hay errores en huéspedes
+    }
+
     this.isLoading = true;
 
     // Crear estructura de ocupaciones - siempre 1 habitación
@@ -191,14 +188,17 @@ export class DeviajeHotelsSearchComponent implements OnInit, OnDestroy {
       },
       occupancies: [occupancy], // Array con 1 ocupación
       destination: {
-        code: this.formSearch.get('destination')?.value.iataCode
+        code: this.formSearch.get('destination')?.value.iataCode,
       },
       currency: this.formSearch.get('currency')?.value,
       language: 'CAS',
     };
 
     const destination = this.formSearch.get('destination')?.value;
-
+    
+    console.log('Hotel Search Request:', searchParams);
+    console.log('Ciudad hotel mapeada:', destination);
+    
     // Navegar a la página de resultados
     this.router.navigate(['/home/hotels/results'], {
       state: { searchParams, destination },

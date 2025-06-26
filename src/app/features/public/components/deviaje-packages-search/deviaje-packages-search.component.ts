@@ -9,36 +9,12 @@ import { DeviajeCalendarComponent } from '../../../../shared/components/deviaje-
 import { DeviajeCityInputComponent } from '../../../../shared/components/deviaje-city-input/deviaje-city-input.component';
 import { DeviajeRoomGuestSelectComponent } from '../../../../shared/components/deviaje-room-guest-select/deviaje-room-guest-select.component';
 
-// Modelos
+// Modelos y servicios
 import { CityDto } from '../../../../shared/models/locations';
 import { FlightSearchRequest } from '../../../../shared/models/flights';
 import { HotelSearchRequest } from '../../../../shared/models/hotels';
-
-interface PackageSearchRequest {
-  // Datos de vuelo
-  origin: string;
-  destination: string;
-  departureDate: string;
-  returnDate: string;
-  adults: number;
-  children?: number;
-  infants?: number;
-  travelClass: string;
-  
-  // Datos de hotel
-  hotelDestination: string;
-  checkInDate: string;
-  checkOutDate: string;
-  occupancies: Array<{
-    rooms: number;
-    adults: number;
-    children: number;
-    paxes?: Array<{
-      type: string;
-      age: number;
-    }>;
-  }>;
-}
+import { CityService } from '../../../../shared/services/city.service';
+import { DateFormatPipe } from '../../../../shared/pipes/date-format.pipe';
 
 @Component({
   selector: 'app-deviaje-packages-search',
@@ -48,28 +24,28 @@ interface PackageSearchRequest {
     ReactiveFormsModule,
     DeviajeCalendarComponent,
     DeviajeCityInputComponent,
-    DeviajeRoomGuestSelectComponent
+    DeviajeRoomGuestSelectComponent,
+    DateFormatPipe
   ],
   templateUrl: './deviaje-packages-search.component.html',
   styleUrl: './deviaje-packages-search.component.scss'
 })
 export class DeviajePackagesSearchComponent implements OnInit, OnDestroy {
   @ViewChild('flightCalendar') flightCalendar!: DeviajeCalendarComponent;
-  @ViewChild('hotelCalendar') hotelCalendar!: DeviajeCalendarComponent;
+  @ViewChild(DeviajeRoomGuestSelectComponent) roomGuestComponent!: DeviajeRoomGuestSelectComponent;
 
   formSearch: FormGroup;
   subscription = new Subscription();
   isLoading: boolean = false;
 
-  // Variables para fechas de vuelo
+  private today: Date = new Date();
+  private departureInitialDate: Date = new Date(this.today);
+  private returnInitialDate: Date = new Date(this.today);
+
+  // Variables para fechas (IGUALES para vuelo y hotel)
   departureDate: Date | null = null;
   returnDate: Date | null = null;
   flightCalendarOpen: boolean = false;
-
-  // Variables para fechas de hotel
-  checkInDate: Date | null = null;
-  checkOutDate: Date | null = null;
-  hotelCalendarOpen: boolean = false;
 
   // Variables para ocupaciones
   occupancies: Array<{
@@ -82,71 +58,43 @@ export class DeviajePackagesSearchComponent implements OnInit, OnDestroy {
     }>;
   }> = [{ rooms: 1, adults: 1, children: 0 }];
 
-  // Clases de viaje
-  travelClasses = [
-    { code: 'ECONOMY', name: 'Económica' },
-    { code: 'PREMIUM_ECONOMY', name: 'Premium Economy' },
-    { code: 'BUSINESS', name: 'Business' },
-    { code: 'FIRST', name: 'Primera Clase' }
-  ];
-
   constructor(
-    private fb: FormBuilder,
-    private router: Router
+    private formBuilder: FormBuilder,
+    private router: Router,
+    private cityService: CityService
   ) {
-    this.formSearch = this.createForm();
+    this.formSearch = this.formBuilder.group({
+      origin: ['', Validators.required],
+      destination: ['', Validators.required], 
+      departureDate: [this.departureInitialDate, Validators.required],
+      returnDate: [this.returnInitialDate, Validators.required],
+      travelClass: ['']
+    });
   }
 
   ngOnInit(): void {
-    // Inicializar fechas por defecto
-    const tomorrow = new Date();
-    tomorrow.setDate(tomorrow.getDate() + 1);
-    
-    const returnDefaultDate = new Date();
-    returnDefaultDate.setDate(returnDefaultDate.getDate() + 8);
-
-    this.departureDate = tomorrow;
-    this.returnDate = returnDefaultDate;
-    this.checkInDate = tomorrow;
-    this.checkOutDate = returnDefaultDate;
-
-    this.formSearch.patchValue({
-      departureDate: tomorrow,
-      returnDate: returnDefaultDate,
-      checkInDate: tomorrow,
-      checkOutDate: returnDefaultDate
-    });
+    this.initializeDefaultDates();
   }
 
   ngOnDestroy(): void {
     this.subscription.unsubscribe();
   }
 
-  private createForm(): FormGroup {
-    return this.fb.group({
-      // Campos de vuelo
-      origin: [null, Validators.required],
-      destination: [null, Validators.required],
-      departureDate: [null, Validators.required],
-      returnDate: [null, Validators.required],
-      travelClass: ['ECONOMY', Validators.required],
-      
-      // Campos de hotel
-      hotelDestination: [null, Validators.required],
-      checkInDate: [null, Validators.required],
-      checkOutDate: [null, Validators.required]
-    });
+  private initializeDefaultDates(): void {
+    this.departureInitialDate.setDate(this.today.getDate() + 10);
+    this.returnInitialDate.setDate(this.today.getDate() + 17);
   }
 
-  // Método para intercambiar origen y destino de vuelos
+  // Intercambiar ciudades
   swapFlightLocations(): void {
-    const originValue = this.formSearch.get('origin')?.value;
-    const destinationValue = this.formSearch.get('destination')?.value;
-    this.formSearch.get('origin')?.setValue(destinationValue);
-    this.formSearch.get('destination')?.setValue(originValue);
+    const origin = this.formSearch.get('origin')?.value;
+    const destination = this.formSearch.get('destination')?.value;
+    
+    this.formSearch.get('origin')?.setValue(destination);
+    this.formSearch.get('destination')?.setValue(origin);
   }
 
-  // Métodos para el calendario de vuelos
+  // Métodos para el calendario
   openFlightCalendar(): void {
     this.flightCalendarOpen = true;
     this.flightCalendar.open();
@@ -164,25 +112,7 @@ export class DeviajePackagesSearchComponent implements OnInit, OnDestroy {
     this.closeFlightCalendar();
   }
 
-  // Métodos para el calendario de hoteles
-  openHotelCalendar(): void {
-    this.hotelCalendarOpen = true;
-    this.hotelCalendar.open();
-  }
-
-  closeHotelCalendar(): void {
-    this.hotelCalendarOpen = false;
-  }
-
-  onHotelDatesSelected(range: { startDate: Date | null; endDate: Date | null }): void {
-    this.checkInDate = range.startDate;
-    this.checkOutDate = range.endDate;
-    this.formSearch.get('checkInDate')?.setValue(range.startDate);
-    this.formSearch.get('checkOutDate')?.setValue(range.endDate);
-    this.closeHotelCalendar();
-  }
-
-  // Métodos para ocupaciones (huéspedes)
+  // Métodos para ocupaciones
   handleOccupanciesChanged(occupancies: Array<{
     rooms: number;
     adults: number;
@@ -195,7 +125,6 @@ export class DeviajePackagesSearchComponent implements OnInit, OnDestroy {
     this.occupancies = occupancies;
   }
 
-  // Obtener totales de pasajeros para mostrar
   getTotalAdults(): number {
     return this.occupancies.reduce((total, occ) => total + occ.adults, 0);
   }
@@ -208,7 +137,55 @@ export class DeviajePackagesSearchComponent implements OnInit, OnDestroy {
     return this.occupancies.reduce((total, occ) => total + occ.rooms, 0);
   }
 
-  // Inferir children e infants para vuelos basado en edades
+  formatDisplayDate(date: Date | null): string {
+    if (!date) return '';
+    const day = date.getDate().toString().padStart(2, '0');
+    const month = (date.getMonth() + 1).toString().padStart(2, '0');
+    const year = date.getFullYear();
+    return `${day}/${month}/${year}`;
+  }
+
+  // MÉTODO CLAVE: Mapear código de vuelo (IATA) a código de hotel (Hotelbeds)
+  private mapFlightCityToHotelCity(flightDestination: CityDto): Promise<CityDto> {
+    return new Promise((resolve, reject) => {
+      // Buscar ciudades de hoteles por nombre
+      this.subscription.add(
+        this.cityService.searchHotelCities(flightDestination.name).subscribe({
+          next: (hotelCities: CityDto[]) => {
+            console.log('Ciudades de hoteles encontradas:', hotelCities);
+
+            // LÓGICA DE MAPEO COMO ME EXPLICASTE:
+            // 1. Buscar por coincidencia exacta de nombre y país
+            let matchingCity = hotelCities.find(city => 
+              city.name === flightDestination.name && 
+              city.country === flightDestination.country
+            );
+
+            // 2. Si no encuentra, buscar por código IATA
+            if (!matchingCity) {
+              matchingCity = hotelCities.find(city => 
+                city.iataCode === flightDestination.iataCode
+              );
+            }
+
+            if (matchingCity) {
+              console.log('Ciudad mapeada para hoteles:', matchingCity);
+              resolve(matchingCity);
+            } else {
+              console.error('No se encontró mapeo para la ciudad:', flightDestination);
+              reject(new Error(`No se encontró código de hotel para ${flightDestination.name}`));
+            }
+          },
+          error: (error) => {
+            console.error('Error buscando ciudades de hoteles:', error);
+            reject(error);
+          }
+        })
+      );
+    });
+  }
+
+  // Inferir passengers para vuelos basado en edades
   private inferFlightPassengers(): { children: number; infants: number } {
     let children = 0;
     let infants = 0;
@@ -230,57 +207,108 @@ export class DeviajePackagesSearchComponent implements OnInit, OnDestroy {
     return { children, infants };
   }
 
-  // Formatear fechas para mostrar
-  formatDisplayDate(date: Date | null): string {
-    if (!date) return '';
-    const day = date.getDate().toString().padStart(2, '0');
-    const month = (date.getMonth() + 1).toString().padStart(2, '0');
-    const year = date.getFullYear();
-    return `${day}/${month}/${year}`;
-  }
-
-  // Buscar paquetes
-  searchPackages(): void {
+  // MÉTODO PRINCIPAL: Buscar paquetes
+  async searchPackages(): Promise<void> {
+    // Validaciones
     if (this.formSearch.invalid) {
       this.formSearch.markAllAsTouched();
       return;
     }
 
+    // VALIDACIÓN DE HUÉSPEDES QUE FALTABA
+    if (!this.roomGuestComponent.isFormValid()) {
+      return; // No permitir búsqueda si hay errores en huéspedes
+    }
+
     this.isLoading = true;
 
-    const formatDate = (date: Date | null): string => {
-      if (!date) return '';
-      return date.toISOString().split('T')[0];
-    };
+    try {
+      const formatDateForApi = (date: Date | null): string => {
+        if (!date) return '';
+        return date.toISOString().split('T')[0];
+      };
 
-    const flightPassengers = this.inferFlightPassengers();
+      const flightPassengers = this.inferFlightPassengers();
+      const originCity = this.formSearch.get('origin')?.value as CityDto;
+      const destinationCity = this.formSearch.get('destination')?.value as CityDto;
 
-    const searchParams: PackageSearchRequest = {
-      // Datos de vuelo
-      origin: this.formSearch.get('origin')?.value?.iataCode,
-      destination: this.formSearch.get('destination')?.value?.iataCode,
-      departureDate: formatDate(this.formSearch.get('departureDate')?.value),
-      returnDate: formatDate(this.formSearch.get('returnDate')?.value),
-      adults: this.getTotalAdults(),
-      children: flightPassengers.children > 0 ? flightPassengers.children : undefined,
-      infants: flightPassengers.infants > 0 ? flightPassengers.infants : undefined,
-      travelClass: this.formSearch.get('travelClass')?.value,
-      
-      // Datos de hotel
-      hotelDestination: this.formSearch.get('hotelDestination')?.value?.name || this.formSearch.get('hotelDestination')?.value?.iataCode,
-      checkInDate: formatDate(this.formSearch.get('checkInDate')?.value),
-      checkOutDate: formatDate(this.formSearch.get('checkOutDate')?.value),
-      occupancies: this.occupancies
-    };
+      // MAPEAR CIUDAD DE VUELO A CIUDAD DE HOTEL
+      const hotelDestinationCity = await this.mapFlightCityToHotelCity(destinationCity);
 
-    // Navegar a los resultados de paquetes
-    this.router.navigate(['/packages/results'], {
-      queryParams: searchParams
-    });
+      // CREAR OBJETO FlightSearchRequest IGUAL QUE EN VUELOS
+      const flightSearchRequest: FlightSearchRequest = {
+        origin: originCity.iataCode,
+        destination: destinationCity.iataCode,
+        departureDate: formatDateForApi(this.departureDate),
+        returnDate: formatDateForApi(this.returnDate),
+        adults: this.getTotalAdults(),
+        children: flightPassengers.children > 0 ? flightPassengers.children : undefined,
+        infants: flightPassengers.infants > 0 ? flightPassengers.infants : undefined,
+        travelClass: this.formSearch.get('travelClass')?.value,
+        currency: 'ARS',
+        nonStop: false
+      };
 
-    setTimeout(() => {
+      // CREAR OBJETO HotelSearchRequest IGUAL QUE EN HOTELES
+      const hotelOccupancy: any = {
+        rooms: 1, // SIEMPRE 1 como en hoteles
+        adults: this.getTotalAdults(),
+        children: this.getTotalChildren(),
+      };
+
+      // Agregar paxes solo si hay niños
+      if (this.getTotalChildren() > 0 && this.occupancies[0].paxes) {
+        hotelOccupancy.paxes = this.occupancies[0].paxes
+          .filter((pax) => pax.type === 'CH')
+          .map((pax) => ({
+            type: pax.type,
+            age: pax.age,
+          }));
+      }
+
+      const hotelSearchRequest: HotelSearchRequest = {
+        stay: {
+          checkIn: this.departureDate!, // FECHAS IGUALES - SIMPLIFICADO
+          checkOut: this.returnDate!,   // FECHAS IGUALES - SIMPLIFICADO
+        },
+        occupancies: [hotelOccupancy],
+        destination: {
+          code: hotelDestinationCity.iataCode // USAR EL CÓDIGO MAPEADO DE HOTELES
+        },
+        currency: 'ARS',
+        language: 'CAS',
+      };
+
+      console.log('Flight Search Request:', flightSearchRequest);
+      console.log('Hotel Search Request:', hotelSearchRequest);
+      console.log('Ciudad vuelo:', destinationCity);
+      console.log('Ciudad hotel mapeada:', hotelDestinationCity);
+
+      // Navegar a resultados de paquetes
+      this.router.navigate(['/home/packages/results'], {
+        state: { 
+          flightSearchRequest,
+          hotelSearchRequest,
+          originCity,
+          destinationCity: destinationCity, // Ciudad original del vuelo
+          hotelDestinationCity, // Ciudad mapeada para hoteles
+          // Datos para mostrar en resultados
+          packageInfo: {
+            departureDate: this.departureDate,
+            returnDate: this.returnDate,
+            totalAdults: this.getTotalAdults(),
+            totalChildren: this.getTotalChildren(),
+            totalRooms: this.getTotalRooms()
+          }
+        },
+      });
+
+    } catch (error) {
+      console.error('Error al buscar paquetes:', error);
+      alert('Error: ' + (error as Error).message);
+    } finally {
       this.isLoading = false;
-    }, 1000);
+    }
   }
 
   // Validadores
