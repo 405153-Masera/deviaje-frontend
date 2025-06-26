@@ -71,6 +71,7 @@ export class DeviajeHotelsSearchComponent implements OnInit, OnDestroy {
     }>;
   }> = [{ rooms: 1, adults: 1, children: 0 }];
 
+  
   // Variables para fechas
   checkInDate: Date | null = null;
   checkOutDate: Date | null = null;
