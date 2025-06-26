@@ -4,7 +4,8 @@
   <div class="row mb-3">
     <div class="col-md-6 mb-3 mb-md-0">
       <label for="firstName" class="form-label">Nombre <span class="text-danger">*</span></label>
-      <small class="text-muted d-block" *ngIf="mode === 'flight'">Indica el nombre tal y como figura en el pasaporte</small>
+      <small class="text-muted d-block" *ngIf="mode === 'flight'">Indica el nombre tal y como figura en el
+        pasaporte</small>
 
       <input type="text" class="form-control" id="firstName" formControlName="firstName"
         [ngClass]="onValidate('firstName')">
@@ -17,7 +18,8 @@
 
     <div class="col-md-6">
       <label for="lastName" class="form-label">Apellido <span class="text-danger">*</span></label>
-      <small class="text-muted d-block" *ngIf="mode === 'flight'">Indica el apellido tal y como figura en el pasaporte</small>
+      <small class="text-muted d-block" *ngIf="mode === 'flight'">Indica el apellido tal y como figura en el
+        pasaporte</small>
 
       <input type="text" class="form-control" id="lastName" formControlName="lastName"
         [ngClass]="onValidate('lastName')">
@@ -38,21 +40,31 @@
       </select>
     </div>
 
-    <div class="col-md-6">
+    <div class="col-md-6" *ngIf="travelerForm.get('travelerType')?.value === 'INFANT'">
       <label for="birthDate" class="form-label">Fecha de nacimiento <span class="text-danger">*</span></label>
-      <input type="date" class="form-control" id="birthDate" formControlName="dateOfBirth"
-        [ngClass]="onValidate('dateOfBirth')" [min]="getDateConstraints(travelerForm.get('travelerType')?.value).min"
+      <input 
+        type="date" 
+        class="form-control" 
+        id="birthDate" 
+        formControlName="dateOfBirth"
+        [ngClass]="onValidate('dateOfBirth')"
+        [min]="getDateConstraints(travelerForm.get('travelerType')?.value).min"
         [max]="getDateConstraints(travelerForm.get('travelerType')?.value).max">
+      
       <div *ngIf="shouldShowError('dateOfBirth')" class="invalid-feedback d-block">
-        La fecha de nacimiento es obligatoria y debe ser válida para el tipo de pasajero
+        <div *ngIf="getFieldErrors('dateOfBirth')?.['required']">La fecha de nacimiento es obligatoria para bebés</div>
       </div>
+      <small class="form-text text-muted">
+        <i class="bi bi-baby me-1"></i>
+        El bebé debe tener menos de 2 años al finalizar el viaje
+      </small>
     </div>
   </div>
 
   <!-- Datos de contacto para el titular en modo hotel -->
   <div *ngIf="mode === 'hotel' && isPrimaryTraveler && travelerForm.get('contact')" formGroupName="contact">
     <h6 class="mb-3">Datos de contacto</h6>
-    
+
     <div class="mb-3">
       <div class="col mb-3 mb-md-0">
         <label for="emailAddress" class="form-label">Email <span class="text-danger">*</span></label>
@@ -65,48 +77,48 @@
       </div>
 
       <div class="row" formArrayName="phones">
-      <div formGroupName="0">
-        <div class="row">
+        <div formGroupName="0">
+          <div class="row">
 
-          <div class="col-md-4 mb-3">
-            <label for="phoneCode" class="form-label">Código de país <span class="text-danger">*</span></label>
-            <div class="input-group">
-              <span class="input-group-text">📞</span>
-              <select class="form-select" id="phoneCode" formControlName="countryCallingCode"
-                [ngClass]="onValidate('contact.phones.0.countryCallingCode')">
-                <option value="" disabled selected>Código</option>
-                <option *ngFor="let country of filteredCountries" [value]="country.phoneCode">
-                  {{ country.name }} ({{ country.displayCode }}) </option>
-              </select>
-              <div *ngIf="shouldShowError('contact.phones.0.countryCallingCode')" class="invalid-feedback d-block">
-                El código de país es obligatorio
+            <div class="col-md-4 mb-3">
+              <label for="phoneCode" class="form-label">Código de país <span class="text-danger">*</span></label>
+              <div class="input-group">
+                <span class="input-group-text">📞</span>
+                <select class="form-select" id="phoneCode" formControlName="countryCallingCode"
+                  [ngClass]="onValidate('contact.phones.0.countryCallingCode')">
+                  <option value="" disabled selected>Código</option>
+                  <option *ngFor="let country of filteredCountries" [value]="country.phoneCode">
+                    {{ country.name }} ({{ country.displayCode }}) </option>
+                </select>
+                <div *ngIf="shouldShowError('contact.phones.0.countryCallingCode')" class="invalid-feedback d-block">
+                  El código de país es obligatorio
+                </div>
               </div>
             </div>
-          </div>
 
-          <div class="col-md-8 mb-3">
-            <label for="phoneNumber" class="form-label">Número de teléfono <span class="text-danger">*</span></label>
-            <input type="tel" class="form-control" id="phoneNumber" formControlName="number"
-              [ngClass]="onValidate('contact.phones.0.number')">
-            <div *ngIf="shouldShowError('contact.phones.0.number')" class="invalid-feedback d-block">
-              <div *ngIf="getFieldErrors('contact.phones.0.number')?.['required']">
-                El número de teléfono es obligatorio
-              </div>
-              <div *ngIf="getFieldErrors('contact.phones.0.number')?.['invalidPhoneNumber']">
-                El número de teléfono no es válido para el país seleccionado
-              </div>
-              <div *ngIf="getFieldErrors('contact.phones.0.number')?.['missingCountryCode']">
-                Seleccione primero el código de país
-              </div>
-              <div *ngIf="getFieldErrors('contact.phones.0.number')?.['phoneValidationError']">
-                Error al validar el número de teléfono
+            <div class="col-md-8 mb-3">
+              <label for="phoneNumber" class="form-label">Número de teléfono <span class="text-danger">*</span></label>
+              <input type="tel" class="form-control" id="phoneNumber" formControlName="number"
+                [ngClass]="onValidate('contact.phones.0.number')">
+              <div *ngIf="shouldShowError('contact.phones.0.number')" class="invalid-feedback d-block">
+                <div *ngIf="getFieldErrors('contact.phones.0.number')?.['required']">
+                  El número de teléfono es obligatorio
+                </div>
+                <div *ngIf="getFieldErrors('contact.phones.0.number')?.['invalidPhoneNumber']">
+                  El número de teléfono no es válido para el país seleccionado
+                </div>
+                <div *ngIf="getFieldErrors('contact.phones.0.number')?.['missingCountryCode']">
+                  Seleccione primero el código de país
+                </div>
+                <div *ngIf="getFieldErrors('contact.phones.0.number')?.['phoneValidationError']">
+                  Error al validar el número de teléfono
+                </div>
               </div>
             </div>
           </div>
         </div>
       </div>
-    </div>
-      
+
     </div>
   </div>
 

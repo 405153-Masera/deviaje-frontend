@@ -1,4 +1,4 @@
-import { Component, Input, OnInit, OnChanges, SimpleChanges } from '@angular/core';
+import { Component, Input, OnInit, OnChanges, SimpleChanges, Output, EventEmitter } from '@angular/core';
 import { CommonModule } from '@angular/common';
 
 export interface PriceBreakdown {
@@ -29,6 +29,8 @@ export class DeviajePriceDetailsComponent implements OnInit, OnChanges {
   @Input() currency: string = 'ARS';
   @Input() passengerCount: number = 1;
   @Input() title: string = '';
+
+  @Output() pricesCalculated = new EventEmitter<any>();
 
   priceBreakdown: PriceBreakdown = {
     grandTotal: 0,
@@ -76,14 +78,18 @@ export class DeviajePriceDetailsComponent implements OnInit, OnChanges {
     switch (this.mode) {
       case 'FLIGHT':
         this.calculateFlightPrices();
+        this.pricesCalculated.emit(this.getPricesDto());
         break;
       case 'HOTEL':
         this.calculateHotelPrices();
+        this.pricesCalculated.emit(this.getPricesDto());
         break;
       case 'PACKAGE':
         this.calculatePackagePrices();
+        this.pricesCalculated.emit(this.getPricesDto());
         break;
     }
+
   }
 
   private calculateFlightPrices() {

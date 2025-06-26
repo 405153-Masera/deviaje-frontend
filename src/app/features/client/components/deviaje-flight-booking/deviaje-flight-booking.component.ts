@@ -20,8 +20,8 @@ import { DeviajeTravelerFormComponent } from '../deviaje-traveler-form/deviaje-t
 import { DeviajePaymentsFormComponent } from '../deviaje-payments-form/deviaje-payments-form.component';
 import { AuthService } from '../../../../core/auth/services/auth.service';
 import { Subscription } from 'rxjs';
-import { DeviajeFlightBookingSummaryComponent } from "../deviaje-flight-booking-summary/deviaje-flight-booking-summary.component";
-import { DeviajePriceDetailsComponent } from "../deviaje-price-details/deviaje-price-details.component";
+import { DeviajeFlightBookingSummaryComponent } from '../deviaje-flight-booking-summary/deviaje-flight-booking-summary.component';
+import { DeviajePriceDetailsComponent } from '../deviaje-price-details/deviaje-price-details.component';
 
 @Component({
   selector: 'app-deviaje-flight-booking',
@@ -32,8 +32,8 @@ import { DeviajePriceDetailsComponent } from "../deviaje-price-details/deviaje-p
     DeviajeTravelerFormComponent,
     DeviajePaymentsFormComponent,
     DeviajeFlightBookingSummaryComponent,
-    DeviajePriceDetailsComponent
-],
+    DeviajePriceDetailsComponent,
+  ],
   templateUrl: './deviaje-flight-booking.component.html',
   styleUrl: './deviaje-flight-booking.component.scss',
 })
@@ -57,7 +57,10 @@ export class DeviajeFlightBookingComponent implements OnInit, OnDestroy {
   readonly flightUtils = inject(FlightUtilsService);
   subscription = new Subscription();
 
-  @ViewChild(DeviajePriceDetailsComponent) priceDetailsComponent!: DeviajePriceDetailsComponent;
+  @ViewChild(DeviajePriceDetailsComponent)
+  priceDetailsComponent!: DeviajePriceDetailsComponent;
+  calculatedTotalAmount: string = '0';
+  calculatedCurrency: string = 'ARS';
 
   flightOffer: FlightOfferDto | null = null;
   selectedOffer: FlightOfferDto | null = null;
@@ -141,6 +144,19 @@ export class DeviajeFlightBookingComponent implements OnInit, OnDestroy {
     }
     this.isReloadedSession = false; // Resetear el estado de recarga
     this.subscription.unsubscribe(); // Limpiar suscripciones
+  }
+
+  onPricesCalculated(pricesDto: any): void {
+    console.log('Precios calculados recibidos:', pricesDto);
+
+    this.calculatedTotalAmount = String(pricesDto.totalAmount);
+    this.calculatedCurrency = pricesDto.currency;
+
+    this.mainForm
+      .get('payment')
+      ?.get('amount')
+      ?.setValue(pricesDto.totalAmount);
+    this.mainForm.get('payment')?.get('currency')?.setValue(pricesDto.currency);
   }
 
   // Load current user and determine role (AGREGAR MÉTODO COMPLETO)
@@ -257,28 +273,34 @@ export class DeviajeFlightBookingComponent implements OnInit, OnDestroy {
         this.isVerifying = false;
         if (verifiedOffer) {
           this.selectedOffer = verifiedOffer;
-          // Actualizar el precio en el formulario de pago
-          console.log('Oferta verificada y seleccionada:', verifiedOffer);
-          this.mainForm
-            .get('payment')
-            ?.get('amount')
-            ?.setValue(parseFloat(verifiedOffer.price.total));
-          this.mainForm
-            .get('payment')
-            ?.get('currency')
-            ?.setValue(verifiedOffer.price.currency);
 
           this.saveBookingState();
         } else {
+          // Mostrar mensaje temporal y redirigir
           this.errorMessage =
-            'La oferta de vuelo ya no está disponible. Por favor, realice una nueva búsqueda.';
+            'La oferta de vuelo ya no está disponible. Regresando a los resultados...';
+
+          // Redirigir después de 2 segundos para que el usuario vea el mensaje
+          setTimeout(() => {
+            this.router.navigate(['/home/flight/results'], {
+              queryParamsHandling: 'preserve', // Mantener los parámetros de búsqueda
+            });
+          }, 2000);
         }
       },
       error: (error) => {
         this.isVerifying = false;
         this.errorMessage =
-          'Error al verificar la disponibilidad: ' +
-          (error.message || 'Oferta no disponible');
+          'Error al verificar la disponibilidad. Regresando a los resultados...';
+
+        console.error('Error verificando oferta:', error);
+
+        // Redirigir después de 2 segundos para que el usuario vea el mensaje
+        setTimeout(() => {
+          this.router.navigate(['/home/flight/results'], {
+            queryParamsHandling: 'preserve', // Mantener los parámetros de búsqueda
+          });
+        }, 2000);
       },
     });
   }
@@ -313,7 +335,11 @@ export class DeviajeFlightBookingComponent implements OnInit, OnDestroy {
 
       const travelerForm = this.fb.group({
         id: [String(i + 1)],
-        dateOfBirth: ['', Validators.required],
+        ...(travelerType === 'INFANT'
+          ? {
+              dateOfBirth: ['', [Validators.required]],
+            }
+          : {}),
         firstName: ['', Validators.required], // Cambiado: firstName directamente en el grupo principal
         lastName: ['', Validators.required],
         gender: ['MALE', Validators.required],
@@ -588,7 +614,9 @@ export class DeviajeFlightBookingComponent implements OnInit, OnDestroy {
       // Solo incluir campos necesarios según el tipo de pasajero
       const travelerData: TravelerDto = {
         id: traveler.id,
-        dateOfBirth: traveler.dateOfBirth,
+        ...(traveler.travelerType === 'INFANT' && traveler.dateOfBirth
+          ? { dateOfBirth: traveler.dateOfBirth }
+          : {}),
         name: {
           firstName: traveler.firstName,
           lastName: traveler.lastName,
@@ -597,7 +625,6 @@ export class DeviajeFlightBookingComponent implements OnInit, OnDestroy {
         documents: traveler.documents,
         travelerType: traveler.travelerType,
         ...(associatedAdultId && { associatedAdultId }),
-
       };
 
       if (index === 0 && primaryContact) {
@@ -661,6 +688,10 @@ export class DeviajeFlightBookingComponent implements OnInit, OnDestroy {
         this.selectedOffer = state.selectedOffer;
         this.searchParams = state.searchParams;
         this.isReloadedSession = true;
+      }
+
+      if (this.flightOffer) {
+        this.verifyFlightOffer(this.flightOffer);
       }
 
       // Cargar los datos del formulario
@@ -836,5 +867,26 @@ export class DeviajeFlightBookingComponent implements OnInit, OnDestroy {
         }
       }
     });
+  }
+
+  getLastArrivalDate(): string {
+    const offer = this.selectedOffer || this.flightOffer;
+
+    if (!offer || !offer.itineraries || offer.itineraries.length === 0) {
+      console.warn('No hay oferta de vuelo disponible');
+      return new Date().toISOString().split('T')[0];
+    }
+
+    try {
+      const lastItinerary = offer.itineraries[offer.itineraries.length - 1];
+      const lastSegment =
+        lastItinerary.segments[lastItinerary.segments.length - 1];
+      const arrivalDate = lastSegment.arrival.at.split('T')[0];
+      console.log('Fecha de llegada del último vuelo:', arrivalDate);
+      return arrivalDate;
+    } catch (error) {
+      console.error('Error al obtener fecha de llegada:', error);
+      return new Date().toISOString().split('T')[0];
+    }
   }
 }

@@ -15,7 +15,7 @@ export interface FlightOfferDto extends FlightOffer {
 
 export interface TravelerDto {
   id: string;
-  dateOfBirth: string;
+  dateOfBirth?: string;
   name: {
     firstName: string;
     lastName: string;

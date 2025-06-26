@@ -52,7 +52,6 @@ export class AuthService {
   // Agrega estos logs TEMPORALES en tu AuthService actual:
 
   private initializeAuthState(): void {
-    console.log('🔍 === INVESTIGANDO PROBLEMA ===');
 
     if (typeof localStorage !== 'undefined') {
       // 1. ¿Qué hay en localStorage?
@@ -72,14 +71,12 @@ export class AuthService {
       let user = null;
       try {
         user = userString ? JSON.parse(userString) : null;
-        console.log('👤 Usuario parseado:', user);
       } catch (e) {
         console.error('❌ Error parseando usuario:', e);
       }
 
       // 3. ¿El token es válido?
       if (token && user) {
-        console.log('✅ Token y usuario existen');
 
         // Verificar expiración paso a paso
         const expirationDate = expiration ? new Date(expiration) : null;
@@ -96,12 +93,10 @@ export class AuthService {
         console.log('🔐 ¿Token válido?', isValid);
 
         if (isValid) {
-          console.log('✅ Todo OK - Debería restaurar sesión');
           this.currentUserSubject.next(user);
           this.isAuthenticatedSubject.next(true);
           this.activeRoleSubject.next(activeRole);
         } else {
-          console.log('❌ Token inválido - Limpiando sesión');
           this.clearSession();
         }
       } else {

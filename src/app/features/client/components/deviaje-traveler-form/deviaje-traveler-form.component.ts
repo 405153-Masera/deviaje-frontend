@@ -20,6 +20,7 @@ import { ValidatorsService } from '../../../../shared/services/validators.servic
 export class DeviajeTravelerFormComponent implements OnInit {
   @Input() travelerForm!: FormGroup;
   @Input() isPrimaryTraveler: boolean = false;
+  @Input() lastArrivalDate: string = '';
   @Input() mode: 'flight' | 'hotel' = 'flight';
 
   private http = inject(HttpClient);
@@ -86,11 +87,10 @@ export class DeviajeTravelerFormComponent implements OnInit {
   }
 
   setupPhoneValidation(): void {
-    
     if (!this.isPrimaryTraveler) {
       return;
     }
-    
+
     const phoneControl = this.travelerForm
       .get('contact')
       ?.get('phones')
@@ -126,7 +126,6 @@ export class DeviajeTravelerFormComponent implements OnInit {
           // Filtrar solo los campos necesarios y usar el nombre en español
           this.countries = data
             .map((country: any) => {
-              
               // Concatenar root + primer suffix para obtener código completo
               let phoneCode = '';
               if (country.idd?.root && country.idd?.suffixes?.length > 0) {
@@ -155,11 +154,21 @@ export class DeviajeTravelerFormComponent implements OnInit {
           this.isLoading = false;
           // Países de fallback en caso de error
           this.countries = [
-          { name: 'Argentina', cca2: 'AR', phoneCode: '54', displayCode: '+54' },
-          { name: 'España', cca2: 'ES', phoneCode: '34', displayCode: '+34' },
-          { name: 'Estados Unidos', cca2: 'US', phoneCode: '1', displayCode: '+1' },
-          { name: 'México', cca2: 'MX', phoneCode: '52', displayCode: '+52' },
-        ];
+            {
+              name: 'Argentina',
+              cca2: 'AR',
+              phoneCode: '54',
+              displayCode: '+54',
+            },
+            { name: 'España', cca2: 'ES', phoneCode: '34', displayCode: '+34' },
+            {
+              name: 'Estados Unidos',
+              cca2: 'US',
+              phoneCode: '1',
+              displayCode: '+1',
+            },
+            { name: 'México', cca2: 'MX', phoneCode: '52', displayCode: '+52' },
+          ];
           this.filteredCountries = [...this.countries];
         },
       });
@@ -229,47 +238,34 @@ export class DeviajeTravelerFormComponent implements OnInit {
 
   // Calcular la fecha mínima y máxima según el tipo de pasajero
   getDateConstraints(type: string): { min: string; max: string } {
-    const today = new Date();
-    let minDate: Date;
-    let maxDate: Date;
+    if (type === 'INFANT') {
+      const referenceDate = new Date(this.lastArrivalDate || new Date());
 
-    if (type === 'ADULT') {
-      // Adulto: 18+ años
-      maxDate = new Date(
-        today.getFullYear() - 18,
-        today.getMonth(),
-        today.getDate()
+      // Fecha mínima: 2 años antes + 1 día
+      const minDate = new Date(
+        referenceDate.getFullYear() - 2,
+        referenceDate.getMonth(),
+        referenceDate.getDate() + 2
       );
-      minDate = new Date(
-        today.getFullYear() - 120,
+
+      // Fecha máxima: HOY - 1 día
+      const today = new Date();
+      const maxDate = new Date(
+        today.getFullYear(),
         today.getMonth(),
-        today.getDate()
+        today.getDate() - 1
       );
-    } else if (type === 'CHILD') {
-      // Niño: 2-17 años
-      minDate = new Date(
-        today.getFullYear() - 17,
-        today.getMonth(),
-        today.getDate()
-      );
-      maxDate = new Date(
-        today.getFullYear() - 2,
-        today.getMonth(),
-        today.getDate()
-      );
-    } else {
-      // Infante: 0-2 años
-      minDate = new Date(
-        today.getFullYear() - 2,
-        today.getMonth(),
-        today.getDate()
-      );
-      maxDate = today;
+
+      return {
+        min: this.formatDateForInput(minDate),
+        max: this.formatDateForInput(maxDate),
+      };
     }
 
+    // Para ADULT/CHILD (no se usa pero por si acaso)
     return {
-      min: this.formatDateForInput(minDate),
-      max: this.formatDateForInput(maxDate),
+      min: '1920-01-01',
+      max: new Date().toISOString().split('T')[0],
     };
   }
 

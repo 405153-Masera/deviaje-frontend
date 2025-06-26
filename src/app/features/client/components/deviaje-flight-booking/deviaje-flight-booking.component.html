@@ -44,6 +44,7 @@
     [flightPrice]="selectedOffer.price"
     [currency]="selectedOffer.price.currency || 'ARS'"
     [passengerCount]="selectedOffer.travelerPricings.length"
+    (pricesCalculated)="onPricesCalculated($event)"
     >
   </app-deviaje-price-details>
 </ng-container>
@@ -141,8 +142,12 @@
                   </div>
 
                   <div class="card-body">
-                    <app-deviaje-traveler-form [travelerForm]="getTravelerFormGroup(i)" [isPrimaryTraveler]="i === 0"
-                      mode="flight"></app-deviaje-traveler-form>
+                    <app-deviaje-traveler-form 
+                      [travelerForm]="getTravelerFormGroup(i)" 
+                      [isPrimaryTraveler]="i === 0"
+                      mode="flight"
+                      [lastArrivalDate]="getLastArrivalDate()"
+                      ></app-deviaje-traveler-form>
                   </div>
                 </div>
               </div>
@@ -153,8 +158,8 @@
           <div *ngIf="currentStep === 2">
             <h5 class="card-title mb-4">Información de pago</h5>
             <ng-container *ngIf="mainForm.get('payment')">
-              <app-deviaje-payments-form [paymentForm]="paymentFormGroup" [amount]="selectedOffer.price.total || '0'"
-                [currency]="selectedOffer.price.currency || 'USD'">
+              <app-deviaje-payments-form [paymentForm]="paymentFormGroup" [amount]="calculatedTotalAmount || '0'"
+                [currency]="calculatedCurrency || 'ARS'">
               </app-deviaje-payments-form>
             </ng-container>
           </div>
@@ -243,8 +248,7 @@
                       mainForm.get('payment')?.get('cardNumber')?.value.substring(12) }}</p>
                   </div>
                   <div class="col-md-6">
-                    <p><strong>Monto total:</strong> {{ selectedOffer.price.total |
-                      currency:(selectedOffer.price.currency || 'USD') }}</p>
+                    <p><strong>Monto total:</strong> {{ calculatedTotalAmount | currency:(selectedOffer.price.currency || 'USD') }}</p>
                     <p><strong>Moneda:</strong> {{ selectedOffer.price.currency }}</p>
                     <p><strong>Cuotas:</strong> 1</p>
                   </div>
