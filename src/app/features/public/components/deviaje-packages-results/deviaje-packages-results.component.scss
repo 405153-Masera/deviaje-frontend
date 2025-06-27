@@ -62,7 +62,7 @@
   box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
   position: sticky;
   top: 0;
-  z-index: 100;
+  z-index: 50;
   animation: slideDown 0.3s ease;
 
   .cart-content {
@@ -92,12 +92,12 @@
 
     &.flight-item {
       border-color: var(--primary-color);
-      background-color: rgba(var(--primary-color), 0.05);
+      background-color: rgba(123, 44, 191, 0.05);
     }
 
     &.hotel-item {
       border-color: var(--secondary-color);
-      background-color: rgba(var(--secondary-color), 0.05);
+      background-color: rgba(40, 167, 69, 0.05);
     }
 
     &.placeholder {
@@ -198,33 +198,83 @@
   }
 }
 
+// ========== TABS NAVIGATION ==========
+.package-tabs {
+  .nav-tabs {
+    border-bottom: 3px solid var(--neutral-300);
+    background: white;
+    border-radius: 12px 12px 0 0;
+    padding: 0.5rem 0.5rem 0;
 
-// ========== SEPARADOR VISUAL ==========
-.section-divider {
-  display: flex;
-  align-items: center;
-  margin: 3rem 0;
-  gap: 1rem;
+    .nav-link {
+      border: none;
+      color: var(--neutral-600);
+      font-weight: 600;
+      padding: 1rem 2rem;
+      border-radius: 8px 8px 0 0;
+      transition: all 0.3s ease;
+      position: relative;
 
-  .divider-line {
-    flex: 1;
-    height: 2px;
-    background: linear-gradient(90deg, transparent, var(--neutral-300), transparent);
+      &:hover {
+        color: var(--primary-color);
+        background-color: rgba(var(--primary-color), 0.05);
+      }
+
+      &.active {
+        color: var(--primary-color);
+        background-color: white;
+        border-bottom: 3px solid var(--primary-color);
+
+        &::after {
+          content: '';
+          position: absolute;
+          bottom: -3px;
+          left: 0;
+          right: 0;
+          height: 3px;
+          background: var(--primary-color);
+        }
+      }
+
+      i {
+        font-size: 1.1rem;
+      }
+
+      .badge {
+        font-size: 0.7rem;
+        padding: 0.2rem 0.5rem;
+      }
+    }
   }
 
-  .divider-icon {
-    width: 50px;
-    height: 50px;
-    border-radius: 50%;
-    background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    color: white;
-    font-size: 1.5rem;
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+  .tab-content {
+    background: white;
+
+    .tab-pane {
+      padding: 0;
+      min-height: 400px;
+    }
   }
 }
+
+// ========== RESPONSIVE TABS ==========
+@include mobile {
+  .package-tabs {
+    .nav-tabs .nav-link {
+      padding: 0.75rem 1rem;
+      font-size: 0.9rem;
+    }
+
+    .tab-content .tab-pane .tab-header {
+      padding: 1rem;
+
+      h3 {
+        font-size: 1.2rem;
+      }
+    }
+  }
+}
+
 
 // ========== BOTÓN FLOTANTE (MÓVIL) ==========
 .floating-action {
@@ -295,5 +345,18 @@
 
   .floating-action {
     padding: 0.75rem;
+  }
+}
+
+// ========== OVERRIDE DE COMPONENTES HIJOS ==========
+// Quitar márgenes innecesarios de los componentes de resultados en modo paquete
+::ng-deep app-deviaje-flight-results,
+::ng-deep app-deviaje-hotels-results {
+  .container {
+    padding: 0;
+  }
+
+  .results-header {
+    display: none; // Ocultamos headers de componentes hijos
   }
 }

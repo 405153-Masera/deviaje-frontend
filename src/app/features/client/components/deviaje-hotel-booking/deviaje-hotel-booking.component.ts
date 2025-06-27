@@ -26,6 +26,8 @@ import {
   HotelSearchResponse,
 } from '../../../../shared/models/hotels';
 import { HotelBookingDto, PaymentDto } from '../../models/bookings';
+import { DeviajePriceDetailsComponent } from '../deviaje-price-details/deviaje-price-details.component';
+import { HotelService } from '../../../../shared/services/hotel.service';
 
 @Component({
   selector: 'app-deviaje-hotel-booking',
@@ -36,6 +38,7 @@ import { HotelBookingDto, PaymentDto } from '../../models/bookings';
     DeviajeHotelBookingSummaryComponent,
     DeviajeTravelerFormComponent,
     DeviajePaymentsFormComponent,
+    DeviajePriceDetailsComponent,
   ],
   templateUrl: './deviaje-hotel-booking.component.html',
   styleUrl: './deviaje-hotel-booking.component.scss',
@@ -43,6 +46,9 @@ import { HotelBookingDto, PaymentDto } from '../../models/bookings';
 export class DeviajeHotelBookingComponent implements OnInit, OnDestroy {
   @ViewChild(DeviajePaymentsFormComponent)
   paymentComponent!: DeviajePaymentsFormComponent;
+
+  @ViewChild(DeviajePriceDetailsComponent)
+  priceDetailsComponent!: DeviajePriceDetailsComponent;
 
   //Datos para sessionStorage
   private readonly BOOKING_STATE_KEY = 'hotel_booking_state';
@@ -56,6 +62,9 @@ export class DeviajeHotelBookingComponent implements OnInit, OnDestroy {
   private readonly route = inject(ActivatedRoute);
   private readonly bookingService = inject(BookingService);
   private readonly authService = inject(AuthService);
+
+  private readonly hotelService = inject(HotelService);
+  calculatedTotalAmount: string = '0';
 
   // Subscription management
   private subscription = new Subscription();
@@ -372,7 +381,7 @@ export class DeviajeHotelBookingComponent implements OnInit, OnDestroy {
                 this.rate = {
                   ...this.rate,
                   net: newPrice,
-                  rateKey: newRate.rateKey
+                  rateKey: newRate.rateKey,
                 };
 
                 // Actualizar el precio en el formulario
@@ -461,9 +470,9 @@ export class DeviajeHotelBookingComponent implements OnInit, OnDestroy {
 
     if (occupancyPart) {
       const [rooms, adults, children] = occupancyPart.split('~').map(Number);
-      
-      console.log("adults:", adults, "children:", children, "rooms:", rooms);
-      
+
+      console.log('adults:', adults, 'children:', children, 'rooms:', rooms);
+
       return {
         rooms: rooms || 1,
         adults: adults || 1,
@@ -698,11 +707,13 @@ export class DeviajeHotelBookingComponent implements OnInit, OnDestroy {
       // Preparar los datos del pago
       const paymentData: PaymentDto = this.preparePaymentData(paymentToken);
 
+      const pricesDto = this.priceDetailsComponent?.getPricesDto() || null;
+      
       console.log('Booking data:', bookingData);
       console.log('Payment data:', paymentData);
 
       this.bookingService
-        .createHotelBooking(bookingData, paymentData)
+        .createHotelBooking(bookingData, paymentData, pricesDto)
         .subscribe({
           next: (response) => {
             this.isLoading = false;
@@ -767,6 +778,8 @@ export class DeviajeHotelBookingComponent implements OnInit, OnDestroy {
       rooms: [
         {
           rateKey: this.rateKey,
+          roomName: this.nameRoom,
+          boardName: (this.rate as any)?.boardName,
           paxes: [
             {
               roomId: 1,
@@ -783,10 +796,10 @@ export class DeviajeHotelBookingComponent implements OnInit, OnDestroy {
   preparePaymentData(paymentToken: string): PaymentDto {
     const travelerData = this.travelers.at(0).value;
     const paymentData = this.mainForm.get('payment')?.value;
-
+    
     return {
-      amount: parseFloat(paymentData.amount) || 0,
-      currency: paymentData.currency,
+      amount: this.mainForm.get('payment')?.get('amount')?.value,
+      currency: 'ARS',
       paymentMethod: 'master',
       paymentToken: paymentToken,
       installments: 1,
@@ -807,5 +820,19 @@ export class DeviajeHotelBookingComponent implements OnInit, OnDestroy {
   // Navigate to bookings
   goToBookings(): void {
     this.router.navigate(['/bookings']);
+  }
+
+  // Método para manejar los precios calculados
+ onPricesCalculated(pricesDto: any): void {
+    console.log('Precios calculados recibidos:', pricesDto);
+
+    this.calculatedTotalAmount = String(pricesDto.totalAmount);
+    //this.calculatedCurrency = pricesDto.currency;
+
+    this.mainForm
+      .get('payment')
+      ?.get('amount')
+      ?.setValue(pricesDto.totalAmount);
+    this.mainForm.get('payment')?.get('currency')?.setValue(pricesDto.currency);
   }
 }

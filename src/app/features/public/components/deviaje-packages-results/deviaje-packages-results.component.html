@@ -1,4 +1,4 @@
-<div>
+<div class="">
   <!-- Header con información del paquete -->
   <header class="results-header">
     <div class="container py-4">
@@ -8,12 +8,12 @@
             <i class="bi bi-airplane me-2"></i>
             Paquete {{ originCity.name }} → {{ destinationCity.name }}
           </h1>
-          <div class="package-info">
-            <span class="package-dates">
+          <div class="travel-info">
+            <span class="travel-dates">
               <i class="bi bi-calendar3"></i>
               {{ formatDate(packageInfo.departureDate) }} - {{ formatDate(packageInfo.returnDate) }}
             </span>
-            <span class="package-guests">
+            <span class="travel-guests">
               <i class="bi bi-person"></i>
               {{ packageInfo.totalAdults }} adulto{{ packageInfo.totalAdults !== 1 ? 's' : '' }}
               @if (packageInfo.totalChildren > 0) {
@@ -27,8 +27,8 @@
           </div>
         </div>
         <div class="col-md-4 text-md-end">
-          <button class="btn btn-outline-primary" (click)="goBackToSearch()">
-            <i class="bi bi-arrow-left me-2"></i>
+          <button class="btn btn-outline mt-2 mt-md-0" (click)="goBackToSearch()">
+            <i class="bi bi-arrow-left"></i>
             Modificar búsqueda
           </button>
         </div>
@@ -62,7 +62,7 @@
                   </div>
                   <div class="item-price">{{ formatPrice(selectedFlight.flightOffer.price.total) }}</div>
                 </div>
-                <button class="btn btn-sm btn-outline-danger" (click)="removeFlightSelection()">
+                <button class="btn btn-sm btn-danger" (click)="removeFlightSelection()">
                   <i class="bi bi-x"></i>
                 </button>
               </div>
@@ -88,7 +88,7 @@
                   <div class="item-description">{{ selectedHotel.nameRoom }}</div>
                   <div class="item-price">{{ formatPrice(getHotelRateNet(selectedHotel.rate)) }}</div>
                 </div>
-                <button class="btn btn-sm btn-outline-danger" (click)="removeHotelSelection()">
+                <button class="btn btn-sm btn-danger" (click)="removeHotelSelection()">
                   <i class="bi bi-x"></i>
                 </button>
               </div>
@@ -138,64 +138,90 @@
     </div>
     }
 
-    <!-- Sección de vuelos -->
-    <section class="flights-section mb-5">
-      <div class="section-header">
-        <h2 class="section-title">
+    <!-- TABS NAVIGATION -->
+    <div class="package-tabs">
+      <nav class="nav nav-tabs" id="packageTabs" role="tablist">
+        <button 
+          class="nav-link active" 
+          id="flights-tab" 
+          data-bs-toggle="tab" 
+          data-bs-target="#flights-pane" 
+          type="button" 
+          role="tab">
           <i class="bi bi-airplane me-2"></i>
-          Selecciona tu vuelo
+          Vuelos
           @if (selectedFlight) {
           <span class="badge bg-success ms-2">
-            <i class="bi bi-check"></i> Seleccionado
+            <i class="bi bi-check"></i>
           </span>
           }
-        </h2>
-        <p class="section-subtitle">
-          Vuelos de {{ originCity.name }} a {{ destinationCity.name }}
-        </p>
-      </div>
-
-      <!-- Componente de resultados de vuelos en modo paquete -->
-      <app-deviaje-flight-results
-        [inPackageMode]="true"
-        [searchParams]="flightSearchRequest"
-        (flightSelected)="onFlightSelected($event)">
-      </app-deviaje-flight-results>
-    </section>
-
-    <!-- Separador visual -->
-    <div class="section-divider">
-      <div class="divider-line"></div>
-      <div class="divider-icon">
-        <i class="bi bi-plus-circle"></i>
-      </div>
-      <div class="divider-line"></div>
-    </div>
-
-    <!-- Sección de hoteles -->
-    <section class="hotels-section">
-      <div class="section-header">
-        <h2 class="section-title">
+        </button>
+        <button 
+          class="nav-link" 
+          id="hotels-tab" 
+          data-bs-toggle="tab" 
+          data-bs-target="#hotels-pane" 
+          type="button" 
+          role="tab">
           <i class="bi bi-building me-2"></i>
-          Selecciona tu hotel
+          Hoteles
           @if (selectedHotel) {
           <span class="badge bg-success ms-2">
-            <i class="bi bi-check"></i> Seleccionado
+            <i class="bi bi-check"></i>
           </span>
           }
-        </h2>
-        <p class="section-subtitle">
-          Hoteles en {{ hotelDestinationCity.name }}
-        </p>
-      </div>
+        </button>
+      </nav>
 
-      <!-- Componente de resultados de hoteles en modo paquete -->
-      <app-deviaje-hotels-results
-        [inPackageMode]="true"
-        [searchParams]="hotelSearchRequest"
-        (hotelSelected)="onHotelSelected($event)">
-      </app-deviaje-hotels-results>
-    </section>
+      <!-- TAB CONTENT -->
+      <div class="tab-content" id="packageTabsContent">
+        <!-- VUELOS TAB -->
+        <div 
+          class="tab-pane fade show active" 
+          id="flights-pane" 
+          role="tabpanel" 
+          tabindex="0">
+          <div class="results-header">
+            <div class="container py-4">
+            <h3 class="results-title">
+              <i class="bi bi-airplane me-2"></i>
+              Selecciona tu vuelo
+            </h3>
+            <p>{{ originCity.name }} → {{ destinationCity.name }}</p>
+            </div>
+          </div>
+          
+          <app-deviaje-flight-results
+            [inPackageMode]="true"
+            [searchParams]="flightSearchRequest"
+            (flightSelected)="onFlightSelected($event)">
+          </app-deviaje-flight-results>
+        </div>
+
+        <!-- HOTELES TAB -->
+        <div 
+          class="tab-pane fade" 
+          id="hotels-pane" 
+          role="tabpanel" 
+          tabindex="0">
+          <div class="results-header">
+            <div class="container py-4">
+            <h3 class="results-title">
+              <i class="bi bi-building me-2"></i>
+              Selecciona tu hotel
+            </h3>
+            <p>{{ hotelDestinationCity.name }}</p>
+            </div>
+          </div>
+          
+          <app-deviaje-hotels-results
+            [inPackageMode]="true"
+            [searchParams]="hotelSearchRequest"
+            (hotelSelected)="onHotelSelected($event)">
+          </app-deviaje-hotels-results>
+        </div>
+      </div>
+    </div>
   </div>
 
   <!-- Botón flotante para proceder (solo móvil) -->

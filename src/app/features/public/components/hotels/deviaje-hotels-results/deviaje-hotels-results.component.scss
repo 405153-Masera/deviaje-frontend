@@ -337,3 +337,143 @@
     transform: rotate(360deg);
   }
 }
+
+.hotel-detail-modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 2000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  visibility: hidden;
+  transition: all 0.3s ease;
+
+  &.show {
+    opacity: 1;
+    visibility: visible;
+  }
+
+  .modal-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(0, 0, 0, 0.7);
+    backdrop-filter: blur(3px);
+  }
+
+  .modal-content {
+    position: relative;
+    width: 90%;
+    max-width: 1000px;
+    max-height: 90vh;
+    background-color: white;
+    border-radius: 12px;
+    box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
+    display: flex;
+    flex-direction: column;
+    transform: translateY(20px) scale(0.95);
+    transition: transform 0.3s ease;
+    overflow: hidden;
+
+    // ARREGLAR EL SCROLL DEL CONTENIDO
+    ::ng-deep app-deviaje-hotel-detail {
+      display: flex;
+      flex-direction: column;
+      height: 100%;
+      
+      .hotel-detail-container {
+        flex: 1;
+        overflow-y: auto;
+        max-height: 80vh; // LIMITAR ALTURA
+        
+        // MEJOR SCROLLBAR
+        &::-webkit-scrollbar {
+          width: 8px;
+        }
+
+        &::-webkit-scrollbar-track {
+          background: #f1f1f1;
+        }
+
+        &::-webkit-scrollbar-thumb {
+          background: #888;
+          border-radius: 4px;
+
+          &:hover {
+            background: #555;
+          }
+        }
+
+        // QUITAR PADDING DEL CONTAINER DENTRO DEL MODAL
+        .container {
+          padding: 1rem !important;
+        }
+      }
+
+      // ESTILO DEL HEADER DEL MODAL
+      .modal-header {
+        flex-shrink: 0; // NO SE ENCOJA
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 1rem 1.5rem;
+        border-bottom: 1px solid #e5e5e5;
+        background-color: #f8f9fa;
+
+        .modal-title {
+          font-weight: 600;
+          margin: 0;
+          color: #333;
+        }
+
+        .btn-close {
+          background: none;
+          border: none;
+          font-size: 1.2rem;
+          color: #666;
+          cursor: pointer;
+          padding: 0.5rem;
+          border-radius: 4px;
+          transition: all 0.2s ease;
+
+          &:hover {
+            color: #333;
+            background-color: #e5e5e5;
+          }
+        }
+      }
+
+      // BARRA DE RESERVA DEBE QUEDARSE ABAJO
+      .booking-bar {
+        position: sticky;
+        bottom: 0;
+        background: white;
+        border-top: 1px solid #e5e5e5;
+        margin-top: auto;
+        flex-shrink: 0;
+      }
+    }
+  }
+
+  &.show .modal-content {
+    transform: translateY(0) scale(1);
+  }
+
+  @include mobile {
+    .modal-content {
+      width: 95%;
+      max-height: 95vh;
+      margin: 2.5%;
+
+      ::ng-deep app-deviaje-hotel-detail .hotel-detail-container {
+        max-height: 85vh;
+      }
+    }
+  }
+}

@@ -84,6 +84,8 @@ export interface HolderDto {
 
 export interface RoomBookingDto {
   rateKey: string;
+  roomName: string,
+  boardName: string,
   paxes: PaxDto[];
 }
 

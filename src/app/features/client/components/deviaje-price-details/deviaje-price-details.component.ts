@@ -1,5 +1,6 @@
-import { Component, Input, OnInit, OnChanges, SimpleChanges, Output, EventEmitter } from '@angular/core';
+import { Component, Input, OnInit, OnChanges, SimpleChanges, Output, EventEmitter, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { HotelService } from '../../../../shared/services/hotel.service';
 
 export interface PriceBreakdown {
   grandTotal: number;
@@ -31,6 +32,8 @@ export class DeviajePriceDetailsComponent implements OnInit, OnChanges {
   @Input() title: string = '';
 
   @Output() pricesCalculated = new EventEmitter<any>();
+
+  private readonly hotelService = inject(HotelService);
 
   priceBreakdown: PriceBreakdown = {
     grandTotal: 0,
@@ -111,15 +114,16 @@ export class DeviajePriceDetailsComponent implements OnInit, OnChanges {
   }
 
   private calculateHotelPrices() {
-    if (!this.hotelPrice) return;
+    const hotelNet = parseFloat((this.hotelPrice as any)?.net) || 0;
+    const priceInArs = this.hotelService.convertToArs(hotelNet);
 
     // Para hoteles usamos el campo 'net'
-    this.priceBreakdown.net = parseFloat(this.hotelPrice.total) || 0;
+    this.priceBreakdown.net = priceInArs;
     this.priceBreakdown.grandTotal = 0;
     this.priceBreakdown.basePrice = this.priceBreakdown.net;
     
     // Impuestos del hotel (si hay)
-    this.priceBreakdown.taxesHotel = parseFloat(this.hotelPrice.taxes) || 0;
+    this.priceBreakdown.taxesHotel = 0;
     this.priceBreakdown.taxesFlight = 0;
     
     // Comisión 20% sobre precio base sin impuestos

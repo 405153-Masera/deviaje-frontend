@@ -91,7 +91,8 @@ export class BookingService {
   // Crear una reserva de hotel con pago
   createHotelBooking(
     bookingData: HotelBookingDto,
-    paymentData: PaymentDto
+    paymentData: PaymentDto,
+    pricesDto?: any 
   ): Observable<BookingResponseDto> {
     const bookAndPayRequest = {
       bookingRequest: bookingData,
