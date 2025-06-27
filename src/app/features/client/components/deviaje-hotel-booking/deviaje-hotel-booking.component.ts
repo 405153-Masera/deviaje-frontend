@@ -60,7 +60,7 @@ export class DeviajeHotelBookingComponent implements OnInit, OnDestroy {
   private readonly fb = inject(FormBuilder);
   private readonly router = inject(Router);
   private readonly route = inject(ActivatedRoute);
-  private readonly bookingService = inject(BookingService);
+  readonly bookingService = inject(BookingService);
   private readonly authService = inject(AuthService);
 
   private readonly hotelService = inject(HotelService);

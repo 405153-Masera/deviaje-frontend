@@ -155,7 +155,7 @@ export class DeviajePackagesResultsComponent implements OnInit {
     });
 
     // Navegar a reserva de paquetes con los mismos datos que usan las reservas individuales
-    this.router.navigate(['/client/packages/booking'], {
+    this.router.navigate(['/home/packages/booking'], {
       state: {
         // Datos del vuelo (exactamente como flight-booking los recibe)
         flightOffer: this.selectedFlight!.flightOffer,

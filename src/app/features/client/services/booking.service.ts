@@ -20,6 +20,35 @@ export class BookingService {
   private hotelBookingUrl = `${environment.apiDeviajeBookings}/api/hotels/book-and-pay`;
   private flightVerifyUrl = `${environment.apiDeviajeBookings}/api/flights/verify-price`;
   private hotelRateCheckUrl = `${environment.apiDeviajeBookings}/api/hotels/checkrates`;
+  private packageBookingUrl = `${environment.apiDeviajeBookings}/api/packages/book-and-pay`;
+
+  // Crear una reserva de paquete (vuelo + hotel) con pago
+  createPackageBooking(
+    flightBookingData: FlightBookingDto,
+    hotelBookingData: HotelBookingDto,
+    paymentData: PaymentDto,
+    pricesDto?: any
+  ): Observable<BookingResponseDto> {
+    const bookAndPayRequest = {
+      flightBooking: flightBookingData,
+      hotelBooking: hotelBookingData,
+      paymentRequest: paymentData,
+      prices: pricesDto,
+    };
+
+    return this.http
+      .post<BookingResponseDto>(this.packageBookingUrl, bookAndPayRequest)
+      .pipe(
+        catchError((error) => {
+          console.error('Error al crear reserva de paquete:', error);
+          return of({
+            success: false,
+            message: 'Error al procesar la reserva del paquete',
+            detailedError: error.message || 'Error de conexión',
+          });
+        })
+      );
+  }
 
   // Verificar disponibilidad y precio de vuelo
   verifyFlightOfferPrice(
@@ -71,7 +100,7 @@ export class BookingService {
     const bookAndPayRequest = {
       bookingRequest: bookingData,
       paymentRequest: paymentData,
-      prices: pricesDto // AGREGADO
+      prices: pricesDto, // AGREGADO
     };
 
     return this.http
@@ -92,12 +121,12 @@ export class BookingService {
   createHotelBooking(
     bookingData: HotelBookingDto,
     paymentData: PaymentDto,
-    pricesDto?: any 
+    pricesDto?: any
   ): Observable<BookingResponseDto> {
     const bookAndPayRequest = {
       bookingRequest: bookingData,
       paymentRequest: paymentData,
-      prices: pricesDto
+      prices: pricesDto,
     };
 
     return this.http
