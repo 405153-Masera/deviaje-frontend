@@ -1,6 +1,6 @@
 // packages-results.component.scss
 
-@import "../../../../../../src/assets/styles/variables";
+@import "../../../../../assets/styles/variables";
 
 .packages-results-container {
   min-height: 100vh;
@@ -198,36 +198,6 @@
   }
 }
 
-// ========== SECCIONES ==========
-.flights-section,
-.hotels-section {
-  .section-header {
-    margin-bottom: 2rem;
-    padding: 1.5rem;
-    background: white;
-    border-radius: 12px;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
-
-    .section-title {
-      display: flex;
-      align-items: center;
-      color: var(--neutral-800);
-      font-weight: 600;
-      margin-bottom: 0.5rem;
-
-      .badge {
-        font-size: 0.7rem;
-        padding: 0.4rem 0.8rem;
-      }
-    }
-
-    .section-subtitle {
-      color: var(--neutral-600);
-      margin: 0;
-      font-size: 1rem;
-    }
-  }
-}
 
 // ========== SEPARADOR VISUAL ==========
 .section-divider {
@@ -325,18 +295,5 @@
 
   .floating-action {
     padding: 0.75rem;
-  }
-}
-
-// ========== OVERRIDE DE COMPONENTES HIJOS ==========
-// Quitar márgenes innecesarios de los componentes de resultados en modo paquete
-::ng-deep app-deviaje-flight-results,
-::ng-deep app-deviaje-hotels-results {
-  .container {
-    padding: 0;
-  }
-
-  .results-header {
-    display: none; // Ocultamos headers de componentes hijos
   }
 }

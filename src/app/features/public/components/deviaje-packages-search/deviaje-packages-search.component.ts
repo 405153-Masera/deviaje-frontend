@@ -244,10 +244,14 @@ export class DeviajePackagesSearchComponent implements OnInit, OnDestroy {
         adults: this.getTotalAdults(),
         children: flightPassengers.children > 0 ? flightPassengers.children : undefined,
         infants: flightPassengers.infants > 0 ? flightPassengers.infants : undefined,
-        travelClass: this.formSearch.get('travelClass')?.value,
         currency: 'ARS',
         nonStop: false
       };
+
+      const travelClass = this.formSearch.get('travelClass')?.value;
+      if (travelClass && travelClass !== '') {
+        flightSearchRequest.travelClass = travelClass;
+      }
 
       // CREAR OBJETO HotelSearchRequest IGUAL QUE EN HOTELES
       const hotelOccupancy: any = {
@@ -294,8 +298,8 @@ export class DeviajePackagesSearchComponent implements OnInit, OnDestroy {
           hotelDestinationCity, // Ciudad mapeada para hoteles
           // Datos para mostrar en resultados
           packageInfo: {
-            departureDate: this.departureDate,
-            returnDate: this.returnDate,
+            departureDate: this.formSearch.get('departureDate')?.value,
+            returnDate: this.formSearch.get('returnDate')?.value,
             totalAdults: this.getTotalAdults(),
             totalChildren: this.getTotalChildren(),
             totalRooms: this.getTotalRooms()
