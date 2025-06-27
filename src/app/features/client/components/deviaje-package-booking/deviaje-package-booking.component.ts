@@ -29,7 +29,7 @@ import {
   HotelSearchResponse,
 } from '../../../../shared/models/hotels';
 import { FlightSearchRequest } from '../../../../shared/models/flights';
-import { DeviajeHotelBookingSummaryComponent } from "../deviaje-hotel-booking-summary/deviaje-hotel-booking-summary.component";
+import { DeviajeHotelBookingSummaryComponent } from '../deviaje-hotel-booking-summary/deviaje-hotel-booking-summary.component';
 
 @Component({
   selector: 'app-deviaje-flight-booking',
@@ -41,8 +41,8 @@ import { DeviajeHotelBookingSummaryComponent } from "../deviaje-hotel-booking-su
     DeviajePaymentsFormComponent,
     DeviajeFlightBookingSummaryComponent,
     DeviajePriceDetailsComponent,
-    DeviajeHotelBookingSummaryComponent
-],
+    DeviajeHotelBookingSummaryComponent,
+  ],
   templateUrl: './deviaje-package-booking.component.html',
   styleUrl: './deviaje-package-booking.component.scss',
 })
@@ -51,9 +51,9 @@ export class DeviajePackageBookingComponent implements OnInit, OnDestroy {
   paymentComponent!: DeviajePaymentsFormComponent;
 
   //Datos para la sessionStorage
-  private readonly BOOKING_STATE_KEY = 'flight_booking_state';
-  private readonly FORM_DATA_KEY = 'flight_booking_form_data';
-  private readonly CURRENT_STEP_KEY = 'flight_booking_current_step';
+  private readonly BOOKING_STATE_KEY = 'package_booking_state';
+  private readonly FORM_DATA_KEY = 'package_booking_form_data';
+  private readonly CURRENT_STEP_KEY = 'package_booking_current_step';
   private isReloadedSession = false; // Indica si la sesión se recargó. para diferenciar de la primera carga
 
   private fb = inject(FormBuilder);
@@ -72,7 +72,7 @@ export class DeviajePackageBookingComponent implements OnInit, OnDestroy {
   calculatedCurrency: string = 'ARS';
 
   flightOffer: FlightOfferDto = {} as FlightOfferDto;
-  searchParams: any;
+  searchParams: any = null;
   currentUser: any = null;
   flightSearchParams: FlightSearchRequest | null = null;
   hotelDetails: HotelResponseDto | null = null;
@@ -125,11 +125,30 @@ export class DeviajePackageBookingComponent implements OnInit, OnDestroy {
 
   loadPackageData(): void {
     const state = window.history.state;
+    console.log('📦 Loading package data from state:', state);
 
     if (state && state.flightOffer && state.hotelDetails) {
       // Datos de vuelo
       this.flightOffer = state.flightOffer;
       this.flightSearchParams = state.flightSearchParams;
+
+      // ✅ CORRECCIÓN: Extraer searchParams del flightSearchParams
+      if (this.flightSearchParams) {
+        this.searchParams = {
+          adults: this.flightSearchParams.adults || 1,
+          children: this.flightSearchParams.children || 0,
+          infants: this.flightSearchParams.infants || 0,
+        };
+        console.log('👥 SearchParams extraídos:', this.searchParams);
+      } else {
+        // Fallback si no hay flightSearchParams
+        console.log('⚠️ No flightSearchParams, usando valores por defecto');
+        this.searchParams = {
+          adults: 1,
+          children: 0,
+          infants: 0,
+        };
+      }
 
       // Datos de hotel
       this.hotelDetails = state.hotelDetails;
@@ -143,9 +162,18 @@ export class DeviajePackageBookingComponent implements OnInit, OnDestroy {
       // Datos del paquete
       this.packageInfo = state.packageInfo;
 
-      console.log('Package data loaded:', state);
+      console.log('✅ Package data loaded successfully');
+      console.log('🛫 FlightOffer:', this.flightOffer);
+      console.log('🏨 HotelDetails:', this.hotelDetails);
+      console.log('👥 SearchParams:', this.searchParams);
+
+      // ✅ CORRECCIÓN: Inicializar el formulario de travelers después de cargar los datos
+      this.initializeTravelersForm();
+
+      // Guardar el estado en sessionStorage
+      this.saveBookingState();
     } else {
-      console.error('No package data found in state');
+      console.error('❌ No package data found in state');
       this.router.navigate(['/home/packages/search']);
     }
   }
@@ -165,15 +193,30 @@ export class DeviajePackageBookingComponent implements OnInit, OnDestroy {
   }
 
   ngOnInit(): void {
-    this.loadPackageData(); // ✅ Cargar datos del state
+    console.log('📦 DeviajePackageBookingComponent iniciando...');
+
+    this.loadPackageData(); // ✅ Ahora incluye inicialización del formulario
     this.loadCurrentUser();
     this.setupFormPersistence();
 
-    this.verifyFlightOffer(this.flightOffer);
+    // Verificar oferta de vuelo solo si existe
+    if (this.flightOffer && Object.keys(this.flightOffer).length > 0) {
+      this.verifyFlightOffer(this.flightOffer);
+    }
 
+    // Verificar hotel solo si es necesario
     if (this.recheck) {
       this.verifyHotelRateAvailability();
     }
+
+    // ✅ DEBUG: Verificar estado después de la inicialización
+    setTimeout(() => {
+      console.log('🔍 Estado final después de ngOnInit:');
+      console.log('   - SearchParams:', this.searchParams);
+      console.log('   - Travelers FormArray length:', this.travelers.length);
+      console.log('   - FlightOffer presente:', !!this.flightOffer);
+      console.log('   - HotelDetails presente:', !!this.hotelDetails);
+    }, 100);
   }
 
   ngOnDestroy(): void {
@@ -317,14 +360,7 @@ export class DeviajePackageBookingComponent implements OnInit, OnDestroy {
         } else {
           // Mostrar mensaje temporal y redirigir
           this.errorMessage =
-            'La oferta de vuelo ya no está disponible. Regresando a los resultados...';
-
-          // Redirigir después de 2 segundos para que el usuario vea el mensaje
-          setTimeout(() => {
-            this.router.navigate(['/home/flight/results'], {
-              queryParamsHandling: 'preserve', // Mantener los parámetros de búsqueda
-            });
-          }, 2000);
+            'La oferta de vuelo ya no está disponible. Regresa a los resultados...';
         }
       },
       error: (error) => {
@@ -501,8 +537,9 @@ export class DeviajePackageBookingComponent implements OnInit, OnDestroy {
     });
   }
 
+  // REEMPLAZAR el método submitBooking() existente con este:
+  // REEMPLAZAR el método submitBooking() con esta versión optimizada:
   async submitBooking(): Promise<void> {
-
     // Validar que el formulario básico esté completo
     if (!this.validateCurrentStep()) {
       this.errorMessage = 'Complete todos los campos correctamente';
@@ -522,30 +559,44 @@ export class DeviajePackageBookingComponent implements OnInit, OnDestroy {
     this.errorMessage = '';
 
     try {
-      console.log('Token de pago generado:', paymentToken);
+      console.log('🔐 Token de pago generado:', paymentToken);
 
       const pricesDto = this.priceDetailsComponent?.getPricesDto() || null;
 
-      // Preparar los datos de la reserva
-      const bookingData: FlightBookingDto = {
-        clientId: this.getClientId(), // CAMBIAR ESTA LÍNEA
-        agentId: this.getAgentId(), // AGREGAR ESTA LÍNEA
+      // ✅ MEJORADO: Obtener clientId y agentId una sola vez
+      const clientId = this.getClientId();
+      const agentId = this.getAgentId();
+
+      // ✅ Preparar los datos de la reserva DE VUELO con estructura completa
+      const flightBookingData: FlightBookingDto = {
+        clientId: clientId,
+        agentId: agentId,
         flightOffer: this.flightOffer,
         travelers: this.prepareTravelersData(),
       };
 
+      // ✅ Preparar los datos de la reserva DE HOTEL
+      const hotelBookingData: HotelBookingDto = this.prepareHotelBookingData();
+
+      // ✅ Asegurar que hotelBookingData también tenga clientId y agentId
+      hotelBookingData.clientId = clientId;
+      hotelBookingData.agentId = agentId;
+
+      console.log('🛫 Datos de reserva de vuelo:', flightBookingData);
+      console.log('🏨 Datos de reserva de hotel:', hotelBookingData);
       console.log(
-        'DNI DEL PAGADOR:',
+        '🆔 DNI del pagador:',
         this.mainForm.get('payment')?.get('payerDni')?.value
       );
-      // Preparar los datos del pago
+
+      // ✅ Preparar los datos del pago
       const paymentData: PaymentDto = {
         amount: this.mainForm.get('payment')?.get('amount')?.value,
         currency: this.mainForm.get('payment')?.get('currency')?.value,
         paymentMethod: 'master',
         paymentToken: paymentToken,
         installments: 1,
-        description: 'Reserva de vuelo',
+        description: 'Reserva de paquete (vuelo + hotel)',
         payer: {
           email: this.travelers.at(0)?.get('contact')?.get('emailAddress')
             ?.value,
@@ -554,15 +605,30 @@ export class DeviajePackageBookingComponent implements OnInit, OnDestroy {
         },
       };
 
+      console.log('💳 Datos de pago:', paymentData);
+      console.log('💰 Precios DTO:', pricesDto);
+
+      // ✅ Llamar al endpoint de PAQUETES (el BookingService ya maneja la estructura correcta)
       this.bookingService
-        .createFlightBooking(bookingData, paymentData, pricesDto)
+        .createPackageBooking(
+          flightBookingData,
+          hotelBookingData,
+          paymentData,
+          pricesDto
+        )
         .subscribe({
           next: (response) => {
             this.isLoading = false;
+            console.log('📦 Respuesta del servidor:', response);
+
             if (response.success) {
               this.showSuccessMessage = true;
               this.bookingReference = response.booking?.id?.toString() || '';
-              // Navegar a la página de confirmación o mostrar un mensaje de éxito
+
+              console.log(
+                '✅ Reserva de paquete exitosa. ID:',
+                this.bookingReference
+              );
 
               // Limpiar los datos persistidos después del éxito
               this.clearPersistedState();
@@ -573,21 +639,28 @@ export class DeviajePackageBookingComponent implements OnInit, OnDestroy {
                 });
               }, 3000);
             } else {
+              console.error('❌ Error en la reserva:', response.detailedError);
               this.errorMessage =
-                response.detailedError || 'Error al procesar la reserva';
+                response.detailedError ||
+                'Error al procesar la reserva del paquete';
             }
           },
           error: (error) => {
             this.isLoading = false;
+            console.error(
+              '❌ Error al procesar la reserva del paquete:',
+              error
+            );
             this.errorMessage =
-              'Error al procesar la reserva: ' +
+              'Error al procesar la reserva del paquete: ' +
               (error.message || 'Inténtelo nuevamente');
           },
         });
     } catch (error: any) {
       this.isLoading = false;
-      this.errorMessage = error.message || 'Error al procesar el pago';
-      console.error('Error en submitBooking:', error);
+      this.errorMessage =
+        error.message || 'Error al procesar el pago del paquete';
+      console.error('❌ Error en submitBooking:', error);
     }
   }
 
@@ -708,23 +781,47 @@ export class DeviajePackageBookingComponent implements OnInit, OnDestroy {
   //METODOS PRIVADOS PARA GUARDAR LA SESION
   private loadPersistedState(): void {
     try {
+      console.log('📂 Cargando estado persistido...');
+
       // Cargar el paso actual
       const savedStep = sessionStorage.getItem(this.CURRENT_STEP_KEY);
       if (savedStep) {
         this.currentStep = parseInt(savedStep, 10);
         this.isReloadedSession = true;
+        console.log(`📋 Paso cargado: ${this.currentStep}`);
       }
 
       // Cargar los datos del estado de la reserva
       const savedState = sessionStorage.getItem(this.BOOKING_STATE_KEY);
       if (savedState) {
         const state = JSON.parse(savedState);
+
+        // Datos de vuelo
         this.flightOffer = state.flightOffer;
+        this.flightSearchParams = state.flightSearchParams;
         this.searchParams = state.searchParams;
+
+        // Datos de hotel
+        this.hotelDetails = state.hotelDetails;
+        this.hotel = state.hotel;
+        this.nameRoom = state.nameRoom;
+        this.rate = state.rate;
+        this.rateKey = state.rateKey;
+        this.recheck = state.recheck;
+        this.hotelSearchParams = state.hotelSearchParams;
+        this.packageInfo = state.packageInfo;
+
         this.isReloadedSession = true;
+        console.log('📦 Estado de paquete cargado desde sessionStorage');
+
+        // ✅ Inicializar formulario si hay searchParams
+        if (this.searchParams) {
+          this.initializeTravelersForm();
+        }
       }
 
-      if (this.flightOffer) {
+      // Verificar oferta de vuelo si existe
+      if (this.flightOffer && Object.keys(this.flightOffer).length > 0) {
         this.verifyFlightOffer(this.flightOffer);
       }
 
@@ -733,20 +830,16 @@ export class DeviajePackageBookingComponent implements OnInit, OnDestroy {
       if (savedFormData) {
         const formData = JSON.parse(savedFormData);
 
-        // Primero inicializar la estructura del formulario
-        if (this.searchParams) {
-          this.initializeTravelersForm();
-        }
-
         // Luego cargar los valores guardados
         setTimeout(() => {
           this.mainForm.patchValue(formData);
+          console.log('📝 Datos del formulario restaurados');
         }, 100);
 
         this.isReloadedSession = true;
       }
     } catch (error) {
-      console.error('Error al cargar estado persistido:', error);
+      console.error('❌ Error al cargar estado persistido:', error);
       this.clearPersistedState();
     }
   }
@@ -789,10 +882,20 @@ export class DeviajePackageBookingComponent implements OnInit, OnDestroy {
     try {
       const state = {
         flightOffer: this.flightOffer,
-        searchParams: this.searchParams,
+        flightSearchParams: this.flightSearchParams,
+        searchParams: this.searchParams, // ✅ Guardar también searchParams
+        hotelDetails: this.hotelDetails,
+        hotel: this.hotel,
+        nameRoom: this.nameRoom,
+        rate: this.rate,
+        rateKey: this.rateKey,
+        recheck: this.recheck,
+        hotelSearchParams: this.hotelSearchParams,
+        packageInfo: this.packageInfo,
         timestamp: Date.now(),
       };
       sessionStorage.setItem(this.BOOKING_STATE_KEY, JSON.stringify(state));
+      console.log('💾 Estado del paquete guardado en sessionStorage');
     } catch (error) {
       console.error('Error al guardar estado de la reserva:', error);
     }
@@ -1031,7 +1134,6 @@ export class DeviajePackageBookingComponent implements OnInit, OnDestroy {
                   net: newPrice,
                   rateKey: newRate.rateKey,
                 };
-
               } else {
                 console.log('Hotel price confirmed:', newPrice);
               }

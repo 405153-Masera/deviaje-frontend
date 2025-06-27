@@ -29,12 +29,27 @@ export class BookingService {
     paymentData: PaymentDto,
     pricesDto?: any
   ): Observable<BookingResponseDto> {
+    // ✅ CORRECCIÓN: Estructura correcta según BookPackageAndPayRequest del backend
     const bookAndPayRequest = {
-      flightBooking: flightBookingData,
-      hotelBooking: hotelBookingData,
+      packageBookingRequest: {
+        clientId: flightBookingData.clientId,
+        agentId: flightBookingData.agentId,
+        flightBooking: {
+          clientId: flightBookingData.clientId,
+          agentId: flightBookingData.agentId,
+          flightOffer: flightBookingData.flightOffer,
+          travelers: flightBookingData.travelers,
+        },
+        hotelBooking: hotelBookingData,
+      },
       paymentRequest: paymentData,
       prices: pricesDto,
     };
+
+    console.log(
+      '📦 Enviando al backend (estructura corregida):',
+      bookAndPayRequest
+    );
 
     return this.http
       .post<BookingResponseDto>(this.packageBookingUrl, bookAndPayRequest)
@@ -191,5 +206,121 @@ export class BookingService {
 
   convertToArs(price: number): number {
     return price * 1250;
+  }
+
+  // Agregar estos métodos al BookingService existente
+
+  // Obtener reservas según el rol del usuario
+  getBookingsByRole(userId: number, userRole: string): Observable<any[]> {
+    let endpoint = '';
+
+    switch (userRole) {
+      case 'CLIENTE':
+        endpoint = `${environment.apiDeviajeBookings}/api/bookings/client/${userId}`;
+        break;
+      case 'AGENTE':
+        endpoint = `${environment.apiDeviajeBookings}/api/bookings/agent/${userId}`;
+        break;
+      case 'ADMINISTRADOR':
+        endpoint = `${environment.apiDeviajeBookings}/api/bookings/admin/all`;
+        break;
+      default:
+        console.error('Rol de usuario no válido:', userRole);
+        return of([]);
+    }
+
+    return this.http.get<any[]>(endpoint).pipe(
+      catchError((error) => {
+        console.error('Error al obtener reservas:', error);
+        return of([]);
+      })
+    );
+  }
+
+  // Obtener reservas de cliente por tipo
+  getClientBookingsByType(clientId: number, type: string): Observable<any[]> {
+    return this.http
+      .get<any[]>(
+        `${environment.apiDeviajeBookings}/api/bookings/client/${clientId}/type/${type}`
+      )
+      .pipe(
+        catchError((error) => {
+          console.error(`Error al obtener reservas de tipo ${type}:`, error);
+          return of([]);
+        })
+      );
+  }
+
+  // Obtener reservas por estado (para administradores)
+  getBookingsByStatus(status: string): Observable<any[]> {
+    return this.http
+      .get<any[]>(
+        `${environment.apiDeviajeBookings}/api/bookings/admin/status/${status}`
+      )
+      .pipe(
+        catchError((error) => {
+          console.error(
+            `Error al obtener reservas con estado ${status}:`,
+            error
+          );
+          return of([]);
+        })
+      );
+  }
+
+  // Actualizar estado de una reserva
+  updateBookingStatus(bookingId: number, newStatus: string): Observable<any> {
+    return this.http
+      .put<any>(
+        `${environment.apiDeviajeBookings}/api/bookings/${bookingId}/status`,
+        {
+          status: newStatus,
+        }
+      )
+      .pipe(
+        catchError((error) => {
+          console.error(
+            `Error al actualizar estado de reserva ${bookingId}:`,
+            error
+          );
+          return of({
+            success: false,
+            message: 'Error al actualizar estado de la reserva',
+          });
+        })
+      );
+  }
+
+  // Método helper para obtener el nombre del tipo de reserva
+  getBookingTypeName(type: string): string {
+    const typeNames: { [key: string]: string } = {
+      FLIGHT: 'Vuelo',
+      HOTEL: 'Hotel',
+      PACKAGE: 'Paquete',
+      TOUR: 'Tour',
+    };
+    return typeNames[type] || type;
+  }
+
+  // Método helper para obtener el estado de la reserva en español
+  getBookingStatusName(status: string): string {
+    const statusNames: { [key: string]: string } = {
+      PENDING: 'Pendiente',
+      CONFIRMED: 'Confirmada',
+      CANCELLED: 'Cancelada',
+      COMPLETED: 'Completada',
+    };
+    return statusNames[status] || status;
+  }
+
+  // Método helper para obtener la clase CSS según el estado
+  getStatusBadgeClass(status: string): string {
+    const statusClasses: { [key: string]: string } = {
+      PENDING: 'bg-warning text-dark',
+      CONFIRMED: 'bg-success',
+      CANCELLED: 'bg-danger',
+      COMPLETED: 'bg-primary',
+    };
+    return statusClasses[status] || 'bg-secondary';
   }
 }

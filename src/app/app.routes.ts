@@ -23,6 +23,7 @@ import { PreguntasFrecuentesComponent } from './pages/legal/preguntas-frecuentes
 import { DeviajePackagesSearchComponent } from './features/public/components/deviaje-packages-search/deviaje-packages-search.component';
 import { DeviajePackagesResultsComponent } from './features/public/components/deviaje-packages-results/deviaje-packages-results.component';
 import { DeviajePackageBookingComponent } from './features/client/components/deviaje-package-booking/deviaje-package-booking.component';
+import { MisReservasComponent } from './features/client/components/mis-reservas/mis-reservas.component';
 
 export const routes: Routes = [
   // Ruta principal
@@ -69,9 +70,12 @@ export const routes: Routes = [
   {
     path: 'bookings',
     component: DeviajeMainLayoutComponent,
-    canActivate: [authGuard],
+    canActivate: [authGuard, roleGuard],
+    data: { roles: ['CLIENTE'] },
     children: [
-      //{ path: '', component: DeviajeBookingsComponent }
+      { path: '', component: MisReservasComponent },
+      // 👇 Ruta para detalles de reserva específica (opcional)
+      // { path: ':id', component: DetalleReservaComponent }
     ],
   },
 
@@ -95,12 +99,13 @@ export const routes: Routes = [
       {
         path: 'bookings',
         children: [
-          //{ path: '', redirectTo: 'all', pathMatch: 'full' },
-          //{ path: 'all', component: DeviajeBookingsComponent }, // Mismo componente, mostrará diferente contenido
-          //{ path: 'flights', component: DeviajeBookingsComponent }, // Mismo componente con filtro
-          //{ path: 'hotels', component: DeviajeBookingsComponent }, // Mismo componente con filtro
-          //{ path: 'packages', component: DeviajeBookingsComponent }, // Mismo componente con filtro
-          //{ path: 'tours', component: DeviajeBookingsComponent }, // Mismo componente con filtro
+          { path: '', redirectTo: 'all', pathMatch: 'full' },
+          // 👇 RUTAS DE RESERVAS PARA ADMINISTRADORES
+          { path: 'all', component: MisReservasComponent }, // Mismo componente, mostrará diferente contenido según rol
+          { path: 'flights', component: MisReservasComponent, data: { filter: 'FLIGHT' } },
+          { path: 'hotels', component: MisReservasComponent, data: { filter: 'HOTEL' } },
+          { path: 'packages', component: MisReservasComponent, data: { filter: 'PACKAGE' } },
+          { path: 'tours', component: MisReservasComponent, data: { filter: 'TOUR' } },
         ],
       },
       //{ path: 'analytics', component: DeviajeAnalyticsComponent },
@@ -115,7 +120,7 @@ export const routes: Routes = [
     data: { roles: ['AGENTE'] },
     children: [
       { path: '', redirectTo: 'clients', pathMatch: 'full' },
-      //{ path: 'clients', component: DeviajeClientsListComponent },
+     { path: 'bookings', component: MisReservasComponent },
       //{ path: 'clients/:id', component: DeviajeClientDetailComponent },
     ],
   },

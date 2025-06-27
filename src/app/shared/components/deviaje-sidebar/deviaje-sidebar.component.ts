@@ -134,14 +134,13 @@ export class DeviajeSidebarComponent implements OnInit, OnDestroy {
       route: '/admin/bookings',
       isSelected: false,
       subItems: [
-        { icon: 'avion', label: 'Vuelos', route: '/admin/bookings/flights' },
-        { icon: 'hotel', label: 'Hoteles', route: '/admin/bookings/hotels' },
+        { icon: 'avion', label: 'Vuelos', route: '/home/flight/search' },
+        { icon: 'hotel', label: 'Hoteles', route: '/admin/hotels/search' },
         {
           icon: 'vacaciones',
           label: 'Paquetes',
-          route: '/admin/bookings/packages',
+          route: '/home/packages/search',
         },
-        { icon: 'tours', label: 'Tours', route: '/admin/bookings/tours' },
         {
           icon: 'lista',
           label: 'Todas las Reservas',
