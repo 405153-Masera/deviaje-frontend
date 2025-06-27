@@ -97,6 +97,7 @@ export class BookingService {
     const bookAndPayRequest = {
       bookingRequest: bookingData,
       paymentRequest: paymentData,
+      prices: pricesDto
     };
 
     return this.http

@@ -80,6 +80,8 @@ export interface HotelBookingDto {
 export interface HolderDto {
   name: string;
   surname: string;
+  email: string;
+  phone: string;
 }
 
 export interface RoomBookingDto {

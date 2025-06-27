@@ -468,6 +468,9 @@ export class DeviajeHotelBookingComponent implements OnInit, OnDestroy {
     const parts = rateKey.split('|');
     const occupancyPart = parts[9]; // 1~1~1
 
+    console.log('RateKey parts:', parts);
+    console.log('Occupancy part:', occupancyPart);
+
     if (occupancyPart) {
       const [rooms, adults, children] = occupancyPart.split('~').map(Number);
 
@@ -708,9 +711,10 @@ export class DeviajeHotelBookingComponent implements OnInit, OnDestroy {
       const paymentData: PaymentDto = this.preparePaymentData(paymentToken);
 
       const pricesDto = this.priceDetailsComponent?.getPricesDto() || null;
-      
+
       console.log('Booking data:', bookingData);
       console.log('Payment data:', paymentData);
+      console.log('precios:', pricesDto);
 
       this.bookingService
         .createHotelBooking(bookingData, paymentData, pricesDto)
@@ -766,7 +770,21 @@ export class DeviajeHotelBookingComponent implements OnInit, OnDestroy {
         agentId = this.currentUser.id;
       }
     }
+
+    const contactInfo = travelerData.contact || {};
+    const emailAddress = contactInfo.emailAddress || '';
+    const phoneNumber = contactInfo.phones?.[0]?.number || '';
+
     // For guest booking or no login: both remain null
+    const paxes = this.travelers.controls.map((travelerControl, index) => {
+      const traveler = travelerControl.value;
+      return {
+        roomId: 1, // Asumiendo 1 habitación por ahora
+        type: traveler.travelerType, // 'AD' o 'CH'
+        name: traveler.firstName,
+        surname: traveler.lastName,
+      };
+    });
 
     return {
       clientId: clientId,
@@ -774,20 +792,15 @@ export class DeviajeHotelBookingComponent implements OnInit, OnDestroy {
       holder: {
         name: travelerData.firstName,
         surname: travelerData.lastName,
+        email: emailAddress, // ✅ AGREGADO
+        phone: phoneNumber,   // ✅ AGREGADO
       },
       rooms: [
         {
           rateKey: this.rateKey,
           roomName: this.nameRoom,
           boardName: (this.rate as any)?.boardName,
-          paxes: [
-            {
-              roomId: 1,
-              type: 'AD', // Adult
-              name: travelerData.firstName,
-              surname: travelerData.lastName,
-            },
-          ],
+          paxes: paxes,
         },
       ],
     };
@@ -796,7 +809,7 @@ export class DeviajeHotelBookingComponent implements OnInit, OnDestroy {
   preparePaymentData(paymentToken: string): PaymentDto {
     const travelerData = this.travelers.at(0).value;
     const paymentData = this.mainForm.get('payment')?.value;
-    
+
     return {
       amount: this.mainForm.get('payment')?.get('amount')?.value,
       currency: 'ARS',
@@ -823,7 +836,7 @@ export class DeviajeHotelBookingComponent implements OnInit, OnDestroy {
   }
 
   // Método para manejar los precios calculados
- onPricesCalculated(pricesDto: any): void {
+  onPricesCalculated(pricesDto: any): void {
     console.log('Precios calculados recibidos:', pricesDto);
 
     this.calculatedTotalAmount = String(pricesDto.totalAmount);
