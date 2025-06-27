@@ -26,7 +26,7 @@ export class DeviajeFlightDetailComponent implements OnInit, OnDestroy {
   readonly flightUtils: FlightUtilsService = inject(FlightUtilsService);
 
   @Input() flightOffer!: FlightOffer;
-  @Input() searchParams?: FlightSearchRequest;
+  @Input() searchParams?: FlightSearchRequest | null = null;
 
   alternativeOffers: FlightOffer[] = [];
   selectedOffer: FlightOffer | null = null;

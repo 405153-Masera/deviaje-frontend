@@ -1,6 +1,6 @@
 <div>
     <!-- Header con información de la búsqueda (solo mostrar si no está en modo paquete) -->
-    @if (!inPackageMode) {
+    
     <header class="results-header">
         <div class="container py-4">
             <div class="row align-items-center">
@@ -27,12 +27,12 @@
             </div>
         </div>
     </header>
-    }
+    
 
     <div class="container">
         <div class="row">
             <!-- Filtros laterales (visible en desktop) -->
-            @if (!inPackageMode) {
+           
             <div class="col-lg-3 d-none d-lg-block filter-sidebar">
                 <div class="filters-panel">
                     <div class="filters-header row">
@@ -134,10 +134,10 @@
                     </div>
                 </div>
             </div>
-            }
+            
 
             <!-- Resultados de hoteles -->
-            <div [class]="inPackageMode ? 'col-12' : 'col-lg-9'">
+            <div class="col-lg-9">
                 <!-- Barra de ordenación -->
                 <div class="sort-panel">
                     <div class="results-count">
@@ -234,7 +234,7 @@
 
                                     <div class="action-buttons">
                                         @if (inPackageMode) {
-                                        <button class="btn btn-primary" (click)="selectHotel(hotel)">
+                                        <button class="btn btn-primary" (click)="showHotelDetails(hotel)">
                                             Seleccionar
                                         </button>
                                         } @else {
@@ -251,7 +251,7 @@
                 }
 
                 <!-- Paginación -->
-                @if (totalPages > 1 && !inPackageMode) {
+                @if (totalPages > 1) {
                 <nav class="pagination-container">
                     <ul class="pagination">
                         <li class="page-item" [class.disabled]="currentPage === 1">
@@ -280,90 +280,17 @@
 </div>
 
 <!-- Modal de detalles del hotel (para modo paquete) -->
-@if (inPackageMode) {
-<div class="hotel-detail-modal" [class.show]="showDetailModal">
+@if (inPackageMode && showDetailModal && selectedHotelForDetail) {
+<div class="hotel-detail-modal show">
     <div class="modal-overlay" (click)="closeDetailModal()"></div>
     <div class="modal-content">
-        <div class="modal-header">
-            <h5 class="modal-title">Detalles del hotel</h5>
-            <button type="button" class="btn-close" (click)="closeDetailModal()">
-                <i class="bi bi-x-lg"></i>
-            </button>
-        </div>
-        <div class="modal-body">
-            @if (selectedHotelForDetail) {
-            <div class="hotel-detail-content">
-                <img [src]="getHotelImage(selectedHotelForDetail)" alt="{{ selectedHotelForDetail.name }}"
-                    class="img-fluid mb-3">
-
-                <h4>{{ selectedHotelForDetail.name }}</h4>
-                <div class="stars mb-2">
-                    @for (i of [1, 2, 3, 4, 5]; track i) {
-                    <i class="bi bi-star-fill"
-                        [class.text-warning]="i <= getCategoryStars(selectedHotelForDetail.categoryCode || '')"></i>
-                    }
-                </div>
-
-                <p class="location">
-                    <i class="bi bi-geo-alt"></i> {{ selectedHotelForDetail.destinationCode }}
-                </p>
-
-                <h5 class="mt-4">Habitaciones disponibles</h5>
-                @if (selectedHotelForDetail.rooms && selectedHotelForDetail.rooms.length > 0) {
-                @for (room of selectedHotelForDetail.rooms; track room.code) {
-                <div class="room-option card mb-3">
-                    <div class="card-body">
-                        <h6 class="room-name">{{ room.name }}</h6>
-
-                        @if (room.rates && room.rates.length > 0) {
-                        <div class="rate-options">
-                            @for (rate of room.rates; track rate.rateKey) {
-                            <div class="rate-option p-3 border rounded mb-2">
-                                <div class="d-flex justify-content-between align-items-center">
-                                    <div>
-                                        <div class="board-type">{{ rate.boardName || 'Solo habitación' }}</div>
-                                        <div class="cancellation">
-                                            @if (rate.cancellationPolicies && rate.cancellationPolicies.length > 0) {
-                                            <small class="text-success">Cancelación gratuita hasta {{
-                                                rate.cancellationPolicies[0].from | date:'dd MMM yyyy' }}</small>
-                                            } @else {
-                                            <small class="text-danger">No reembolsable</small>
-                                            }
-                                        </div>
-                                    </div>
-                                    <div class="text-end">
-                                        <div class="rate-price">{{ hotelService.convertToArs(rate.net) | currency:(searchParams?.currency || 'USD') }}
-                                        </div>
-                                        <button class="btn btn-sm btn-primary mt-2"
-                                            (click)="selectHotel(selectedHotelForDetail)">
-                                            Seleccionar
-                                        </button>
-                                    </div>
-                                </div>
-                            </div>
-                            }
-                        </div>
-                        } @else {
-                        <p>No hay tarifas disponibles para esta habitación</p>
-                        }
-                    </div>
-                </div>
-                }
-                } @else {
-                <p>No hay habitaciones disponibles</p>
-                }
-
-                <div class="text-center mt-4">
-                    <button class="btn btn-outline-primary me-2" (click)="closeDetailModal()">
-                        Cancelar
-                    </button>
-                    <button class="btn btn-primary" (click)="selectHotel(selectedHotelForDetail)">
-                        Seleccionar este hotel
-                    </button>
-                </div>
-            </div>
-            }
-        </div>
+        <app-deviaje-hotel-detail
+            [inPackageMode]="true"
+            [packageHotel]="selectedHotelForDetail"
+            [packageSearchParams]="searchParams"
+            (hotelAndRoomSelected)="onHotelAndRoomSelected($event)"
+            (modalClosed)="closeDetailModal()">
+        </app-deviaje-hotel-detail>
     </div>
 </div>
 }

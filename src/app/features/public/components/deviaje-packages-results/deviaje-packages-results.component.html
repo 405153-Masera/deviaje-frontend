@@ -1,0 +1,210 @@
+<div class="packages-results-container">
+  <!-- Header con información del paquete -->
+  <header class="package-header">
+    <div class="container py-4">
+      <div class="row align-items-center">
+        <div class="col-md-8">
+          <h1 class="package-title">
+            <i class="bi bi-airplane me-2"></i>
+            Paquete {{ originCity.name }} → {{ destinationCity.name }}
+          </h1>
+          <div class="package-info">
+            <span class="package-dates">
+              <i class="bi bi-calendar3"></i>
+              {{ formatDate(packageInfo.departureDate) }} - {{ formatDate(packageInfo.returnDate) }}
+            </span>
+            <span class="package-guests">
+              <i class="bi bi-person"></i>
+              {{ packageInfo.totalAdults }} adulto{{ packageInfo.totalAdults !== 1 ? 's' : '' }}
+              @if (packageInfo.totalChildren > 0) {
+              , {{ packageInfo.totalChildren }} niño{{ packageInfo.totalChildren !== 1 ? 's' : '' }}
+              }
+            </span>
+            <span class="package-rooms">
+              <i class="bi bi-door-open"></i>
+              {{ packageInfo.totalRooms }} habitación{{ packageInfo.totalRooms !== 1 ? 'es' : '' }}
+            </span>
+          </div>
+        </div>
+        <div class="col-md-4 text-md-end">
+          <button class="btn btn-outline-primary" (click)="goBackToSearch()">
+            <i class="bi bi-arrow-left me-2"></i>
+            Modificar búsqueda
+          </button>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <!-- Carrito de selecciones (fijo arriba cuando hay selecciones) -->
+  @if (selectedFlight || selectedHotel) {
+  <div class="package-cart">
+    <div class="container">
+      <div class="cart-content">
+        <div class="row align-items-center">
+          <div class="col-md-8">
+            <h5 class="cart-title">
+              <i class="bi bi-cart3 me-2"></i>
+              Tu paquete seleccionado
+            </h5>
+            
+            <div class="selected-items">
+              <!-- Vuelo seleccionado -->
+              @if (selectedFlight) {
+              <div class="selected-item flight-item">
+                <div class="item-icon">
+                  <i class="bi bi-airplane"></i>
+                </div>
+                <div class="item-details">
+                  <div class="item-title">Vuelo seleccionado</div>
+                  <div class="item-description">
+                    {{ originCity.name }} → {{ destinationCity.name }}
+                  </div>
+                  <div class="item-price">{{ formatPrice(selectedFlight.flightOffer.price.total) }}</div>
+                </div>
+                <button class="btn btn-sm btn-outline-danger" (click)="removeFlightSelection()">
+                  <i class="bi bi-x"></i>
+                </button>
+              </div>
+              } @else {
+              <div class="selected-item placeholder">
+                <div class="item-icon">
+                  <i class="bi bi-airplane text-muted"></i>
+                </div>
+                <div class="item-details">
+                  <div class="item-title text-muted">Selecciona un vuelo</div>
+                </div>
+              </div>
+              }
+
+              <!-- Hotel seleccionado -->
+              @if (selectedHotel) {
+              <div class="selected-item hotel-item">
+                <div class="item-icon">
+                  <i class="bi bi-building"></i>
+                </div>
+                <div class="item-details">
+                  <div class="item-title">{{ selectedHotel.hotel.name }}</div>
+                  <div class="item-description">{{ selectedHotel.nameRoom }}</div>
+                  <div class="item-price">{{ formatPrice(getHotelRateNet(selectedHotel.rate)) }}</div>
+                </div>
+                <button class="btn btn-sm btn-outline-danger" (click)="removeHotelSelection()">
+                  <i class="bi bi-x"></i>
+                </button>
+              </div>
+              } @else {
+              <div class="selected-item placeholder">
+                <div class="item-icon">
+                  <i class="bi bi-building text-muted"></i>
+                </div>
+                <div class="item-details">
+                  <div class="item-title text-muted">Selecciona un hotel</div>
+                </div>
+              </div>
+              }
+            </div>
+          </div>
+          
+          <div class="col-md-4 text-md-end">
+            <div class="cart-summary">
+              <div class="total-price">
+                <div class="total-label">Total del paquete</div>
+                <div class="total-amount">{{ formatPrice(getTotalPrice()) }}</div>
+              </div>
+              <button 
+                class="btn btn-primary btn-lg mt-2" 
+                [disabled]="!canProceedToBooking()"
+                (click)="proceedToBooking()">
+                <i class="bi bi-credit-card me-2"></i>
+                Reservar paquete
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  }
+
+  <div class="container my-4">
+    <!-- Instrucciones -->
+    @if (!selectedFlight && !selectedHotel) {
+    <div class="instructions-banner">
+      <div class="alert alert-info">
+        <i class="bi bi-info-circle me-2"></i>
+        <strong>¡Arma tu paquete perfecto!</strong> 
+        Selecciona un vuelo y un hotel para crear tu paquete de viaje.
+      </div>
+    </div>
+    }
+
+    <!-- Sección de vuelos -->
+    <section class="flights-section mb-5">
+      <div class="section-header">
+        <h2 class="section-title">
+          <i class="bi bi-airplane me-2"></i>
+          Selecciona tu vuelo
+          @if (selectedFlight) {
+          <span class="badge bg-success ms-2">
+            <i class="bi bi-check"></i> Seleccionado
+          </span>
+          }
+        </h2>
+        <p class="section-subtitle">
+          Vuelos de {{ originCity.name }} a {{ destinationCity.name }}
+        </p>
+      </div>
+
+      <!-- Componente de resultados de vuelos en modo paquete -->
+      <app-deviaje-flight-results
+        [inPackageMode]="true"
+        [searchParams]="flightSearchRequest"
+        (flightSelected)="onFlightSelected($event)">
+      </app-deviaje-flight-results>
+    </section>
+
+    <!-- Separador visual -->
+    <div class="section-divider">
+      <div class="divider-line"></div>
+      <div class="divider-icon">
+        <i class="bi bi-plus-circle"></i>
+      </div>
+      <div class="divider-line"></div>
+    </div>
+
+    <!-- Sección de hoteles -->
+    <section class="hotels-section">
+      <div class="section-header">
+        <h2 class="section-title">
+          <i class="bi bi-building me-2"></i>
+          Selecciona tu hotel
+          @if (selectedHotel) {
+          <span class="badge bg-success ms-2">
+            <i class="bi bi-check"></i> Seleccionado
+          </span>
+          }
+        </h2>
+        <p class="section-subtitle">
+          Hoteles en {{ hotelDestinationCity.name }}
+        </p>
+      </div>
+
+      <!-- Componente de resultados de hoteles en modo paquete -->
+      <app-deviaje-hotels-results
+        [inPackageMode]="true"
+        [searchParams]="hotelSearchRequest"
+        (hotelSelected)="onHotelSelected($event)">
+      </app-deviaje-hotels-results>
+    </section>
+  </div>
+
+  <!-- Botón flotante para proceder (solo móvil) -->
+  @if (canProceedToBooking()) {
+  <div class="floating-action d-md-none">
+    <button class="btn btn-primary btn-lg w-100" (click)="proceedToBooking()">
+      <i class="bi bi-credit-card me-2"></i>
+      Reservar paquete - {{ formatPrice(getTotalPrice()) }}
+    </button>
+  </div>
+  }
+</div>

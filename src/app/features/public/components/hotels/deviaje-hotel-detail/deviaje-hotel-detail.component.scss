@@ -331,6 +331,45 @@
   }
 }
 
+// Selección visual para habitaciones y rates
+.room-card {
+  cursor: pointer;
+  transition: $transition-fast;
+  
+  &:hover {
+    border-color: $primary-color !important;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba($primary-color, 0.15);
+  }
+  
+  &.selected {
+    border-color: $primary-color !important;
+    background-color: rgba($primary-color, 0.05);
+    
+    .room-title {
+      color: $primary-color;
+    }
+  }
+}
+
+.rate-option {
+  cursor: pointer;
+  
+  &:hover {
+    border-color: $primary-color;
+    background-color: rgba($primary-color, 0.02);
+  }
+  
+  &.selected {
+    border-color: $primary-color !important;
+    background-color: rgba($primary-color, 0.08);
+    
+    .rate-price {
+      color: $primary-color !important;
+    }
+  }
+}
+
 // Animaciones
 @keyframes spin {
   to {

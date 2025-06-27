@@ -1,20 +1,22 @@
-import { Component, inject, Input, OnInit } from '@angular/core';
+import { Component, EventEmitter, inject, Input, OnInit, Output } from '@angular/core';
 import { Router, RouterModule } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { HotelService } from '../../../../../shared/services/hotel.service';
 import { Subscription } from 'rxjs';
 import {
+  HotelResponseDto,
   HotelSearchRequest,
   HotelSearchResponse,
 } from '../../../../../shared/models/hotels';
 import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
 import { CityDto } from '../../../../../shared/models/locations';
+import { DeviajeHotelDetailComponent } from "../deviaje-hotel-detail/deviaje-hotel-detail.component";
 
 @Component({
   selector: 'app-deviaje-hotels-results',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterModule],
+  imports: [CommonModule, FormsModule, RouterModule, DeviajeHotelDetailComponent],
   templateUrl: './deviaje-hotels-results.component.html',
   styleUrl: './deviaje-hotels-results.component.scss',
 })
@@ -26,7 +28,20 @@ export class DeviajeHotelsResultsComponent implements OnInit {
 
   // Input para cuando se utiliza como componente dentro de paquetes
   @Input() inPackageMode: boolean = false;
-  @Input() searchParams?: HotelSearchRequest;
+  @Input() searchParams: HotelSearchRequest | null = null;
+  @Output() hotelSelected = new EventEmitter<{
+    hotelDetails: HotelResponseDto | null;
+    hotel: HotelSearchResponse.Hotel;
+    nameRoom: string;
+    rate: HotelSearchResponse.Rate;
+    rateKey: string;
+    recheck: boolean;
+    searchParams: HotelSearchRequest;
+  }>();
+
+  selectedHotelForDetail: HotelSearchResponse.Hotel | null = null;
+  showDetailModal: boolean = false;
+
 
   // Resultados y filtros
   searchResults: HotelSearchResponse | null = null;
@@ -62,9 +77,6 @@ export class DeviajeHotelsResultsComponent implements OnInit {
   currentPage: number = 1;
   itemsPerPage: number = 10;
 
-  // Hotel seleccionado para detalle
-  selectedHotelForDetail: HotelSearchResponse.Hotel | null = null;
-  showDetailModal: boolean = false;
 
   ngOnInit(): void {
     if (!this.inPackageMode) {
@@ -314,14 +326,14 @@ export class DeviajeHotelsResultsComponent implements OnInit {
   // Métodos para mostrar detalles
   showHotelDetails(hotel: HotelSearchResponse.Hotel): void {
 
-    console.log('desde resultaados', this.searchParams?.occupancies);
+    console.log('Mostrando detalles del hotel:', hotel.name, 'Modo paquete:', this.inPackageMode);
      // Depura
     if (this.inPackageMode) {
       // En modo paquete, mostrar modal
       this.selectedHotelForDetail = hotel;
       this.showDetailModal = true;
     } else {
-      console.log('Navigating to hotel detail with code:', hotel.code); // Depura
+      
       if (!hotel.code) {
         console.error('Hotel code is missing:', hotel);
         return; // Evitar navegar si no hay code
@@ -330,11 +342,6 @@ export class DeviajeHotelsResultsComponent implements OnInit {
         state: { hotel, searchParams: this.searchParams },
       });
     }
-  }
-
-  closeDetailModal(): void {
-    this.showDetailModal = false;
-    this.selectedHotelForDetail = null;
   }
 
   // Obtener el precio mínimo de las habitaciones
@@ -386,12 +393,6 @@ export class DeviajeHotelsResultsComponent implements OnInit {
     return this.sanitizer.bypassSecurityTrustResourceUrl(`https://www.google.com/maps/embed/v1/search?key=AIzaSyDeOCIAAqkNEW-62wQUIdKXsNKbgMDOMs0&q=${query}`);
   }
 
-  // Seleccionar un hotel (para modo paquete)
-  selectHotel(hotel: HotelSearchResponse.Hotel): void {
-    // Emitir evento para seleccionar este hotel en el paquete
-    // Implementar lógica específica para el modo de paquete
-  }
-
   // Obtener el número total de habitaciones de la búsqueda actual
   getTotalRooms(): number {
     if (!this.searchParams || !this.searchParams.occupancies) {
@@ -412,5 +413,33 @@ export class DeviajeHotelsResultsComponent implements OnInit {
     return this.searchParams.occupancies.reduce((total, occupancy) => {
       return total + (occupancy.adults || 0) + (occupancy.children || 0);
     }, 0);
+  }
+
+  //METODOS PARA EL MODO PAQUETE
+   onHotelAndRoomSelected(selection: {
+    hotelDetails: HotelResponseDto | null;
+    hotel: HotelSearchResponse.Hotel;
+    nameRoom: string;
+    rate: HotelSearchResponse.Rate;
+    rateKey: string;
+    recheck: boolean;
+    searchParams: HotelSearchRequest;
+  }): void {
+    console.log('Hotel y habitación seleccionados:', selection);
+    
+    // Emitir evento hacia el componente padre (packages-results)
+    this.hotelSelected.emit(selection);
+    
+    // Cerrar modal
+    this.closeDetailModal();
+  }
+
+  onModalClosed(): void {
+    this.closeDetailModal();
+  }
+
+  closeDetailModal(): void {
+    this.showDetailModal = false;
+    this.selectedHotelForDetail = null;
   }
 }

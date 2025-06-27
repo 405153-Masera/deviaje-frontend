@@ -1,4 +1,12 @@
-import { Component, inject, OnDestroy, OnInit } from '@angular/core';
+import {
+  Component,
+  EventEmitter,
+  inject,
+  Input,
+  OnDestroy,
+  OnInit,
+  Output,
+} from '@angular/core';
 import {
   FlightOffer,
   FlightSearchRequest,
@@ -31,7 +39,6 @@ export class DeviajeFlightResultsComponent implements OnInit, OnDestroy {
   readonly flightUtils: FlightUtilsService = inject(FlightUtilsService);
 
   flightOffers: FlightOffer[] = [];
-  searchParams?: FlightSearchRequest;
   originCity: CityDto | null = null;
   destinationCity: CityDto | null = null;
   sortOption: string = 'price_asc';
@@ -55,6 +62,12 @@ export class DeviajeFlightResultsComponent implements OnInit, OnDestroy {
   // Propiedades para el modal de detalles de vuelo
   selectedFlightForDetail: FlightOffer | null = null;
   showDetailModal: boolean = false;
+  @Input() inPackageMode: boolean = false;
+  @Input() searchParams: FlightSearchRequest | null = null;
+  @Output() flightSelected = new EventEmitter<{
+    flightOffer: FlightOffer;
+    searchParams: FlightSearchRequest;
+  }>();
 
   // propiedades para la paginación
   currentPage: number = 1;
@@ -66,39 +79,46 @@ export class DeviajeFlightResultsComponent implements OnInit, OnDestroy {
   showFilters: boolean = false;
 
   ngOnInit(): void {
-    if (typeof window !== 'undefined') {
-      const state = window.history.state;
+    if (!this.inPackageMode) {
+      if (typeof window !== 'undefined') {
+        const state = window.history.state;
 
-      if (state && state.searchParams) {
-        this.searchParams = state.searchParams;
-        this.originCity = state.originCity;
-        this.destinationCity = state.destinationCity;
+        if (state && state.searchParams) {
+          this.searchParams = state.searchParams;
+          this.originCity = state.originCity;
+          this.destinationCity = state.destinationCity;
 
-        this.searchFlights();
-      } else {
-        try {
-          const storedParams = localStorage.getItem('flightSearchParams');
-          const storedOriginCity = localStorage.getItem('cityOrigin');
-          const storedDestinationCity = localStorage.getItem('cityDestination');
-
-          if (storedParams) {
-            this.searchParams = JSON.parse(storedParams) as FlightSearchRequest;
-            this.originCity = storedOriginCity
-              ? JSON.parse(storedOriginCity)
-              : null;
-            this.destinationCity = storedDestinationCity
-              ? JSON.parse(storedDestinationCity)
-              : null;
-            this.searchFlights();
-          } else {
-            // Si no hay datos, redirigimos a la búsqueda
+          this.searchFlights();
+        } else {
+          try {
+            const storedParams = localStorage.getItem('flightSearchParams');
+            const storedOriginCity = localStorage.getItem('cityOrigin');
+            const storedDestinationCity =
+              localStorage.getItem('cityDestination');
+            if (storedParams) {
+              this.searchParams = JSON.parse(
+                storedParams
+              ) as FlightSearchRequest;
+              this.originCity = storedOriginCity
+                ? JSON.parse(storedOriginCity)
+                : null;
+              this.destinationCity = storedDestinationCity
+                ? JSON.parse(storedDestinationCity)
+                : null;
+              this.searchFlights();
+            } else {
+              // Si no hay datos, redirigimos a la búsqueda
+              this.router.navigate(['/home/flight/search']);
+            }
+          } catch (e) {
+            console.warn('Error al recuperar datos de localStorage:', e);
             this.router.navigate(['/home/flight/search']);
           }
-        } catch (e) {
-          console.warn('Error al recuperar datos de localStorage:', e);
-          this.router.navigate(['/home/flight/search']);
         }
       }
+    } else if (this.searchParams) {
+      // MODO PAQUETE: Si tenemos parámetros recibidos como Input, hacer búsqueda
+      this.searchFlights();
     }
   }
 
@@ -415,10 +435,18 @@ export class DeviajeFlightResultsComponent implements OnInit, OnDestroy {
   }
 
   bookFlight(offer: FlightOffer): void {
-    // Navegar a la página de reserva de vuelo
-    this.router.navigate(['/home/flight/booking'], {
-      state: { flightOffer: offer, searchParams: this.searchParams },
-    });
+    if (this.inPackageMode) {
+      // MODO PAQUETE: Emitir evento hacia el componente padre (packages-results)
+      this.flightSelected.emit({
+        flightOffer: offer,
+        searchParams: this.searchParams!
+      });
+    } else {
+      // MODO NORMAL: Navegar (lógica original sin cambios)
+      this.router.navigate(['/home/flight/booking'], {
+        state: { flightOffer: offer, searchParams: this.searchParams },
+      });
+    }
   }
 
   hasFlightCabinInfo(offer: FlightOffer): boolean {

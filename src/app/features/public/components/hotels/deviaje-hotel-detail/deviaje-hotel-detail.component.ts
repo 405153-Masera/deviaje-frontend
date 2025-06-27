@@ -1,4 +1,12 @@
-import { Component, inject, Input, OnDestroy, OnInit } from '@angular/core';
+import {
+  Component,
+  EventEmitter,
+  inject,
+  Input,
+  OnDestroy,
+  OnInit,
+  Output,
+} from '@angular/core';
 import { ActivatedRoute, Router, RouterModule } from '@angular/router';
 import { HotelService } from '../../../../../shared/services/hotel.service';
 import { Subscription } from 'rxjs';
@@ -20,11 +28,25 @@ import { FormsModule } from '@angular/forms';
 export class DeviajeHotelDetailComponent implements OnInit, OnDestroy {
   readonly router: Router = inject(Router);
   private readonly route: ActivatedRoute = inject(ActivatedRoute);
-  private readonly hotelService: HotelService = inject(HotelService);
+  readonly hotelService: HotelService = inject(HotelService);
 
   // Input para modo paquete
   @Input() inPackageMode: boolean = false;
+  @Input() packageHotel: HotelSearchResponse.Hotel | null = null;
   @Input() packageSearchParams: HotelSearchRequest | null = null;
+
+  // OUTPUT para emitir selección al carrito (modo paquete)
+  @Output() hotelAndRoomSelected = new EventEmitter<{
+    hotelDetails: HotelResponseDto | null;
+    hotel: HotelSearchResponse.Hotel;
+    nameRoom: string;
+    rate: HotelSearchResponse.Rate;
+    rateKey: string;
+    recheck: boolean;
+    searchParams: HotelSearchRequest;
+  }>();
+
+  @Output() modalClosed = new EventEmitter<void>();
 
   subscription: Subscription = new Subscription();
 
@@ -46,26 +68,46 @@ export class DeviajeHotelDetailComponent implements OnInit, OnDestroy {
   currentImageIndex: number = 0;
 
   ngOnInit(): void {
-    if (this.inPackageMode && this.packageSearchParams) {
-      // Modo paquete
-      this.searchParams = this.packageSearchParams;
+    if (this.inPackageMode) {
+      // MODO PAQUETE: Usar datos pasados como Input
+      this.initializePackageMode();
     } else {
-      // Modo normal
-      this.route.paramMap.subscribe((params) => {
-        this.hotelCode = params.get('code');
+      // MODO NORMAL: Obtener datos de la ruta
+      this.initializeNormalMode();
+    }
+  }
 
-        if (this.hotelCode) {
-          if (window.history.state.hotel) {
-            this.hotel = window.history.state.hotel;
-            this.searchParams = window.history.state.searchParams;
-            this.loadHotelDetails();
-          } else {
-            this.router.navigate(['/home/hotels/search']);
-          }
-        } else {
-          this.router.navigate(['/home/hotels/search']);
+  private initializeNormalMode(): void {
+    this.route.paramMap.subscribe((params) => {
+      this.hotelCode = params.get('code');
+
+      if (this.hotelCode) {
+        if (window.history.state.hotel) {
+          this.hotel = window.history.state.hotel;
         }
-      });
+        if (window.history.state.searchParams) {
+          this.searchParams = window.history.state.searchParams;
+        }
+
+        this.loadHotelDetails();
+      } else {
+        this.hasError = true;
+        this.errorMessage = 'Código de hotel no válido';
+      }
+    });
+  }
+
+  private initializePackageMode(): void {
+    if (this.packageHotel && this.packageSearchParams) {
+      this.hotel = this.packageHotel;
+      this.searchParams = this.packageSearchParams;
+      this.hotelCode = this.packageHotel.code;
+
+      // Cargar detalles del hotel desde API (EN MODO PAQUETE SÍ CARGAMOS TODO)
+      this.loadHotelDetails();
+    } else {
+      this.hasError = true;
+      this.errorMessage = 'Datos de hotel no válidos para modo paquete';
     }
   }
 
@@ -78,6 +120,7 @@ export class DeviajeHotelDetailComponent implements OnInit, OnDestroy {
 
     this.isLoading = true;
     this.hasError = false;
+    this.errorMessage = '';
 
     this.subscription.add(
       this.hotelService.getHotelOfferDetails(this.hotelCode).subscribe({
@@ -95,6 +138,7 @@ export class DeviajeHotelDetailComponent implements OnInit, OnDestroy {
       })
     );
   }
+
   // Métodos auxiliares para acceder a propiedades de Rate de forma segura
   getRateOffers(rate: HotelSearchResponse.Rate | null): any[] {
     return (rate as any)?.offers || [];
@@ -117,31 +161,29 @@ export class DeviajeHotelDetailComponent implements OnInit, OnDestroy {
   }
 
   formatCancellationPolicy(cancellationPolicies: any[] | undefined): string {
-    if (!cancellationPolicies || cancellationPolicies.length === 0) {
-      return 'Sin política de cancelación especificada';
-    }
-
-    const policy = cancellationPolicies[0];
-    const fromDate = new Date(policy.from);
-    const amount = policy.amount;
-
-    if (amount === '0.00' || amount === 0) {
-      return `Cancelación gratuita hasta ${fromDate.toLocaleDateString()}`;
-    } else {
-      return `Cancelación gratuita hasta ${fromDate.toLocaleDateString()}. Después: ${this.formatPrice(
-        amount,
-        this.searchParams?.currency
-      )}`;
-    }
+  if (!cancellationPolicies || cancellationPolicies.length === 0) {
+    return 'Sin política de cancelación especificada';
   }
 
-  formatPrice(amount: number | string, currency?: string): string {
-    const numAmount = typeof amount === 'string' ? parseFloat(amount) : amount;
-    const currencySymbol = this.getCurrencySymbol(currency || 'EUR');
-    return `${currencySymbol} ${numAmount.toLocaleString('es-AR', {
-      minimumFractionDigits: 2,
-    })}`;
+  const policy = cancellationPolicies[0];
+  const fromDate = new Date(policy.from);
+  const amount = policy.amount;
+
+  if (amount === '0.00' || amount === 0) {
+    return `Cancelación gratuita hasta ${fromDate.toLocaleDateString()}`;
+  } else {
+    // ⭐ CAMBIAR esta línea:
+    const priceInArs = this.hotelService.convertToArs(Number(amount));
+    const formattedPrice = new Intl.NumberFormat('es-AR', {
+      style: 'currency',
+      currency: 'ARS',
+      minimumFractionDigits: 0,
+    }).format(priceInArs);
+    
+    return `Cancelación gratuita hasta ${fromDate.toLocaleDateString()}. Después: ${formattedPrice}`;
   }
+}
+
 
   getCurrencySymbol(currency: string): string {
     const symbols: { [key: string]: string } = {
@@ -168,18 +210,37 @@ export class DeviajeHotelDetailComponent implements OnInit, OnDestroy {
       return;
     }
 
-    // Navegar a booking con datos simples
-    this.router.navigate(['/home/hotels/booking'], {
-      state: {
+    if (this.inPackageMode) {
+      // Modo paquete: emitir evento
+      this.hotelAndRoomSelected.emit({
         hotelDetails: this.hotelDetails,
-        hotel: this.hotel, // ⭐ PARA categoryName y categoryCode
+        hotel: this.hotel!,
         nameRoom: this.selectedRoom.name,
         rate: this.selectedRate,
         rateKey: this.selectedRate.rateKey,
         recheck: this.selectedRate.rateType === 'RECHECK',
-        searchParams: this.searchParams, // ⭐ PARA fechas y calcular noches
-      },
-    });
+        searchParams: this.searchParams!,
+      });
+    } else {
+      // Modo normal: navegar (LÓGICA ORIGINAL)
+      this.router.navigate(['/home/hotels/booking'], {
+        state: {
+          hotelDetails: this.hotelDetails,
+          hotel: this.hotel, // ⭐ PARA categoryName y categoryCode
+          nameRoom: this.selectedRoom.name,
+          rate: this.selectedRate,
+          rateKey: this.selectedRate.rateKey,
+          recheck: this.selectedRate.rateType === 'RECHECK',
+          searchParams: this.searchParams, // ⭐ PARA fechas y calcular noches
+        },
+      });
+    }
+  }
+
+  closeModal(): void {
+    if (this.inPackageMode) {
+      this.modalClosed.emit();
+    }
   }
 
   selectRoom(room: HotelSearchResponse.Room): void {

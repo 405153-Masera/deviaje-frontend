@@ -239,8 +239,8 @@ export class DeviajePackagesSearchComponent implements OnInit, OnDestroy {
       const flightSearchRequest: FlightSearchRequest = {
         origin: originCity.iataCode,
         destination: destinationCity.iataCode,
-        departureDate: formatDateForApi(this.departureDate),
-        returnDate: formatDateForApi(this.returnDate),
+        departureDate: formatDateForApi(this.formSearch.get('departureDate')?.value),
+        returnDate: formatDateForApi(this.formSearch.get('returnDate')?.value),
         adults: this.getTotalAdults(),
         children: flightPassengers.children > 0 ? flightPassengers.children : undefined,
         infants: flightPassengers.infants > 0 ? flightPassengers.infants : undefined,
@@ -268,8 +268,8 @@ export class DeviajePackagesSearchComponent implements OnInit, OnDestroy {
 
       const hotelSearchRequest: HotelSearchRequest = {
         stay: {
-          checkIn: this.departureDate!, // FECHAS IGUALES - SIMPLIFICADO
-          checkOut: this.returnDate!,   // FECHAS IGUALES - SIMPLIFICADO
+          checkIn: this.formSearch.get('departureDate')?.value, // FECHAS IGUALES - SIMPLIFICADO
+          checkOut: this.formSearch.get('returnDate')?.value,   // FECHAS IGUALES - SIMPLIFICADO
         },
         occupancies: [hotelOccupancy],
         destination: {
