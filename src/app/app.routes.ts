@@ -22,6 +22,7 @@ import { PoliticaPrivacidadComponent } from './pages/legal/politica-privacidad/p
 import { PreguntasFrecuentesComponent } from './pages/legal/preguntas-frecuentes/preguntas-frecuentes.component';
 import { DeviajePackagesSearchComponent } from './features/public/components/deviaje-packages-search/deviaje-packages-search.component';
 import { DeviajePackagesResultsComponent } from './features/public/components/deviaje-packages-results/deviaje-packages-results.component';
+import { DeviajePackageBookingComponent } from './features/client/components/deviaje-package-booking/deviaje-package-booking.component';
 
 export const routes: Routes = [
   // Ruta principal
@@ -48,6 +49,7 @@ export const routes: Routes = [
       { path: 'hotels/detail/:code', component: DeviajeHotelDetailComponent },
       { path: 'packages/search', component: DeviajePackagesSearchComponent },
       { path: 'packages/results', component: DeviajePackagesResultsComponent },
+      { path: 'packages/booking', component: DeviajePackageBookingComponent},
       { path: 'flight/booking', component: DeviajeFlightBookingComponent },
       { path: 'hotels/booking', component: DeviajeHotelBookingComponent }, // Reutilizando el componente para reservas de hoteles
     ],

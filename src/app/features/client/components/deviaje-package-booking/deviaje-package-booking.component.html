@@ -31,26 +31,34 @@
   </div>
 
  <!-- Panel de información del vuelo -->
-<ng-container *ngIf="selectedOffer && !isVerifying">
+<ng-container *ngIf="!isVerifying">
   <app-deviaje-flight-booking-summary 
-    [flightOffer]="selectedOffer"
+    [flightOffer]="flightOffer"
     [title]="'Detalles del vuelo'"
   >
   </app-deviaje-flight-booking-summary>
 
+  <app-deviaje-hotel-booking-summary 
+  [hotelDetails]="hotelDetails" 
+  [hotel]="hotel" 
+  [nameRoom]="nameRoom" 
+  [rate]="rate"
+  [searchParams]="hotelSearchParams">
+</app-deviaje-hotel-booking-summary>
+
   <app-deviaje-price-details
     #priceDetailsComponent
     [mode]="'FLIGHT'"
-    [flightPrice]="selectedOffer.price"
-    [currency]="selectedOffer.price.currency || 'ARS'"
-    [passengerCount]="selectedOffer.travelerPricings.length"
+    [flightPrice]="flightOffer.price"
+    [currency]="flightOffer.price.currency || 'ARS'"
+    [passengerCount]="flightOffer.travelerPricings.length"
     (pricesCalculated)="onPricesCalculated($event)"
     >
   </app-deviaje-price-details>
 </ng-container>
 
   <!-- Formulario principal -->
-  <div *ngIf="selectedOffer && !isVerifying && !showSuccessMessage">
+  <div *ngIf="!isVerifying && !showSuccessMessage">
     <div class="card mb-4">
       <div class="card-header bg-primary text-white">
         <div class="d-flex justify-content-between align-items-center">
@@ -248,8 +256,8 @@
                       mainForm.get('payment')?.get('cardNumber')?.value.substring(12) }}</p>
                   </div>
                   <div class="col-md-6">
-                    <p><strong>Monto total:</strong> {{ calculatedTotalAmount | currency:(selectedOffer.price.currency || 'USD') }}</p>
-                    <p><strong>Moneda:</strong> {{ selectedOffer.price.currency }}</p>
+                    <p><strong>Monto total:</strong> {{ calculatedTotalAmount | currency:(flightOffer.price.currency || 'USD') }}</p>
+                    <p><strong>Moneda:</strong> {{ flightOffer.price.currency }}</p>
                     <p><strong>Cuotas:</strong> 1</p>
                   </div>
                 </div>

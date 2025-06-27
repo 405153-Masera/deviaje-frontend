@@ -13,6 +13,7 @@ import { CommonModule } from '@angular/common';
 import {
   FlightBookingDto,
   FlightOfferDto,
+  HotelBookingDto,
   PaymentDto,
   TravelerDto,
 } from '../../models/bookings';
@@ -22,6 +23,13 @@ import { AuthService } from '../../../../core/auth/services/auth.service';
 import { Subscription } from 'rxjs';
 import { DeviajeFlightBookingSummaryComponent } from '../deviaje-flight-booking-summary/deviaje-flight-booking-summary.component';
 import { DeviajePriceDetailsComponent } from '../deviaje-price-details/deviaje-price-details.component';
+import {
+  HotelResponseDto,
+  HotelSearchRequest,
+  HotelSearchResponse,
+} from '../../../../shared/models/hotels';
+import { FlightSearchRequest } from '../../../../shared/models/flights';
+import { DeviajeHotelBookingSummaryComponent } from "../deviaje-hotel-booking-summary/deviaje-hotel-booking-summary.component";
 
 @Component({
   selector: 'app-deviaje-flight-booking',
@@ -33,11 +41,12 @@ import { DeviajePriceDetailsComponent } from '../deviaje-price-details/deviaje-p
     DeviajePaymentsFormComponent,
     DeviajeFlightBookingSummaryComponent,
     DeviajePriceDetailsComponent,
-  ],
+    DeviajeHotelBookingSummaryComponent
+],
   templateUrl: './deviaje-package-booking.component.html',
   styleUrl: './deviaje-package-booking.component.scss',
 })
-export class DeviajeFlightBookingComponent implements OnInit, OnDestroy {
+export class DeviajePackageBookingComponent implements OnInit, OnDestroy {
   @ViewChild(DeviajePaymentsFormComponent)
   paymentComponent!: DeviajePaymentsFormComponent;
 
@@ -62,10 +71,18 @@ export class DeviajeFlightBookingComponent implements OnInit, OnDestroy {
   calculatedTotalAmount: string = '0';
   calculatedCurrency: string = 'ARS';
 
-  flightOffer: FlightOfferDto | null = null;
-  selectedOffer: FlightOfferDto | null = null;
+  flightOffer: FlightOfferDto = {} as FlightOfferDto;
   searchParams: any;
   currentUser: any = null;
+  flightSearchParams: FlightSearchRequest | null = null;
+  hotelDetails: HotelResponseDto | null = null;
+  hotel: HotelSearchResponse.Hotel | null = null;
+  nameRoom: string = '';
+  rate: HotelSearchResponse.Rate = {} as HotelSearchResponse.Rate;
+  rateKey: string = '';
+  recheck: boolean = false;
+  hotelSearchParams: HotelSearchRequest | null = null;
+  packageInfo: any = null;
 
   isLoading = false;
   isVerifying = false;
@@ -106,6 +123,33 @@ export class DeviajeFlightBookingComponent implements OnInit, OnDestroy {
     }),
   });
 
+  loadPackageData(): void {
+    const state = window.history.state;
+
+    if (state && state.flightOffer && state.hotelDetails) {
+      // Datos de vuelo
+      this.flightOffer = state.flightOffer;
+      this.flightSearchParams = state.flightSearchParams;
+
+      // Datos de hotel
+      this.hotelDetails = state.hotelDetails;
+      this.hotel = state.hotel;
+      this.nameRoom = state.nameRoom || '';
+      this.rate = state.rate;
+      this.rateKey = state.rateKey || '';
+      this.recheck = state.recheck;
+      this.hotelSearchParams = state.hotelSearchParams;
+
+      // Datos del paquete
+      this.packageInfo = state.packageInfo;
+
+      console.log('Package data loaded:', state);
+    } else {
+      console.error('No package data found in state');
+      this.router.navigate(['/home/packages/search']);
+    }
+  }
+
   get travelers(): FormArray {
     return this.mainForm.get('travelers') as FormArray;
   }
@@ -121,20 +165,15 @@ export class DeviajeFlightBookingComponent implements OnInit, OnDestroy {
   }
 
   ngOnInit(): void {
-    // Verificar y cargar si hay datos persistidos en sessionStorage
-    if (typeof window !== 'undefined') {
-      this.loadPersistedState();
-    }
-    // Si no hay datos persistidos, cargar desde el state del router
-    if (!this.isReloadedSession) {
-      this.loadFromRouterState();
-    }
-
-    // AGREGAR: Cargar usuario actual y roles
+    this.loadPackageData(); // ✅ Cargar datos del state
     this.loadCurrentUser();
-
-    // Configurar la suscripción para guardar cambios automáticamente
     this.setupFormPersistence();
+
+    this.verifyFlightOffer(this.flightOffer);
+
+    if (this.recheck) {
+      this.verifyHotelRateAvailability();
+    }
   }
 
   ngOnDestroy(): void {
@@ -272,7 +311,7 @@ export class DeviajeFlightBookingComponent implements OnInit, OnDestroy {
       next: (verifiedOffer) => {
         this.isVerifying = false;
         if (verifiedOffer) {
-          this.selectedOffer = verifiedOffer;
+          this.flightOffer = verifiedOffer;
 
           this.saveBookingState();
         } else {
@@ -463,10 +502,6 @@ export class DeviajeFlightBookingComponent implements OnInit, OnDestroy {
   }
 
   async submitBooking(): Promise<void> {
-    if (!this.selectedOffer) {
-      this.errorMessage = 'No hay una oferta de vuelo seleccionada';
-      return;
-    }
 
     // Validar que el formulario básico esté completo
     if (!this.validateCurrentStep()) {
@@ -495,7 +530,7 @@ export class DeviajeFlightBookingComponent implements OnInit, OnDestroy {
       const bookingData: FlightBookingDto = {
         clientId: this.getClientId(), // CAMBIAR ESTA LÍNEA
         agentId: this.getAgentId(), // AGREGAR ESTA LÍNEA
-        flightOffer: this.selectedOffer,
+        flightOffer: this.flightOffer,
         travelers: this.prepareTravelersData(),
       };
 
@@ -685,7 +720,6 @@ export class DeviajeFlightBookingComponent implements OnInit, OnDestroy {
       if (savedState) {
         const state = JSON.parse(savedState);
         this.flightOffer = state.flightOffer;
-        this.selectedOffer = state.selectedOffer;
         this.searchParams = state.searchParams;
         this.isReloadedSession = true;
       }
@@ -726,7 +760,6 @@ export class DeviajeFlightBookingComponent implements OnInit, OnDestroy {
 
     if (state && state.flightOffer) {
       this.flightOffer = state.flightOffer;
-      this.selectedOffer = state.flightOffer;
       this.searchParams = state.searchParams;
 
       // Guardar el estado inicial
@@ -756,7 +789,6 @@ export class DeviajeFlightBookingComponent implements OnInit, OnDestroy {
     try {
       const state = {
         flightOffer: this.flightOffer,
-        selectedOffer: this.selectedOffer,
         searchParams: this.searchParams,
         timestamp: Date.now(),
       };
@@ -870,7 +902,7 @@ export class DeviajeFlightBookingComponent implements OnInit, OnDestroy {
   }
 
   getLastArrivalDate(): string {
-    const offer = this.selectedOffer || this.flightOffer;
+    const offer = this.flightOffer;
 
     if (!offer || !offer.itineraries || offer.itineraries.length === 0) {
       console.warn('No hay oferta de vuelo disponible');
@@ -888,5 +920,131 @@ export class DeviajeFlightBookingComponent implements OnInit, OnDestroy {
       console.error('Error al obtener fecha de llegada:', error);
       return new Date().toISOString().split('T')[0];
     }
+  }
+
+  //**************************METODOS PARA LOS HOTELES********************************
+  // En tu componente de package booking
+  prepareHotelBookingData(): HotelBookingDto {
+    const travelerData = this.travelers.at(0).value;
+
+    // Determine clientId and agentId based on role and selection
+    let clientId = null;
+    let agentId = null;
+
+    if (this.userRole === 'CLIENTE' && !this.isGuestBooking) {
+      clientId = this.currentUser.id;
+      agentId = null;
+    } else if (this.userRole === 'AGENTE') {
+      if (!this.isGuestBooking && this.selectedClientId) {
+        clientId = parseInt(this.selectedClientId);
+        agentId = this.currentUser.id;
+      } else {
+        clientId = null;
+        agentId = this.currentUser.id;
+      }
+    }
+
+    const contactInfo = travelerData.contact || {};
+    const emailAddress = contactInfo.emailAddress || '';
+    const phoneNumber = contactInfo.phones?.[0]?.number || '';
+
+    // ✅ CONVERSIÓN DE TRAVELERS: flight mode → hotel mode
+    const paxes = this.travelers.controls.map((travelerControl, index) => {
+      const traveler = travelerControl.value;
+
+      // Conversión de tipos:
+      // 'ADULT' → 'AD'
+      // 'CHILD' → 'CH'
+      // 'INFANT' → 'CH'
+      let hotelType = 'AD';
+      if (
+        traveler.travelerType === 'CHILD' ||
+        traveler.travelerType === 'INFANT'
+      ) {
+        hotelType = 'CH';
+      }
+
+      return {
+        roomId: 1, // Asumiendo 1 habitación por ahora
+        type: hotelType, // 'AD' o 'CH' (formato HotelBeds)
+        name: traveler.firstName,
+        surname: traveler.lastName,
+      };
+    });
+
+    return {
+      clientId: clientId,
+      agentId: agentId,
+      holder: {
+        name: travelerData.firstName,
+        surname: travelerData.lastName,
+        email: emailAddress,
+        phone: phoneNumber,
+      },
+      rooms: [
+        {
+          rateKey: this.rateKey, // Viene del state
+          roomName: this.nameRoom, // Viene del state
+          boardName: (this.rate as any)?.boardName,
+          paxes: paxes,
+        },
+      ],
+    };
+  }
+
+  // Agregar este método a tu package booking component
+  verifyHotelRateAvailability(): void {
+    this.isVerifying = true;
+    this.errorMessage = '';
+
+    this.subscription.add(
+      this.bookingService.checkRates(this.rateKey).subscribe({
+        next: (response) => {
+          console.log('Hotel rate verification successful:', response);
+          this.isVerifying = false;
+
+          if (
+            response &&
+            response.hotel &&
+            response.hotel.rooms &&
+            response.hotel.rooms.length > 0
+          ) {
+            const room = response.hotel.rooms[0];
+            if (room.rates && room.rates.length > 0) {
+              const newRate = room.rates[0];
+
+              // Verificar si el precio cambió
+              const oldPrice = this.rate?.net || 0;
+              const newPrice = parseFloat(newRate.net) || 0;
+
+              if (oldPrice !== newPrice) {
+                console.log(
+                  'Hotel price changed from',
+                  oldPrice,
+                  'to',
+                  newPrice
+                );
+
+                // Actualizar el rate en packageData
+                this.rate = {
+                  ...this.rate,
+                  net: newPrice,
+                  rateKey: newRate.rateKey,
+                };
+
+              } else {
+                console.log('Hotel price confirmed:', newPrice);
+              }
+            }
+          }
+        },
+        error: (error) => {
+          console.error('Hotel rate verification failed:', error);
+          this.isVerifying = false;
+          this.errorMessage =
+            'La tarifa del hotel ya no está disponible. Por favor, realice una nueva búsqueda.';
+        },
+      })
+    );
   }
 }
