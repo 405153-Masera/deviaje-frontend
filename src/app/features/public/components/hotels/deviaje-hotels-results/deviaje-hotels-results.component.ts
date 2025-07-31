@@ -425,7 +425,7 @@ export class DeviajeHotelsResultsComponent implements OnInit {
     return minPrice === Number.MAX_VALUE ? hotel.minRate || 0 : minPrice;
   }
 
-  // NUEVO: Obtener URL de Google Maps para el hotel
+  // Obtener URL de Google Maps para el hotel
   getGoogleMapsUrl(hotel: HotelSearchResponse.Hotel): SafeResourceUrl {
    
     const apiKey = environment.googleMaps.apiKey;
