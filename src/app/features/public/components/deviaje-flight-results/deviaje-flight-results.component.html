@@ -4,7 +4,8 @@
     <div class="container py-4">
       <div class="row align-items-center">
         <div class="col-md-8">
-          <h1 class="results-title no-uppercase">Vuelos de {{ originCity?.name }} ({{originCity?.country}}) a {{ destinationCity?.name }} ({{destinationCity?.country}})</h1>
+          <h1 class="results-title no-uppercase">Vuelos de {{ originCity?.name }} ({{originCity?.country}}) a {{
+            destinationCity?.name }} ({{destinationCity?.country}})</h1>
           <div class="travel-info">
             <span>
               <i class="bi bi-calendar3"></i>
@@ -57,11 +58,8 @@
             <h3 class="filter-section-title">Precio</h3>
             <div class="price-range">
               <div class="price-slider mb-3">
-                <input type="range" class="form-range" 
-                        min="{{ priceRange.min }}" 
-                        max="{{ priceRange.max }}"
-                        [(ngModel)]="priceRange.current" 
-                        (input)="onFilterChange()">
+                <input type="range" class="form-range" min="{{ priceRange.min }}" max="{{ priceRange.max }}"
+                  [(ngModel)]="priceRange.current" (input)="onFilterChange()">
               </div>
               <div class="price-labels d-flex justify-content-between flex-column">
                 <span>{{ priceRange.current | currency:(searchParams?.currency || 'USD') }}</span>
@@ -389,7 +387,7 @@
             <i class="bi bi-list-ul me-1"></i> Ver más
           </button>
           <button class="btn btn-primary book-btn" (click)="bookFlight(offer)">
-           {{ inPackageMode ? 'Seleccionar' : 'Seleccionar' }}
+            {{ inPackageMode ? 'Seleccionar' : 'Seleccionar' }}
           </button>
         </div>
       </div>
@@ -406,12 +404,18 @@
           </a>
         </li>
 
-        @for (page of [].constructor(totalPages); track $index; let i = $index) {
-        <li class="page-item" [class.active]="currentPage === i + 1">
-          <a class="page-link" (click)="changePage(i + 1)">{{ i + 1 }}</a>
+        @for (page of getVisiblePages(); track page) {
+        @if (isPageNumber(page)) {
+        <li class="page-item" [class.active]="currentPage === page">
+          <a class="page-link" (click)="changePage(page)">{{ page }}</a>
+        </li>
+        } @else {
+        <li class="page-item disabled">
+          <span class="page-link">{{ page }}</span>
         </li>
         }
-
+        }
+        
         <li class="page-item" [class.disabled]="currentPage === totalPages">
           <a class="page-link" (click)="changePage(currentPage + 1)">
             <i class="bi bi-chevron-right"></i>

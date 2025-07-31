@@ -404,7 +404,7 @@ export class DeviajeFlightResultsComponent implements OnInit, OnDestroy {
     this.applyFilters();
   }
 
-  // Paginación
+  //######################## METODOS DE PAGINACIÓN ########################
   get paginatedOffers(): FlightOffer[] {
     const startIndex = (this.currentPage - 1) * this.itemsPerPage;
     return this.filteredOffers.slice(
@@ -424,6 +424,47 @@ export class DeviajeFlightResultsComponent implements OnInit, OnDestroy {
     }
   }
 
+  getVisiblePages(): (number | string)[] {
+    const totalPages = this.totalPages;
+    const currentPage = this.currentPage;
+    const visiblePages: (number | string)[] = [];
+
+    if (totalPages <= 7) {
+      for (let i = 1; i <= totalPages; i++) {
+        visiblePages.push(i);
+      }
+      return visiblePages;
+    }
+
+    visiblePages.push(1);
+
+    if (currentPage <= 4) {
+      for (let i = 2; i <= Math.min(5, totalPages - 1); i++) {
+        visiblePages.push(i);
+      }
+      if (totalPages > 5) visiblePages.push('...');
+    } else if (currentPage >= totalPages - 3) {
+      visiblePages.push('...');
+      for (let i = Math.max(2, totalPages - 4); i < totalPages; i++) {
+        visiblePages.push(i);
+      }
+    } else {
+      visiblePages.push('...');
+      for (let i = currentPage - 1; i <= currentPage + 1; i++) {
+        visiblePages.push(i);
+      }
+      visiblePages.push('...');
+    }
+
+    if (totalPages > 1) visiblePages.push(totalPages);
+    return visiblePages;
+  }
+
+  isPageNumber(page: number | string): page is number {
+    return typeof page === 'number';
+  }
+  //######################## FIN DE METODOS DE PAGINACIÓN ########################
+
   showFlightDetails(offer: FlightOffer): void {
     this.selectedFlightForDetail = offer;
     this.showDetailModal = true;
@@ -439,7 +480,7 @@ export class DeviajeFlightResultsComponent implements OnInit, OnDestroy {
       // MODO PAQUETE: Emitir evento hacia el componente padre (packages-results)
       this.flightSelected.emit({
         flightOffer: offer,
-        searchParams: this.searchParams!
+        searchParams: this.searchParams!,
       });
     } else {
       // MODO NORMAL: Navegar (lógica original sin cambios)

@@ -6,15 +6,13 @@ export const environment = {
   apiDeviajeValidation: 'http://localhost:9060/api/validation',
   apiDeviajeBookings: 'http://localhost:9062',
 
-  // Configuración de MercadoPago
   mercadoPago: {
     sdkUrl: 'https://sdk.mercadopago.com/js/v2',
     locale: 'es-AR',
-    publicKeyEndpoint: '/api/payments/config', // Endpoint relativo al apiDeviajeBookings
+    publicKeyEndpoint: '/api/payments/config',
   },
 
-  // Configuración de Google Maps
   googleMaps: {
-    apiKey: 'AIzaSyDeOCIAAqkNEW-62wQUIdKXsNKbgMDOMs0'
-  },
+    apiKey: 'TU_GOOGLE_MAPS_API_KEY_AQUI' // ← Placeholder
+  }
 };

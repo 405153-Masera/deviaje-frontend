@@ -286,7 +286,7 @@
 </div>
 
 <!-- Sección de tarifas alternativas -->
-<div class="card mb-4">
+<!-- <div class="card mb-4">
     <div class="card-header bg-primary text-white">
         <h5 class="mb-0">Selecciona tu tarifa</h5>
     </div>
@@ -307,7 +307,7 @@
         }
 
         @if (!isLoading && !hasError) {
-        <!-- Tarifa original -->
+
         <div class="fare-option mb-3" [class.selected]="selectedOffer?.id === flightOffer.id">
             <div class="row">
                 <div class="col-md-4">
@@ -341,7 +341,7 @@
                                 </div>
                                 }
                         </div>
-                      <!-- Detalles expandibles de la tarifa -->
+
                       @if (isFareExpanded(flightOffer.id)) {
                         <div class="fare-details-expanded mt-3">
                             <div class="card">
@@ -402,7 +402,6 @@
             </div>
         </div>
 
-        <!-- Tarifas alternativas -->
         @if (alternativeOffers.length > 0) {
         @for (offer of alternativeOffers; track offer.id) {
         @if (offer.id !== flightOffer.id) {
@@ -439,7 +438,7 @@
                                     </div>
                                 }
                             </div>
-                           <!-- Detalles expandibles de la tarifa -->
+                            
                            @if (isFareExpanded(offer.id)) {
                             <div class="fare-details-expanded mt-3">
                                 <div class="card">
@@ -533,5 +532,5 @@
         }
         }
     </div>
-</div>
+</div> -->
 </div>

@@ -1,6 +1,6 @@
 <div>
     <!-- Header con información de la búsqueda (solo mostrar si no está en modo paquete) -->
-    
+
     <header class="results-header">
         <div class="container py-4">
             <div class="row align-items-center">
@@ -27,12 +27,12 @@
             </div>
         </div>
     </header>
-    
+
 
     <div class="container">
         <div class="row">
             <!-- Filtros laterales (visible en desktop) -->
-           
+
             <div class="col-lg-3 d-none d-lg-block filter-sidebar">
                 <div class="filters-panel">
                     <div class="filters-header row">
@@ -48,10 +48,12 @@
                         <div class="price-range">
                             <div class="price-slider mb-3">
                                 <input type="range" class="form-range" min="{{ priceRange.min }}"
-                                    max="{{ priceRange.max }}" [(ngModel)]="priceRange.current" (change)="applyFilters()">
+                                    max="{{ priceRange.max }}" [(ngModel)]="priceRange.current"
+                                    (change)="applyFilters()">
                             </div>
                             <div class="price-labels d-flex justify-content-between flex-column">
-                                <span>{{ hotelService.convertToArs(priceRange.current) | currency:(searchParams?.currency || 'USD') }}</span>
+                                <span>{{ hotelService.convertToArs(priceRange.current) |
+                                    currency:(searchParams?.currency || 'USD') }}</span>
                             </div>
                         </div>
                     </div>
@@ -100,7 +102,8 @@
                                         (change)="applyFilters()">
                                 </div>
                                 <div class="price-labels">
-                                    <span>{{ hotelService.convertToArs(priceRange.current) | currency:(searchParams?.currency || 'USD') }}</span>
+                                    <span>{{ hotelService.convertToArs(priceRange.current) |
+                                        currency:(searchParams?.currency || 'USD') }}</span>
                                 </div>
                             </div>
                         </div>
@@ -134,7 +137,7 @@
                     </div>
                 </div>
             </div>
-            
+
 
             <!-- Resultados de hoteles -->
             <div class="col-lg-9">
@@ -229,7 +232,8 @@
                                         <div class="price-details">
                                             <div class="price-label">Precio desde</div>
                                         </div>
-                                        <div class="price-amount">{{ hotelService.convertToArs(getMinRoomPrice(hotel)) | currency:(searchParams?.currency || 'USD') }}</div>
+                                        <div class="price-amount">{{ hotelService.convertToArs(getMinRoomPrice(hotel)) |
+                                            currency:(searchParams?.currency || 'USD') }}</div>
                                     </div>
 
                                     <div class="action-buttons">
@@ -260,10 +264,16 @@
                             </a>
                         </li>
 
-                        @for (page of [].constructor(totalPages); track $index; let i = $index) {
-                        <li class="page-item" [class.active]="currentPage === i + 1">
-                            <a class="page-link" (click)="changePage(i + 1)">{{ i + 1 }}</a>
+                        @for (page of getVisiblePages(); track page) {
+                        @if (isPageNumber(page)) {
+                        <li class="page-item" [class.active]="currentPage === page">
+                            <a class="page-link" (click)="changePage(page)">{{ page }}</a>
                         </li>
+                        } @else {
+                        <li class="page-item disabled">
+                            <span class="page-link">{{ page }}</span>
+                        </li>
+                        }
                         }
 
                         <li class="page-item" [class.disabled]="currentPage === totalPages">
@@ -284,11 +294,8 @@
 <div class="hotel-detail-modal show">
     <div class="modal-overlay" (click)="closeDetailModal()"></div>
     <div class="modal-content">
-        <app-deviaje-hotel-detail
-            [inPackageMode]="true"
-            [packageHotel]="selectedHotelForDetail"
-            [packageSearchParams]="searchParams"
-            (hotelAndRoomSelected)="onHotelAndRoomSelected($event)"
+        <app-deviaje-hotel-detail [inPackageMode]="true" [packageHotel]="selectedHotelForDetail"
+            [packageSearchParams]="searchParams" (hotelAndRoomSelected)="onHotelAndRoomSelected($event)"
             (modalClosed)="closeDetailModal()">
         </app-deviaje-hotel-detail>
     </div>

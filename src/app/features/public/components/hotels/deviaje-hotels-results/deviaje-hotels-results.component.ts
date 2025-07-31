@@ -1,4 +1,11 @@
-import { Component, EventEmitter, inject, Input, OnInit, Output } from '@angular/core';
+import {
+  Component,
+  EventEmitter,
+  inject,
+  Input,
+  OnInit,
+  Output,
+} from '@angular/core';
 import { Router, RouterModule } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
@@ -11,12 +18,18 @@ import {
 } from '../../../../../shared/models/hotels';
 import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
 import { CityDto } from '../../../../../shared/models/locations';
-import { DeviajeHotelDetailComponent } from "../deviaje-hotel-detail/deviaje-hotel-detail.component";
+import { DeviajeHotelDetailComponent } from '../deviaje-hotel-detail/deviaje-hotel-detail.component';
+import { environment } from '../../../../../shared/enviroments/enviroment';
 
 @Component({
   selector: 'app-deviaje-hotels-results',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterModule, DeviajeHotelDetailComponent],
+  imports: [
+    CommonModule,
+    FormsModule,
+    RouterModule,
+    DeviajeHotelDetailComponent,
+  ],
   templateUrl: './deviaje-hotels-results.component.html',
   styleUrl: './deviaje-hotels-results.component.scss',
 })
@@ -41,7 +54,6 @@ export class DeviajeHotelsResultsComponent implements OnInit {
 
   selectedHotelForDetail: HotelSearchResponse.Hotel | null = null;
   showDetailModal: boolean = false;
-
 
   // Resultados y filtros
   searchResults: HotelSearchResponse | null = null;
@@ -77,7 +89,6 @@ export class DeviajeHotelsResultsComponent implements OnInit {
   currentPage: number = 1;
   itemsPerPage: number = 10;
 
-
   ngOnInit(): void {
     if (!this.inPackageMode) {
       // Solo buscar hoteles si no estamos en modo paquete
@@ -87,9 +98,8 @@ export class DeviajeHotelsResultsComponent implements OnInit {
         if (state && state.searchParams) {
           this.searchParams = state.searchParams;
           this.destinationCity = state.destination;
-          
+
           this.searchHotels();
-          
         } else {
           this.tryLoadFromStorage();
         }
@@ -153,8 +163,10 @@ export class DeviajeHotelsResultsComponent implements OnInit {
 
       if (storedParams) {
         this.searchParams = JSON.parse(storedParams);
-        this.destinationCity = storedDestination ? JSON.parse(storedDestination) : null;
-        
+        this.destinationCity = storedDestination
+          ? JSON.parse(storedDestination)
+          : null;
+
         this.searchHotels();
       } else {
         this.router.navigate(['/home/hotels/search']);
@@ -184,8 +196,12 @@ export class DeviajeHotelsResultsComponent implements OnInit {
   private initializeFilters(hotels: HotelSearchResponse.Hotel[]): void {
     // Rango de precios
     const prices = hotels.map((hotel) => hotel.minRate || 0);
-    this.priceRange.min = this.hotelService.convertToArs(Math.floor(Math.min(...prices)));
-    this.priceRange.max = this.hotelService.convertToArs(Math.ceil(Math.max(...prices)));
+    this.priceRange.min = this.hotelService.convertToArs(
+      Math.floor(Math.min(...prices))
+    );
+    this.priceRange.max = this.hotelService.convertToArs(
+      Math.ceil(Math.max(...prices))
+    );
     this.priceRange.current = this.priceRange.max;
     this.selectedCategories = [];
   }
@@ -193,13 +209,13 @@ export class DeviajeHotelsResultsComponent implements OnInit {
   applyFilters(): void {
     this.isLoading = true;
 
-    let filtered = [...this.searchResults?.hotels?.hotels || []];
+    let filtered = [...(this.searchResults?.hotels?.hotels || [])];
 
     if (
       this.selectedCategories.length === 0 &&
       this.priceRange.current === this.priceRange.max
     ) {
-      this.filteredHotels = [...this.searchResults?.hotels?.hotels || []];
+      this.filteredHotels = [...(this.searchResults?.hotels?.hotels || [])];
       this.sortResults();
       this.currentPage = 1;
       this.isLoading = false;
@@ -303,7 +319,7 @@ export class DeviajeHotelsResultsComponent implements OnInit {
     this.showFilters = !this.showFilters;
   }
 
-  // Métodos de paginación
+  //###################### METÓDOS DE PAGINACIÓN ######################
   get paginatedHotels(): HotelSearchResponse.Hotel[] {
     const startIndex = (this.currentPage - 1) * this.itemsPerPage;
     return this.filteredHotels.slice(
@@ -323,17 +339,61 @@ export class DeviajeHotelsResultsComponent implements OnInit {
     }
   }
 
-  // Métodos para mostrar detalles
-  showHotelDetails(hotel: HotelSearchResponse.Hotel): void {
+  getVisiblePages(): (number | string)[] {
+    const totalPages = this.totalPages;
+    const currentPage = this.currentPage;
+    const visiblePages: (number | string)[] = [];
 
-    console.log('Mostrando detalles del hotel:', hotel.name, 'Modo paquete:', this.inPackageMode);
-     // Depura
+    if (totalPages <= 7) {
+      for (let i = 1; i <= totalPages; i++) {
+        visiblePages.push(i);
+      }
+      return visiblePages;
+    }
+
+    visiblePages.push(1);
+
+    if (currentPage <= 4) {
+      for (let i = 2; i <= Math.min(5, totalPages - 1); i++) {
+        visiblePages.push(i);
+      }
+      if (totalPages > 5) visiblePages.push('...');
+    } else if (currentPage >= totalPages - 3) {
+      visiblePages.push('...');
+      for (let i = Math.max(2, totalPages - 4); i < totalPages; i++) {
+        visiblePages.push(i);
+      }
+    } else {
+      visiblePages.push('...');
+      for (let i = currentPage - 1; i <= currentPage + 1; i++) {
+        visiblePages.push(i);
+      }
+      visiblePages.push('...');
+    }
+
+    if (totalPages > 1) visiblePages.push(totalPages);
+    return visiblePages;
+  }
+
+  isPageNumber(page: number | string): page is number {
+    return typeof page === 'number';
+  }
+  //###################### METÓDOS DE PAGINACIÓN ######################
+
+  //####################### METÓDOS PARA DETALLES DE LOS HOTELES ######################
+  showHotelDetails(hotel: HotelSearchResponse.Hotel): void {
+    console.log(
+      'Mostrando detalles del hotel:',
+      hotel.name,
+      'Modo paquete:',
+      this.inPackageMode
+    );
+    // Depura
     if (this.inPackageMode) {
       // En modo paquete, mostrar modal
       this.selectedHotelForDetail = hotel;
       this.showDetailModal = true;
     } else {
-      
       if (!hotel.code) {
         console.error('Hotel code is missing:', hotel);
         return; // Evitar navegar si no hay code
@@ -365,32 +425,27 @@ export class DeviajeHotelsResultsComponent implements OnInit {
     return minPrice === Number.MAX_VALUE ? hotel.minRate || 0 : minPrice;
   }
 
-  // Obtener una imagen para el hotel
-  getHotelImage(hotel: HotelSearchResponse.Hotel): string {
-    // Aquí deberías implementar la lógica para obtener la imagen del hotel
-    // Por ahora, devolvemos una imagen genérica
-    return `https://via.placeholder.com/300x200?text=${encodeURIComponent(
-      hotel.name || 'Hotel'
-    )}`;
-  }
-
   // NUEVO: Obtener URL de Google Maps para el hotel
   getGoogleMapsUrl(hotel: HotelSearchResponse.Hotel): SafeResourceUrl {
+   
+    const apiKey = environment.googleMaps.apiKey;
+    
     // Si el hotel tiene coordenadas, usarlas
-    if (
-      hotel.latitude &&
-      hotel.longitude
-    ) {
+    if (hotel.latitude && hotel.longitude) {
       const lat = hotel.latitude;
       const lng = hotel.longitude;
-      return this.sanitizer.bypassSecurityTrustResourceUrl(`https://www.google.com/maps/embed/v1/place?key=AIzaSyDeOCIAAqkNEW-62wQUIdKXsNKbgMDOMs0&q=${lat},${lng}&zoom=15`);
+      return this.sanitizer.bypassSecurityTrustResourceUrl(
+        `https://www.google.com/maps/embed/v1/place?key=${apiKey}&q=${lat},${lng}&zoom=15`
+      );
     }
 
     // Si no tiene coordenadas, buscar por nombre y ubicación
     const query = encodeURIComponent(
       `${hotel.name} ${hotel.destinationCode || ''}`
     );
-    return this.sanitizer.bypassSecurityTrustResourceUrl(`https://www.google.com/maps/embed/v1/search?key=AIzaSyDeOCIAAqkNEW-62wQUIdKXsNKbgMDOMs0&q=${query}`);
+    return this.sanitizer.bypassSecurityTrustResourceUrl(
+      `https://www.google.com/maps/embed/v1/search?key=${apiKey}&q=${query}`
+    );
   }
 
   // Obtener el número total de habitaciones de la búsqueda actual
@@ -416,7 +471,7 @@ export class DeviajeHotelsResultsComponent implements OnInit {
   }
 
   //METODOS PARA EL MODO PAQUETE
-   onHotelAndRoomSelected(selection: {
+  onHotelAndRoomSelected(selection: {
     hotelDetails: HotelResponseDto | null;
     hotel: HotelSearchResponse.Hotel;
     nameRoom: string;
@@ -426,10 +481,10 @@ export class DeviajeHotelsResultsComponent implements OnInit {
     searchParams: HotelSearchRequest;
   }): void {
     console.log('Hotel y habitación seleccionados:', selection);
-    
+
     // Emitir evento hacia el componente padre (packages-results)
     this.hotelSelected.emit(selection);
-    
+
     // Cerrar modal
     this.closeDetailModal();
   }
