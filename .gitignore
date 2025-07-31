@@ -42,6 +42,6 @@ testem.log
 Thumbs.db
 
 # Environment files
-src/app/shared/enviroments/enviroment.ts
+/src/app/shared/enviroments/enviroment.ts
 src/app/shared/enviroments/enviroment.prod.ts
 .env
