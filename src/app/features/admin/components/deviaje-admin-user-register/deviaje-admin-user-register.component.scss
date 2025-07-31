@@ -1,34 +1,6 @@
 // Custom form control focus and validation states
 @import "../../../../../assets/styles/variables";
 
-.form-control,
-.form-select {
-  &:focus {
-    border-color: $primary-color;
-    box-shadow: 0 0 0 0.25rem rgba($primary-color, 0.25);
-  }
-
-  &.is-invalid {
-    border-color: $tertiary-color;
-    
-    &:focus {
-      border-color: $tertiary-color;
-      box-shadow: 0 0 0 0.25rem rgba($tertiary-color, 0.25);
-    }
-  }
-}
-
-// Required field indicator
-.form-label {
-  font-weight: 500;
-  margin-bottom: 0.5rem;
-}
-
-// Animaciones suaves para cambios de estado
-.form-control,
-.form-select {
-  transition: $transition-fast;
-}
 
 // Estilos para el spinner de loading
 .spinner-border-sm.text-primary {

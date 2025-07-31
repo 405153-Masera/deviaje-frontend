@@ -97,7 +97,7 @@
                     <label class="mb-1" for="selectClass">Clase</label>
                     <div class="input-with-icon">
                         <i class="bi bi-star"></i>
-                        <select formControlName="travelClass" id="selectClass">
+                        <select formControlName="travelClass" id="selectClass" class="w-100">
                             <option value="">Sin seleccionar</option>
                             <option value="ECONOMY">Económica</option>
                             <option value="PREMIUM_ECONOMY">Premium</option>
@@ -106,19 +106,8 @@
                         </select>
                     </div>
                 </div>
-
-                <!-- <div class="col-lg col-md-4 mb-4">
-                    <label class="mb-1" for="currency">Moneda</label>
-                    <div class="input-with-icon">
-                        <i class="bi bi-currency-dollar"></i>
-                        <select formControlName="currency" id="currency">
-                            <option value="USD">USD - Dólares</option>
-                            <option value="EUR">EUR - Euros</option>
-                            <option value="ARS">ARS - Pesos Argentinos</option>
-                        </select>
-                    </div>
-                </div> -->
             </div>
+
             <div class="row mt-3">
                 <div class="col-md d-flex justify-content-end">
                     <button type="button" class="btn-search" (click)="searchFlights()">
