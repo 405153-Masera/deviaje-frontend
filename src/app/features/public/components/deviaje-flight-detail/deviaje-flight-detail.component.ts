@@ -1,10 +1,4 @@
-import {
-  Component,
-  inject,
-  Input,
-  OnDestroy,
-  OnInit,
-} from '@angular/core';
+import { Component, inject, Input, OnDestroy, OnInit } from '@angular/core';
 import {
   FlightOffer,
   FlightSearchRequest,
@@ -13,6 +7,7 @@ import { Subscription } from 'rxjs';
 import { FlightService } from '../../../../shared/services/flight.service';
 import { FlightUtilsService } from '../../../../shared/services/flight-utils.service';
 import { CommonModule } from '@angular/common';
+import { CountryService } from '../../../../shared/services/country.service';
 
 @Component({
   selector: 'app-deviaje-flight-detail',
@@ -23,6 +18,7 @@ import { CommonModule } from '@angular/common';
 })
 export class DeviajeFlightDetailComponent implements OnInit, OnDestroy {
   private readonly flightService: FlightService = inject(FlightService);
+  private readonly countryService: CountryService = inject(CountryService);
   readonly flightUtils: FlightUtilsService = inject(FlightUtilsService);
 
   @Input() flightOffer!: FlightOffer;
@@ -36,7 +32,7 @@ export class DeviajeFlightDetailComponent implements OnInit, OnDestroy {
 
   // Estado para mostrar o ocultar detalles de segmentos y tarfias
   expandedSegments: { [key: string]: boolean } = {};
-  expandedFareDetails: {[key: string]: boolean} = {};
+  expandedFareDetails: { [key: string]: boolean } = {};
 
   private subscription = new Subscription();
 
@@ -114,7 +110,7 @@ export class DeviajeFlightDetailComponent implements OnInit, OnDestroy {
   toggleFareDetails(fareId: string): void {
     this.expandedFareDetails[fareId] = !this.expandedFareDetails[fareId];
   }
-  
+
   isFareExpanded(fareId: string): boolean {
     return this.expandedFareDetails[fareId] || false;
   }
@@ -131,5 +127,24 @@ export class DeviajeFlightDetailComponent implements OnInit, OnDestroy {
       itineraryIndex
     );
     return this.flightUtils.minutesToString(minutes);
+  }
+
+  getTravelerTypeLabel(travelerType: string): string {
+    switch (travelerType) {
+      case 'ADULT':
+        return 'Adulto';
+      case 'CHILD':
+        return 'Niño';
+      case 'HELD_INFANT':
+        return 'Infante';
+      case 'INFANT':
+        return 'Infante';
+      default:
+        return travelerType;
+    }
+  }
+
+  getAirportInfo(iataCode: string): string {
+     return this.countryService.getAirportInfo(iataCode);
   }
 }

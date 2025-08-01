@@ -104,8 +104,11 @@ export interface BookingResponseDto {
   message: string;
   booking?: {
     id: number;
-    reference?: string;
+    bookingReference?: string;
+    clientId?: number;
+    agentId?: number;
     status: string;
+    type?: string; // "FLIGHT", "HOTEL", etc.
     totalAmount: number;
     currency: string;
   };

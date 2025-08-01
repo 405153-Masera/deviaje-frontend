@@ -214,9 +214,9 @@
             <select id="sortBy" class="form-select form-select-sm" [(ngModel)]="sortOption" (change)="sortResults()">
               <option value="price_asc">Precio (menor a mayor)</option>
               <option value="price_desc">Precio (mayor a menor)</option>
-              <option value="duration_asc">Duración (más corto primero)</option>
-              <option value="departure_asc">Hora de salida (más temprano)</option>
-              <option value="arrival_asc">Hora de llegada (más temprano)</option>
+              <option value="duration_asc">Duración más corto primero (Ida)</option>
+              <option value="departure_asc">Hora de salida más temprano (Ida)</option>
+              <option value="arrival_asc">Hora de llegada más temprano (Ida)</option>
             </select>
           </div>
         </div>
@@ -242,6 +242,7 @@
 
         @for (offer of paginatedOffers; track offer.id) {
         <div class="flight-card">
+
           <!-- Vuelo de ida -->
           <div class="flight-info">
             <div class="flight-route">
@@ -256,7 +257,7 @@
               <div class="flight-main-details">
                 <div class="flight-departure">
                   <div class="flight-time">{{ formatTime(offer.itineraries[0].segments[0].departure.at) }}</div>
-                  <div class="flight-airport">{{ offer.itineraries[0].segments[0].departure.iataCode }}</div>
+                  <div class="flight-airport">{{ getAirportInfo(offer.itineraries[0].segments[0].departure.iataCode) }}</div>
                   <div class="flight-date">{{ formatDate(offer.itineraries[0].segments[0].departure.at) }}</div>
                 </div>
                 <div class="flight-duration">
@@ -278,7 +279,7 @@
                   @if (offer.itineraries[0].segments.length > 0) {
                   @let lastSegment = offer.itineraries[0].segments[offer.itineraries[0].segments.length - 1];
                   <div class="flight-time">{{ formatTime(lastSegment.arrival.at) }}</div>
-                  <div class="flight-airport">{{ lastSegment.arrival.iataCode }}</div>
+                  <div class="flight-airport">{{ getAirportInfo(lastSegment.arrival.iataCode) }}</div>
                   <div class="flight-date">{{ formatDate(lastSegment.arrival.at) }}</div>
                   }
                 </div>
@@ -293,7 +294,7 @@
                 <div class="layover-info">
                   <div class="layover-airport">
                     <i class="bi bi-geo-alt"></i>
-                    Escala en {{ segment.arrival.iataCode }} - {{
+                    Escala en {{ getAirportInfo(segment.arrival.iataCode) }} - {{
                     flightUtils.minutesToString(flightUtils.getLayoverDuration(segment,
                     offer.itineraries[0].segments[i+1])) }} de espera
                   </div>
@@ -320,14 +321,14 @@
             <div class="flight-main-details">
               <div class="flight-departure">
                 <div class="flight-time">{{ formatTime(offer.itineraries[1].segments[0].departure.at) }}</div>
-                <div class="flight-airport">{{ offer.itineraries[1].segments[0].departure.iataCode }}</div>
+                <div class="flight-airport">{{ getAirportInfo(offer.itineraries[1].segments[0].departure.iataCode) }}</div>
                 <div class="flight-date">{{ formatDate(offer.itineraries[1].segments[0].departure.at) }}</div>
               </div>
               <div class="flight-duration">
                 <div class="flight-duration-line">
                   <div class="flight-stops-indicator">
                     @for (segment of offer.itineraries[1].segments; track segment.id) {
-                    @if ($first) {
+                    @if (!$first) {
                     <div class="stop-point"></div>
                     }
                     <div class="flight-line" [class.last-segment]="$last"></div>
@@ -342,8 +343,8 @@
                 @if (offer.itineraries[1].segments.length > 0) {
                 @let lastSegment = offer.itineraries[1].segments[offer.itineraries[1].segments.length - 1];
                 <div class="flight-time">{{ formatTime(lastSegment.arrival.at) }}</div>
-                <div class="flight-airport">{{ lastSegment.arrival.iataCode }}</div>
-                <div class="flight-date">{{ formatDate(lastSegment.arrival.at) }}</div>*
+                <div class="flight-airport">{{ getAirportInfo(lastSegment.arrival.iataCode) }}</div>
+                <div class="flight-date">{{ formatDate(lastSegment.arrival.at) }}</div>
                 }
               </div>
             </div>
@@ -357,7 +358,7 @@
               <div class="layover-info">
                 <div class="layover-airport">
                   <i class="bi bi-geo-alt"></i>
-                  Escala en {{ segment.arrival.iataCode }} - {{
+                  Escala en {{ getAirportInfo(segment.arrival.iataCode) }} - {{
                   flightUtils.minutesToString(flightUtils.getLayoverDuration(segment,
                   offer.itineraries[1].segments[i+1]))
                   }} de espera
@@ -374,9 +375,9 @@
       <!-- Precio y botón de reserva -->
       <div class="flight-price-booking">
         <div class="flight-price">
+          <div class="price-label">Precio desde (sin comisión)</div>
           <div class="price-amount">{{ offer.price.total | currency:(searchParams?.currency || 'USD') }}</div>
           <div class="price-details">
-            <div class="price-label">Precio total</div>
             @if (offer.travelerPricings.length > 1) {
             <div class="price-passengers">{{ offer.travelerPricings.length }} pasajeros</div>
             }
@@ -431,7 +432,6 @@
   <div class="modal-overlay" (click)="closeDetailModal()"></div>
   <div class="modal-content">
     <div class="modal-header">
-      <h5 class="modal-title">Detalles del vuelo</h5>
       <button type="button" class="btn-close" (click)="closeDetailModal()">
         <i class="bi bi-x-lg"></i>
       </button>

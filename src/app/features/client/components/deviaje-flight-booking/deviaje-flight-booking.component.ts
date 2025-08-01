@@ -526,7 +526,7 @@ export class DeviajeFlightBookingComponent implements OnInit, OnDestroy {
             this.isLoading = false;
             if (response.success) {
               this.showSuccessMessage = true;
-              this.bookingReference = response.booking?.id?.toString() || '';
+              this.bookingReference = response.booking?.bookingReference?.toString() || '';
               // Navegar a la página de confirmación o mostrar un mensaje de éxito
 
               // Limpiar los datos persistidos después del éxito

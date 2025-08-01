@@ -19,6 +19,7 @@ import { FlightService } from '../../../../shared/services/flight.service';
 import { Subscription } from 'rxjs';
 import { DeviajeFlightDetailComponent } from '../deviaje-flight-detail/deviaje-flight-detail.component';
 import { CityDto } from '../../../../shared/models/locations';
+import { CountryService } from '../../../../shared/services/country.service';
 
 @Component({
   selector: 'app-deviaje-flight-results',
@@ -36,6 +37,7 @@ export class DeviajeFlightResultsComponent implements OnInit, OnDestroy {
   private readonly router: Router = inject(Router);
   subscription: Subscription = new Subscription();
   private readonly flightService: FlightService = inject(FlightService);
+  private readonly countryService: CountryService = inject(CountryService);
   readonly flightUtils: FlightUtilsService = inject(FlightUtilsService);
 
   flightOffers: FlightOffer[] = [];
@@ -131,6 +133,8 @@ export class DeviajeFlightResultsComponent implements OnInit, OnDestroy {
           this.isLoading = false;
           this.flightOffers = flightOffers;
           this.flightUtils.extractBrandedFaresFromOffers(flightOffers);
+
+          this.preloadAirportCodes();
 
           try {
             localStorage.setItem(
@@ -542,5 +546,25 @@ export class DeviajeFlightResultsComponent implements OnInit, OnDestroy {
     }
 
     return 'ECONOMY';
+  }
+
+  getAirportInfo(iataCode: string): string {
+     return this.countryService.getAirportInfo(iataCode);
+  }
+
+  private preloadAirportCodes(): void {
+    const codes: string[] = [];
+    this.flightOffers.forEach(offer => {
+      offer.itineraries.forEach(itinerary => {
+        itinerary.segments.forEach(segment => {
+          codes.push(segment.departure.iataCode);
+          codes.push(segment.arrival.iataCode);
+        });
+      });
+    });
+    
+    // Pre-cargar todos los códigos únicos
+    const uniqueCodes = [...new Set(codes)];
+    this.countryService.preloadAirports(uniqueCodes);
   }
 }

@@ -45,3 +45,11 @@ Thumbs.db
 src/app/shared/enviroments/enviroment.ts
 src/app/shared/enviroments/enviroment.prod.ts
 .env
+
+# Certificados SSL
+ssl/
+*.pem
+*.crt
+*.key
+*.p12
+localhost.conf

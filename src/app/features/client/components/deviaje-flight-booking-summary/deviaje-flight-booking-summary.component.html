@@ -17,7 +17,7 @@
             <div class="flight-main-details">
               <div class="flight-departure">
                 <div class="flight-time">{{ flightUtils.formatTime(flightOffer.itineraries[0].segments[0].departure.at) }}</div>
-                <div class="flight-airport">{{ flightOffer.itineraries[0].segments[0].departure.iataCode }}</div>
+                <div class="flight-airport">{{ getAirportInfo(flightOffer.itineraries[0].segments[0].departure.iataCode) }}</div>
                 <div class="flight-date">{{ flightUtils.formatDate(flightOffer.itineraries[0].segments[0].departure.at) }}</div>
               </div>
               <div class="flight-duration">
@@ -31,14 +31,14 @@
                     }
                   </div>
                 </div>
-                <div class="flight-duration-time">{{ flightUtils.minutesToString(flightUtils.durationToMinutes(flightOffer.itineraries[0].duration)) }}</div>
+                <!-- <div class="flight-duration-time">{{ flightUtils.minutesToString(flightUtils.durationToMinutes(flightOffer.itineraries[0].duration)) }}</div> -->
                 <div class="flight-stops">{{ flightUtils.getStopsLabel(flightOffer.itineraries[0].segments) }}</div>
               </div>
               <div class="flight-arrival">
                 @if (flightOffer.itineraries[0].segments.length > 0) {
                   @let lastSegment = flightOffer.itineraries[0].segments[flightOffer.itineraries[0].segments.length - 1];
                   <div class="flight-time">{{ flightUtils.formatTime(lastSegment.arrival.at) }}</div>
-                  <div class="flight-airport">{{ lastSegment.arrival.iataCode }}</div>
+                  <div class="flight-airport">{{ getAirportInfo(lastSegment.arrival.iataCode) }}</div>
                   <div class="flight-date">{{ flightUtils.formatDate(lastSegment.arrival.at) }}</div>
                 }
               </div>
@@ -59,7 +59,7 @@
               <div class="flight-main-details">
                 <div class="flight-departure">
                   <div class="flight-time">{{ flightUtils.formatTime(flightOffer.itineraries[1].segments[0].departure.at) }}</div>
-                  <div class="flight-airport">{{ flightOffer.itineraries[1].segments[0].departure.iataCode }}</div>
+                  <div class="flight-airport">{{ getAirportInfo(flightOffer.itineraries[1].segments[0].departure.iataCode) }}</div>
                   <div class="flight-date">{{ flightUtils.formatDate(flightOffer.itineraries[1].segments[0].departure.at) }}</div>
                 </div>
                 <div class="flight-duration">
@@ -73,14 +73,14 @@
                       }
                     </div>
                   </div>
-                  <div class="flight-duration-time">{{ flightUtils.minutesToString(flightUtils.durationToMinutes(flightOffer.itineraries[1].duration)) }}</div>
+                  <!-- <div class="flight-duration-time">{{ flightUtils.minutesToString(flightUtils.durationToMinutes(flightOffer.itineraries[1].duration)) }}</div> -->
                   <div class="flight-stops">{{ flightUtils.getStopsLabel(flightOffer.itineraries[1].segments) }}</div>
                 </div>
                 <div class="flight-arrival">
                   @if (flightOffer.itineraries[1].segments.length > 0) {
                     @let lastSegment = flightOffer.itineraries[1].segments[flightOffer.itineraries[1].segments.length - 1];
                     <div class="flight-time">{{ flightUtils.formatTime(lastSegment.arrival.at) }}</div>
-                    <div class="flight-airport">{{ lastSegment.arrival.iataCode }}</div>
+                    <div class="flight-airport">{{ getAirportInfo(lastSegment.arrival.iataCode) }}</div>
                     <div class="flight-date">{{ flightUtils.formatDate(lastSegment.arrival.at) }}</div>
                   }
                 </div>
