@@ -9,6 +9,7 @@ import {
   PaymentDto,
 } from '../models/bookings';
 import { catchError, map, Observable, of, throwError } from 'rxjs';
+import { BaseResponse } from '../../../shared/models/BaseResponse';
 
 @Injectable({
   providedIn: 'root',
@@ -28,7 +29,7 @@ export class BookingService {
     hotelBookingData: HotelBookingDto,
     paymentData: PaymentDto,
     pricesDto?: any
-  ): Observable<BookingResponseDto> {
+  ): Observable<BaseResponse<string>> {
     // ✅ CORRECCIÓN: Estructura correcta según BookPackageAndPayRequest del backend
     const bookAndPayRequest = {
       packageBookingRequest: {
@@ -52,15 +53,26 @@ export class BookingService {
     );
 
     return this.http
-      .post<BookingResponseDto>(this.packageBookingUrl, bookAndPayRequest)
+      .post<BaseResponse<string>>(this.packageBookingUrl, bookAndPayRequest)
       .pipe(
         catchError((error) => {
-          console.error('Error al crear reserva de paquete:', error);
-          return of({
-            success: false,
-            message: 'Error al procesar la reserva del paquete',
-            detailedError: error.message || 'Error de conexión',
-          });
+          console.error('Error de conexión:', error);
+
+          // Solo errores de red/infraestructura
+          if (error.status === 0) {
+            return of({
+              success: false,
+              data: null,
+              message:
+                'No hay conexión con el servidor. Verifica tu conexión a internet.',
+            });
+          } else {
+            return of({
+              success: false,
+              data: null,
+              message: 'Error de conexión con el servidor. Intenta nuevamente.',
+            });
+          }
         })
       );
   }
@@ -111,7 +123,7 @@ export class BookingService {
     bookingData: FlightBookingDto,
     paymentData: PaymentDto,
     pricesDto?: any // AGREGADO
-  ): Observable<BookingResponseDto> {
+  ): Observable<BaseResponse<string>> {
     const bookAndPayRequest = {
       bookingRequest: bookingData,
       paymentRequest: paymentData,
@@ -119,15 +131,26 @@ export class BookingService {
     };
 
     return this.http
-      .post<BookingResponseDto>(this.flightBookingUrl, bookAndPayRequest)
+      .post<BaseResponse<string>>(this.flightBookingUrl, bookAndPayRequest)
       .pipe(
         catchError((error) => {
-          console.error('Error al crear reserva de vuelo:', error);
-          return of({
-            success: false,
-            message: 'Error al procesar la reserva',
-            detailedError: error.message || 'Error de conexión',
-          });
+          console.error('Error de conexión:', error);
+
+          // Solo errores de red/infraestructura
+          if (error.status === 0) {
+            return of({
+              success: false,
+              data: null,
+              message:
+                'No hay conexión con el servidor. Verifica tu conexión a internet.',
+            });
+          } else {
+            return of({
+              success: false,
+              data: null,
+              message: 'Error de conexión con el servidor. Intenta nuevamente.',
+            });
+          }
         })
       );
   }
@@ -137,7 +160,7 @@ export class BookingService {
     bookingData: HotelBookingDto,
     paymentData: PaymentDto,
     pricesDto?: any
-  ): Observable<BookingResponseDto> {
+  ): Observable<BaseResponse<string>> {
     const bookAndPayRequest = {
       bookingRequest: bookingData,
       paymentRequest: paymentData,
@@ -145,15 +168,26 @@ export class BookingService {
     };
 
     return this.http
-      .post<BookingResponseDto>(this.hotelBookingUrl, bookAndPayRequest)
+      .post<BaseResponse<string>>(this.hotelBookingUrl, bookAndPayRequest)
       .pipe(
         catchError((error) => {
-          console.error('Error al crear reserva de hotel:', error);
-          return of({
-            success: false,
-            message: 'Error al procesar la reserva',
-            detailedError: error.message || 'Error de conexión',
-          });
+          console.error('Error de conexión:', error);
+
+          // Solo errores de red/infraestructura
+          if (error.status === 0) {
+            return of({
+              success: false,
+              data: null,
+              message:
+                'No hay conexión con el servidor. Verifica tu conexión a internet.',
+            });
+          } else {
+            return of({
+              success: false,
+              data: null,
+              message: 'Error de conexión con el servidor. Intenta nuevamente.',
+            });
+          }
         })
       );
   }

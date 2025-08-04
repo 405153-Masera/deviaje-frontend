@@ -1,4 +1,4 @@
-import { Component, Input, inject } from '@angular/core';
+import { Component, EventEmitter, Input, OnInit, Output, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FlightUtilsService } from '../../../../shared/services/flight-utils.service';
 import { CountryService } from '../../../../shared/services/country.service';
@@ -10,14 +10,32 @@ import { CountryService } from '../../../../shared/services/country.service';
   templateUrl: './deviaje-flight-booking-summary.component.html',
   styleUrl: './deviaje-flight-booking-summary.component.scss'
 })
-export class DeviajeFlightBookingSummaryComponent {
+export class DeviajeFlightBookingSummaryComponent implements OnInit {
   @Input() flightOffer: any = null;
   @Input() title: string = 'Detalles del vuelo';
+
+  @Output() originChange = new EventEmitter<string>();
+  @Output() destinationChange = new EventEmitter<string>();
 
   private readonly countryService = inject(CountryService);
   readonly flightUtils = inject(FlightUtilsService);
 
+  ngOnInit() {
+    this.sendFlightData();
+  }
+
   getAirportInfo(iataCode: string): string {
      return this.countryService.getAirportInfo(iataCode);
+  }
+
+  sendFlightData() {
+    if (this.flightOffer) {
+      const segments = this.flightOffer.itineraries[0].segments;
+      const origin = segments[0].departure.iataCode;
+      const destination = segments[segments.length - 1].arrival.iataCode;
+
+      this.originChange.emit(this.getAirportInfo(origin));
+      this.destinationChange.emit(this.getAirportInfo(destination));
+    }
   }
 }

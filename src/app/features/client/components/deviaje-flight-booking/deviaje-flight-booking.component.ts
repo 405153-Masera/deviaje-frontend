@@ -22,6 +22,11 @@ import { AuthService } from '../../../../core/auth/services/auth.service';
 import { Subscription } from 'rxjs';
 import { DeviajeFlightBookingSummaryComponent } from '../deviaje-flight-booking-summary/deviaje-flight-booking-summary.component';
 import { DeviajePriceDetailsComponent } from '../deviaje-price-details/deviaje-price-details.component';
+import { BaseResponse } from '../../../../shared/models/BaseResponse';
+import {
+  UserData,
+  UserService,
+} from '../../../../shared/services/user.service';
 
 @Component({
   selector: 'app-deviaje-flight-booking',
@@ -54,6 +59,7 @@ export class DeviajeFlightBookingComponent implements OnInit, OnDestroy {
   //Servicios para reserva, autenticacion y utilidades
   private bookingService = inject(BookingService);
   private authService = inject(AuthService);
+  private userService = inject(UserService);
   readonly flightUtils = inject(FlightUtilsService);
   subscription = new Subscription();
 
@@ -66,6 +72,8 @@ export class DeviajeFlightBookingComponent implements OnInit, OnDestroy {
   selectedOffer: FlightOfferDto | null = null;
   searchParams: any;
   currentUser: any = null;
+  origin: string = '';
+  destination: string = '';
 
   isLoading = false;
   isVerifying = false;
@@ -167,11 +175,9 @@ export class DeviajeFlightBookingComponent implements OnInit, OnDestroy {
         next: (user) => {
           this.currentUser = user;
           this.isLoggedIn = !!user;
-          console.log('Flight booking - Usuario:', user);
           this.setupBookingBasedOnRole();
         },
-        error: (error) => {
-          console.log('Flight booking - No user logged in');
+        error: () => {
           this.isLoggedIn = false;
           this.setupBookingBasedOnRole();
         },
@@ -188,15 +194,13 @@ export class DeviajeFlightBookingComponent implements OnInit, OnDestroy {
     );
   }
 
-  // Setup booking flow based on user role (AGREGAR MÉTODO COMPLETO)
   setupBookingBasedOnRole(): void {
-    console.log('Flight booking - Setting up based on role:', this.userRole);
-
-    // BLOQUEAR ADMINISTRADOR
     if (this.userRole === 'ADMINISTRADOR') {
       this.router.navigate(['/admin']);
       return;
     }
+
+    this.clearTravelersForm();
 
     if (!this.isLoggedIn) {
       // Usuario no logueado - reserva como invitado
@@ -207,19 +211,12 @@ export class DeviajeFlightBookingComponent implements OnInit, OnDestroy {
       this.isGuestBooking = false;
       this.selectedClientId = this.currentUser?.id;
       this.showUserSelection = false; // CLIENTE no ve selector
-      this.prefillUserData();
-    } else if (this.userRole === 'AGENTE') {
-      // Solo AGENTE ve el selector
-      this.showUserSelection = true;
-      this.isGuestBooking = true; // Por defecto invitado
-    }
 
-    console.log(
-      'Flight booking - Updated flags - showUserSelection:',
-      this.showUserSelection,
-      'isGuestBooking:',
-      this.isGuestBooking
-    );
+      this.loadUserDataAndPrefill(this.currentUser.username);
+    } else if (this.userRole === 'AGENTE') {
+      this.showUserSelection = true;
+      this.isGuestBooking = true;
+    }
   }
 
   // Agent functions - User selection (AGREGAR MÉTODOS)
@@ -231,36 +228,102 @@ export class DeviajeFlightBookingComponent implements OnInit, OnDestroy {
   onUserSelected(clientId: string): void {
     this.selectedClientId = clientId;
     this.isGuestBooking = false;
-    console.log('Flight booking - Selected client ID:', clientId);
   }
 
-  // Prefill user data for logged clients (AGREGAR MÉTODO)
-  prefillUserData(): void {
-    if (this.currentUser && this.userRole === 'CLIENTE') {
-      // Auto-llenar datos del primer pasajero con datos del usuario
-      const firstTraveler = this.travelers.at(0) as FormGroup;
-      if (firstTraveler) {
-        firstTraveler.patchValue({
-          firstName: this.currentUser.firstName || '',
-          lastName: this.currentUser.lastName || '',
+  prefillUserData(userData: UserData): void {
+    if (!userData) return;
+
+    console.log('Llenando datos del usuario:', userData);
+
+    const firstTraveler = this.travelers.at(0) as FormGroup;
+    if (firstTraveler) {
+      firstTraveler.patchValue({
+        firstName: userData.firstName || '',
+        lastName: userData.lastName || '',
+        gender: userData.gender || 'MALE',
+        travelerType: 'ADULT',
+      });
+
+      const contactGroup = firstTraveler.get('contact') as FormGroup;
+      if (contactGroup) {
+        contactGroup.patchValue({
+          emailAddress: userData.email || '',
         });
 
-        // Auto-llenar contacto
-        const contactGroup = firstTraveler.get('contact') as FormGroup;
-        if (contactGroup) {
-          contactGroup.patchValue({
-            emailAddress: this.currentUser.email || '',
+        const phonesArray = contactGroup.get('phones') as FormArray;
+        if (phonesArray && phonesArray.length > 0) {
+          phonesArray.at(0)?.patchValue({
+            deviceType: 'MOBILE',
+            countryCallingCode: '+' + userData.countryCallingCode || '',
+            number: userData.phone || '',
           });
-
-          const phonesArray = contactGroup.get('phones') as FormArray;
-          if (phonesArray && phonesArray.length > 0) {
-            phonesArray.at(0)?.patchValue({
-              number: this.currentUser.phone || '',
-            });
-          }
         }
       }
+
+      if (userData.passport) {
+        const documentsArray = firstTraveler.get('documents') as FormArray;
+        if (documentsArray && documentsArray.length > 0) {
+          documentsArray.at(0)?.patchValue({
+            documentType: 'PASSPORT',
+            number: userData.passport.passportNumber || '',
+            expiryDate: userData.passport.expiryDate || '',
+            issuanceCountry: userData.passport.issuanceCountry || 'AR',
+            nationality: userData.passport.nationality || 'AR',
+          });
+        }
+      }
+
+      if (userData.birthDate) {
+        firstTraveler.patchValue({
+          dateOfBirth: userData.birthDate,
+        });
+      }
     }
+  }
+
+  private loadUserDataAndPrefill(username: string): void {
+    this.userService.getUserByUsername(username).subscribe({
+      next: (userData) => {
+        this.prefillUserData(userData);
+      },
+      error: (error) => {
+        console.error('Error cargando datos del usuario:', error);
+      },
+    });
+  }
+
+  searchUserByUsername(username: string): void {
+    if (!username.trim()) return;
+
+    if (username === this.currentUser?.username) {
+      this.errorMessage = 'No puedes reservar para ti mismo siendo agente';
+      return;
+    }
+
+    this.userService.getUserByUsername(username).subscribe({
+      next: (userData) => {
+        console.log('Usuario encontrado:', userData);
+        this.selectedClientId = userData.id.toString();
+        this.isGuestBooking = false;
+        this.clearTravelersForm();
+        this.prefillUserData(userData);
+
+        this.errorMessage = '';
+      },
+      error: (error) => {
+        console.error('Usuario no encontrado:', error);
+        this.errorMessage =
+          'Usuario no encontrado. Verifica el nombre de usuario.';
+        this.selectedClientId = null;
+        this.clearTravelersForm();
+      },
+    });
+  }
+
+  private clearTravelersForm(): void {
+    this.travelers.clear();
+    this.initializeTravelersForm();
+    this.errorMessage = '';
   }
 
   verifyFlightOffer(offer: FlightOfferDto): void {
@@ -462,6 +525,14 @@ export class DeviajeFlightBookingComponent implements OnInit, OnDestroy {
     });
   }
 
+  onOriginReceived(origin: string) {
+    this.origin = origin;
+  }
+
+  onDestinationReceived(destination: string) {
+    this.destination = destination;
+  }
+
   async submitBooking(): Promise<void> {
     if (!this.selectedOffer) {
       this.errorMessage = 'No hay una oferta de vuelo seleccionada';
@@ -493,10 +564,14 @@ export class DeviajeFlightBookingComponent implements OnInit, OnDestroy {
 
       // Preparar los datos de la reserva
       const bookingData: FlightBookingDto = {
-        clientId: this.getClientId(), // CAMBIAR ESTA LÍNEA
-        agentId: this.getAgentId(), // AGREGAR ESTA LÍNEA
+        clientId: this.getClientId(),
+        agentId: this.getAgentId(),
+        origin: this.origin,
+        destination: this.destination,
         flightOffer: this.selectedOffer,
         travelers: this.prepareTravelersData(),
+        cancellationFrom: this.calculateFlightCancellationDate(),
+        cancellationAmount: this.calculateFlightCancellationAmount(),
       };
 
       console.log(
@@ -526,10 +601,9 @@ export class DeviajeFlightBookingComponent implements OnInit, OnDestroy {
             this.isLoading = false;
             if (response.success) {
               this.showSuccessMessage = true;
-              this.bookingReference = response.booking?.bookingReference?.toString() || '';
-              // Navegar a la página de confirmación o mostrar un mensaje de éxito
+              this.bookingReference = response.data || '';
+              this.errorMessage = '';
 
-              // Limpiar los datos persistidos después del éxito
               this.clearPersistedState();
 
               setTimeout(() => {
@@ -538,15 +612,9 @@ export class DeviajeFlightBookingComponent implements OnInit, OnDestroy {
                 });
               }, 3000);
             } else {
-              this.errorMessage =
-                response.detailedError || 'Error al procesar la reserva';
+              this.isLoading = false;
+              this.handleBookingError(response);
             }
-          },
-          error: (error) => {
-            this.isLoading = false;
-            this.errorMessage =
-              'Error al procesar la reserva: ' +
-              (error.message || 'Inténtelo nuevamente');
           },
         });
     } catch (error: any) {
@@ -554,6 +622,10 @@ export class DeviajeFlightBookingComponent implements OnInit, OnDestroy {
       this.errorMessage = error.message || 'Error al procesar el pago';
       console.error('Error en submitBooking:', error);
     }
+  }
+
+  private handleBookingError(response: BaseResponse<string>): void {
+    this.errorMessage = response.message || 'Ocurrió un error inesperado';
   }
 
   private getClientId(): number | undefined {
@@ -668,6 +740,16 @@ export class DeviajeFlightBookingComponent implements OnInit, OnDestroy {
       }),
     });
     return travelersData;
+  }
+
+  private calculateFlightCancellationDate(): string {
+    const tomorrow = new Date();
+    tomorrow.setDate(tomorrow.getDate() + 1);
+    return tomorrow.toISOString().split('T')[0];
+  }
+
+  private calculateFlightCancellationAmount(): number {
+    return parseFloat(this.flightOffer?.price?.total || '0');
   }
 
   //METODOS PRIVADOS PARA GUARDAR LA SESION
@@ -873,7 +955,6 @@ export class DeviajeFlightBookingComponent implements OnInit, OnDestroy {
     const offer = this.selectedOffer || this.flightOffer;
 
     if (!offer || !offer.itineraries || offer.itineraries.length === 0) {
-      console.warn('No hay oferta de vuelo disponible');
       return new Date().toISOString().split('T')[0];
     }
 
@@ -882,10 +963,8 @@ export class DeviajeFlightBookingComponent implements OnInit, OnDestroy {
       const lastSegment =
         lastItinerary.segments[lastItinerary.segments.length - 1];
       const arrivalDate = lastSegment.arrival.at.split('T')[0];
-      console.log('Fecha de llegada del último vuelo:', arrivalDate);
       return arrivalDate;
     } catch (error) {
-      console.error('Error al obtener fecha de llegada:', error);
       return new Date().toISOString().split('T')[0];
     }
   }

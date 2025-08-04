@@ -14,7 +14,7 @@ nav {
   z-index: 200; // Asegura que el navbar esté por encima de otros elementos
   width: 100%; // Ocupa todo el ancho de la pantalla
   @include flex-between;
-  padding: 1.2rem 2rem 1.2rem 1.27rem;
+  padding: 1rem 2rem 1rem 1.27rem;
   border-bottom: 1px solid $navbar-border-color;
   position: fixed; // Fija el navbar en la parte superior de la pantalla al hacer scroll
   top: 0;
@@ -69,10 +69,13 @@ nav {
 .brand {
   @include flex-center;
   gap: 0.6rem;
+  flex-shrink: 0;
 
   .logo {
-    width: 1.7rem;
-  }
+  width: 8rem; /* Mantén un ancho fijo o usa un porcentaje */
+  height: auto; /* Permite que la altura se ajuste automáticamente */
+  object-fit: contain; /* Asegura que la imagen no se deforme */
+}
 
   .name {
     font-size: 1.5rem;

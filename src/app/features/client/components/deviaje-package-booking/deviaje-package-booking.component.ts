@@ -30,6 +30,7 @@ import {
 } from '../../../../shared/models/hotels';
 import { FlightSearchRequest } from '../../../../shared/models/flights';
 import { DeviajeHotelBookingSummaryComponent } from '../deviaje-hotel-booking-summary/deviaje-hotel-booking-summary.component';
+import { BaseResponse } from '../../../../shared/models/BaseResponse';
 
 @Component({
   selector: 'app-deviaje-flight-booking',
@@ -74,6 +75,8 @@ export class DeviajePackageBookingComponent implements OnInit, OnDestroy {
   flightOffer: FlightOfferDto = {} as FlightOfferDto;
   searchParams: any = null;
   currentUser: any = null;
+  origin: string = '';
+  destination: string = '';
   flightSearchParams: FlightSearchRequest | null = null;
   hotelDetails: HotelResponseDto | null = null;
   hotel: HotelSearchResponse.Hotel | null = null;
@@ -571,8 +574,12 @@ export class DeviajePackageBookingComponent implements OnInit, OnDestroy {
       const flightBookingData: FlightBookingDto = {
         clientId: clientId,
         agentId: agentId,
+        origin: this.origin,
+        destination: this.destination,
         flightOffer: this.flightOffer,
         travelers: this.prepareTravelersData(),
+        cancellationFrom: this.calculateFlightCancellationDate(),
+        cancellationAmount: this.calculateFlightCancellationAmount(),
       };
 
       // ✅ Preparar los datos de la reserva DE HOTEL
@@ -623,14 +630,9 @@ export class DeviajePackageBookingComponent implements OnInit, OnDestroy {
 
             if (response.success) {
               this.showSuccessMessage = true;
-              this.bookingReference = response.booking?.id?.toString() || '';
+              this.bookingReference = response.data || '';
+              this.errorMessage = '';
 
-              console.log(
-                '✅ Reserva de paquete exitosa. ID:',
-                this.bookingReference
-              );
-
-              // Limpiar los datos persistidos después del éxito
               this.clearPersistedState();
 
               setTimeout(() => {
@@ -639,21 +641,9 @@ export class DeviajePackageBookingComponent implements OnInit, OnDestroy {
                 });
               }, 3000);
             } else {
-              console.error('❌ Error en la reserva:', response.detailedError);
-              this.errorMessage =
-                response.detailedError ||
-                'Error al procesar la reserva del paquete';
+              this.isLoading = false;
+              this.handleBookingError(response);
             }
-          },
-          error: (error) => {
-            this.isLoading = false;
-            console.error(
-              '❌ Error al procesar la reserva del paquete:',
-              error
-            );
-            this.errorMessage =
-              'Error al procesar la reserva del paquete: ' +
-              (error.message || 'Inténtelo nuevamente');
           },
         });
     } catch (error: any) {
@@ -662,6 +652,20 @@ export class DeviajePackageBookingComponent implements OnInit, OnDestroy {
         error.message || 'Error al procesar el pago del paquete';
       console.error('❌ Error en submitBooking:', error);
     }
+  }
+
+  onOriginReceived(origin: string) {
+    this.origin = origin;
+    console.log('Origen recibido:', origin);
+  }
+
+  onDestinationReceived(destination: string) {
+    this.destination = destination;
+    console.log('Destino recibido:', destination);
+  }
+
+  private handleBookingError(response: BaseResponse<string>): void {
+    this.errorMessage = response.message || 'Ocurrió un error inesperado';
   }
 
   private getClientId(): number | undefined {
@@ -776,6 +780,64 @@ export class DeviajePackageBookingComponent implements OnInit, OnDestroy {
       }),
     });
     return travelersData;
+  }
+
+  private calculateFlightCancellationDate(): string {
+    // 24 horas desde ahora
+    const tomorrow = new Date();
+    tomorrow.setDate(tomorrow.getDate() + 1);
+    return tomorrow.toISOString().split('T')[0]; // formato YYYY-MM-DD
+  }
+
+  private calculateFlightCancellationAmount(): number {
+    // Después de 24h paga el precio completo del vuelo
+    return parseFloat(this.flightOffer?.price?.total || '0');
+  }
+
+  private extractHotelCancellationDate(): string {
+    try {
+      // Usar this.rate directamente si tienes acceso a él, o this.hotelDetails
+      const cancellationPolicies = this.rate?.cancellationPolicies;
+      if (cancellationPolicies && cancellationPolicies.length > 0) {
+        const from = cancellationPolicies[0]?.from;
+        if (from) {
+          // Convertir "2025-08-02T23:59:00-03:00" a "2025-08-02"
+          return from.split('T')[0];
+        }
+      }
+    } catch (error) {
+      console.error(
+        'Error extrayendo fecha de cancelación de HotelBeds:',
+        error
+      );
+    }
+
+    // Default: mañana si no hay política
+    const tomorrow = new Date();
+    tomorrow.setDate(tomorrow.getDate() + 1);
+    return tomorrow.toISOString().split('T')[0];
+  }
+
+  private extractHotelCancellationAmount(): number {
+    try {
+      const cancellationPolicies = this.rate?.cancellationPolicies;
+      if (cancellationPolicies && cancellationPolicies.length > 0) {
+        const amount = cancellationPolicies[0]?.amount;
+        if (amount) {
+          return parseFloat(amount); // "357.79" → 357.79
+        }
+      }
+    } catch (error) {
+      console.error(
+        'Error extrayendo monto de cancelación de HotelBeds:',
+        error
+      );
+    }
+
+    // Default: precio total del hotel
+    return this.calculatedTotalAmount
+      ? parseFloat(this.calculatedTotalAmount)
+      : 0;
   }
 
   //METODOS PRIVADOS PARA GUARDAR LA SESION
@@ -1024,6 +1086,7 @@ export class DeviajePackageBookingComponent implements OnInit, OnDestroy {
       return new Date().toISOString().split('T')[0];
     }
   }
+  
 
   //**************************METODOS PARA LOS HOTELES********************************
   // En tu componente de package booking
@@ -1092,6 +1155,8 @@ export class DeviajePackageBookingComponent implements OnInit, OnDestroy {
           paxes: paxes,
         },
       ],
+      cancellationFrom: this.extractHotelCancellationDate(),
+      cancellationAmount: this.extractHotelCancellationAmount(),
     };
   }
 

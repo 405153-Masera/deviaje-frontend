@@ -10,8 +10,7 @@
     </div>
 
     <div class="brand">
-      <!-- <img src="" alt="DeViaje Logo" class="logo"> -->
-      <span class="name">DeViaje</span>
+      <img src="../../../../assets/images/deviaje_logo_navbar.png" alt="DeViaje Logo" class="logo">
     </div>
 
     <!-- Selector de rol para usuarios con múltiples roles -->
@@ -68,7 +67,7 @@
     </ng-container>
 
     <ng-container *ngIf="!isAuthenticated">
-      <a (click)="goToLogin()" class="auth-btn login-btn">
+      <a (click)="goToLogin()" class="auth-btn login-btn" style="cursor: pointer;">
         <i class="bi bi-box-arrow-in-right"></i> Iniciar Sesión
       </a>
       <a routerLink="/user/signup" class="auth-btn signup-btn">

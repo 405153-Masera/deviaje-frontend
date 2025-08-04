@@ -1,6 +1,6 @@
 import { Injectable, inject } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
-import { Observable } from 'rxjs';
+import { catchError, Observable, of } from 'rxjs';
 import { environment } from '../../shared/enviroments/enviroment';
 
 // Interfaces para el servicio de usuarios
@@ -43,6 +43,28 @@ export interface UserResponse {
   lastLogin?: string;
 }
 
+export interface UserData {
+  id: number;
+  username: string;
+  email: string;
+  firstName: string;
+  lastName: string;
+  gender: string;
+  countryCallingCode: string;
+  phone: string;
+  birthDate: string;
+  active: boolean;
+  avatarUrl?: string;
+  roles: string[];
+  passport?: {
+    id: number;
+    passportNumber: string;
+    expiryDate: string;
+    issuanceCountry: string;
+    nationality: string;
+  };
+}
+
 export interface PaginatedUsersResponse {
   users: UserResponse[];
   totalElements: number;
@@ -76,6 +98,10 @@ export class UserService {
       `${this.baseUrl}`,
       userData
     );
+  }
+
+  getUserByUsername(username: string): Observable<UserData> {
+    return this.http.get<UserData>(`${this.baseUrl}/username/${username}`);
   }
 
   /**

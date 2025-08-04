@@ -1,12 +1,16 @@
-import { FlightOffer } from "../../../shared/models/flights";
+import { FlightOffer } from '../../../shared/models/flights';
 
 // DTOs para reserva de vuelos
 export interface FlightBookingDto {
   clientId?: number;
   agentId?: number;
+  origin: string;
+  destination: string;
   branchId?: number;
   flightOffer: FlightOfferDto;
   travelers: TravelerDto[];
+  cancellationFrom?: string;
+  cancellationAmount?: number;
 }
 
 export interface FlightOfferDto extends FlightOffer {
@@ -75,6 +79,8 @@ export interface HotelBookingDto {
   clientReference?: string;
   remark?: string;
   tolerance?: number;
+  cancellationFrom?: string;
+  cancellationAmount?: number;
 }
 
 export interface HolderDto {
@@ -86,8 +92,8 @@ export interface HolderDto {
 
 export interface RoomBookingDto {
   rateKey: string;
-  roomName: string,
-  boardName: string,
+  roomName: string;
+  boardName: string;
   paxes: PaxDto[];
 }
 
@@ -115,7 +121,6 @@ export interface BookingResponseDto {
   detailedError?: string;
   failureReason?: string;
 }
-
 
 // DTOs específicos para MercadoPago
 export interface MercadoPagoTokenRequest {

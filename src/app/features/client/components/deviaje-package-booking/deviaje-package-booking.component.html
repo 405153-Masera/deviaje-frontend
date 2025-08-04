@@ -34,6 +34,8 @@
 <ng-container *ngIf="!isVerifying">
   <app-deviaje-flight-booking-summary 
     [flightOffer]="flightOffer"
+    (originChange)="onOriginReceived($event)"
+    (destinationChange)="onDestinationReceived($event)"
     [title]="'Detalles del vuelo'"
   >
   </app-deviaje-flight-booking-summary>

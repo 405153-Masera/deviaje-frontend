@@ -28,6 +28,7 @@ import {
 import { HotelBookingDto, PaymentDto } from '../../models/bookings';
 import { DeviajePriceDetailsComponent } from '../deviaje-price-details/deviaje-price-details.component';
 import { HotelService } from '../../../../shared/services/hotel.service';
+import { BaseResponse } from '../../../../shared/models/BaseResponse';
 
 @Component({
   selector: 'app-deviaje-hotel-booking',
@@ -723,8 +724,10 @@ export class DeviajeHotelBookingComponent implements OnInit, OnDestroy {
             this.isLoading = false;
             if (response.success) {
               this.showSuccessMessage = true;
-              this.bookingReference = response.booking?.id?.toString() || '';
-              this.currentStep = 3; // Go to confirmation step
+              this.bookingReference = response.data || '';
+              this.errorMessage = '';
+
+              this.clearPersistedState();
 
               setTimeout(() => {
                 this.router.navigate(['/bookings'], {
@@ -732,15 +735,9 @@ export class DeviajeHotelBookingComponent implements OnInit, OnDestroy {
                 });
               }, 3000);
             } else {
-              this.errorMessage =
-                response.detailedError || 'Error al procesar la reserva';
+              this.isLoading = false;
+              this.handleBookingError(response);
             }
-          },
-          error: (error) => {
-            this.isLoading = false;
-            this.errorMessage =
-              'Error al procesar la reserva: ' +
-              (error.message || 'Inténtelo nuevamente');
           },
         });
     } catch (error: any) {
@@ -748,6 +745,10 @@ export class DeviajeHotelBookingComponent implements OnInit, OnDestroy {
       this.errorMessage = error.message || 'Error al procesar el pago';
       console.error('Error en submitBooking:', error);
     }
+  }
+
+  private handleBookingError(response: BaseResponse<string>): void {
+    this.errorMessage = response.message || 'Ocurrió un error inesperado';
   }
 
   // Prepare booking request for backend
@@ -793,7 +794,7 @@ export class DeviajeHotelBookingComponent implements OnInit, OnDestroy {
         name: travelerData.firstName,
         surname: travelerData.lastName,
         email: emailAddress, // ✅ AGREGADO
-        phone: phoneNumber,   // ✅ AGREGADO
+        phone: phoneNumber, // ✅ AGREGADO
       },
       rooms: [
         {
@@ -803,6 +804,8 @@ export class DeviajeHotelBookingComponent implements OnInit, OnDestroy {
           paxes: paxes,
         },
       ],
+      cancellationFrom: this.extractHotelCancellationDate(),
+      cancellationAmount: this.extractHotelCancellationAmount(),
     };
   }
 
@@ -823,6 +826,52 @@ export class DeviajeHotelBookingComponent implements OnInit, OnDestroy {
         identificationType: 'DNI',
       },
     };
+  }
+
+  private extractHotelCancellationDate(): string {
+    try {
+      // Usar this.rate directamente si tienes acceso a él, o this.hotelDetails
+      const cancellationPolicies = this.rate?.cancellationPolicies;
+      if (cancellationPolicies && cancellationPolicies.length > 0) {
+        const from = cancellationPolicies[0]?.from;
+        if (from) {
+          // Convertir "2025-08-02T23:59:00-03:00" a "2025-08-02"
+          return from.split('T')[0];
+        }
+      }
+    } catch (error) {
+      console.error(
+        'Error extrayendo fecha de cancelación de HotelBeds:',
+        error
+      );
+    }
+
+    // Default: mañana si no hay política
+    const tomorrow = new Date();
+    tomorrow.setDate(tomorrow.getDate() + 1);
+    return tomorrow.toISOString().split('T')[0];
+  }
+
+  private extractHotelCancellationAmount(): number {
+    try {
+      const cancellationPolicies = this.rate?.cancellationPolicies;
+      if (cancellationPolicies && cancellationPolicies.length > 0) {
+        const amount = cancellationPolicies[0]?.amount;
+        if (amount) {
+          return parseFloat(amount); // "357.79" → 357.79
+        }
+      }
+    } catch (error) {
+      console.error(
+        'Error extrayendo monto de cancelación de HotelBeds:',
+        error
+      );
+    }
+
+    // Default: precio total del hotel
+    return this.calculatedTotalAmount
+      ? parseFloat(this.calculatedTotalAmount)
+      : 0;
   }
 
   // Navigate to search

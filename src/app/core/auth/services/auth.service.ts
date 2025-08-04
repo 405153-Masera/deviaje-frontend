@@ -60,13 +60,6 @@ export class AuthService {
       const activeRole = localStorage.getItem('activeRole');
       const expiration = localStorage.getItem('expiration');
 
-      console.log('📦 CONTENIDO de localStorage:', {
-        token: token,
-        userString: userString,
-        activeRole: activeRole,
-        expiration: expiration,
-      });
-
       // 2. ¿Se puede parsear el usuario?
       let user = null;
       try {
@@ -82,15 +75,7 @@ export class AuthService {
         const expirationDate = expiration ? new Date(expiration) : null;
         const now = new Date();
 
-        console.log('⏰ Verificación de expiración:', {
-          expirationString: expiration,
-          expirationDate: expirationDate,
-          now: now,
-          isValid: expirationDate ? now < expirationDate : false,
-        });
-
         const isValid = this.isTokenValid();
-        console.log('🔐 ¿Token válido?', isValid);
 
         if (isValid) {
           this.currentUserSubject.next(user);
