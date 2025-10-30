@@ -3,7 +3,7 @@
 <div class="d-flex flex-column min-vh-100">
   
   <!-- Navbar (no crece) -->
-   <div class="mb-5">
+   <div>
     <app-deviaje-navbar (toggleSidebar)="toggleSidebar()"></app-deviaje-navbar>
    </div>
   
@@ -12,7 +12,7 @@
   <app-deviaje-sidebar [isOpen]="isSidebarOpen"></app-deviaje-sidebar>
 
   <!-- Contenido principal (crece para empujar el footer) -->
-  <section class="container py-6 flex-grow-1">
+  <section class="container py-6 p-0 flex-grow-1">
     <router-outlet></router-outlet>
   </section>
 

@@ -109,7 +109,7 @@ export class DeviajeCityInputComponent
 
   selectCity(city: CityDto): void {
     this.selectedCity = city;
-    this.displayValue = `${city.name} (${city.iataCode})`;
+    this.displayValue = `${city.name}, (${city.country})`;
     this.isSuggestionsOpen = false;
     this.onChange(city); // Notificar al formulario del nuevo valor
     this.onTouched(); // Marcar como tocado

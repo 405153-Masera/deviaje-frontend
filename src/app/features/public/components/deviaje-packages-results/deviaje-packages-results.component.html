@@ -43,79 +43,72 @@
       <div class="cart-content">
         <div class="row align-items-center">
           <div class="col-md-8">
-            <h5 class="cart-title">
-              <i class="bi bi-cart3 me-2"></i>
-              Tu paquete seleccionado
-            </h5>
-            
             <div class="selected-items">
-              <!-- Vuelo seleccionado -->
-              @if (selectedFlight) {
-              <div class="selected-item flight-item">
-                <div class="item-icon">
-                  <i class="bi bi-airplane"></i>
-                </div>
-                <div class="item-details">
-                  <div class="item-title">Vuelo seleccionado</div>
-                  <div class="item-description">
-                    {{ originCity.name }} → {{ destinationCity.name }}
+                <!-- Vuelo seleccionado -->
+                @if (selectedFlight) {
+                <div class="selected-item flight-item">
+                  <div class="item-icon">
+                    <i class="bi bi-airplane"></i>
                   </div>
-                  <div class="item-price">{{ formatPrice(selectedFlight.flightOffer.price.total) }}</div>
+                  <div class="item-details">
+                    <div class="item-title">Vuelo seleccionado</div>
+                    <div class="item-description">
+                      {{ originCity.name }} → {{ destinationCity.name }}
+                    </div>
+                    <div class="item-price">{{ selectedFlight.flightOffer.price.total | currency:('ARS') }}</div>
+                  </div>
+                  <button class="btn btn-sm btn-danger" (click)="removeFlightSelection()">
+                    <i class="bi bi-x"></i>
+                  </button>
                 </div>
-                <button class="btn btn-sm btn-danger" (click)="removeFlightSelection()">
-                  <i class="bi bi-x"></i>
-                </button>
-              </div>
-              } @else {
-              <div class="selected-item placeholder">
-                <div class="item-icon">
-                  <i class="bi bi-airplane text-muted"></i>
+                } @else {
+                <div class="selected-item placeholder">
+                  <div class="item-icon">
+                    <i class="bi bi-airplane text-muted"></i>
+                  </div>
+                  <div class="item-details">
+                    <div class="item-title text-muted">Selecciona un vuelo</div>
+                  </div>
                 </div>
-                <div class="item-details">
-                  <div class="item-title text-muted">Selecciona un vuelo</div>
-                </div>
-              </div>
-              }
+                }
 
-              <!-- Hotel seleccionado -->
-              @if (selectedHotel) {
-              <div class="selected-item hotel-item">
-                <div class="item-icon">
-                  <i class="bi bi-building"></i>
+                <!-- Hotel seleccionado -->
+                @if (selectedHotel) {
+                <div class="selected-item hotel-item">
+                  <div class="item-icon">
+                    <i class="bi bi-building"></i>
+                  </div>
+                  <div class="item-details">
+                    <div class="item-title">{{ selectedHotel.hotel.name }}</div>
+                    <div class="item-description">{{ selectedHotel.nameRoom }}</div>
+                    <div class="item-price">{{ getHotelRateNet(selectedHotel.rate) | currency:('ARS') }}</div>
+                  </div>
+                  <button class="btn btn-sm btn-danger" (click)="removeHotelSelection()">
+                    <i class="bi bi-x"></i>
+                  </button>
                 </div>
-                <div class="item-details">
-                  <div class="item-title">{{ selectedHotel.hotel.name }}</div>
-                  <div class="item-description">{{ selectedHotel.nameRoom }}</div>
-                  <div class="item-price">{{ formatPrice(getHotelRateNet(selectedHotel.rate)) }}</div>
+                } @else {
+                <div class="selected-item placeholder">
+                  <div class="item-icon">
+                    <i class="bi bi-building text-muted"></i>
+                  </div>
+                  <div class="item-details">
+                    <div class="item-title text-muted">Selecciona un hotel</div>
+                  </div>
                 </div>
-                <button class="btn btn-sm btn-danger" (click)="removeHotelSelection()">
-                  <i class="bi bi-x"></i>
-                </button>
-              </div>
-              } @else {
-              <div class="selected-item placeholder">
-                <div class="item-icon">
-                  <i class="bi bi-building text-muted"></i>
-                </div>
-                <div class="item-details">
-                  <div class="item-title text-muted">Selecciona un hotel</div>
-                </div>
-              </div>
-              }
+                }
+
             </div>
           </div>
-          
-          <div class="col-md-4 text-md-end">
+
+          <div class="col-md-4">
             <div class="cart-summary">
               <div class="total-price">
                 <div class="total-label">Total del paquete</div>
-                <div class="total-amount">{{ formatPrice(getTotalPrice()) }}</div>
+                <div class="total-amount">{{ getTotalPrice() | currency:('ARS') }}</div>
               </div>
-              <button 
-                class="btn btn-primary btn-lg mt-2" 
-                [disabled]="!canProceedToBooking()"
+              <button class="btn btn-primary btn-lg" [disabled]="!canProceedToBooking()"
                 (click)="proceedToBooking()">
-                <i class="bi bi-credit-card me-2"></i>
                 Reservar paquete
               </button>
             </div>
@@ -132,7 +125,7 @@
     <div class="instructions-banner">
       <div class="alert alert-info">
         <i class="bi bi-info-circle me-2"></i>
-        <strong>¡Arma tu paquete perfecto!</strong> 
+        <strong>¡Arma tu paquete perfecto!</strong>
         Selecciona un vuelo y un hotel para crear tu paquete de viaje.
       </div>
     </div>
@@ -141,13 +134,8 @@
     <!-- TABS NAVIGATION -->
     <div class="package-tabs">
       <nav class="nav nav-tabs" id="packageTabs" role="tablist">
-        <button 
-          class="nav-link active" 
-          id="flights-tab" 
-          data-bs-toggle="tab" 
-          data-bs-target="#flights-pane" 
-          type="button" 
-          role="tab">
+        <button class="nav-link active" id="flights-tab" data-bs-toggle="tab" data-bs-target="#flights-pane"
+          type="button" role="tab">
           <i class="bi bi-airplane me-2"></i>
           Vuelos
           @if (selectedFlight) {
@@ -156,12 +144,7 @@
           </span>
           }
         </button>
-        <button 
-          class="nav-link" 
-          id="hotels-tab" 
-          data-bs-toggle="tab" 
-          data-bs-target="#hotels-pane" 
-          type="button" 
+        <button class="nav-link" id="hotels-tab" data-bs-toggle="tab" data-bs-target="#hotels-pane" type="button"
           role="tab">
           <i class="bi bi-building me-2"></i>
           Hoteles
@@ -176,48 +159,36 @@
       <!-- TAB CONTENT -->
       <div class="tab-content" id="packageTabsContent">
         <!-- VUELOS TAB -->
-        <div 
-          class="tab-pane fade show active" 
-          id="flights-pane" 
-          role="tabpanel" 
-          tabindex="0">
+        <div class="tab-pane fade show active" id="flights-pane" role="tabpanel" tabindex="0">
           <div class="results-header">
             <div class="container py-4">
-            <h3 class="results-title">
-              <i class="bi bi-airplane me-2"></i>
-              Selecciona tu vuelo
-            </h3>
-            <p>{{ originCity.name }} → {{ destinationCity.name }}</p>
+              <h3 class="results-title">
+                <i class="bi bi-airplane me-2"></i>
+                Selecciona tu vuelo
+              </h3>
+              <p>{{ originCity.name }} → {{ destinationCity.name }}</p>
             </div>
           </div>
-          
-          <app-deviaje-flight-results
-            [inPackageMode]="true"
-            [searchParams]="flightSearchRequest"
+
+          <app-deviaje-flight-results [inPackageMode]="true" [searchParams]="flightSearchRequest"
             (flightSelected)="onFlightSelected($event)">
           </app-deviaje-flight-results>
         </div>
 
         <!-- HOTELES TAB -->
-        <div 
-          class="tab-pane fade" 
-          id="hotels-pane" 
-          role="tabpanel" 
-          tabindex="0">
+        <div class="tab-pane fade" id="hotels-pane" role="tabpanel" tabindex="0">
           <div class="results-header">
             <div class="container py-4">
-            <h3 class="results-title">
-              <i class="bi bi-building me-2"></i>
-              Selecciona tu hotel
-            </h3>
-            <p>{{ hotelDestinationCity.name }}</p>
+              <h3 class="results-title">
+                <i class="bi bi-building me-2"></i>
+                Selecciona tu hotel
+              </h3>
+              <p>{{ hotelDestinationCity.name }}</p>
             </div>
           </div>
-          
-          <app-deviaje-hotels-results
-            [inPackageMode]="true"
-            [searchParams]="hotelSearchRequest"
-            (hotelSelected)="onHotelSelected($event)">
+
+          <app-deviaje-hotels-results [inPackageMode]="true" [searchParams]="hotelSearchRequest"
+            [destinationCity]="hotelDestinationCity" (hotelSelected)="onHotelSelected($event)">
           </app-deviaje-hotels-results>
         </div>
       </div>
@@ -229,7 +200,7 @@
   <div class="floating-action d-md-none">
     <button class="btn btn-primary btn-lg w-100" (click)="proceedToBooking()">
       <i class="bi bi-credit-card me-2"></i>
-      Reservar paquete - {{ formatPrice(getTotalPrice()) }}
+      Reservar paquete - {{ getTotalPrice() | currency:('ARS') }}
     </button>
   </div>
   }

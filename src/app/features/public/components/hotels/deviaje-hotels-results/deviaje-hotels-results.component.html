@@ -1,4 +1,4 @@
-<div>
+<div class="pt-4">
     <!-- Header con información de la búsqueda (solo mostrar si no está en modo paquete) -->
 
     <header class="results-header">
@@ -19,7 +19,7 @@
                         </span>
                     </div>
                 </div>
-                <div class="col-md-4 text-md-end">
+                <div class="col-md-4 text-center text-md-end">
                     <button class="btn btn-outline mt-2 mt-md-0" routerLink="/home/hotels/search">
                         <i class="bi bi-arrow-left"></i> Modificar búsqueda
                     </button>
@@ -63,13 +63,32 @@
                         <h6 class="filter-section-title">Categoría</h6>
                         @for (category of categoryFilters; track category.value) {
                         <div class="form-check py-1">
-                            <input type="checkbox" class="form-check-input me-2" [value]="category.value"
-                                [checked]="selectedCategories.includes(category.value)"
+                            <input type="checkbox" class="form-check-input me-2" [id]="'cat-' + category.value"
+                                [value]="category.value" [checked]="selectedCategories.includes(category.value)"
                                 (change)="onCategoryChange(category.value, $event)">
-                            <label class="form-check-label">{{ category.label }}</label>
+                            <label class="form-check-label" [for]="'cat-' + category.value">
+                                {{ category.label }}
+                            </label>
                         </div>
                         }
                     </div>
+
+                    <!-- Filtro de zonas -->
+                    @if (zoneFilters.length > 0) {
+                    <div class="filter-section">
+                        <h6 class="filter-section-title">Zona</h6>
+                        @for (zone of zoneFilters; track zone.value) {
+                        <div class="form-check py-1">
+                            <input type="checkbox" class="form-check-input me-2" [id]="'zone-' + zone.value"
+                                [value]="zone.value" [checked]="selectedZones.includes(zone.value)"
+                                (change)="onZoneChange(zone.value, $event)">
+                            <label class="form-check-label" [for]="'zone-' + zone.value">
+                                {{ zone.label }}
+                            </label>
+                        </div>
+                        }
+                    </div>
+                    }
                 </div>
             </div>
 
@@ -93,10 +112,10 @@
 
                     <div class="mobile-filters-content">
                         <!-- Filtro de precio -->
-                        <div class="filter-section">
+                        <div class="filter-section mb-3">
                             <h3 class="filter-section-title">Precio</h3>
                             <div class="price-range">
-                                <div class="price-slider mb-3">
+                                <div class="price-slider mb-2">
                                     <input type="range" class="form-range" min="{{ priceRange.min }}"
                                         max="{{ priceRange.max }}" [(ngModel)]="priceRange.current"
                                         (change)="applyFilters()">
@@ -109,22 +128,42 @@
                         </div>
 
                         <!-- Filtro de categorías -->
-                        <div class="filter-section">
+                        <div class="filter-section mb-3">
                             <h3 class="filter-section-title">Categoría del hotel</h3>
                             <div class="categories-filter">
                                 @for (category of categoryFilters; track category.value) {
                                 <div class="form-check py-1">
                                     <input class="form-check-input me-2" type="checkbox"
-                                        id="mobile-category-{{ category.value }}" [value]="category.value"
+                                        [id]="'mobile-cat-' + category.value" [value]="category.value"
                                         [checked]="selectedCategories.includes(category.value)"
                                         (change)="onCategoryChange(category.value, $event)">
-                                    <label class="form-check-label" for="mobile-category-{{ category.value }}">
+                                    <label class="form-check-label" [for]="'mobile-cat-' + category.value">
                                         {{ category.label }}
                                     </label>
                                 </div>
                                 }
                             </div>
                         </div>
+
+                        <!-- Filtro de zonas -->
+                        @if (zoneFilters.length > 0) {
+                        <div class="filter-section">
+                            <h3 class="filter-section-title">Zona</h3>
+                            <div class="zones-filter">
+                                @for (zone of zoneFilters; track zone.value) {
+                                <div class="form-check py-1">
+                                    <input class="form-check-input me-2" type="checkbox"
+                                        [id]="'mobile-zone-' + zone.value" [value]="zone.value"
+                                        [checked]="selectedZones.includes(zone.value)"
+                                        (change)="onZoneChange(zone.value, $event)">
+                                    <label class="form-check-label" [for]="'mobile-zone-' + zone.value">
+                                        {{ zone.label }}
+                                    </label>
+                                </div>
+                                }
+                            </div>
+                        </div>
+                        }
                     </div>
 
                     <div class="mobile-filters-footer">
@@ -206,34 +245,56 @@
                         <!-- Información del hotel -->
                         <div class="col-md-8">
                             <div class="card-body">
-                                <div class="d-flex justify-content-between">
+                                <div class="d-flex justify-content-between align-items-start">
                                     <h5 class="card-title">{{ hotel.name }}</h5>
-                                    <!-- Cambiar la sección de estrellas por: -->
-                                    <div class="hotel-stars mb-2">
-                                        @if (getCategoryStars(hotel.categoryName || '') > 0) {
-                                        @for (i of [1, 2, 3, 4, 5]; track i) {
-                                        <i class="bi bi-star-fill"
-                                            [class.text-warning]="i <= getCategoryStars(hotel.categoryName || '')"
-                                            [class.text-muted]="i > getCategoryStars(hotel.categoryName || '')"></i>
+
+                                    <!-- Mostrar categoría con estrellas o badge -->
+                                    @let display = getCategoryDisplay(hotel.categoryCode || '', hotel.categoryName
+                                    ||'');
+
+                                    <div class="hotel-category">
+                                        @if (display.type === 'stars') {
+                                        <div class="d-flex align-items-center">
+                                            <div class="stars-container">
+                                                @for (star of [].constructor(display.stars); track $index) {
+                                                <i class="bi bi-star-fill text-warning"></i>
+                                                }
+                                                @if (display.isHalf) {
+                                                <i class="bi bi-star-half text-warning"></i>
+                                                }
+                                            </div>
+                                            @if (display.isLuxury) {
+                                            <span class="badge rounded-pill bg-gold text-dark ms-2">LUJO</span>
+                                            }
+                                            @if (display.isSuperior) {
+                                            <span class="badge rounded-pill bg-primary ms-2">SUPERIOR</span>
+                                            }
+                                        </div>
                                         }
-                                        } @else {
-                                        <span class="badge bg-secondary">{{ hotel.categoryName }}</span>
+
+                                        @if (display.type === 'badge') {
+                                        <span class="badge rounded-pill" [ngClass]="display.badgeClass">
+                                            {{ display.badgeText }}
+                                        </span>
                                         }
                                     </div>
                                 </div>
 
                                 <p class="card-text location">
-                                    <i class="bi bi-geo-alt"></i> {{ hotel.destinationCode }}
+                                    <i class="bi bi-geo-alt"></i> {{ hotel?.zoneName }},
+                                    {{ hotel?.destinationName }}
                                 </p>
 
                                 <!-- Precio y acciones -->
-                                <div class="price-booking mt-3">
+                                <div class="price-booking mt-2">
                                     <div class="price">
-                                        <div class="price-details">
-                                            <div class="price-label">Precio desde</div>
-                                        </div>
+                                        <div class="price-label">Precio desde</div>
                                         <div class="price-amount">{{ hotelService.convertToArs(getMinRoomPrice(hotel)) |
-                                            currency:(searchParams?.currency || 'USD') }}</div>
+                                            currency:(searchParams?.currency || 'USD') }}
+                                        </div>
+                                        <div class="price-details">
+                                            {{ getTotalGuests() }} {{ getTotalGuests() === 1 ? 'huésped' : 'huéspedes'}}
+                                        </div>
                                     </div>
 
                                     <div class="action-buttons">
@@ -264,7 +325,7 @@
                             </a>
                         </li>
 
-                        @for (page of getVisiblePages(); track page) {
+                        @for (page of getVisiblePages(); track $index) {
                         @if (isPageNumber(page)) {
                         <li class="page-item" [class.active]="currentPage === page">
                             <a class="page-link" (click)="changePage(page)">{{ page }}</a>
@@ -296,7 +357,7 @@
     <div class="modal-content">
         <app-deviaje-hotel-detail [inPackageMode]="true" [packageHotel]="selectedHotelForDetail"
             [packageSearchParams]="searchParams" (hotelAndRoomSelected)="onHotelAndRoomSelected($event)"
-            (modalClosed)="closeDetailModal()">
+            [destinationCity]="destinationCity" (modalClosed)="closeDetailModal()">
         </app-deviaje-hotel-detail>
     </div>
 </div>

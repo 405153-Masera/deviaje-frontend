@@ -1,72 +1,75 @@
-<section class="container">
-    <div class="search-panel">
-        <div class="search-header">
-            <h2 class="search-title">¿Dónde te gustaría hospedarte?</h2>
+<div class="hero-background">
+    <section class="container py-2">
+        <div class="search-panel">
+            <div class="search-header">
+                <h2 class="search-title">¿Dónde te gustaría hospedarte?</h2>
+            </div>
+
+            <form [formGroup]="formSearch" class="search-form">
+
+                <div class="row mb-md-0 mb-2">
+                    <div class="col-md mb-2">
+                        <app-deviaje-city-input label="Destino" formControlName="destination"
+                            mode="hotel"></app-deviaje-city-input>
+                        <span class="error-message"
+                            [class.visible]="formSearch.get('destination')?.invalid && formSearch.get('destination')?.touched">
+                            Por favor seleccione un destino
+                        </span>
+                    </div>
+
+                    <div class="col-md mb-3">
+                        <app-deviaje-room-guest-select [occupancies]="occupancies"
+                            (occupanciesChanged)="handleOccupanciesChanged($event)">
+                        </app-deviaje-room-guest-select>
+                    </div>
+                </div>
+
+                <div class="row mb-2">
+                    <div class="col-md">
+                        <label class="mb-1" for="checkin">Fecha de entrada</label>
+                        <div class="input-with-icon date-input">
+                            <i class="bi bi-calendar3"></i>
+                            <input id="checkin" type="text" placeholder="dd/mm/aaaa" class="date-picker-trigger"
+                                [value]="formSearch.get('checkInDate')?.value | dateFormat" readonly
+                                (click)="openCalendar('checkin')" (keydown.enter)="openCalendar('checkin')"
+                                (keydown.space)="openCalendar('checkin')">
+                        </div>
+                        <span class="error-message"
+                            [class.visible]="formSearch.get('checkInDate')?.invalid && formSearch.get('checkInDate')?.touched">
+                            La fecha de entrada es obligatoria
+                        </span>
+                    </div>
+
+                    <div class="col-md">
+                        <label class="mb-1" for="checkout">Fecha de salida</label>
+                        <div class="input-with-icon date-input">
+                            <i class="bi bi-calendar3"></i>
+                            <input id="checkout" type="text" placeholder="dd/mm/aaaa" class="date-picker-trigger"
+                                [value]="formSearch.get('checkOutDate')?.value | dateFormat" readonly
+                                (click)="openCalendar('checkout')" (keydown.enter)="openCalendar('checkout')"
+                                (keydown.space)="openCalendar('checkout')">
+                        </div>
+                        <span class="error-message"
+                            [class.visible]="formSearch.get('checkOutDate')?.invalid && formSearch.get('checkOutDate')?.touched">
+                            La fecha de salida es obligatoria
+                        </span>
+                    </div>
+                </div>
+
+                <div class="row mt-3">
+                    <div class="col-md d-flex justify-content-end">
+                        <button type="button" class="btn-search" (click)="searchHotels()">
+                            <span>Buscar hoteles</span>
+                            <i class="bi bi-search"></i>
+                        </button>
+                    </div>
+                </div>
+            </form>
+
+
         </div>
-
-        <form [formGroup]="formSearch" class="search-form">
-            
-            <div class="row">
-                <div class="col-md mb-2">
-                    <app-deviaje-city-input label="Destino" formControlName="destination" mode="hotel"></app-deviaje-city-input>
-                    <span class="error-message"
-                        [class.visible]="formSearch.get('destination')?.invalid && formSearch.get('destination')?.touched">
-                        Por favor seleccione un destino
-                    </span>
-                </div>
-
-                <div class="col-md">
-                    <app-deviaje-room-guest-select [occupancies]="occupancies"
-                        (occupanciesChanged)="handleOccupanciesChanged($event)">
-                    </app-deviaje-room-guest-select>
-                </div>
-            </div>
-
-            <div class="row mb-3">
-                  <div class="col-md">
-                    <label class="mb-1" for="checkin">Fecha de entrada</label>
-                    <div class="input-with-icon date-input">
-                        <i class="bi bi-calendar3"></i>
-                        <input id="checkin" type="text" placeholder="dd/mm/aaaa" class="date-picker-trigger"
-                            [value]="formSearch.get('checkInDate')?.value | dateFormat" readonly
-                            (click)="openCalendar('checkin')" (keydown.enter)="openCalendar('checkin')"
-                            (keydown.space)="openCalendar('checkin')">
-                    </div>
-                    <span class="error-message"
-                        [class.visible]="formSearch.get('checkInDate')?.invalid && formSearch.get('checkInDate')?.touched">
-                        La fecha de entrada es obligatoria
-                    </span>
-                </div>
-
-                <div class="col-md">
-                    <label class="mb-1" for="checkout">Fecha de salida</label>
-                    <div class="input-with-icon date-input">
-                        <i class="bi bi-calendar3"></i>
-                        <input id="checkout" type="text" placeholder="dd/mm/aaaa" class="date-picker-trigger"
-                            [value]="formSearch.get('checkOutDate')?.value | dateFormat" readonly 
-                            (click)="openCalendar('checkout')" (keydown.enter)="openCalendar('checkout')"
-                            (keydown.space)="openCalendar('checkout')">
-                    </div>
-                    <span class="error-message"
-                        [class.visible]="formSearch.get('checkOutDate')?.invalid && formSearch.get('checkOutDate')?.touched">
-                        La fecha de salida es obligatoria
-                    </span>
-                </div>
-            </div>
-
-            <div class="row mt-3">
-                <div class="col-md d-flex justify-content-end">
-                    <button type="button" class="btn-search" (click)="searchHotels()">
-                        <span>Buscar hoteles</span>
-                        <i class="bi bi-search"></i>
-                    </button>
-                </div>
-            </div>
-        </form>
-
-
-    </div>
-</section>
+    </section>
+</div>
 
 <app-deviaje-calendar selectionMode="range" [minDate]="minDate" [initialStartDate]="checkInDate"
     [initialEndDate]="checkOutDate" [showTwoMonths]="true" [showPrices]="false"

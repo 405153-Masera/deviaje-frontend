@@ -3,6 +3,7 @@ import {
   EventEmitter,
   inject,
   Input,
+  OnDestroy,
   OnInit,
   Output,
 } from '@angular/core';
@@ -33,7 +34,7 @@ import { environment } from '../../../../../shared/enviroments/enviroment';
   templateUrl: './deviaje-hotels-results.component.html',
   styleUrl: './deviaje-hotels-results.component.scss',
 })
-export class DeviajeHotelsResultsComponent implements OnInit {
+export class DeviajeHotelsResultsComponent implements OnInit, OnDestroy {
   private readonly router: Router = inject(Router);
   hotelService: HotelService = inject(HotelService);
   private sanitizer: DomSanitizer = inject(DomSanitizer);
@@ -55,20 +56,13 @@ export class DeviajeHotelsResultsComponent implements OnInit {
   selectedHotelForDetail: HotelSearchResponse.Hotel | null = null;
   showDetailModal: boolean = false;
 
-  // Resultados y filtros
+  //Mapas de hoteles para Google Maps
+  hotelMapsUrls: Map<string, SafeResourceUrl> = new Map();
+
+  // Resultados
   searchResults: HotelSearchResponse | null = null;
   filteredHotels: HotelSearchResponse.Hotel[] = [];
-  destinationCity: CityDto | null = null;
-
-  // Por:
-  categoryFilters = [
-    { value: '5', label: '5 estrellas' },
-    { value: '4', label: '4 estrellas' },
-    { value: '3', label: '3 estrellas' },
-    { value: '2', label: '2 estrellas' },
-    { value: '1', label: '1 estrellas' },
-    { value: 'other', label: 'Otros' },
-  ];
+  @Input() destinationCity: CityDto | null = null;
 
   // Estado de carga
   isLoading: boolean = false;
@@ -81,6 +75,18 @@ export class DeviajeHotelsResultsComponent implements OnInit {
     max: 10000,
     current: 10000,
   };
+
+  // Zonas extraídas dinámicamente de los resultados
+  availableZones: { zoneCode: number; zoneName: string }[] = [];
+  zoneFilters: { value: number; label: string }[] = [];
+  selectedZones: number[] = [];
+
+  // Filtros de categorías (se generan dinámicamente)
+  categoryFilters: { value: string; label: string }[] = [];
+
+  // Categorías extraídas dinámicamente de los resultados
+  availableCategories: { categoryCode: string; categoryName: string }[] = [];
+
   selectedCategories: string[] = [];
   sortOption: string = 'price_asc';
   showFilters: boolean = false;
@@ -183,6 +189,12 @@ export class DeviajeHotelsResultsComponent implements OnInit {
     if (response && response.hotels && response.hotels.hotels) {
       const hotels = response.hotels.hotels;
 
+      // Extraer categorías únicas
+      this.extractUniqueCategories();
+
+      // Extraer zonas únicas
+      this.extractUniqueZones();
+
       // Inicializar filtros
       this.initializeFilters(hotels);
 
@@ -213,6 +225,7 @@ export class DeviajeHotelsResultsComponent implements OnInit {
 
     if (
       this.selectedCategories.length === 0 &&
+      this.selectedZones.length === 0 &&
       this.priceRange.current === this.priceRange.max
     ) {
       this.filteredHotels = [...(this.searchResults?.hotels?.hotels || [])];
@@ -231,14 +244,14 @@ export class DeviajeHotelsResultsComponent implements OnInit {
     // Filtrar por categorías seleccionadas
     if (this.selectedCategories && this.selectedCategories.length > 0) {
       filtered = filtered.filter((hotel) => {
-        const stars = this.getCategoryStars(hotel.categoryName || '');
+        return this.selectedCategories.includes(hotel.categoryCode || '');
+      });
+    }
 
-        return this.selectedCategories.some((category) => {
-          if (category === 'other') {
-            return stars === 0; // Sin estrellas = "Otros"
-          }
-          return stars.toString() === category;
-        });
+    // Filtrar por zonas seleccionadas
+    if (this.selectedZones && this.selectedZones.length > 0) {
+      filtered = filtered.filter((hotel) => {
+        return this.selectedZones.includes(hotel.zoneCode);
       });
     }
 
@@ -271,6 +284,89 @@ export class DeviajeHotelsResultsComponent implements OnInit {
     }
   }
 
+  /**
+   * Extrae las categorías únicas de los hoteles recibidos
+   */
+  extractUniqueCategories(): void {
+    if (!this.searchResults?.hotels?.hotels) return;
+
+    const uniqueCategories = new Map<
+      string,
+      { categoryCode: string; categoryName: string }
+    >();
+
+    this.searchResults.hotels.hotels.forEach((hotel) => {
+      if (hotel.categoryCode && hotel.categoryName) {
+        uniqueCategories.set(hotel.categoryCode, {
+          categoryCode: hotel.categoryCode,
+          categoryName: hotel.categoryName,
+        });
+      }
+    });
+
+    // Convertir a array y ordenar por código
+    this.availableCategories = Array.from(uniqueCategories.values()).sort(
+      (a, b) => {
+        // Función auxiliar para extraer prioridad de ordenamiento
+        const getPriority = (
+          code: string
+        ): { group: number; value: number } => {
+          // Grupo 1: Estrellas (1EST, H1_5, 2EST, H2_5, ...)
+          if (code.includes('EST') || code.match(/^H\d_5$/)) {
+            const stars = code.match(/(\d)/);
+            const isMedio = code.includes('_5');
+            return {
+              group: 1,
+              value: stars ? parseInt(stars[1]) * 10 + (isMedio ? 5 : 0) : 0,
+            };
+          }
+
+          // Grupo 2: Llaves (1LL, 2LL, ...)
+          if (code.includes('LL')) {
+            const llaves = code.match(/(\d)/);
+            return {
+              group: 2,
+              value: llaves ? parseInt(llaves[1]) * 10 : 0,
+            };
+          }
+
+          // Grupo 3: Otros (alfabético)
+          return { group: 3, value: 0 };
+        };
+
+        const priorityA = getPriority(a.categoryCode);
+        const priorityB = getPriority(b.categoryName);
+
+        // Comparar por grupo primero
+        if (priorityA.group !== priorityB.group) {
+          return priorityA.group - priorityB.group;
+        }
+
+        // Dentro del mismo grupo, comparar por valor
+        if (priorityA.value !== priorityB.value) {
+          return priorityA.value - priorityB.value;
+        }
+
+        // Si son iguales, alfabético
+        return a.categoryCode.localeCompare(b.categoryCode);
+      }
+    );
+
+    // Generar filtros dinámicamente
+    this.generateCategoryFilters();
+
+    console.log('Categorías únicas encontradas:', this.availableCategories);
+  }
+
+  generateCategoryFilters(): void {
+    this.categoryFilters = this.availableCategories.map((category) => ({
+      value: category.categoryCode,
+      label: category.categoryName,
+    }));
+
+    console.log('Filtros generados:', this.categoryFilters);
+  }
+
   onCategoryChange(categoryValue: string, event: Event): void {
     const target = event.target as HTMLInputElement;
 
@@ -283,6 +379,25 @@ export class DeviajeHotelsResultsComponent implements OnInit {
       // Remover categoría si está
       this.selectedCategories = this.selectedCategories.filter(
         (cat) => cat !== categoryValue
+      );
+    }
+
+    // Aplicar filtros después del cambio
+    this.applyFilters();
+  }
+
+  onZoneChange(zoneCode: number, event: Event): void {
+    const target = event.target as HTMLInputElement;
+
+    if (target.checked) {
+      // Agregar zona si no está
+      if (!this.selectedZones.includes(zoneCode)) {
+        this.selectedZones.push(zoneCode);
+      }
+    } else {
+      // Remover zona si está
+      this.selectedZones = this.selectedZones.filter(
+        (zone) => zone !== zoneCode
       );
     }
 
@@ -304,6 +419,173 @@ export class DeviajeHotelsResultsComponent implements OnInit {
     return 0; // Para otros tipos como "LLAVES", "BOUTIQUE", etc.
   }
 
+  /**
+   * Extrae las zonas únicas de los hoteles recibidos
+   */
+  extractUniqueZones(): void {
+    if (!this.searchResults?.hotels?.hotels) return;
+
+    const uniqueZones = new Map<
+      number,
+      { zoneCode: number; zoneName: string }
+    >();
+
+    this.searchResults.hotels.hotels.forEach((hotel) => {
+      if (hotel.zoneCode && hotel.zoneName) {
+        uniqueZones.set(hotel.zoneCode, {
+          zoneCode: hotel.zoneCode,
+          zoneName: hotel.zoneName,
+        });
+      }
+    });
+
+    // Convertir a array y ordenar alfabéticamente por nombre
+    this.availableZones = Array.from(uniqueZones.values()).sort((a, b) =>
+      a.zoneName.localeCompare(b.zoneName)
+    );
+
+    // Generar filtros de zonas
+    this.generateZoneFilters();
+
+    console.log('Zonas únicas encontradas:', this.availableZones);
+  }
+
+  /**
+   * Genera los filtros de zonas basándose en las zonas disponibles
+   */
+  generateZoneFilters(): void {
+    this.zoneFilters = this.availableZones.map((zone) => ({
+      value: zone.zoneCode,
+      label: zone.zoneName,
+    }));
+
+    console.log('Filtros de zona generados:', this.zoneFilters);
+  }
+
+  /**
+   * Analiza una categoría y devuelve información para renderizar
+   */
+  getCategoryDisplay(
+    categoryCode: string,
+    categoryName: string
+  ): {
+    type: 'stars' | 'badge';
+    stars?: number;
+    isHalf?: boolean;
+    isLuxury?: boolean;
+    isSuperior?: boolean;
+    badgeText?: string;
+    badgeClass?: string;
+  } {
+    // ===== DETECTAR ESTRELLAS =====
+    // Códigos que contienen estrellas: EST, H*_5, LUX, SUP, H*S
+    const starsCodes = ['EST', 'LUX', 'SUP'];
+    const hasStarsCode =
+      starsCodes.some((code) => categoryCode.includes(code)) ||
+      categoryCode.match(/^H\d_5$/) ||
+      categoryCode.match(/^H\dS$/);
+
+    if (hasStarsCode || categoryName.includes('ESTRELLA')) {
+      // Extraer número de estrellas del nombre o código
+      let stars = 0;
+      const starsMatch = categoryName.match(/(\d+)\s*ESTRELLA/i);
+      if (starsMatch) {
+        stars = parseInt(starsMatch[1]);
+      } else {
+        // Si no está en el nombre, buscar en el código
+        const codeMatch = categoryCode.match(/(\d)/);
+        if (codeMatch) {
+          stars = parseInt(codeMatch[1]);
+        }
+      }
+
+      const isHalf =
+        categoryName.includes('MEDIA') || categoryCode.includes('_5');
+      const isLuxury =
+        categoryName.includes('LUJO') || categoryCode.includes('LUX');
+      const isSuperior =
+        categoryName.includes('SUPERIOR') ||
+        categoryCode === 'SUP' ||
+        !!categoryCode.match(/^H\dS$/);
+
+      return {
+        type: 'stars',
+        stars: stars,
+        isHalf: isHalf,
+        isLuxury: isLuxury,
+        isSuperior: isSuperior,
+      };
+    }
+
+    // ===== DETECTAR LLAVES =====
+    if (categoryCode.includes('LL')) {
+      const llavesMatch = categoryName.match(/(\d+)\s*LLAVE/i);
+      if (llavesMatch) {
+        return {
+          type: 'badge',
+          badgeText: `${llavesMatch[1]} 🔑`,
+          badgeClass: 'bg-warning text-dark',
+        };
+      }
+    }
+
+    // ===== CATEGORÍAS ESPECIALES CON BADGES =====
+    const specialCategories: {
+      [key: string]: { text: string; class: string };
+    } = {
+      // Boutique y especiales
+      BOU: { text: 'BOUTIQUE', class: 'bg-purple' },
+      HIST: { text: 'HISTÓRICO DE LUJO', class: 'bg-dark' },
+
+      // Rurales y naturaleza
+      AG: { text: 'AGROTURISMO', class: 'bg-success' },
+      HR: { text: 'HOTEL RURAL', class: 'bg-success' },
+
+      // Resorts y villas
+      RSORT: { text: 'RESORT', class: 'bg-primary' },
+      VILLA: { text: 'VILLA', class: 'bg-info' },
+      POUSA: { text: 'POUSADA', class: 'bg-info' },
+
+      // B&B y apartamentos
+      BB: { text: 'BED & BREAKFAST', class: 'bg-secondary' },
+      APTH: { text: 'APARTOTEL', class: 'bg-info' },
+      AT: { text: 'APARTAMENTO', class: 'bg-info' },
+      VTV: { text: 'VIVIENDA TURÍSTICA', class: 'bg-info' },
+
+      // Económicos
+      ALBER: { text: 'ALBERGUE', class: 'bg-light text-dark' },
+      PENSI: { text: 'PENSIÓN', class: 'bg-light text-dark' },
+      HS: { text: 'HOSTAL', class: 'bg-purple' },
+      CHUES: { text: 'CASA DE HUÉSPEDES', class: 'bg-light text-dark' },
+
+      // Otros
+      CAMP: { text: 'CAMPING', class: 'bg-success' },
+      LODGE: { text: 'LODGE', class: 'bg-success' },
+      RESID: { text: 'RESIDENCIA', class: 'bg-secondary' },
+      STD: { text: 'ESTÁNDAR', class: 'bg-secondary' },
+      SPC: { text: 'SIN CATEGORÍA', class: 'bg-light text-dark' },
+      PENDI: { text: 'PENDIENTE', class: 'bg-warning text-dark' },
+    };
+
+    // Buscar coincidencia en el código (busca parcialmente)
+    for (const [key, value] of Object.entries(specialCategories)) {
+      if (categoryCode.toUpperCase().includes(key)) {
+        return {
+          type: 'badge',
+          badgeText: value.text,
+          badgeClass: value.class,
+        };
+      }
+    }
+
+    // Por defecto, mostrar el nombre como badge genérico
+    return {
+      type: 'badge',
+      badgeText: categoryName,
+      badgeClass: 'bg-secondary',
+    };
+  }
+
   resetFilters(): void {
     if (
       this.searchResults &&
@@ -311,6 +593,7 @@ export class DeviajeHotelsResultsComponent implements OnInit {
       this.searchResults.hotels.hotels
     ) {
       this.initializeFilters(this.searchResults.hotels.hotels);
+      this.selectedZones = [];
       this.applyFilters();
     }
   }
@@ -382,13 +665,6 @@ export class DeviajeHotelsResultsComponent implements OnInit {
 
   //####################### METÓDOS PARA DETALLES DE LOS HOTELES ######################
   showHotelDetails(hotel: HotelSearchResponse.Hotel): void {
-    console.log(
-      'Mostrando detalles del hotel:',
-      hotel.name,
-      'Modo paquete:',
-      this.inPackageMode
-    );
-    // Depura
     if (this.inPackageMode) {
       // En modo paquete, mostrar modal
       this.selectedHotelForDetail = hotel;
@@ -399,7 +675,11 @@ export class DeviajeHotelsResultsComponent implements OnInit {
         return; // Evitar navegar si no hay code
       }
       this.router.navigate(['/home/hotels/detail', hotel.code], {
-        state: { hotel, searchParams: this.searchParams },
+        state: {
+          hotel,
+          searchParams: this.searchParams,
+          destination: this.destinationCity,
+        },
       });
     }
   }
@@ -427,13 +707,27 @@ export class DeviajeHotelsResultsComponent implements OnInit {
 
   // Obtener URL de Google Maps para el hotel
   getGoogleMapsUrl(hotel: HotelSearchResponse.Hotel): SafeResourceUrl {
-   
+    if (this.hotelMapsUrls.has(hotel.code)) {
+      console.log('Aca llamamos al mapa ya generado');
+      return this.hotelMapsUrls.get(hotel.code)!;
+    }
+
+    // Si no está, generarlo y guardarlo
+    const url = this.createGoogleMapsUrl(hotel);
+    this.hotelMapsUrls.set(hotel.code, url);
+    return url;
+  }
+
+  private createGoogleMapsUrl(
+    hotel: HotelSearchResponse.Hotel
+  ): SafeResourceUrl {
     const apiKey = environment.googleMaps.apiKey;
-    
+
     // Si el hotel tiene coordenadas, usarlas
     if (hotel.latitude && hotel.longitude) {
       const lat = hotel.latitude;
       const lng = hotel.longitude;
+      console.log('Hotel coordinates:', lat, lng);
       return this.sanitizer.bypassSecurityTrustResourceUrl(
         `https://www.google.com/maps/embed/v1/place?key=${apiKey}&q=${lat},${lng}&zoom=15`
       );

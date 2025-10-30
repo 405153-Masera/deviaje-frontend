@@ -29,6 +29,9 @@ export interface HotelSearchRequest {
 export interface HotelSearchResponse {
   hotels: {
     hotels: HotelSearchResponse.Hotel[];
+    checkIn: string; 
+    checkOut: string;
+    total: number;
   };
 }
 
@@ -39,10 +42,14 @@ export namespace HotelSearchResponse {
     categoryCode: string;
     categoryName: string;
     destinationCode: string;
+    destinationName: string;
+    zoneCode: number;
+    zoneName: string;
     latitude: number;
     longitude: number;
     rooms: Room[];
     minRate: number;
+    maxRate: number;
     currency: string;
   }
 
@@ -57,23 +64,26 @@ export namespace HotelSearchResponse {
     rateClass: string;
     rateType: string;
     net: number;
-    discount?: number;
-    // Nuevas propiedades agregadas
-    adults?: number;
-    children?: number;
-    childrenAges?: string; // Edades separadas por comas "10,8"
-    rooms?: number;
     allotment?: number;
     rateCommentsId?: string;
     paymentType?: string;
     packaging?: boolean;
-    offers?: Offer[];
-    // Propiedades existentes
-    cancellationPolicies?: CancellationPolicy[];
     boardCode?: string;
     boardName?: string;
-    taxes?: Tax[];
+    cancellationPolicies?: CancellationPolicy[];
+    rooms?: number;
+    adults?: number;
+    children?: number;
+    childrenAges?: string;
+    offers?: Offer[];
   }
+
+  export interface Promotion {
+    code: string;
+    name: string;
+    remark: string;
+  }
+
 
   export interface Offer {
     code: string;

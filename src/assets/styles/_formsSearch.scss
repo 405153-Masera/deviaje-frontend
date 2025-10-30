@@ -3,14 +3,47 @@
 //############ Formularios de busqueda ############
 
 .search-panel {
+  background: rgba(255, 255, 255, 0.65);
+  backdrop-filter: blur(0px); /* Efecto vidrio */
   border-radius: $border-radius-lg;
-  box-shadow: $box-shadow;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
   position: relative; 
   transition: $transition-normal;
+  margin-left: 2rem;
+  margin-right: 2rem;
+  color: $gray-800;
+  font-weight: 500;
 
   &:hover {
-    box-shadow: $hover-shadow;
+    box-shadow: 0 8px 28px rgba(0, 0, 0, 0.2);
     transform: translateY(-2px);
+  }
+}
+
+// Wrapper con imagen de fondo que escapa del container
+.hero-background {
+  position: relative;
+  width: 100vw;
+  margin-left: calc(-50vw + 50%);
+  min-height: 500px;
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  padding: 4rem 1rem;
+
+  &::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.3);
+    z-index: 1;
+  }
+
+  section {
+    position: relative;
+    z-index: 2;
+    padding: 0 !important;
+    margin-top: 0 !important;
   }
 }
 
@@ -118,6 +151,11 @@
 
 // Estilos para dispositivos móviles
 @include mobile {
+
+  .search-panel {
+    margin-left: 0;
+    margin-right: 0;
+  }
   .search-box {
     padding: 15px;
   }

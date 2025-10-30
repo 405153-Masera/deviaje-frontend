@@ -1,7 +1,7 @@
 @import "../styles/variables";
 
 // Estilos base para inputs
-input,
+input:not([type="checkbox"]),
 select,
 textarea {
   width: 100%;
@@ -131,7 +131,8 @@ select {
 // Mensaje de error para campos inválidos
 .error-message {
   color: $tertiary-color;
-  font-size: 0.8rem;
+  font-size: 0.9rem;
+  font-weight: 700;
   margin-top: 0.25rem;
   display: block;
   visibility: hidden;

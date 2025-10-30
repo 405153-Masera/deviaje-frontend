@@ -576,3 +576,70 @@
     transform: rotate(360deg);
   }
 }
+
+// Estilos para badges de categorías
+.bg-purple {
+  background-color: #6f42c1 !important;
+  color: white !important;
+}
+
+.bg-gold {
+  background-color: #ffd700 !important;
+  color: #000 !important;
+}
+
+// Mejorar espaciado de labels con badges
+.form-check-label {
+  cursor: pointer;
+  user-select: none;
+  
+  .badge {
+    font-size: 0.75rem;
+    padding: 0.25rem 0.5rem;
+  }
+}
+
+// Estilos para categorías en tarjetas
+.hotel-category {
+  .stars-container {
+    display: inline-flex;
+    gap: 2px;
+    
+    i {
+      font-size: 1rem;
+    }
+  }
+
+  .badge {
+    font-size: 0.75rem;
+    padding: 0.35rem 0.65rem;
+    font-weight: 600;
+    white-space: nowrap;
+  }
+}
+
+// Colores para badges
+.bg-purple {
+  background-color: #6f42c1 !important;
+  color: white !important;
+}
+
+.bg-gold {
+  background-color: #ffd700 !important;
+  color: #000 !important;
+  font-weight: 700;
+}
+
+// Mejorar responsive de la categoría
+@media (max-width: 768px) {
+  .hotel-category {
+    .stars-container i {
+      font-size: 0.85rem;
+    }
+    
+    .badge {
+      font-size: 0.65rem;
+      padding: 0.25rem 0.5rem;
+    }
+  }
+}

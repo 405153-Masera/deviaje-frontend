@@ -82,6 +82,7 @@ export class DeviajeFlightBookingComponent implements OnInit, OnDestroy {
   showSuccessMessage = false;
   bookingReference = '';
   errorMessage = '';
+  userErrorMessage = '';
   isLoggedIn: boolean = false;
   userRole: string = '';
 
@@ -225,15 +226,8 @@ export class DeviajeFlightBookingComponent implements OnInit, OnDestroy {
     this.selectedClientId = null;
   }
 
-  onUserSelected(clientId: string): void {
-    this.selectedClientId = clientId;
-    this.isGuestBooking = false;
-  }
-
   prefillUserData(userData: UserData): void {
     if (!userData) return;
-
-    console.log('Llenando datos del usuario:', userData);
 
     const firstTraveler = this.travelers.at(0) as FormGroup;
     if (firstTraveler) {
@@ -254,7 +248,7 @@ export class DeviajeFlightBookingComponent implements OnInit, OnDestroy {
         if (phonesArray && phonesArray.length > 0) {
           phonesArray.at(0)?.patchValue({
             deviceType: 'MOBILE',
-            countryCallingCode: '+' + userData.countryCallingCode || '',
+            countryCallingCode: userData.countryCallingCode || '',
             number: userData.phone || '',
           });
         }
@@ -266,7 +260,7 @@ export class DeviajeFlightBookingComponent implements OnInit, OnDestroy {
           documentsArray.at(0)?.patchValue({
             documentType: 'PASSPORT',
             number: userData.passport.passportNumber || '',
-            expiryDate: userData.passport.expiryDate || '',
+            expiryDate: userData.passport.expiryDate,
             issuanceCountry: userData.passport.issuanceCountry || 'AR',
             nationality: userData.passport.nationality || 'AR',
           });
@@ -296,23 +290,22 @@ export class DeviajeFlightBookingComponent implements OnInit, OnDestroy {
     if (!username.trim()) return;
 
     if (username === this.currentUser?.username) {
-      this.errorMessage = 'No puedes reservar para ti mismo siendo agente';
+      this.userErrorMessage = 'No puedes reservar para ti mismo siendo agente';
       return;
     }
+    this.userErrorMessage = '';
 
     this.userService.getUserByUsername(username).subscribe({
       next: (userData) => {
-        console.log('Usuario encontrado:', userData);
         this.selectedClientId = userData.id.toString();
         this.isGuestBooking = false;
         this.clearTravelersForm();
         this.prefillUserData(userData);
 
-        this.errorMessage = '';
+        this.userErrorMessage = '';
       },
-      error: (error) => {
-        console.error('Usuario no encontrado:', error);
-        this.errorMessage =
+      error: () => {
+        this.userErrorMessage =
           'Usuario no encontrado. Verifica el nombre de usuario.';
         this.selectedClientId = null;
         this.clearTravelersForm();

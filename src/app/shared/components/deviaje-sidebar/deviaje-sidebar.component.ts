@@ -42,7 +42,7 @@ export class DeviajeSidebarComponent implements OnInit, OnDestroy {
       route: '/home/packages/search',
       isSelected: false,
     },
-    { icon: 'tours', label: 'Tours', route: '/tours', isSelected: false },
+    //{ icon: 'tours', label: 'Tours', route: '/tours', isSelected: false },
   ];
 
   clientMenuItems: MenuItem[] = [
@@ -65,7 +65,7 @@ export class DeviajeSidebarComponent implements OnInit, OnDestroy {
       route: '/home/packages/search',
       isSelected: false,
     },
-    { icon: 'tours', label: 'Tours', route: '/tours', isSelected: false },
+    //{ icon: 'tours', label: 'Tours', route: '/tours', isSelected: false },
     {
       icon: 'reserva',
       label: 'Mis Reservas',
@@ -94,7 +94,7 @@ export class DeviajeSidebarComponent implements OnInit, OnDestroy {
       route: '/home/packages/search',
       isSelected: false,
     },
-    { icon: 'tours', label: 'Tours', route: '/tours', isSelected: false },
+    //{ icon: 'tours', label: 'Tours', route: '/tours', isSelected: false },
     {
       icon: 'usuarios',
       label: 'Mis Clientes',

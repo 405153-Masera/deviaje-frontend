@@ -431,7 +431,7 @@ export class DeviajeHotelBookingComponent implements OnInit, OnDestroy {
                   phones: this.fb.array([
                     this.fb.group({
                       deviceType: ['MOBILE'],
-                      countryCallingCode: ['+54'],
+                      countryCallingCode: ['', Validators.required],
                       number: ['', [Validators.required]],
                     }),
                   ]),

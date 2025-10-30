@@ -148,8 +148,7 @@
   }
 }
 
-// Moviles
-@include mobile {
+@include laptop {
   .sidebar {
     width: 0;
 

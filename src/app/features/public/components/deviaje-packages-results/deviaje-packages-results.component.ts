@@ -7,9 +7,17 @@ import { DeviajeFlightResultsComponent } from '../deviaje-flight-results/deviaje
 import { DeviajeHotelsResultsComponent } from '../hotels/deviaje-hotels-results/deviaje-hotels-results.component';
 
 // Modelos
-import { FlightSearchRequest, FlightOffer } from '../../../../shared/models/flights';
-import { HotelSearchRequest, HotelSearchResponse, HotelResponseDto } from '../../../../shared/models/hotels';
+import {
+  FlightSearchRequest,
+  FlightOffer,
+} from '../../../../shared/models/flights';
+import {
+  HotelSearchRequest,
+  HotelSearchResponse,
+  HotelResponseDto,
+} from '../../../../shared/models/hotels';
 import { CityDto } from '../../../../shared/models/locations';
+import { HotelService } from '../../../../shared/services/hotel.service';
 
 @Component({
   selector: 'app-deviaje-packages-results',
@@ -17,18 +25,19 @@ import { CityDto } from '../../../../shared/models/locations';
   imports: [
     CommonModule,
     DeviajeFlightResultsComponent,
-    DeviajeHotelsResultsComponent
+    DeviajeHotelsResultsComponent,
   ],
   templateUrl: './deviaje-packages-results.component.html',
-  styleUrl: './deviaje-packages-results.component.scss'
+  styleUrl: './deviaje-packages-results.component.scss',
 })
 export class DeviajePackagesResultsComponent implements OnInit {
   private readonly router = inject(Router);
+  private readonly hotelService = inject(HotelService);
 
   // Datos de búsqueda recibidos desde packages-search
   flightSearchRequest!: FlightSearchRequest;
   hotelSearchRequest!: HotelSearchRequest;
-  
+
   // Datos adicionales para mostrar
   originCity!: CityDto;
   destinationCity!: CityDto;
@@ -60,7 +69,7 @@ export class DeviajePackagesResultsComponent implements OnInit {
   ngOnInit(): void {
     // Obtener datos del state (desde packages-search)
     const state = window.history.state;
-    
+
     if (state && state.flightSearchRequest && state.hotelSearchRequest) {
       this.flightSearchRequest = state.flightSearchRequest;
       this.hotelSearchRequest = state.hotelSearchRequest;
@@ -68,11 +77,11 @@ export class DeviajePackagesResultsComponent implements OnInit {
       this.destinationCity = state.destinationCity;
       this.hotelDestinationCity = state.hotelDestinationCity;
       this.packageInfo = state.packageInfo;
-      
+
       console.log('Datos de paquetes recibidos:', {
         flight: this.flightSearchRequest,
         hotel: this.hotelSearchRequest,
-        packageInfo: this.packageInfo
+        packageInfo: this.packageInfo,
       });
     } else {
       // Si no hay datos, redirigir a búsqueda
@@ -82,8 +91,11 @@ export class DeviajePackagesResultsComponent implements OnInit {
   }
 
   // ========== MANEJADORES DEL CARRITO ==========
-  
-  onFlightSelected(flightData: { flightOffer: FlightOffer; searchParams: FlightSearchRequest }): void {
+
+  onFlightSelected(flightData: {
+    flightOffer: FlightOffer;
+    searchParams: FlightSearchRequest;
+  }): void {
     console.log('Vuelo seleccionado:', flightData);
     this.selectedFlight = flightData;
   }
@@ -107,37 +119,30 @@ export class DeviajePackagesResultsComponent implements OnInit {
     return this.selectedFlight !== null && this.selectedHotel !== null;
   }
 
+  getHotelRateNet(rate: HotelSearchResponse.Rate): number {
+    const eurPrice = (rate as any)?.net || 0;
+    return this.hotelService.convertToArs(eurPrice);
+  }
+
   getTotalPrice(): number {
     let total = 0;
-    
+
     if (this.selectedFlight) {
       total += parseFloat(this.selectedFlight.flightOffer.price.total);
     }
-    
+
     if (this.selectedHotel) {
-      total += this.getHotelRateNet(this.selectedHotel.rate);
+      total += this.getHotelRateNet(this.selectedHotel.rate); // ← USAR EL MÉTODO
     }
-    
+
     return total;
-  }
-
-  getHotelRateNet(rate: HotelSearchResponse.Rate): number {
-    return (rate as any)?.net || 0;
-  }
-
-  formatPrice(price: number | string): string {
-    const numPrice = typeof price === 'string' ? parseFloat(price) : price;
-    return new Intl.NumberFormat('es-AR', {
-      style: 'currency',
-      currency: 'ARS',
-    }).format(numPrice);
   }
 
   formatDate(date: Date): string {
     return new Intl.DateTimeFormat('es-AR', {
       day: '2-digit',
       month: 'short',
-      year: 'numeric'
+      year: 'numeric',
     }).format(date);
   }
 
@@ -151,7 +156,7 @@ export class DeviajePackagesResultsComponent implements OnInit {
 
     console.log('Procediendo a reserva de paquete con:', {
       flight: this.selectedFlight,
-      hotel: this.selectedHotel
+      hotel: this.selectedHotel,
     });
 
     // Navegar a reserva de paquetes con los mismos datos que usan las reservas individuales
@@ -160,7 +165,7 @@ export class DeviajePackagesResultsComponent implements OnInit {
         // Datos del vuelo (exactamente como flight-booking los recibe)
         flightOffer: this.selectedFlight!.flightOffer,
         flightSearchParams: this.selectedFlight!.searchParams,
-        
+
         // Datos del hotel (exactamente como hotel-booking los recibe)
         hotelDetails: this.selectedHotel!.hotelDetails,
         hotel: this.selectedHotel!.hotel,
@@ -169,11 +174,11 @@ export class DeviajePackagesResultsComponent implements OnInit {
         rateKey: this.selectedHotel!.rateKey,
         recheck: this.selectedHotel!.recheck,
         hotelSearchParams: this.selectedHotel!.searchParams,
-        
+
         // Datos adicionales del paquete
         packageInfo: this.packageInfo,
-        totalPrice: this.getTotalPrice()
-      }
+        totalPrice: this.getTotalPrice(),
+      },
     });
   }
 

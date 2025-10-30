@@ -50,11 +50,13 @@ $transition-slow: all 0.5s ease;
 // Font
 $font-family: 'Nunito Sans', sans-serif;
 
-// Breakpoints
-$mobile-breakpoint: 576px;
-$tablet-breakpoint: 768px;
-$desktop-breakpoint: 992px;
-$large-desktop-breakpoint: 1200px;
+// Breakpoints (compatibles con Bootstrap 5)
+$mobile-breakpoint: 576px;   
+$tablet-breakpoint: 768px;   
+$desktop-breakpoint: 992px;  
+$laptop-breakpoint: 1024px;  
+$large-desktop-breakpoint: 1200px; 
+$xl-desktop-breakpoint: 1400px;    
 
 
 //####### Navbar #######
@@ -107,8 +109,20 @@ $navbar-background-hover: rgba(255, 255, 255, 0.05);
   }
 }
 
+@mixin laptop {
+  @media (max-width: #{$laptop-breakpoint}) {
+    @content;
+  }
+}
+
 @mixin large-desktop {
   @media (max-width: #{$large-desktop-breakpoint}) {
+    @content;
+  }
+}
+
+@mixin xl-desktop {
+  @media (max-width: #{$xl-desktop-breakpoint}) {
     @content;
   }
 }

@@ -1,13 +1,16 @@
 <div class="position-relative w-100">
-  <label class="mb-1">{{ label }}</label>
+  <label class="mb-1" id="selectGuest">{{ label }}</label>
 
   <!-- ✅ CAMPO PRINCIPAL CON VALIDACIÓN -->
   <div class="selector-trigger" 
        [class.is-invalid]="!isValid"
-       (click)="toggleDropdown($event)">
-    <i class="bi bi-person me-2"></i>
-    <span>{{ getTotalGuests() }} huéspedes</span>
-    <i class="bi bi-chevron-down dropdown-icon" [class.rotate]="isDropdownOpen"></i>
+       (click)="toggleDropdown($event)"
+       aria-labelledby="selectGuest">
+       <div>
+        <i class="bi bi-person me-2"></i>
+        <span>{{ getTotalGuests() }} huéspedes</span>
+       </div>
+      <i class="bi bi-chevron-down dropdown-icon" [class.rotate]="isDropdownOpen"></i>
   </div>
 
   <!-- ✅ MENSAJE DE ERROR DEBAJO DEL CAMPO -->

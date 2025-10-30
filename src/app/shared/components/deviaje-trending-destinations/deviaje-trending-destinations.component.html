@@ -1,0 +1,193 @@
+<section class="py-5">
+  <div class="container">
+    <!-- Título -->
+    <div class="text-center mb-5">
+      <h2 class="display-5 mb-3">{{ title }}</h2>
+      <p class="lead text-muted">{{ subtitle }}</p>
+    </div>
+
+    <!-- Loading State -->
+    @if (isLoading) {
+    <div class="row g-4">
+      @for (item of [1,2,3,4,5,6,7,8]; track item) {
+      <div class="col-lg-3 col-md-4 col-sm-6">
+        <div class="card h-100 border-0">
+          <div class="placeholder-glow">
+            <div class="placeholder bg-secondary card-img-skeleton"></div>
+          </div>
+          <div class="card-body">
+            <span class="placeholder col-6 bg-secondary"></span>
+            <span class="placeholder col-4 bg-secondary"></span>
+          </div>
+        </div>
+      </div>
+      }
+    </div>
+    }
+
+    <!-- Vista Desktop/Tablet Grande (Grid) -->
+    @if (!isLoading && !isMobile) {
+    <div class="row g-4">
+      @for (dest of trendingDestinations; track dest.name) {
+      <div class="col-lg-3 col-md-4 col-sm-6">
+        <div class="card h-100 shadow-sm border-0 overflow-hidden rounded-4 destination-card">
+          <div class="position-relative card-image-wrapper">
+            <img [src]="dest.image" class="card-img-top" [alt]="dest.name" loading="lazy">
+
+            <!-- Preview galería al hacer hover -->
+            <div class="gallery-overlay">
+              <div class="gallery-grid">
+                @for (img of dest.gallery.slice(0, 4); track img) {
+                <img [src]="img" [alt]="dest.name" class="gallery-thumb" loading="lazy">
+                }
+              </div>
+            </div>
+
+            <div class="card-overlay">
+              <div class="card-content">
+                <h5 class="text-white fw-bold mb-2">{{ dest.name }}</h5>
+                <span class="badge bg-white bg-opacity-90 text-dark px-3 py-2">
+                  {{ dest.country }}
+                </span>
+              </div>
+            </div>
+          </div>
+
+          <div class="card-body py-3 px-3">
+            <button (click)="openGallery(dest)" class="btn btn-outline-primary btn-sm w-100 rounded-pill">
+              Ver más fotos ({{ dest.gallery.length }})
+            </button>
+          </div>
+        </div>
+      </div>
+      }
+    </div>
+    }
+
+    <!-- Vista Mobile/Tablet (Carrusel) -->
+    @if (!isLoading && isMobile) {
+    <div class="carousel-container position-relative">
+      <!-- Carrusel -->
+      <div class="carousel-wrapper overflow-hidden">
+        <div class="carousel-track d-flex transition-transform" 
+             [style.transform]="'translateX(-' + (currentIndex * 100) + '%)'">
+          @for (dest of trendingDestinations; track dest.name) {
+          <div class="carousel-item flex-shrink-0 w-100 px-3">
+            <div class="card shadow-sm border-0 overflow-hidden rounded-4 destination-card">
+              <div class="position-relative card-image-wrapper">
+                <img [src]="dest.image" class="card-img-top" [alt]="dest.name" loading="lazy">
+
+                <div class="card-overlay">
+                  <div class="card-content">
+                    <h5 class="text-white fw-bold mb-2">{{ dest.name }}</h5>
+                    <span class="badge bg-white bg-opacity-90 text-dark px-3 py-2">
+                      {{ dest.country }}
+                    </span>
+                  </div>
+                </div>
+              </div>
+
+              <div class="card-body py-3 px-3">
+                <button (click)="openGallery(dest)" class="btn btn-outline-primary btn-sm w-100 rounded-pill">
+                  Ver más fotos ({{ dest.gallery.length }})
+                </button>
+              </div>
+            </div>
+          </div>
+          }
+        </div>
+      </div>
+
+      <!-- Controles del carrusel -->
+      <button 
+        class="carousel-control carousel-control-prev" 
+        (click)="prevSlide()"
+        [disabled]="currentIndex === 0"
+        [class.disabled]="currentIndex === 0">
+        <i class="bi bi-chevron-left"></i>
+      </button>
+      
+      <button 
+        class="carousel-control carousel-control-next" 
+        (click)="nextSlide()"
+        [disabled]="currentIndex === trendingDestinations.length - 1"
+        [class.disabled]="currentIndex === trendingDestinations.length - 1">
+        <i class="bi bi-chevron-right"></i>
+      </button>
+
+      <!-- Indicadores -->
+      <div class="carousel-indicators d-flex justify-content-center gap-2 mt-4">
+        @for (dest of trendingDestinations; track dest.name; let i = $index) {
+        <button 
+          class="indicator-dot" 
+          [class.active]="i === currentIndex"
+          (click)="goToSlide(i)">
+        </button>
+        }
+      </div>
+    </div>
+    }
+  </div>
+</section>
+
+<!-- Modal de Galería Completa -->
+@if (showGalleryModal && selectedDestination) {
+<div class="gallery-modal" (click)="closeGallery()">
+  <div class="modal-content" (click)="$event.stopPropagation()">
+    <!-- Header -->
+    <div class="modal-header">
+      <div>
+        <h3 class="mb-0">{{ selectedDestination.name }}</h3>
+        <small class="text-muted">{{ selectedDestination.country }}</small>
+      </div>
+      <button class="btn-close-modal" (click)="closeGallery()">
+        <i class="bi bi-x-lg"></i>
+      </button>
+    </div>
+
+    <!-- Imagen principal -->
+    <div class="modal-body position-relative">
+      <img 
+        [src]="selectedDestination.gallery[currentGalleryIndex]" 
+        [alt]="selectedDestination.name"
+        class="gallery-main-image">
+
+      <!-- Controles de navegación -->
+      <button 
+        class="gallery-nav gallery-nav-prev" 
+        (click)="prevGalleryImage()"
+        [disabled]="currentGalleryIndex === 0"
+        [class.disabled]="currentGalleryIndex === 0">
+        <i class="bi bi-chevron-left"></i>
+      </button>
+
+      <button 
+        class="gallery-nav gallery-nav-next" 
+        (click)="nextGalleryImage()"
+        [disabled]="currentGalleryIndex === selectedDestination.gallery.length - 1"
+        [class.disabled]="currentGalleryIndex === selectedDestination.gallery.length - 1">
+        <i class="bi bi-chevron-right"></i>
+      </button>
+
+      <!-- Contador -->
+      <div class="gallery-counter">
+        {{ currentGalleryIndex + 1 }} / {{ selectedDestination.gallery.length }}
+      </div>
+    </div>
+
+    <!-- Miniaturas -->
+    <div class="modal-footer">
+      <div class="gallery-thumbnails d-flex gap-2 overflow-auto">
+        @for (img of selectedDestination.gallery; track img; let i = $index) {
+        <img 
+          [src]="img" 
+          [alt]="selectedDestination.name"
+          class="thumbnail"
+          [class.active]="i === currentGalleryIndex"
+          (click)="currentGalleryIndex = i">
+        }
+      </div>
+    </div>
+  </div>
+</div>
+}

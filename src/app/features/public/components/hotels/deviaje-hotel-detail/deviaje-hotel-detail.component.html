@@ -62,13 +62,17 @@
                   }
                 </div>
                 <p class="hotel-location">
-                  <i class="bi bi-geo-alt-fill me-1"></i> {{ hotel.destinationCode }}
+                  <i class="bi bi-geo-alt-fill me-1"></i> {{ destinationCity?.name }}, {{ destinationCity?.country }}
                 </p>
               </div>
               <div class="hotel-price text-end">
                 <div class="price-from">Desde</div>
                 <div class="price-amount">{{ hotelService.convertToArs(hotel.minRate || 0) | currency:'ARS' }}</div>
-                <div class="price-night">por noche</div>
+                @if(passengers > 1){
+                  <div class="price-night">{{passengers}} húespedes</div>
+                } @else {
+                  <div class="price-night">{{passengers}} húesped</div>
+                }
               </div>
             </div>
           </div>
@@ -123,7 +127,7 @@
             </p>
             <p class="city">
               <i class="bi bi-building me-2"></i>
-              {{ hotelDetails.city }}, {{ hotelDetails.country?.name }}
+              {{ destinationCity?.name }}, {{ destinationCity?.country }}
             </p>
             }
           </div>
@@ -173,15 +177,17 @@
                           </small>
                         </div>
                         }
-
-                        @if (getRateClass(rate)) {
-                        <span class="badge bg-secondary mt-1">{{ getRateClass(rate) }}</span>
-                        }
                       </div>
-                      <div class="text-end">
+                      <div class="text-end"> 
+                        <div class="price-from">Desde</div>
                         <div class="rate-price fw-bold text-primary h5">
                           {{  hotelService.convertToArs(getRateNet(rate)) | currency:'ARS' }}
                         </div>
+                        @if(passengers > 1){
+                          <div class="price-night">{{passengers}} húespedes</div>
+                        } @else {
+                          <div class="price-night">{{passengers}} húesped</div>
+                        }
                         <small class="text-muted">
                           {{ hotelService.convertToArs(getRateNet(rate) / getNightsCount()) | currency:'ARS' }} / noche
                         </small>

@@ -1,125 +1,125 @@
 <!-- unique-flight-search.component.html -->
-<section>
-    <div class="search-panel">
-        <div class="search-header">
-            <h2 class="search-title">¿A dónde te gustaría volar?</h2>
+<div class="hero-background">
+    <section class="container py-2">
+        <div class="search-panel">
+            <div class="search-header">
+                <h2 class="search-title">¿A dónde te gustaría volar?</h2>
 
-            <div class="row mb-3">
-                <div class="trip-type-select">
-                    <div class="col-md-auto">
-                        <div class="form-check trip-type-option">
-                            <input type="radio" class="form-check-input" name="tripType" id="roundTrip" checked
-                                (change)="setTripType('roundtrip')">
-                            <label for="roundTrip" class="form-check-label">Ida y vuelta</label>
+                <div class="row mb-3">
+                    <div class="trip-type-select">
+                        <div class="col-md-auto">
+                            <div class="form-check trip-type-option">
+                                <input type="radio" class="form-check-input" name="tripType" id="roundTrip" checked
+                                    (change)="setTripType('roundtrip')">
+                                <label for="roundTrip" class="form-check-label">Ida y vuelta</label>
+                            </div>
+                        </div>
+
+                        <div class="col-md-auto">
+                            <div class="form-check trip-type-option">
+                                <input type="radio" class="form-check-input" name="tripType" id="oneWay"
+                                    (change)="setTripType('oneway')">
+                                <label for="oneWay" class="form-check-label">Solo ida</label>
+                            </div>
                         </div>
                     </div>
 
-                    <div class="col-md-auto">
-                        <div class="form-check trip-type-option">
-                            <input type="radio" class="form-check-input" name="tripType" id="oneWay"
-                                (change)="setTripType('oneway')">
-                            <label for="oneWay" class="form-check-label">Solo ida</label>
+                </div>
+            </div>
+
+            <form [formGroup]="formSearch" class="search-form">
+
+                <div class="row">
+
+                    <div class="col-md mb-4 position-relative">
+                        <app-deviaje-city-input label="Salgo de" formControlName="origin"></app-deviaje-city-input>
+                        <span class="error-message position-absolute"
+                            [class.visible]="formSearch.get('origin')?.invalid && formSearch.get('origin')?.touched">
+                            Por favor seleccione una ciudad de origen
+                        </span>
+                    </div>
+
+                    <div class="col-md-auto col-12 col align-self-center swap-button d-flex justify-content-center">
+                        <button type="button" aria-label="Intercambiar origen y destino" (click)="swapLocations()">
+                            <i class="bi bi-arrow-left-right"></i>
+                        </button>
+                    </div>
+
+                    <div class="col-md mb-4 position-relative">
+                        <app-deviaje-city-input label="Voy a" formControlName="destination"></app-deviaje-city-input>
+                        <span class="error-message position-absolute"
+                            [class.visible]="formSearch.get('destination')?.invalid && formSearch.get('destination')?.touched">
+                            Por favor seleccione una ciudad de destino
+                        </span>
+                    </div>
+                </div>
+
+                <div class="row">
+
+                    <div class="col-lg col-md-6 mb-4 position-relative">
+                        <label class="mb-1" for="departureDate">Fecha de salida</label>
+                        <div class="input-with-icon date-input">
+                            <i class="bi bi-calendar3"></i>
+                            <input id="departureDate" type="text" placeholder="dd/mm/aaaa" class="date-picker-trigger"
+                                [value]="formSearch.get('departureDate')?.value | dateFormat" readonly
+                                (click)="openCalendar('departure')" (keydown.enter)="openCalendar('departure')"
+                                (keydown.space)="openCalendar('departure')">
                         </div>
+                        <span class="error-message position-absolute"
+                            [class.visible]="formSearch.get('departureDate')?.invalid && formSearch.get('departureDate')?.touched">
+                            La fecha de salida es obligatoria
+                        </span>
                     </div>
-                </div>
 
-            </div>
-        </div>
-
-        <form [formGroup]="formSearch" class="search-form">
-
-            <div class="row">
-
-                <div class="col-md mb-4 position-relative">
-                    <app-deviaje-city-input label="Salgo de" formControlName="origin"></app-deviaje-city-input>
-                    <span class="error-message position-absolute"
-                    [class.visible]="formSearch.get('origin')?.invalid && formSearch.get('origin')?.touched">
-                        Por favor seleccione una ciudad de origen
-                    </span>
-                </div>
-
-                <div class="col-md-auto col-12 col align-self-center swap-button d-flex justify-content-center">
-                    <button type="button" aria-label="Intercambiar origen y destino" (click)="swapLocations()">
-                        <i class="bi bi-arrow-left-right"></i>
-                    </button>
-                </div>
-
-                <div class="col-md mb-4 position-relative">
-                    <app-deviaje-city-input label="Voy a" formControlName="destination"></app-deviaje-city-input>
-                    <span class="error-message position-absolute"
-                    [class.visible]="formSearch.get('destination')?.invalid && formSearch.get('destination')?.touched">
-                        Por favor seleccione una ciudad de destino
-                    </span>
-                </div>
-            </div>
-
-            <div class="row">
-
-                <div class="col-lg col-md-6 mb-4 position-relative">
-                    <label class="mb-1" for="departureDate">Fecha de salida</label>
-                    <div class="input-with-icon date-input">
-                        <i class="bi bi-calendar3"></i>
-                        <input id="departureDate" type="text" placeholder="dd/mm/aaaa" class="date-picker-trigger"
-                            [value]="formSearch.get('departureDate')?.value | dateFormat" readonly
-                            (click)="openCalendar('departure')"
-                            (keydown.enter)="openCalendar('departure')"
-                            (keydown.space)="openCalendar('departure')">
-                    </div>
-                    <span class="error-message position-absolute"
-                    [class.visible]="formSearch.get('departureDate')?.invalid && formSearch.get('departureDate')?.touched">
-                    La fecha de salida es obligatoria
-                    </span>
-                </div>
-
-                <div class="col-lg col-md-6 mb-4 position-relative" [class.disabled]="tripType === 'oneway'">
-                    <label class="mb-1" for="dateReturn">Fecha de regreso</label>
-                    <div class="input-with-icon date-input">
-                        <i class="bi bi-calendar3"></i>
-                        <input type="text" placeholder="dd/mm/aaaa" id="dateReturn" class="date-picker-trigger"
-                            [value]="formSearch.get('returnDate')?.value | dateFormat" readonly
-                            (click)="tripType !== 'oneway' && openCalendar('return')"
-                            (keydown.enter)="tripType !== 'oneway' && openCalendar('return')"
-                            (keydown.space)="tripType !== 'oneway' && openCalendar('return')">
-                    </div>
-                    <span class="error-message position-absolute"
-                    [class.visible]="formSearch.get('returnDate')?.invalid && formSearch.get('returnDate')?.touched && tripType !==
+                    <div class="col-lg col-md-6 mb-4 position-relative" [class.disabled]="tripType === 'oneway'">
+                        <label class="mb-1" for="dateReturn">Fecha de regreso</label>
+                        <div class="input-with-icon date-input">
+                            <i class="bi bi-calendar3"></i>
+                            <input type="text" placeholder="dd/mm/aaaa" id="dateReturn" class="date-picker-trigger"
+                                [value]="formSearch.get('returnDate')?.value | dateFormat" readonly
+                                (click)="tripType !== 'oneway' && openCalendar('return')"
+                                (keydown.enter)="tripType !== 'oneway' && openCalendar('return')"
+                                (keydown.space)="tripType !== 'oneway' && openCalendar('return')">
+                        </div>
+                        <span class="error-message position-absolute" [class.visible]="formSearch.get('returnDate')?.invalid && formSearch.get('returnDate')?.touched && tripType !==
                     'oneway'">
-                    La fecha de regreso es obligatoria
-                    </span>
-                </div>
+                            La fecha de regreso es obligatoria
+                        </span>
+                    </div>
 
-                <div class="col-lg col-md-4 mb-4">
-                    <app-deviaje-passenger-select [adults]="adults" [children]="children" [infants]="infants"
-                        (passengersChanged)="handlePassengersChanged($event)"></app-deviaje-passenger-select>
-                </div>
+                    <div class="col-lg col-md-4 mb-4">
+                        <app-deviaje-passenger-select [adults]="adults" [children]="children" [infants]="infants"
+                            (passengersChanged)="handlePassengersChanged($event)"></app-deviaje-passenger-select>
+                    </div>
 
-                <div class="col-lg col-md-4 mb-4">
-                    <label class="mb-1" for="selectClass">Clase</label>
-                    <div class="input-with-icon">
-                        <i class="bi bi-star"></i>
-                        <select formControlName="travelClass" id="selectClass" class="w-100">
-                            <option value="">Sin seleccionar</option>
-                            <option value="ECONOMY">Económica</option>
-                            <option value="PREMIUM_ECONOMY">Premium</option>
-                            <option value="BUSINESS">Negocio</option>
-                            <!-- <option value="FIRST">Primera</option> -->
-                        </select>
+                    <div class="col-lg col-md-4 mb-4">
+                        <label class="mb-1" for="selectClass">Clase</label>
+                        <div class="input-with-icon">
+                            <i class="bi bi-star"></i>
+                            <select formControlName="travelClass" id="selectClass" class="w-100">
+                                <option value="">Sin seleccionar</option>
+                                <option value="ECONOMY">Económica</option>
+                                <option value="PREMIUM_ECONOMY">Premium</option>
+                                <option value="BUSINESS">Negocio</option>
+                                <!-- <option value="FIRST">Primera</option> -->
+                            </select>
+                        </div>
                     </div>
                 </div>
-            </div>
 
-            <div class="row mt-3">
-                <div class="col-md d-flex justify-content-end">
-                    <button type="button" class="btn-search" (click)="searchFlights()">
-                        <span>Buscar vuelos</span>
-                        <i class="bi bi-search"></i>
-                    </button>
+                <div class="row mt-3">
+                    <div class="col-md d-flex justify-content-end">
+                        <button type="button" class="btn-search" (click)="searchFlights()">
+                            <span>Buscar vuelos</span>
+                            <i class="bi bi-search"></i>
+                        </button>
+                    </div>
                 </div>
-            </div>
 
-        </form>
-    </div>
-</section>
+            </form>
+        </div>
+    </section>
+</div>
 
 <app-deviaje-calendar [selectionMode]="tripType === 'oneway' ? 'single' : 'range'" [minDate]="minDate"
     [initialStartDate]="departureDate" [initialEndDate]="returnDate" [showTwoMonths]="true" [showPrices]="false"

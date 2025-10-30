@@ -10,7 +10,8 @@
   <!-- Alerta de éxito -->
   <div *ngIf="showSuccessMessage" class="alert alert-success" role="alert">
     <i class="bi bi-check-circle-fill me-2"></i>
-    <strong>¡Reserva exitosa!</strong> Tu reserva ha sido procesada correctamente. Número de referencia: {{ bookingReference }}
+    <strong>¡Reserva exitosa!</strong> Tu reserva ha sido procesada correctamente. Número de referencia: {{
+    bookingReference }}
     <div class="mt-2">
       Redirigiendo a la página de tus reservas...
       <div class="spinner-border spinner-border-sm ms-2" role="status">
@@ -29,26 +30,17 @@
     </div>
   </div>
 
- <!-- Panel de información del vuelo -->
-<ng-container *ngIf="selectedOffer && !isVerifying">
-  <app-deviaje-flight-booking-summary 
-    [flightOffer]="selectedOffer"
-    (originChange)="onOriginReceived($event)"
-    (destinationChange)="onDestinationReceived($event)"
-    [title]="'Detalles del vuelo'"
-  >
-  </app-deviaje-flight-booking-summary>
+  <!-- Panel de información del vuelo -->
+  <ng-container *ngIf="selectedOffer && !isVerifying">
+    <app-deviaje-flight-booking-summary [flightOffer]="selectedOffer" (originChange)="onOriginReceived($event)"
+      (destinationChange)="onDestinationReceived($event)" [title]="'Detalles del vuelo'">
+    </app-deviaje-flight-booking-summary>
 
-  <app-deviaje-price-details
-    #priceDetailsComponent
-    [mode]="'FLIGHT'"
-    [flightPrice]="selectedOffer.price"
-    [currency]="selectedOffer.price.currency || 'ARS'"
-    [passengerCount]="selectedOffer.travelerPricings.length"
-    (pricesCalculated)="onPricesCalculated($event)"
-    >
-  </app-deviaje-price-details>
-</ng-container>
+    <app-deviaje-price-details #priceDetailsComponent [mode]="'FLIGHT'" [flightPrice]="selectedOffer.price"
+      [currency]="selectedOffer.price.currency || 'ARS'" [passengerCount]="selectedOffer.travelerPricings.length"
+      (pricesCalculated)="onPricesCalculated($event)">
+    </app-deviaje-price-details>
+  </ng-container>
 
   <!-- Formulario principal -->
   <div *ngIf="selectedOffer && !isVerifying && !showSuccessMessage">
@@ -83,7 +75,7 @@
                 <div class="row">
                   <div class="col-md-6">
                     <div class="form-check">
-                      <input class="form-check-input" type="radio" [checked]="isGuestBooking"
+                      <input class="form-check-input me-2" type="radio" [checked]="isGuestBooking"
                         (change)="onBookingTypeChange(true)" id="guestBookingFlight">
                       <label class="form-check-label" for="guestBookingFlight">
                         <strong>Reserva para invitado</strong>
@@ -93,7 +85,7 @@
                   </div>
                   <div class="col-md-6">
                     <div class="form-check">
-                      <input class="form-check-input" type="radio" [checked]="!isGuestBooking"
+                      <input class="form-check-input me-2" type="radio" [checked]="!isGuestBooking"
                         (change)="onBookingTypeChange(false)" id="userBookingFlight">
                       <label class="form-check-label" for="userBookingFlight">
                         <strong>Reserva para usuario registrado</strong>
@@ -104,19 +96,24 @@
                 </div>
 
                 <!-- Búsqueda de usuario (cuando no es guest booking) -->
-                <div *ngIf="!isGuestBooking" class="mt-3">
+                <div *ngIf="!isGuestBooking" class="mt-3 col-6">
                   <label class="form-label">Buscar cliente por nombre de usuario</label>
                   <div class="input-group">
-                    <input type="text" class="form-control" placeholder="Nombre de usuario del cliente"
+                    <input type="text" class="form-control me-3" placeholder="Nombre de usuario del cliente"
                       #userSearchInput>
-                    <button class="btn btn-outline-secondary" type="button"
+                    <button class="btn btn-secondary" type="button"
                       (click)="searchUserByUsername(userSearchInput.value)">
-                      <i class="bi bi-search"></i> Buscar
+                      Buscar
                     </button>
                   </div>
                   <div *ngIf="selectedClientId" class="alert alert-success mt-2">
                     <i class="bi bi-check-circle me-2"></i>
-                    Cliente seleccionado (ID: {{ selectedClientId }})
+                    Cliente seleccionado {{ userSearchInput.value }}
+                  </div>
+                  <div *ngIf="userErrorMessage"
+                    class="alert alert-danger mt-2">
+                    <i class="bi bi-exclamation-triangle me-2"></i>
+                    {{ userErrorMessage }}
                   </div>
                 </div>
 
@@ -144,12 +141,8 @@
                   </div>
 
                   <div class="card-body">
-                    <app-deviaje-traveler-form 
-                      [travelerForm]="getTravelerFormGroup(i)" 
-                      [isPrimaryTraveler]="i === 0"
-                      mode="flight"
-                      [lastArrivalDate]="getLastArrivalDate()"
-                      ></app-deviaje-traveler-form>
+                    <app-deviaje-traveler-form [travelerForm]="getTravelerFormGroup(i)" [isPrimaryTraveler]="i === 0"
+                      mode="flight" [lastArrivalDate]="getLastArrivalDate()"></app-deviaje-traveler-form>
                   </div>
                 </div>
               </div>
@@ -250,7 +243,8 @@
                       mainForm.get('payment')?.get('cardNumber')?.value.substring(12) }}</p>
                   </div>
                   <div class="col-md-6">
-                    <p><strong>Monto total:</strong> {{ calculatedTotalAmount | currency:(selectedOffer.price.currency || 'USD') }}</p>
+                    <p><strong>Monto total:</strong> {{ calculatedTotalAmount | currency:(selectedOffer.price.currency
+                      || 'USD') }}</p>
                     <p><strong>Moneda:</strong> {{ selectedOffer.price.currency }}</p>
                     <p><strong>Cuotas:</strong> 1</p>
                   </div>
@@ -263,7 +257,7 @@
 
       <div class="card-footer">
         <div class="d-flex justify-content-between">
-          <button class="btn btn-outline-secondary" [disabled]="currentStep === 1 || isLoading"
+          <button class="btn btn-secondary" type="button" [disabled]="currentStep === 1 || isLoading"
             (click)="previousStep()">
             <i class="bi bi-arrow-left me-1"></i> Anterior
           </button>
@@ -274,7 +268,7 @@
               Siguiente <i class="bi bi-arrow-right ms-1"></i>
             </button>
 
-            <button *ngIf="currentStep === totalSteps" class="btn btn-success" [disabled]="isLoading"
+            <button *ngIf="currentStep === totalSteps" class="btn btn-primary" [disabled]="isLoading"
               (click)="submitBooking()">
               <span *ngIf="!isLoading">Confirmar reserva</span>
               <span *ngIf="isLoading">

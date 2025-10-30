@@ -1,0 +1,16 @@
+.hero-section {
+  position: relative;
+  height: 90vh;
+  justify-content: center;
+  align-items: center;
+  text-align: center;
+
+  .text-highlight {
+    color: #A78BFA;
+  }
+
+  .btn-hover:hover {
+    transform: translateY(-3px);
+    transition: all 0.3s ease;
+  }
+}

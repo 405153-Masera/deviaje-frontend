@@ -20,11 +20,11 @@
             @for(city of cities; track city.iataCode) {
             <div class="suggestion-item" (click)="selectCity(city)">
                 <span class="city-name">
-                    {{ city.name }} {{ city.iataCode ? '(' + city.iataCode + ')' : '' }}
+                    {{ city.name }}, {{ city.country }}
                 </span>
-                <span class="country-name">
+                <!-- <span class="country-name">
                     {{ city.country }}
-                </span>
+                </span> -->
             </div>
             }
             }

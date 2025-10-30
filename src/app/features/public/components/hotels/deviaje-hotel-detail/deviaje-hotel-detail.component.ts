@@ -17,6 +17,7 @@ import {
 } from '../../../../../shared/models/hotels';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { CityDto } from '../../../../../shared/models/locations';
 
 @Component({
   selector: 'app-deviaje-hotel-detail',
@@ -34,6 +35,7 @@ export class DeviajeHotelDetailComponent implements OnInit, OnDestroy {
   @Input() inPackageMode: boolean = false;
   @Input() packageHotel: HotelSearchResponse.Hotel | null = null;
   @Input() packageSearchParams: HotelSearchRequest | null = null;
+  @Input() packageDestinationCity: CityDto | null = null;
 
   // OUTPUT para emitir selección al carrito (modo paquete)
   @Output() hotelAndRoomSelected = new EventEmitter<{
@@ -54,6 +56,8 @@ export class DeviajeHotelDetailComponent implements OnInit, OnDestroy {
   hotel: HotelSearchResponse.Hotel | null = null;
   hotelDetails: HotelResponseDto | null = null;
   searchParams: HotelSearchRequest | null = null;
+  @Input() destinationCity: CityDto | null = null;
+  passengers: number = 0;
 
   // Restaurar variables originales
   selectedRoom: HotelSearchResponse.Room | null = null;
@@ -75,6 +79,11 @@ export class DeviajeHotelDetailComponent implements OnInit, OnDestroy {
       // MODO NORMAL: Obtener datos de la ruta
       this.initializeNormalMode();
     }
+    this.passengers =
+      this.searchParams?.occupancies.reduce(
+        (total, occ) => total + occ.adults + occ.children,
+        0
+      ) || 0;
   }
 
   private initializeNormalMode(): void {
@@ -87,6 +96,10 @@ export class DeviajeHotelDetailComponent implements OnInit, OnDestroy {
         }
         if (window.history.state.searchParams) {
           this.searchParams = window.history.state.searchParams;
+        }
+        if (window.history.state.destination) {
+          this.destinationCity = window.history.state.destination;
+          console.log('Destino cargado desde el estado de navegación:', this.destinationCity);
         }
 
         this.loadHotelDetails();

@@ -1,0 +1,336 @@
+/* Skeleton loading */
+.card-img-skeleton {
+  height: 250px;
+  border-radius: 1rem 1rem 0 0;
+}
+
+/* --- Destinos Cards --- */
+.destination-card {
+  cursor: pointer;
+  transition: transform 0.3s ease;
+  border-radius: 1rem;
+
+  &:hover {
+    transform: translateY(-5px);
+  }
+
+  .card-image-wrapper {
+    position: relative;
+
+    img {
+      height: 250px;
+      width: 100%;
+      object-fit: cover;
+      border-radius: 1rem 1rem 0 0;
+    }
+
+    .card-overlay {
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      width: 100%;
+      padding: 1rem;
+      background: linear-gradient(to top, rgba(0, 0, 0, 0.7), transparent);
+    }
+
+    .gallery-overlay {
+      position: absolute;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.6);
+      opacity: 0;
+      transition: opacity 0.3s ease;
+
+      .gallery-grid {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 4px;
+        padding: 10px;
+        height: 100%;
+
+        img {
+          width: 100%;
+          height: 100%;
+          object-fit: cover;
+          border-radius: 6px;
+        }
+      }
+    }
+
+    &:hover .gallery-overlay {
+      opacity: 1;
+    }
+  }
+}
+
+/* --- Carrusel para Mobile/Tablet --- */
+.carousel-container {
+  .carousel-wrapper {
+    border-radius: 1rem;
+  }
+
+  .carousel-track {
+    transition: transform 0.5s ease-in-out;
+  }
+
+  .carousel-item {
+    min-width: 100%;
+  }
+
+  .carousel-control {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    background: rgba(255, 255, 255, 0.9);
+    border: none;
+    border-radius: 50%;
+    width: 45px;
+    height: 45px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    z-index: 10;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+
+    i {
+      font-size: 1.5rem;
+      color: #333;
+    }
+
+    &:hover:not(.disabled) {
+      background: white;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+    }
+
+    &.disabled {
+      opacity: 0.3;
+      cursor: not-allowed;
+    }
+
+    &.carousel-control-prev {
+      left: 10px;
+    }
+
+    &.carousel-control-next {
+      right: 10px;
+    }
+  }
+
+  .carousel-indicators {
+    .indicator-dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      background: #ccc;
+      border: none;
+      padding: 0;
+      cursor: pointer;
+      transition: all 0.3s ease;
+
+      &.active {
+        background: #A78BFA;
+        width: 24px;
+        border-radius: 5px;
+      }
+
+      &:hover {
+        background: #A78BFA;
+        opacity: 0.7;
+      }
+    }
+  }
+}
+
+/* --- Modal de Galería --- */
+.gallery-modal {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.95);
+  z-index: 9999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+  animation: fadeIn 0.3s ease;
+
+  .modal-content {
+    background: white;
+    border-radius: 1rem;
+    width: 100%;
+    max-width: 1200px;
+    max-height: 90vh;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+
+  .modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1.5rem;
+    border-bottom: 1px solid #e5e7eb;
+
+    h3 {
+      color: #1f2937;
+      font-size: 1.5rem;
+      font-weight: 600;
+    }
+
+    .btn-close-modal {
+      background: none;
+      border: none;
+      font-size: 1.5rem;
+      cursor: pointer;
+      color: #6b7280;
+      transition: color 0.3s ease;
+      padding: 0.5rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+
+      &:hover {
+        color: #1f2937;
+      }
+    }
+  }
+
+  .modal-body {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 2rem;
+    background: #f9fafb;
+    overflow: hidden;
+
+    .gallery-main-image {
+      max-width: 100%;
+      max-height: 100%;
+      object-fit: contain;
+      border-radius: 0.5rem;
+    }
+
+    .gallery-nav {
+      position: absolute;
+      background: rgba(255, 255, 255, 0.95);
+      border: none;
+      border-radius: 50%;
+      width: 50px;
+      height: 50px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+
+      i {
+        font-size: 1.75rem;
+        color: #333;
+      }
+
+      &:hover:not(.disabled) {
+        background: white;
+        transform: scale(1.1);
+        box-shadow: 0 6px 16px rgba(0, 0, 0, 0.2);
+      }
+
+      &.disabled {
+        opacity: 0.3;
+        cursor: not-allowed;
+      }
+
+      &.gallery-nav-prev {
+        left: 1rem;
+      }
+
+      &.gallery-nav-next {
+        right: 1rem;
+      }
+    }
+
+    .gallery-counter {
+      position: absolute;
+      bottom: 1rem;
+      left: 50%;
+      transform: translateX(-50%);
+      background: rgba(0, 0, 0, 0.7);
+      color: white;
+      padding: 0.5rem 1rem;
+      border-radius: 2rem;
+      font-size: 0.875rem;
+      font-weight: 500;
+    }
+  }
+
+  .modal-footer {
+    padding: 1rem 1.5rem;
+    border-top: 1px solid #e5e7eb;
+
+    .gallery-thumbnails {
+      .thumbnail {
+        width: 80px;
+        height: 60px;
+        object-fit: cover;
+        border-radius: 0.5rem;
+        cursor: pointer;
+        opacity: 0.6;
+        transition: all 0.3s ease;
+        border: 2px solid transparent;
+
+        &:hover {
+          opacity: 1;
+          transform: scale(1.05);
+        }
+
+        &.active {
+          opacity: 1;
+          border-color: #A78BFA;
+          box-shadow: 0 0 0 2px rgba(167, 139, 250, 0.3);
+        }
+      }
+    }
+  }
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .destination-card .card-image-wrapper img {
+    height: 200px;
+  }
+
+  .gallery-modal {
+    .modal-body {
+      padding: 1rem;
+
+      .gallery-nav {
+        width: 40px;
+        height: 40px;
+
+        i {
+          font-size: 1.25rem;
+        }
+      }
+    }
+
+    .modal-footer .gallery-thumbnails .thumbnail {
+      width: 60px;
+      height: 45px;
+    }
+  }
+}
+
+.transition-transform {
+  transition: transform 0.5s ease-in-out;
+}
