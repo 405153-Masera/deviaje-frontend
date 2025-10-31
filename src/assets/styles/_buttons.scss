@@ -21,8 +21,7 @@
 }
 
 // Variantes de botones
-.btn-primary {
-  background-color: $primary-color;
+.btn-violet {
   color: $white;
 
   &:disabled {
@@ -40,7 +39,7 @@
   }
 }
 
-.btn-secondary {
+.btn-green {
   background-color: $secondary-color;
   color: $white;
 
@@ -87,6 +86,7 @@
 
   &:hover:not(:disabled) {
     background-color: $gray-100;
+    color: black;
   }
 
   &:active:not(:disabled) {

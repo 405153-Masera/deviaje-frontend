@@ -16,12 +16,15 @@
 
   .card-image-wrapper {
     position: relative;
+    width: 100%;
+    min-height: 250px; // 👈 NUEVO: Asegurar altura mínima
 
     img {
       height: 250px;
       width: 100%;
       object-fit: cover;
       border-radius: 1rem 1rem 0 0;
+      display: block; // 👈 NUEVO: Asegurar que se muestre
     }
 
     .card-overlay {
@@ -31,6 +34,7 @@
       width: 100%;
       padding: 1rem;
       background: linear-gradient(to top, rgba(0, 0, 0, 0.7), transparent);
+      z-index: 2; // 👈 NUEVO: Asegurar que esté encima
     }
 
     .gallery-overlay {
@@ -39,6 +43,7 @@
       background: rgba(0, 0, 0, 0.6);
       opacity: 0;
       transition: opacity 0.3s ease;
+      z-index: 1;
 
       .gallery-grid {
         display: grid;
@@ -56,31 +61,61 @@
       }
     }
 
-    &:hover .gallery-overlay {
-      opacity: 1;
+    // Solo mostrar hover en desktop
+    @media (min-width: 992px) {
+      &:hover .gallery-overlay {
+        opacity: 1;
+      }
     }
   }
 }
 
 /* --- Carrusel para Mobile/Tablet --- */
 .carousel-container {
+  position: relative;
+  width: 100%;
+  
   .carousel-wrapper {
     border-radius: 1rem;
+    width: 100%;
+    overflow: hidden;
+    min-height: 350px; // 👈 NUEVO: Altura mínima para el carrusel
   }
 
   .carousel-track {
-    transition: transform 0.5s ease-in-out;
+    display: flex;
+    transition: transform 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+    will-change: transform;
+    min-height: 350px; // 👈 NUEVO: Asegurar altura del track
   }
 
   .carousel-item {
     min-width: 100%;
+    width: 100%;
+    flex-shrink: 0;
+    
+    .card {
+      width: 100%; // 👈 NUEVO: Asegurar ancho completo
+      max-width: 500px;
+    }
+
+    // 👈 NUEVO: Asegurar que las imágenes del carrusel tengan altura
+    .card-image-wrapper {
+      min-height: 250px;
+      
+      img {
+        height: 250px !important; // 👈 FORZAR altura en carrusel
+        width: 100%;
+        object-fit: cover;
+      }
+    }
   }
 
   .carousel-control {
     position: absolute;
     top: 50%;
     transform: translateY(-50%);
-    background: rgba(255, 255, 255, 0.9);
+    background: rgba(255, 255, 255, 0.95);
     border: none;
     border-radius: 50%;
     width: 45px;
@@ -98,14 +133,14 @@
       color: #333;
     }
 
-    &:hover:not(.disabled) {
+    &:hover {
       background: white;
       box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+      transform: translateY(-50%) scale(1.1);
     }
 
-    &.disabled {
-      opacity: 0.3;
-      cursor: not-allowed;
+    &:active {
+      transform: translateY(-50%) scale(0.95);
     }
 
     &.carousel-control-prev {
@@ -118,6 +153,8 @@
   }
 
   .carousel-indicators {
+    margin-top: 1.5rem;
+    
     .indicator-dot {
       width: 10px;
       height: 10px;
@@ -204,6 +241,7 @@
     padding: 2rem;
     background: #f9fafb;
     overflow: hidden;
+    position: relative;
 
     .gallery-main-image {
       max-width: 100%;
@@ -231,15 +269,14 @@
         color: #333;
       }
 
-      &:hover:not(.disabled) {
+      &:hover {
         background: white;
         transform: scale(1.1);
         box-shadow: 0 6px 16px rgba(0, 0, 0, 0.2);
       }
 
-      &.disabled {
-        opacity: 0.3;
-        cursor: not-allowed;
+      &:active {
+        transform: scale(0.95);
       }
 
       &.gallery-nav-prev {
@@ -266,10 +303,25 @@
   }
 
   .modal-footer {
+    display: unset;
     padding: 1rem 1.5rem;
     border-top: 1px solid #e5e7eb;
 
     .gallery-thumbnails {
+      &::-webkit-scrollbar {
+        height: 6px;
+      }
+
+      &::-webkit-scrollbar-track {
+        background: #f1f1f1;
+        border-radius: 3px;
+      }
+
+      &::-webkit-scrollbar-thumb {
+        background: #A78BFA;
+        border-radius: 3px;
+      }
+
       .thumbnail {
         width: 80px;
         height: 60px;
@@ -279,6 +331,7 @@
         opacity: 0.6;
         transition: all 0.3s ease;
         border: 2px solid transparent;
+        flex-shrink: 0;
 
         &:hover {
           opacity: 1;
@@ -306,11 +359,50 @@
 
 /* Responsive adjustments */
 @media (max-width: 768px) {
-  .destination-card .card-image-wrapper img {
-    height: 200px;
+  .destination-card .card-image-wrapper {
+    min-height: 200px; // 👈 NUEVO: Altura mínima en móvil
+    
+    img {
+      height: 200px !important; // 👈 NUEVO: Forzar altura en móvil
+    }
+  }
+
+  .carousel-container {
+    .carousel-wrapper {
+      min-height: 320px; // 👈 AJUSTAR para móvil
+    }
+
+    .carousel-track {
+      min-height: 320px;
+    }
+
+    .carousel-item .card-image-wrapper {
+      min-height: 200px;
+      
+      img {
+        height: 200px !important;
+      }
+    }
+
+    .carousel-control {
+      width: 40px;
+      height: 40px;
+
+      i {
+        font-size: 1.25rem;
+      }
+    }
   }
 
   .gallery-modal {
+    .modal-header {
+      padding: 1rem;
+
+      h3 {
+        font-size: 1.25rem;
+      }
+    }
+
     .modal-body {
       padding: 1rem;
 
@@ -322,6 +414,11 @@
           font-size: 1.25rem;
         }
       }
+
+      .gallery-counter {
+        font-size: 0.75rem;
+        padding: 0.375rem 0.75rem;
+      }
     }
 
     .modal-footer .gallery-thumbnails .thumbnail {
@@ -331,6 +428,23 @@
   }
 }
 
-.transition-transform {
-  transition: transform 0.5s ease-in-out;
+/* Ajuste específico para tablets */
+@media (min-width: 768px) and (max-width: 991px) {
+  .carousel-item {
+    padding: 0 2rem !important;
+    
+    .card-image-wrapper {
+      min-height: 250px;
+      
+      img {
+        height: 250px !important;
+      }
+    }
+  }
+}
+
+/* Asegurar que las imágenes siempre tengan altura */
+.card-img-top {
+  min-height: 200px !important; // 👈 NUEVO: Garantizar altura mínima
+  max-height: 300px;
 }

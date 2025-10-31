@@ -52,7 +52,7 @@ export const routes: Routes = [
     children: [
       {
         path: '',
-        loadComponent: () => import('./shared/components/home-component/home-component.component')
+        loadComponent: () => import('./shared/components/deviaje-home/deviaje-home.component')
           .then(m => m.HomeComponentComponent)
       },
       // VUELOS

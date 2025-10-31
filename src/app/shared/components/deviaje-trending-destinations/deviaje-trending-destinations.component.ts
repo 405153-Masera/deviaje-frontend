@@ -1,4 +1,4 @@
-import { Component, OnInit, Input, PLATFORM_ID, Inject } from '@angular/core';
+import { Component, OnInit, Input, PLATFORM_ID, Inject, OnDestroy, HostListener, AfterViewInit } from '@angular/core';
 import { CommonModule, isPlatformBrowser } from '@angular/common';
 import { HttpClient } from '@angular/common/http';
 import { forkJoin } from 'rxjs';
@@ -12,10 +12,10 @@ import { environment } from '../../enviroments/enviroment';
   templateUrl: './deviaje-trending-destinations.component.html',
   styleUrls: ['./deviaje-trending-destinations.component.scss']
 })
-export class TrendingDestinationsComponent implements OnInit {
+export class TrendingDestinationsComponent implements OnInit, AfterViewInit, OnDestroy {
   @Input() title: string = 'Destinos que son tendencia';
   @Input() subtitle: string = 'Los lugares más visitados del mundo según nuestros viajeros';
-  @Input() cities: City[] = [
+  cities: City[] = [
     { name: 'París', country: 'Francia' },
     { name: 'Nueva York', country: 'EE.UU.' },
     { name: 'Tokio', country: 'Japón' },
@@ -44,25 +44,39 @@ export class TrendingDestinationsComponent implements OnInit {
   ngOnInit(): void {
     this.checkScreenSize();
     this.loadImages();
-    
-    if (isPlatformBrowser(this.platformId)) {
-      window.addEventListener('resize', () => this.checkScreenSize());
-    }
+  }
+
+  ngAfterViewInit(): void {
+    // Re-verificar después de que la vista esté inicializada
+    setTimeout(() => {
+      this.checkScreenSize();
+      console.log('✅ Vista inicializada - Verificando pantalla');
+    }, 200);
+  }
+
+  @HostListener('window:resize', ['$event'])
+  onResize(event?: any): void {
+    this.checkScreenSize();
   }
 
   checkScreenSize(): void {
     if (isPlatformBrowser(this.platformId)) {
-      // Detectar mobile y tablet (menos de 992px = Bootstrap lg breakpoint)
+      const previousState = this.isMobile;
       this.isMobile = window.innerWidth < 992;
-      console.log('🔍 Detección de pantalla:', {
-        width: window.innerWidth,
-        isMobile: this.isMobile,
-        isLoading: this.isLoading
-      });
+      
+      // Log solo cuando cambia el estado
+      if (previousState !== this.isMobile || !this.isLoading) {
+        console.log('🔍 Detección de pantalla:', {
+          width: window.innerWidth,
+          isMobile: this.isMobile,
+          isLoading: this.isLoading,
+          cambio: previousState !== this.isMobile ? 'SÍ' : 'NO'
+        });
+      }
     }
   }
 
-    loadImages(): void {
+  loadImages(): void {
     const requests = this.cities.map(city => 
       this.http.get<UnsplashResponse>(
         `https://api.unsplash.com/search/photos?query=${encodeURIComponent(city.name)}&orientation=landscape&per_page=10&client_id=${environment.unsplash.apiKey}`
@@ -80,9 +94,12 @@ export class TrendingDestinationsComponent implements OnInit {
       next: (destinations) => {
         this.trendingDestinations = destinations;
         this.isLoading = false;
+        
         // Re-verificar el tamaño después de cargar
-        setTimeout(() => this.checkScreenSize(), 100);
-        console.log('✅ Imágenes cargadas:', destinations.length);
+        setTimeout(() => {
+          this.checkScreenSize();
+          console.log('✅ Imágenes cargadas:', destinations.length);
+        }, 150);
       },
       error: (err) => {
         console.error('❌ Error cargando imágenes:', err);
@@ -93,7 +110,10 @@ export class TrendingDestinationsComponent implements OnInit {
           gallery: ['assets/default-city.jpg']
         }));
         this.isLoading = false;
-        setTimeout(() => this.checkScreenSize(), 100);
+        
+        setTimeout(() => {
+          this.checkScreenSize();
+        }, 150);
       }
     });
   }
@@ -149,7 +169,6 @@ export class TrendingDestinationsComponent implements OnInit {
 
   ngOnDestroy(): void {
     if (isPlatformBrowser(this.platformId)) {
-      window.removeEventListener('resize', () => this.checkScreenSize());
       document.body.style.overflow = 'auto';
     }
   }

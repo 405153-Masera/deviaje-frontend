@@ -121,6 +121,10 @@
     </section>
 </div>
 
+<app-trending-destinations title="Destinos que son tendencia"
+    subtitle="Los lugares más visitados del mundo según nuestros viajeros">
+</app-trending-destinations>
+
 <app-deviaje-calendar [selectionMode]="tripType === 'oneway' ? 'single' : 'range'" [minDate]="minDate"
     [initialStartDate]="departureDate" [initialEndDate]="returnDate" [showTwoMonths]="true" [showPrices]="false"
     (dateSelected)="selectSingleDate($event)" (rangeSelected)="selectDateRange($event)" (closed)="closeCalendar()"

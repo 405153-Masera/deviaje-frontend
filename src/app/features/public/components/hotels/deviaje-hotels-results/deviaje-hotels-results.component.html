@@ -20,7 +20,7 @@
                     </div>
                 </div>
                 <div class="col-md-4 text-center text-md-end">
-                    <button class="btn btn-outline mt-2 mt-md-0" routerLink="/home/hotels/search">
+                    <button class="btn btn-secondary mt-2 mt-md-0" routerLink="/home/hotels/search">
                         <i class="bi bi-arrow-left"></i> Modificar búsqueda
                     </button>
                 </div>
@@ -52,7 +52,7 @@
                                     (change)="applyFilters()">
                             </div>
                             <div class="price-labels d-flex justify-content-between flex-column">
-                                <span>{{ hotelService.convertToArs(priceRange.current) |
+                                <span>{{ priceRange.current |
                                     currency:(searchParams?.currency || 'USD') }}</span>
                             </div>
                         </div>
@@ -121,7 +121,7 @@
                                         (change)="applyFilters()">
                                 </div>
                                 <div class="price-labels">
-                                    <span>{{ hotelService.convertToArs(priceRange.current) |
+                                    <span>{{ priceRange.current |
                                         currency:(searchParams?.currency || 'USD') }}</span>
                                 </div>
                             </div>

@@ -3,7 +3,7 @@
 // Estilos base para inputs
 input:not([type="checkbox"]),
 select,
-textarea {
+textarea, .form-select {
   width: 100%;
   padding: 12px 16px;
   border: 1px solid $gray-300;

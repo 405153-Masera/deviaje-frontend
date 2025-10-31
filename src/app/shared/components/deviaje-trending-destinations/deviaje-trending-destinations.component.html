@@ -5,7 +5,7 @@
       <h2 class="display-5 mb-3">{{ title }}</h2>
       <p class="lead text-muted">{{ subtitle }}</p>
     </div>
-
+    
     <!-- Loading State -->
     @if (isLoading) {
     <div class="row g-4">
@@ -67,13 +67,14 @@
     <!-- Vista Mobile/Tablet (Carrusel) -->
     @if (!isLoading && isMobile) {
     <div class="carousel-container position-relative">
+      
       <!-- Carrusel -->
-      <div class="carousel-wrapper overflow-hidden">
-        <div class="carousel-track d-flex transition-transform" 
+      <div class="carousel-wrapper overflow-hidden position-relative">
+        <div class="carousel-track d-flex" 
              [style.transform]="'translateX(-' + (currentIndex * 100) + '%)'">
-          @for (dest of trendingDestinations; track dest.name) {
-          <div class="carousel-item flex-shrink-0 w-100 px-3">
-            <div class="card shadow-sm border-0 overflow-hidden rounded-4 destination-card">
+          @for (dest of trendingDestinations; track dest.name; let i = $index) {
+          <div class="flex-shrink-0 w-100 px-2">
+            <div class="card shadow-sm border-0 overflow-hidden rounded-4 destination-card mx-auto" style="max-width: 500px;">
               <div class="position-relative card-image-wrapper">
                 <img [src]="dest.image" class="card-img-top" [alt]="dest.name" loading="lazy">
 
@@ -99,21 +100,23 @@
       </div>
 
       <!-- Controles del carrusel -->
+      @if (currentIndex > 0) {
       <button 
         class="carousel-control carousel-control-prev" 
         (click)="prevSlide()"
-        [disabled]="currentIndex === 0"
-        [class.disabled]="currentIndex === 0">
+        type="button">
         <i class="bi bi-chevron-left"></i>
       </button>
+      }
       
+      @if (currentIndex < trendingDestinations.length - 1) {
       <button 
         class="carousel-control carousel-control-next" 
         (click)="nextSlide()"
-        [disabled]="currentIndex === trendingDestinations.length - 1"
-        [class.disabled]="currentIndex === trendingDestinations.length - 1">
+        type="button">
         <i class="bi bi-chevron-right"></i>
       </button>
+      }
 
       <!-- Indicadores -->
       <div class="carousel-indicators d-flex justify-content-center gap-2 mt-4">
@@ -121,7 +124,8 @@
         <button 
           class="indicator-dot" 
           [class.active]="i === currentIndex"
-          (click)="goToSlide(i)">
+          (click)="goToSlide(i)"
+          type="button">
         </button>
         }
       </div>
@@ -140,7 +144,7 @@
         <h3 class="mb-0">{{ selectedDestination.name }}</h3>
         <small class="text-muted">{{ selectedDestination.country }}</small>
       </div>
-      <button class="btn-close-modal" (click)="closeGallery()">
+      <button class="btn-close-modal" (click)="closeGallery()" type="button">
         <i class="bi bi-x-lg"></i>
       </button>
     </div>
@@ -153,21 +157,23 @@
         class="gallery-main-image">
 
       <!-- Controles de navegación -->
+      @if (currentGalleryIndex > 0) {
       <button 
         class="gallery-nav gallery-nav-prev" 
         (click)="prevGalleryImage()"
-        [disabled]="currentGalleryIndex === 0"
-        [class.disabled]="currentGalleryIndex === 0">
+        type="button">
         <i class="bi bi-chevron-left"></i>
       </button>
+      }
 
+      @if (currentGalleryIndex < selectedDestination.gallery.length - 1) {
       <button 
         class="gallery-nav gallery-nav-next" 
         (click)="nextGalleryImage()"
-        [disabled]="currentGalleryIndex === selectedDestination.gallery.length - 1"
-        [class.disabled]="currentGalleryIndex === selectedDestination.gallery.length - 1">
+        type="button">
         <i class="bi bi-chevron-right"></i>
       </button>
+      }
 
       <!-- Contador -->
       <div class="gallery-counter">
@@ -177,7 +183,7 @@
 
     <!-- Miniaturas -->
     <div class="modal-footer">
-      <div class="gallery-thumbnails d-flex gap-2 overflow-auto">
+      <div class="gallery-thumbnails d-flex gap-2 overflow-auto pb-2">
         @for (img of selectedDestination.gallery; track img; let i = $index) {
         <img 
           [src]="img" 

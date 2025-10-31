@@ -21,14 +21,14 @@ import { FlightSearchRequest } from '../../../../shared/models/flights';
 import { DeviajeCityInputComponent } from '../../../../shared/components/deviaje-city-input/deviaje-city-input.component';
 import { DeviajePassengerSelectComponent } from "../../../../shared/components/deviaje-passenger-select/deviaje-passenger-select.component";
 import { DateFormatPipe } from '../../../../shared/pipes/date-format.pipe';
+import { TrendingDestinationsComponent } from "../../../../shared/components/deviaje-trending-destinations/deviaje-trending-destinations.component";
 
 @Component({
   selector: 'app-deviaje-flights-search',
   standalone: true,
-  imports: [CommonModule, DeviajeCalendarComponent, ReactiveFormsModule, 
+  imports: [CommonModule, DeviajeCalendarComponent, ReactiveFormsModule,
     DeviajeCityInputComponent, DeviajePassengerSelectComponent,
-    DateFormatPipe
-  ],
+    DateFormatPipe, TrendingDestinationsComponent],
   templateUrl: './deviaje-flights-search.component.html',
   styleUrl: './deviaje-flights-search.component.scss',
 })

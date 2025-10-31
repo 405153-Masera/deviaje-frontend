@@ -15,18 +15,20 @@ import { FlightSearchRequest } from '../../../../shared/models/flights';
 import { HotelSearchRequest } from '../../../../shared/models/hotels';
 import { CityService } from '../../../../shared/services/city.service';
 import { DateFormatPipe } from '../../../../shared/pipes/date-format.pipe';
+import { TrendingDestinationsComponent } from "../../../../shared/components/deviaje-trending-destinations/deviaje-trending-destinations.component";
 
 @Component({
   selector: 'app-deviaje-packages-search',
   standalone: true,
   imports: [
-    CommonModule, 
+    CommonModule,
     ReactiveFormsModule,
     DeviajeCalendarComponent,
     DeviajeCityInputComponent,
     DeviajeRoomGuestSelectComponent,
-    DateFormatPipe
-  ],
+    DateFormatPipe,
+    TrendingDestinationsComponent
+],
   templateUrl: './deviaje-packages-search.component.html',
   styleUrl: './deviaje-packages-search.component.scss'
 })

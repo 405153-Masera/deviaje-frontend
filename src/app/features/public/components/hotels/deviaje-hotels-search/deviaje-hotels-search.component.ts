@@ -14,6 +14,7 @@ import { CityDto } from '../../../../../shared/models/locations';
 import { HotelSearchRequest } from '../../../../../shared/models/hotels';
 import { DeviajeRoomGuestSelectComponent } from '../../../../../shared/components/deviaje-room-guest-select/deviaje-room-guest-select.component';
 import { DateFormatPipe } from '../../../../../shared/pipes/date-format.pipe';
+import { TrendingDestinationsComponent } from "../../../../../shared/components/deviaje-trending-destinations/deviaje-trending-destinations.component";
 
 @Component({
   selector: 'app-deviaje-hotels-search',
@@ -25,7 +26,8 @@ import { DateFormatPipe } from '../../../../../shared/pipes/date-format.pipe';
     DeviajeCityInputComponent,
     DeviajeRoomGuestSelectComponent,
     DateFormatPipe,
-  ],
+    TrendingDestinationsComponent
+],
   templateUrl: './deviaje-hotels-search.component.html',
   styleUrl: './deviaje-hotels-search.component.scss',
 })
