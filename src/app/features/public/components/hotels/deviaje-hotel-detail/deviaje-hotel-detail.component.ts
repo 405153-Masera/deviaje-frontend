@@ -11,13 +11,22 @@ import { ActivatedRoute, Router, RouterModule } from '@angular/router';
 import { HotelService } from '../../../../../shared/services/hotel.service';
 import { Subscription } from 'rxjs';
 import {
+  HotelFacility,
   HotelResponseDto,
+  HotelRoom,
   HotelSearchRequest,
   HotelSearchResponse,
 } from '../../../../../shared/models/hotels';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { CityDto } from '../../../../../shared/models/locations';
+
+// Interface para agrupar facilities
+interface GroupedFacility {
+  groupCode: number;
+  groupName: string;
+  items: HotelFacility[];
+}
 
 @Component({
   selector: 'app-deviaje-hotel-detail',
@@ -99,7 +108,10 @@ export class DeviajeHotelDetailComponent implements OnInit, OnDestroy {
         }
         if (window.history.state.destination) {
           this.destinationCity = window.history.state.destination;
-          console.log('Destino cargado desde el estado de navegación:', this.destinationCity);
+          console.log(
+            'Destino cargado desde el estado de navegación:',
+            this.destinationCity
+          );
         }
 
         this.loadHotelDetails();
@@ -174,29 +186,28 @@ export class DeviajeHotelDetailComponent implements OnInit, OnDestroy {
   }
 
   formatCancellationPolicy(cancellationPolicies: any[] | undefined): string {
-  if (!cancellationPolicies || cancellationPolicies.length === 0) {
-    return 'Sin política de cancelación especificada';
+    if (!cancellationPolicies || cancellationPolicies.length === 0) {
+      return 'Sin política de cancelación especificada';
+    }
+
+    const policy = cancellationPolicies[0];
+    const fromDate = new Date(policy.from);
+    const amount = policy.amount;
+
+    if (amount === '0.00' || amount === 0) {
+      return `Cancelación gratuita hasta ${fromDate.toLocaleDateString()}`;
+    } else {
+      // ⭐ CAMBIAR esta línea:
+      const priceInArs = this.hotelService.convertToArs(Number(amount));
+      const formattedPrice = new Intl.NumberFormat('es-AR', {
+        style: 'currency',
+        currency: 'ARS',
+        minimumFractionDigits: 0,
+      }).format(priceInArs);
+
+      return `Cancelación gratuita hasta ${fromDate.toLocaleDateString()}. Después: ${formattedPrice}`;
+    }
   }
-
-  const policy = cancellationPolicies[0];
-  const fromDate = new Date(policy.from);
-  const amount = policy.amount;
-
-  if (amount === '0.00' || amount === 0) {
-    return `Cancelación gratuita hasta ${fromDate.toLocaleDateString()}`;
-  } else {
-    // ⭐ CAMBIAR esta línea:
-    const priceInArs = this.hotelService.convertToArs(Number(amount));
-    const formattedPrice = new Intl.NumberFormat('es-AR', {
-      style: 'currency',
-      currency: 'ARS',
-      minimumFractionDigits: 0,
-    }).format(priceInArs);
-    
-    return `Cancelación gratuita hasta ${fromDate.toLocaleDateString()}. Después: ${formattedPrice}`;
-  }
-}
-
 
   getCurrencySymbol(currency: string): string {
     const symbols: { [key: string]: string } = {
@@ -356,6 +367,12 @@ export class DeviajeHotelDetailComponent implements OnInit, OnDestroy {
     return 'Habitación';
   }
 
+  getBoardDescription(boardName: string | undefined): string {
+    if (!boardName) return 'Solo alojamiento';
+
+    return `Régimen: ${boardName}`;
+  }
+
   getCategoryStars(categoryName: string): number {
     if (!categoryName) return 0;
 
@@ -368,5 +385,132 @@ export class DeviajeHotelDetailComponent implements OnInit, OnDestroy {
     }
 
     return 0; // Para otros tipos
+  }
+
+  getHealthSafetyStars(): number {
+    if (!this.hotelDetails?.s2c) return 0;
+
+    const match = this.hotelDetails.s2c.match(/\d+/);
+    return match ? parseInt(match[0]) : 0;
+  }
+
+  // ============================================
+  // FACILITIES DEL HOTEL
+  // ============================================
+
+  getGroupedFacilities(): GroupedFacility[] {
+    if (
+      !this.hotelDetails?.facilities ||
+      this.hotelDetails.facilities.length === 0
+    ) {
+      return [];
+    }
+
+    const grouped = new Map<number, GroupedFacility>();
+
+    this.hotelDetails.facilities.forEach((facility) => {
+      const groupCode = facility.facilityGroupCode || 0;
+
+      if (!grouped.has(groupCode)) {
+        // ✅ USAR facilityGroupName que viene del BACKEND (enrichFacilities)
+        const groupName = facility.facilityGroupName || 'Otros servicios';
+
+        grouped.set(groupCode, {
+          groupCode,
+          groupName, // 👈 Del backend, NO hardcodeado
+          items: [],
+        });
+      }
+
+      grouped.get(groupCode)!.items.push(facility);
+    });
+
+    return Array.from(grouped.values()).sort(
+      (a, b) => a.groupCode - b.groupCode
+    );
+  }
+
+  getRoomFacilities(roomCode: string): HotelFacility[] {
+    if (!this.hotelDetails?.rooms) {
+      return [];
+    }
+
+    const room = this.hotelDetails.rooms.find((r) => r.roomCode === roomCode);
+    return room?.roomFacilities || [];
+  }
+
+  getCommonRoomFacilities(): HotelFacility[] {
+    if (!this.hotelDetails?.facilities) {
+      return [];
+    }
+
+    return this.hotelDetails.facilities.filter(
+      (f) => f.facilityGroupCode === 60
+    );
+  }
+
+  getAllRoomFacilities(roomCode: string): HotelFacility[] {
+    const specificFacilities = this.getRoomFacilities(roomCode);
+    const commonFacilities = this.getCommonRoomFacilities();
+
+    return [...commonFacilities, ...specificFacilities];
+  }
+
+  formatFacilityInfo(facility: HotelFacility): string {
+    let info =
+      facility.description?.content || facility.facilityName || 'Disponible';
+
+    if (facility.number) {
+      info += ` (${facility.number})`;
+    }
+
+    return info;
+  }
+
+  isFacilityAvailable(facility: HotelFacility): boolean {
+    if (facility.indLogic !== undefined) {
+      return facility.indLogic === true;
+    }
+
+    if (facility.indYesOrNo !== undefined) {
+      return facility.indYesOrNo === true;
+    }
+
+    return true;
+  }
+
+  hasFee(facility: HotelFacility): boolean {
+    return facility.indFee === true;
+  }
+
+  getFeeText(facility: HotelFacility): string {
+    if (!this.hasFee(facility)) {
+      return 'Gratis';
+    }
+
+    if (facility.amount && facility.currency) {
+      return `${facility.amount} ${facility.currency}`;
+    }
+
+    return 'Con cargo';
+  }
+
+  getRoomDetails(roomCode: string): HotelRoom | null {
+    if (!this.hotelDetails?.rooms) {
+      return null;
+    }
+
+    return this.hotelDetails.rooms.find((r) => r.roomCode === roomCode) || null;
+  }
+
+  getWildcardRoomName(roomCode: string): string | null {
+    if (!this.hotelDetails?.wildcards) {
+      return null;
+    }
+
+    const wildcard = this.hotelDetails.wildcards.find(
+      (w) => w.roomCode === roomCode
+    );
+    return wildcard?.hotelRoomDescription?.content || null;
   }
 }

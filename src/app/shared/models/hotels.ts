@@ -116,6 +116,7 @@ export interface HotelResponseDto {
   stateCode?: string;
   destination?: string;
   zoneCode?: number;
+  zone?: string;//GUARDA ACA TUVE QUE PONERLO POR UN ERROR EN DEVIAJE HOTEL SUMMARY
   category?: string;
   chain?: string;
   accommodationType?: string;
@@ -157,6 +158,25 @@ export interface HotelResponseDto {
       content: string;
     };
   }>;
+   wildcards?: Array<{
+    roomCode?: string;
+    roomType?: string;
+    characteristicCode?: string;
+    hotelRoomDescription?: {
+      content: string;
+    };
+  }>;
+  issues?: Array<{
+    issueCode?: string;
+    issueType?: string;
+    dateFrom?: string;
+    dateTo?: string;
+    order?: number;
+    alternative?: boolean;
+    description?: {
+      content: string;
+    };
+  }>;
   ranking?: number;
   s2c?: string;
 }
@@ -165,6 +185,7 @@ export interface HotelFacility {
   facilityCode: number;
   facilityGroupCode: number;
   facilityName?: string;
+  facilityGroupName?: string;
   order?: number;
   distance?: number;
   indLogic?: boolean;
@@ -197,6 +218,5 @@ export interface HotelRoom {
   roomType?: string;
   characteristicCode?: string;
   description?: string;
-  // ✨ NUEVO: Facilities específicas de cada habitación
   roomFacilities?: HotelFacility[];
 }
