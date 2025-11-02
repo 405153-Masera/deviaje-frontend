@@ -1,23 +1,7 @@
 @import '../styles/variables';
 
 .btn {
-  display: inline-flex;  // inline: no comienza lina nueva y ocupa el espacio necesario. flex: permite alinear su contenido
-  align-items: center; // centra los elementos hijos verticalmente
-  justify-content: center; // centra los elementos horizontalmente
-  padding: 10px 16px;
   border-radius: $border-radius;
-  font-weight: 500;
-  font-size: 14px;
-  text-align: center;
-  cursor: pointer;
-  transition: $transition-fast;
-  border: none;
-  gap: 8px; // separacion entre elementos hijos
-
-  &:disabled {
-    opacity: 0.6;
-    cursor: not-allowed;
-  }
 }
 
 // Variantes de botones
@@ -105,7 +89,7 @@
   font-size: 16px;
 }
 
-// Botón de búsqueda de vuelos
+// Botón de búsqueda
 .btn-search {
   display: flex;
   align-items: center;

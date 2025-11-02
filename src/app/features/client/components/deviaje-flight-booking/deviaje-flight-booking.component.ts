@@ -22,7 +22,7 @@ import { AuthService } from '../../../../core/auth/services/auth.service';
 import { Subscription } from 'rxjs';
 import { DeviajeFlightBookingSummaryComponent } from '../deviaje-flight-booking-summary/deviaje-flight-booking-summary.component';
 import { DeviajePriceDetailsComponent } from '../deviaje-price-details/deviaje-price-details.component';
-import { BaseResponse } from '../../../../shared/models/BaseResponse';
+import { BaseResponse } from '../../../../shared/models/baseResponse';
 import {
   UserData,
   UserService,

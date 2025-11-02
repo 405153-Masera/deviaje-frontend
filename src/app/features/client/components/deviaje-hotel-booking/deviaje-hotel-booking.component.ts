@@ -28,7 +28,7 @@ import {
 import { HotelBookingDto, PaymentDto } from '../../models/bookings';
 import { DeviajePriceDetailsComponent } from '../deviaje-price-details/deviaje-price-details.component';
 import { HotelService } from '../../../../shared/services/hotel.service';
-import { BaseResponse } from '../../../../shared/models/BaseResponse';
+import { BaseResponse } from '../../../../shared/models/baseResponse';
 
 @Component({
   selector: 'app-deviaje-hotel-booking',

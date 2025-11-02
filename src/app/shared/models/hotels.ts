@@ -111,19 +111,26 @@ export interface HotelResponseDto {
   country?: {
     code: string;
     name: string;
+    isoCode?: string;
   };
-  state?: string;
+  stateCode?: string;
   destination?: string;
-  zone?: string;
-  categoryCode?: string;
-  categoryGroupCode?: string;
-  chainCode?: string;
-  accommodationTypeCode?: string;
+  zoneCode?: number;
+  category?: string;
+  chain?: string;
+  accommodationType?: string;
   address?: string;
   street?: string;
   number?: string;
   city?: string;
   email?: string;
+  web?: string;
+   phones?: Array<{
+    phoneNumber: string;
+    phoneType: string;
+  }>;
+  facilities?: HotelFacility[];
+  rooms?: HotelRoom[];
   images: {
     imageTypeCode: string;
     path: string;
@@ -132,4 +139,64 @@ export interface HotelResponseDto {
     order?: number;
     visualOrder?: string;
   }[];
+   interestPoints?: Array<{
+    facilityCode?: number;
+    facilityGroupCode?: number;
+    order?: number;
+    poiName?: string;
+    distance?: string;
+  }>;
+  segments?: Array<{
+    code: number;
+    description?: string;
+  }>;
+  terminals?: Array<{
+    terminalCode: string;
+    distance?: number;
+    description?: {
+      content: string;
+    };
+  }>;
+  ranking?: number;
+  s2c?: string;
+}
+
+export interface HotelFacility {
+  facilityCode: number;
+  facilityGroupCode: number;
+  facilityName?: string;
+  order?: number;
+  distance?: number;
+  indLogic?: boolean;
+  number?: number;
+  indFee?: boolean;
+  indYesOrNo?: boolean;
+  voucher?: boolean;
+  ageFrom?: number;
+  ageTo?: number;
+  amount?: number;
+  applicationType?: string;
+  currency?: string;
+  dateFrom?: string;
+  dateTo?: string;
+  timeFrom?: string;
+  timeTo?: string;
+  description?: {
+    content: string;
+  };
+}
+
+export interface HotelRoom {
+  roomCode: string;
+  isParentRoom?: boolean;
+  minPax?: number;
+  maxPax?: number;
+  maxAdults?: number;
+  maxChildren?: number;
+  minAdults?: number;
+  roomType?: string;
+  characteristicCode?: string;
+  description?: string;
+  // ✨ NUEVO: Facilities específicas de cada habitación
+  roomFacilities?: HotelFacility[];
 }

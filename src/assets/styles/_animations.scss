@@ -74,13 +74,6 @@
     animation: spin 1s linear infinite;
   }
   
-  // Animación para botones
-  .btn {
-    &:active:not(:disabled) {
-      transform: scale(0.98);
-    }
-  }
-  
   // Animación de hover para card o elementos con sombra
   .hover-lift {
     transition: $transition-normal;

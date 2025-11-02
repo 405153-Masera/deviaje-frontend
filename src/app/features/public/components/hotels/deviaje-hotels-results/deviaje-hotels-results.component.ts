@@ -40,7 +40,6 @@ export class DeviajeHotelsResultsComponent implements OnInit, OnDestroy {
   private sanitizer: DomSanitizer = inject(DomSanitizer);
   subscription: Subscription = new Subscription();
 
-  // Input para cuando se utiliza como componente dentro de paquetes
   @Input() inPackageMode: boolean = false;
   @Input() searchParams: HotelSearchRequest | null = null;
   @Output() hotelSelected = new EventEmitter<{
@@ -128,6 +127,7 @@ export class DeviajeHotelsResultsComponent implements OnInit, OnDestroy {
 
     this.isLoading = true;
     this.hasError = false;
+    this.errorMessage = '';
 
     this.subscription.add(
       this.hotelService.findHotelsByCity(this.searchParams).subscribe({
@@ -155,8 +155,7 @@ export class DeviajeHotelsResultsComponent implements OnInit, OnDestroy {
           console.error('Error al buscar hoteles:', error);
           this.isLoading = false;
           this.hasError = true;
-          this.errorMessage =
-            'Error al buscar hoteles. Por favor, intenta de nuevo.';
+          this.errorMessage = error.message || 'Error al buscar hoteles. Por favor, intenta de nuevo.';
         },
       })
     );

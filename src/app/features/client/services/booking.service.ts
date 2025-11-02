@@ -9,7 +9,7 @@ import {
   PaymentDto,
 } from '../models/bookings';
 import { catchError, map, Observable, of, throwError } from 'rxjs';
-import { BaseResponse } from '../../../shared/models/BaseResponse';
+import { BaseResponse } from '../../../shared/models/baseResponse';
 
 @Injectable({
   providedIn: 'root',

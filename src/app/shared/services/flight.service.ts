@@ -12,7 +12,6 @@ export class FlightService {
 
   private readonly http: HttpClient = inject(HttpClient);
   private readonly flightUtils: FlightUtilsService = inject(FlightUtilsService);
-
   private url = `${environment.apiDeviajeSearches}/flights`
 
   searchFlights(params: FlightSearchRequest): Observable<FlightOffer[]> {
@@ -23,11 +22,7 @@ export class FlightService {
           this.flightUtils.setDictionaries(response.dictionaries);
         }
       }),
-      map(response => response.data || []),
-      catchError(error => {
-        console.error('Error buscando vuelos:', error)
-        throw error;
-      })
+      map(response => response.data || [])
     );
   }
 
@@ -42,11 +37,7 @@ export class FlightService {
 
     return this.http.post<any>(`${this.url}/upsell`, body)
       .pipe(
-        map(response => response.data || []),
-        catchError(error => {
-          console.error('Error obteniendo tarifas alternativas:', error);
-          throw error;
-        })
+        map(response => response.data || [])
       );
   }
 
@@ -60,11 +51,7 @@ export class FlightService {
     };
     return this.http.post<any>(`${this.url}/pricing`, body)
       .pipe(
-        map(response => response.data?.flightOffers?.[0] || flightOffer),
-        catchError(error => {
-          console.error('Error verificando precio:', error);
-          throw error;
-        })
+        map(response => response.data?.flightOffers?.[0] || flightOffer)
       );
   }
 }

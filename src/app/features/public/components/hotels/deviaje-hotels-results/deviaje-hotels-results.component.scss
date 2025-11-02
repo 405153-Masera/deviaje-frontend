@@ -14,17 +14,6 @@
     transform: translateY(-2px);
   }
 
-  .hotel-image {
-    max-height: 220px;
-    overflow: hidden;
-
-    img {
-      width: 100%;
-      height: 100%;
-      object-fit: cover;
-    }
-  }
-
   .card-body {
     padding: 1.25rem;
     height: 100%;
@@ -36,14 +25,6 @@
       font-weight: 600;
       margin-bottom: 0.5rem;
       color: $gray-800;
-    }
-
-    .hotel-stars {
-      color: $gray-400;
-
-      .text-warning {
-        color: #ffc107 !important;
-      }
     }
 
     .location {
@@ -205,56 +186,6 @@
   }
 }
 
-// Hotel detail content
-.hotel-detail-content {
-  .stars {
-    color: $gray-400;
-
-    .text-warning {
-      color: #ffc107 !important;
-    }
-  }
-
-  .location {
-    color: $gray-600;
-    font-size: 0.9rem;
-
-    i {
-      margin-right: 0.25rem;
-    }
-  }
-
-  .room-option {
-    .room-name {
-      font-weight: 600;
-      margin-bottom: 1rem;
-    }
-
-    .rate-option {
-      transition: $transition-fast;
-
-      &:hover {
-        background-color: $gray-100;
-      }
-
-      .board-type {
-        font-weight: 500;
-        margin-bottom: 0.25rem;
-      }
-
-      .cancellation {
-        font-size: 0.8rem;
-      }
-
-      .rate-price {
-        font-size: 1.25rem;
-        font-weight: 700;
-        color: $gray-800;
-      }
-    }
-  }
-}
-
 // Estados de error y carga
 .error-container,
 .no-results {
@@ -276,10 +207,6 @@
   p {
     color: $gray-700;
     margin-bottom: 1.5rem;
-  }
-
-  .btn {
-    min-width: 150px;
   }
 }
 
@@ -322,10 +249,6 @@
   .hotel-card {
     .row {
       flex-direction: column;
-    }
-
-    .hotel-image {
-      max-height: 180px;
     }
   }
 }

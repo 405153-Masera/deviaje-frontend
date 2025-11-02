@@ -30,7 +30,7 @@ import {
 } from '../../../../shared/models/hotels';
 import { FlightSearchRequest } from '../../../../shared/models/flights';
 import { DeviajeHotelBookingSummaryComponent } from '../deviaje-hotel-booking-summary/deviaje-hotel-booking-summary.component';
-import { BaseResponse } from '../../../../shared/models/BaseResponse';
+import { BaseResponse } from '../../../../shared/models/baseResponse';
 
 @Component({
   selector: 'app-deviaje-flight-booking',

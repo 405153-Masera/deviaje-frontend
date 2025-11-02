@@ -5,7 +5,10 @@
   <div class="selector-trigger" 
        [class.is-invalid]="!isValid"
        (click)="toggleDropdown($event)"
-       aria-labelledby="selectGuest">
+       aria-labelledby="selectGuest"
+       tabindex="0"
+      (keydown.enter)="toggleDropdown($event)"
+      (keydown.space)="toggleDropdown($event)">
        <div>
         <i class="bi bi-person me-2"></i>
         <span>{{ getTotalGuests() }} huéspedes</span>
