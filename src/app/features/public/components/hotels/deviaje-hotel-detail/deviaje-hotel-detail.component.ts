@@ -7,7 +7,9 @@ import {
   OnDestroy,
   OnInit,
   Output,
+  QueryList,
   ViewChild,
+  ViewChildren,
 } from '@angular/core';
 import { ActivatedRoute, Router, RouterModule } from '@angular/router';
 import { HotelService } from '../../../../../shared/services/hotel.service';
@@ -385,22 +387,6 @@ export class DeviajeHotelDetailComponent implements OnInit, OnDestroy {
     return [];
   }
 
-  getRoomImage(roomCode: string): string {
-    if (
-      this.hotelDetails &&
-      this.hotelDetails.images &&
-      this.hotelDetails.images.length > 0
-    ) {
-      const roomImage = this.hotelDetails.images.find(
-        (img) => img.roomCode === roomCode
-      );
-      if (roomImage && roomImage.path) {
-        return `https://photos.hotelbeds.com/giata/${roomImage.path}`;
-      }
-    }
-    return 'https://via.placeholder.com/300x200?text=Habitación';
-  }
-
   getHotelImage(hotel: HotelSearchResponse.Hotel): string {
     return `https://via.placeholder.com/600x400?text=${encodeURIComponent(
       hotel.name || 'Hotel'
@@ -442,7 +428,7 @@ export class DeviajeHotelDetailComponent implements OnInit, OnDestroy {
     }
 
     const wildcard = this.hotelDetails.wildcards.find(
-      (w) => w.roomCode === roomCode
+      (w) => w.roomType === roomCode
     );
     return wildcard?.hotelRoomDescription?.content || null;
   }
@@ -451,6 +437,10 @@ export class DeviajeHotelDetailComponent implements OnInit, OnDestroy {
 
   //--------------------------------- Instalaciones ---------------------------------
   expandedFacilityGroups: Set<number> = new Set();
+  expandedRoomAmenities: Set<string> = new Set();
+  currentRoomImageIndex: Map<string, number> = new Map();
+  @ViewChildren('thumbnailsRoom') thumbnailsRooms!: QueryList<ElementRef>;
+  private scrollIntervals = new Map<string, any>();
 
   getGroupedFacilities(): GroupedFacility[] {
     if (
@@ -483,10 +473,7 @@ export class DeviajeHotelDetailComponent implements OnInit, OnDestroy {
     });
 
     return Array.from(grouped.values())
-      .filter(
-        (group) =>
-          group.items.length > 0
-      ) // Excluir grupo 60 y grupos vacíos
+      .filter((group) => group.items.length > 0) // Excluir grupo 60 y grupos vacíos
       .sort((a, b) => a.groupCode - b.groupCode);
   }
 
@@ -496,6 +483,7 @@ export class DeviajeHotelDetailComponent implements OnInit, OnDestroy {
     }
 
     const room = this.hotelDetails.rooms.find((r) => r.roomCode === roomCode);
+    console.log(room?.roomCode);
     return room?.roomFacilities || [];
   }
 
@@ -514,6 +502,148 @@ export class DeviajeHotelDetailComponent implements OnInit, OnDestroy {
     const commonFacilities = this.getCommonRoomFacilities();
 
     return [...commonFacilities, ...specificFacilities];
+  }
+
+  /**
+   * Obtiene TODAS las imágenes de una habitación
+   * @param roomCode Código de la habitación
+   * @returns Array de URLs de imágenes
+   */
+  getRoomImages(roomCode: string): string[] {
+    if (!this.hotelDetails?.images || this.hotelDetails.images.length === 0) {
+      return [];
+    }
+
+    // Filtrar imágenes de esta habitación específica
+    const roomImages = this.hotelDetails.images
+      .filter((img) => img.roomCode === roomCode)
+      .map((img) => `https://photos.hotelbeds.com/giata/${img.path}`);
+
+    // Si no hay imágenes específicas de la habitación, buscar imágenes generales del hotel
+    if (roomImages.length === 0) {
+      const hotelImages = this.hotelDetails.images
+        .filter((img) => !img.roomCode || img.roomCode === '')
+        .slice(0, 3) // Máximo 3 imágenes del hotel
+        .map((img) => `https://photos.hotelbeds.com/giata/${img.path}`);
+
+      return hotelImages;
+    }
+
+    return roomImages;
+  }
+
+  onThumbnailsRoomMouseMove(event: MouseEvent, roomCode: string) {
+    const element = this.thumbnailsRooms.find(
+      (el) => el.nativeElement.getAttribute('data-room-code') === roomCode
+    );
+
+    if (!element) return;
+
+    const container = element.nativeElement;
+    const rect = container.getBoundingClientRect();
+    const mouseX = event.clientX - rect.left;
+    const containerWidth = rect.width;
+
+    this.stopAutoRoomScroll(roomCode);
+
+    if (mouseX < this.edgeThreshold) {
+      const intensity = 1 - mouseX / this.edgeThreshold;
+      this.startAutoRoomScroll(roomCode, -this.scrollSpeed * intensity);
+    } else if (mouseX > containerWidth - this.edgeThreshold) {
+      const intensity =
+        (mouseX - (containerWidth - this.edgeThreshold)) / this.edgeThreshold;
+      this.startAutoRoomScroll(roomCode, this.scrollSpeed * intensity);
+    }
+  }
+
+  onThumbnailsRoomMouseLeave(roomCode: string) {
+    this.stopAutoRoomScroll(roomCode);
+  }
+
+  private startAutoRoomScroll(roomCode: string, speed: number) {
+    if (this.scrollIntervals.get(roomCode)) return;
+
+    this.scrollIntervals.set(
+      roomCode,
+      setInterval(() => {
+        const element = this.thumbnailsRooms.find(
+          (el) => el.nativeElement.getAttribute('data-room-code') === roomCode
+        );
+
+        if (element) {
+          element.nativeElement.scrollLeft += speed;
+        }
+      }, 16)
+    );
+  }
+
+  private stopAutoRoomScroll(roomCode: string) {
+    const interval = this.scrollIntervals.get(roomCode);
+    if (interval) {
+      clearInterval(interval);
+      this.scrollIntervals.delete(roomCode);
+    }
+  }
+  /**
+   * Selecciona una imagen específica de la galería
+   * @param roomCode Código de la habitación
+   * @param index Índice de la imagen
+   */
+  selectRoomImage(roomCode: string, index: number): void {
+    this.currentRoomImageIndex.set(roomCode, index);
+  }
+
+  /**
+   * Obtiene el índice de la imagen actual de una habitación
+   * @param roomCode Código de la habitación
+   * @returns Índice actual (default 0)
+   */
+  getCurrentRoomImageIndex(roomCode: string): number {
+    return this.currentRoomImageIndex.get(roomCode) || 0;
+  }
+
+  /**
+   * Navega a la siguiente imagen
+   * @param roomCode Código de la habitación
+   */
+  nextRoomImage(roomCode: string): void {
+    const images = this.getRoomImages(roomCode);
+    if (images.length <= 1) return;
+
+    const currentIndex = this.getCurrentRoomImageIndex(roomCode);
+    const nextIndex = (currentIndex + 1) % images.length;
+    this.selectRoomImage(roomCode, nextIndex);
+  }
+
+  /**
+   * Navega a la imagen anterior
+   * @param roomCode Código de la habitación
+   */
+  prevRoomImage(roomCode: string): void {
+    const images = this.getRoomImages(roomCode);
+    if (images.length <= 1) return;
+
+    const currentIndex = this.getCurrentRoomImageIndex(roomCode);
+    const prevIndex = currentIndex === 0 ? images.length - 1 : currentIndex - 1;
+    this.selectRoomImage(roomCode, prevIndex);
+  }
+
+  /**
+   * Toggle para expandir/colapsar comodidades de una habitación
+   */
+  toggleRoomAmenities(roomCode: string): void {
+    if (this.expandedRoomAmenities.has(roomCode)) {
+      this.expandedRoomAmenities.delete(roomCode);
+    } else {
+      this.expandedRoomAmenities.add(roomCode);
+    }
+  }
+
+  /**
+   * Verifica si las comodidades de una habitación están expandidas
+   */
+  isRoomAmenitiesExpanded(roomCode: string): boolean {
+    return this.expandedRoomAmenities.has(roomCode);
   }
 
   formatFacilityInfo(facility: HotelFacility): string {
@@ -611,5 +741,32 @@ export class DeviajeHotelDetailComponent implements OnInit, OnDestroy {
   getVisibleFacilitiesCount(group: GroupedFacility): number {
     return group.items.filter((f) => this.isFacilityAvailable(f)).length;
   }
+
+  /**
+   * Formatea la política de cancelación de forma corta para las cards
+   * @param cancellationPolicies Políticas de cancelación
+   * @returns Texto corto
+   */
+  formatCancellationPolicyShort(
+    cancellationPolicies: any[] | undefined
+  ): string {
+    if (!cancellationPolicies || cancellationPolicies.length === 0) {
+      return 'Sin política';
+    }
+
+    const policy = cancellationPolicies[0];
+    const fromDate = new Date(policy.from);
+    const amount = policy.amount;
+
+    if (amount === '0.00' || amount === 0) {
+      return `Gratis hasta ${fromDate.toLocaleDateString('es-AR', {
+        day: 'numeric',
+        month: 'short',
+      })}`;
+    } else {
+      return `Cancela con cargo`;
+    }
+  }
+
   //--------------------------------- Instalaciones ---------------------------------
 }

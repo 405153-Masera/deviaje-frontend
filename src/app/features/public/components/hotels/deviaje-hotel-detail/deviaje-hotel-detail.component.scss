@@ -141,8 +141,6 @@
 }
 // --------------------------------- Galería de imágenes -----------------------------------------------
 
-// Responsive: ajustar tamaño de thumbnails en móviles
-
 // Información del hotel
 .hotel-info {
   height: 100%;
@@ -336,171 +334,467 @@ $warning-color: #ffc107;
   }
 }
 // --------------------------------- Instalaciones -----------------------------------------------
+$success-color: #28a745;
+$gray-50: #f8f9fa;
 
-// Habitaciones disponibles
-.room-options {
-  .card-header {
-    background-color: $primary-color;
-    color: $white;
+.rooms-container {
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+}
+
+.room-card {
+  background: $white;
+  border: 2px solid $gray-200;
+  border-radius: $border-radius;
+  overflow: hidden;
+  transition: $transition;
+  
+  &:hover {
+    border-color: $primary-color;
+    box-shadow: 0 4px 20px rgba($primary-color, 0.1);
   }
+  
+  &.selected {
+    border-color: $primary-color;
+    box-shadow: 0 6px 24px rgba($primary-color, 0.15);
+  }
+}
 
-  .room-card {
-    border-bottom: 1px solid $gray-200;
-    transition: $transition-normal;
+.room-top-section {
+  display: grid;
+  grid-template-columns: 400px 1fr;
+  gap: 2rem;
+  padding: 1.5rem;
+  border-bottom: 2px solid $gray-100;
+}
 
-    &:last-child {
-      border-bottom: none;
+.room-gallery-column {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.room-header-compact {
+  .room-title-compact {
+    font-size: 1.25rem;
+    font-weight: 700;
+    color: $gray-800;
+    margin: 0;
+  }
+  
+  .room-subtitle-compact {
+    font-size: 0.85rem;
+    color: $gray-600;
+    font-style: italic;
+    margin-top: 0.25rem;
+  }
+}
+
+// Mini galería
+.room-mini-gallery {
+  .gallery-main-image {
+    position: relative;
+    width: 100%;
+    height: 220px;
+    border-radius: $border-radius;
+    overflow: hidden;
+    
+    img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      transition: transform 0.3s ease;
     }
-
-    &.selected {
-      background-color: rgba($primary-color, 0.05);
+    
+    &:hover img {
+      transform: scale(1.05);
     }
-
-    .room-name {
-      font-weight: 600;
+    
+    .selected-badge-mini {
+      position: absolute;
+      top: 0.75rem;
+      right: 0.75rem;
+      background: $primary-color;
+      color: $white;
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 2px 8px rgba($primary-color, 0.3);
+      
+      i {
+        font-size: 1rem;
+      }
+    }
+  }
+  
+  .gallery-placeholder {
+    width: 100%;
+    height: 220px;
+    border-radius: $border-radius;
+    background: $gray-100;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    color: $gray-400;
+    
+    i {
+      font-size: 3rem;
       margin-bottom: 0.5rem;
     }
-
-    .room-price {
-      .price-amount {
-        font-size: 1.5rem;
-        font-weight: 700;
-        color: $gray-800;
-      }
-
-      .price-night {
-        font-size: 0.8rem;
-        color: $gray-600;
-      }
-    }
-
-    .rates-title {
-      font-size: 1rem;
-      font-weight: 500;
-      margin-bottom: 1rem;
-      color: $gray-700;
-    }
-
-    .rate-option {
-      padding: 1rem;
-      border-radius: $border-radius;
-      border: 1px solid $gray-200;
-      margin-bottom: 1rem;
-      transition: $transition-fast;
-
-      &:hover {
-        border-color: $gray-400;
-      }
-
-      &.selected {
-        border-color: $primary-color;
-        background-color: rgba($primary-color, 0.05);
-      }
-
-      .rate-details {
-        .board-type {
-          color: $gray-800;
-        }
-      }
-
-      .rate-price {
-        font-size: 1.2rem;
-        font-weight: 700;
-        color: $gray-800;
-      }
-    }
-  }
-
-  .no-rooms {
-    padding: 3rem;
-
-    p {
-      margin-bottom: 1.5rem;
-      color: $gray-600;
-    }
-  }
-}
-
-// Barra de reserva flotante
-.booking-bar {
-  position: fixed;
-  bottom: 0;
-  left: 0;
-  width: 100%;
-  background-color: $white;
-  box-shadow: 0 -4px 10px rgba($black, 0.1);
-  padding: 1rem 0;
-  z-index: 100;
-  transition: $transition-normal;
-  transform: translateY(100%);
-  animation: slideUp 0.3s forwards;
-
-  .selection-summary {
-    .room-name {
-      font-weight: 600;
-      margin-bottom: 0.25rem;
-    }
-
-    .rate-detail {
+    
+    span {
       font-size: 0.9rem;
-      color: $gray-600;
     }
-  }
-
-  .booking-price {
-    font-size: 1.5rem;
-    font-weight: 700;
-    color: $primary-color;
   }
 }
 
-// Selección visual para habitaciones y rates
-.room-card {
-  cursor: pointer;
-  transition: $transition-fast;
-
-  &:hover {
-    border-color: $primary-color !important;
-    transform: translateY(-2px);
-    box-shadow: 0 4px 12px rgba($primary-color, 0.15);
-  }
-
-  &.selected {
-    border-color: $primary-color !important;
-    background-color: rgba($primary-color, 0.05);
-
-    .room-title {
+// ============================================
+// COLUMNA DERECHA: COMODIDADES
+// ============================================
+.room-amenities-column {
+  .amenities-title-compact {
+    font-size: 1rem;
+    font-weight: 600;
+    color: $gray-700;
+    margin-bottom: 1rem;
+    display: flex;
+    align-items: center;
+    
+    i {
       color: $primary-color;
     }
   }
-}
-
-.rate-option {
-  cursor: pointer;
-
-  &:hover {
-    border-color: $primary-color;
-    background-color: rgba($primary-color, 0.02);
+  
+  .amenities-grid-compact {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    
+    .amenity-item-compact {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      font-size: 0.875rem;
+      color: $gray-700;
+      
+      i {
+        font-size: 0.75rem;
+        flex-shrink: 0;
+      }
+    }
   }
-
-  &.selected {
-    border-color: $primary-color !important;
-    background-color: rgba($primary-color, 0.08);
-
-    .rate-price {
-      color: $primary-color !important;
+  
+  .btn-link {
+    color: $primary-color;
+    text-decoration: none;
+    font-size: 0.875rem;
+    font-weight: 500;
+    
+    &:hover {
+      text-decoration: underline;
     }
   }
 }
 
-// Animaciones
-@keyframes spin {
-  to {
-    transform: rotate(360deg);
+.room-rates-section {
+  padding: 1.5rem;
+  background: $gray-100;
+  
+  .rates-title-compact {
+    font-size: 1rem;
+    font-weight: 600;
+    color: $gray-700;
+    margin-bottom: 1rem;
+    display: flex;
+    align-items: center;
+    
+    i {
+      color: $primary-color;
+    }
+  }
+  
+  .rates-list-compact {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
   }
 }
 
-@keyframes slideUp {
+// ============================================
+// CARD DE TARIFA COMPACTA
+// ============================================
+.rate-card-compact {
+  background: $white;
+  border: 2px solid $gray-200;
+  border-radius: $border-radius;
+  padding: 1rem;
+  cursor: pointer;
+  transition: $transition;
+  
+  &:hover {
+    border-color: $primary-color;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba($primary-color, 0.1);
+  }
+  
+  &.selected {
+    border-color: $primary-color;
+    background: rgba($primary-color, 0.05);
+    box-shadow: 0 4px 16px rgba($primary-color, 0.15);
+  }
+  
+  .rate-content-compact {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 2rem;
+  }
+}
+
+// Info de tarifa compacta
+.rate-info-compact {
+  flex: 1;
+  
+  .rate-board-name {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 1rem;
+    color: $gray-800;
+    margin-bottom: 0.5rem;
+    
+    i {
+      color: $primary-color;
+      font-size: 1.1rem;
+    }
+  }
+  
+  .rate-details-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+    
+    .rate-offer-tag {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.25rem;
+      background: rgba($success-color, 0.1);
+      color: darken($success-color, 10%);
+      padding: 0.25rem 0.625rem;
+      border-radius: $border-radius-sm;
+      font-size: 0.8rem;
+      font-weight: 500;
+      
+      i {
+        font-size: 0.85rem;
+      }
+    }
+    
+    .rate-cancellation-tag {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.25rem;
+      color: $gray-600;
+      font-size: 0.8rem;
+      
+      i {
+        color: $success-color;
+        font-size: 0.9rem;
+      }
+    }
+  }
+}
+
+// Precio y acción compacta
+.rate-price-action {
+  display: flex;
+  align-items: center;
+  gap: 1.5rem;
+  
+  .price-info-compact {
+    text-align: right;
+    
+    .price-label-compact {
+      font-size: 0.7rem;
+      color: $gray-600;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      font-weight: 500;
+    }
+    
+    .price-amount-compact {
+      font-size: 1.5rem;
+      font-weight: 700;
+      color: $primary-color;
+      line-height: 1.2;
+    }
+    
+    .price-details-compact {
+      font-size: 0.75rem;
+      color: $gray-600;
+      margin-top: 0.25rem;
+    }
+  }
+  
+  .btn-select-compact {
+    padding: 0.625rem 1.25rem;
+    font-size: 0.9rem;
+    font-weight: 600;
+    border-radius: $border-radius-sm;
+    border: none;
+    transition: $transition;
+    white-space: nowrap;
+    
+    &.btn-primary {
+      background: $primary-color;
+      color: $white;
+      
+      &:hover {
+        background: darken($primary-color, 10%);
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba($primary-color, 0.3);
+      }
+    }
+    
+    &.btn-success {
+      background: $success-color;
+      color: $white;
+      cursor: default;
+      
+      i {
+        margin-right: 0.5rem;
+        animation: checkPulse 0.6s ease-out;
+      }
+    }
+  }
+}
+
+// ============================================
+// ANIMACIONES
+// ============================================
+@keyframes checkPulse {
+  0%, 100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.2);
+  }
+}
+
+.animate-slide-down {
+  animation: slideDown 0.3s ease-out;
+}
+
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    max-height: 0;
+  }
+  to {
+    opacity: 1;
+    max-height: 500px;
+  }
+}
+
+// ============================================
+// BARRA DE RESERVA FLOTANTE (SIN CAMBIOS)
+// ============================================
+.booking-bar-fixed {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: $white;
+  box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.1);
+  padding: 1rem 0;
+  z-index: 1000;
+  animation: slideUpBar 0.3s ease-out;
+  
+  .booking-bar-content {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 2rem;
+  }
+  
+  .selection-info {
+    flex: 1;
+    
+    .selection-room {
+      display: flex;
+      align-items: center;
+      font-size: 1rem;
+      color: $gray-800;
+      margin-bottom: 0.25rem;
+      
+      i {
+        color: $primary-color;
+      }
+    }
+    
+    .selection-board {
+      display: flex;
+      align-items: center;
+      font-size: 0.875rem;
+      color: $gray-600;
+      
+      i {
+        color: $gray-600;
+      }
+    }
+  }
+  
+  .booking-action {
+    display: flex;
+    align-items: center;
+    gap: 1.5rem;
+    
+    .booking-price-info {
+      text-align: right;
+      
+      .price-label {
+        display: block;
+        font-size: 0.75rem;
+        color: $gray-600;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+      }
+      
+      .price-value {
+        display: block;
+        font-size: 1.5rem;
+        font-weight: 700;
+        color: $primary-color;
+        line-height: 1.2;
+      }
+    }
+    
+    .btn-booking {
+      background: $primary-color;
+      color: $white;
+      border: none;
+      padding: 0.875rem 2rem;
+      font-size: 1rem;
+      font-weight: 600;
+      border-radius: $border-radius-sm;
+      transition: $transition;
+      white-space: nowrap;
+      
+      &:hover {
+        background: darken($primary-color, 10%);
+        transform: translateY(-2px);
+        box-shadow: 0 6px 20px rgba($primary-color, 0.3);
+      }
+    }
+  }
+}
+
+@keyframes slideUpBar {
   from {
     transform: translateY(100%);
   }
@@ -509,39 +803,111 @@ $warning-color: #ffc107;
   }
 }
 
-// Responsive
-@include mobile {
-  .hotel-header {
-    .hotel-title {
-      font-size: 1.5rem;
+// ============================================
+// SIN HABITACIONES
+// ============================================
+.no-rooms-available {
+  text-align: center;
+  padding: 3rem 1rem;
+  
+  i {
+    font-size: 4rem;
+    color: $gray-300;
+    margin-bottom: 1rem;
+  }
+  
+  h5 {
+    color: $gray-700;
+    margin-bottom: 0.5rem;
+  }
+  
+  p {
+    color: $gray-600;
+    margin-bottom: 1.5rem;
+  }
+}
+
+// ============================================
+// RESPONSIVE
+// ============================================
+@media (max-width: 1199px) {
+  .room-top-section {
+    grid-template-columns: 350px 1fr;
+  }
+  
+  .gallery-main-image {
+    height: 200px !important;
+  }
+}
+
+@media (max-width: 991px) {
+  .room-top-section {
+    grid-template-columns: 1fr;
+    gap: 1.5rem;
+  }
+  
+  .gallery-main-image {
+    height: 250px !important;
+  }
+  
+  .rate-card-compact .rate-content-compact {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 1rem;
+  }
+  
+  .rate-price-action {
+    width: 100%;
+    justify-content: space-between;
+    
+    .price-info-compact {
+      text-align: left;
+    }
+    
+    .btn-select-compact {
+      flex: 1;
+      max-width: 150px;
     }
   }
+}
 
-  .hotel-gallery {
-    .main-image {
-      height: 250px;
+@media (max-width: 767px) {
+  .room-header-compact {
+    .room-title-compact {
+      font-size: 1.1rem;
     }
   }
-
-  .room-options {
-    .room-card {
-      .room-price {
-        margin-top: 1rem;
-        text-align: left;
+  
+  .gallery-main-image {
+    height: 200px !important;
+  }
+  
+  .gallery-thumbnails {
+    grid-template-columns: repeat(4, 1fr) !important;
+    
+    .thumbnail-item {
+      height: 50px !important;
+    }
+  }
+  
+  .rate-price-action {
+    .btn-select-compact {
+      max-width: none;
+    }
+  }
+  
+  .booking-bar-fixed {
+    .booking-bar-content {
+      flex-direction: column;
+      gap: 1rem;
+    }
+    
+    .booking-action {
+      width: 100%;
+      
+      .btn-booking {
+        flex: 1;
       }
-
-      .rate-option {
-        .rate-price {
-          margin: 1rem 0;
-        }
-      }
-    }
-  }
-
-  .booking-bar {
-    .selection-summary,
-    .booking-price {
-      margin-bottom: 1rem;
     }
   }
 }

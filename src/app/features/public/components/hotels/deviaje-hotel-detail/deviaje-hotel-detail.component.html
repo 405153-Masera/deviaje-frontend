@@ -46,37 +46,23 @@
       <div class="col-12">
         <div class="hotel-header card">
           <div class="card-body">
-            <div class="d-flex justify-content-between align-items-start flex-wrap">
+            <div
+              class="d-flex flex-column flex-lg-row align-items-center align-items-lg-start justify-content-center justify-content-lg-between text-center text-lg-start w-100">
 
               <div>
-                <h1 class="hotel-title">{{ hotel.name }}</h1>
+                <h1 class="hotel-title mb-0">{{ hotel.name }}</h1>
                 <p class="address">
                   <span>
                     <i class="bi bi-geo-alt"></i>
-                    {{ hotelDetails?.address }}
+                    {{ hotelDetails?.address }} -
                   </span>
                   <span>
-                    <i class="bi bi-building ms-3"></i>
                     {{destinationCity?.zone}}, {{ destinationCity?.name }} {{ destinationCity?.country }}
                   </span>
                 </p>
               </div>
 
               <div class="text-center">
-                <!-- Estrellas de Salud y Seguridad (S2C) -->
-                @if (hotelDetails?.s2c && getHealthSafetyStars() > 0) {
-                <div class="health-safety-stars mb-2"
-                  title="Certificación de Salud y Seguridad. Evalúa los protocolos sanitarios y de higiene del establecimiento.">
-                  <small class="text-muted me-2">
-                    <i class="bi bi-shield-check me-1"></i>
-                    Salud y Seguridad:
-                  </small>
-                  @for (i of [1, 2, 3, 4, 5]; track i) {
-                  <i class="bi bi-star-fill" [class.text-success]="i <= getHealthSafetyStars()"
-                    [class.text-muted]="i > getHealthSafetyStars()"></i>
-                  }
-                </div>
-                }
 
                 <!-- Cadena hotelera y ranking -->
                 <div class="d-flex gap-3 mb-2 flex-wrap">
@@ -94,6 +80,22 @@
                   </span>
                   }
                 </div>
+
+                <!-- Estrellas de Salud y Seguridad (S2C) -->
+                @if (hotelDetails?.s2c && getHealthSafetyStars() > 0) {
+                <div class="health-safety-stars mb-2"
+                  title="Certificación de Salud y Seguridad. Evalúa los protocolos sanitarios y de higiene del establecimiento.">
+                  <small class="text-muted me-2">
+                    <i class="bi bi-shield-check me-1"></i>
+                    Salud y Seguridad:
+                  </small>
+                  @for (i of [1, 2, 3, 4, 5]; track i) {
+                  <i class="bi bi-star-fill" [class.text-success]="i <= getHealthSafetyStars()"
+                    [class.text-muted]="i > getHealthSafetyStars()"></i>
+                  }
+                </div>
+                }
+
                 <!-- Enlace al sitio web del hotel -->
                 @if (hotelDetails?.web) {
                 <p class="hotel-web mb-0">
@@ -253,6 +255,7 @@
                               {{ getFeeText(facility) }}
                             </span>
                             }
+
                           </div>
                         </div>
                       </li>
@@ -270,166 +273,269 @@
       </div>
       }
 
+      <!-- Habitaciones disponibles -->
       <div class="col-12 mt-4">
-        <div class="card">
+        <div class="card border-0 shadow-sm">
           <div class="card-header bg-primary text-white">
             <h4 class="mb-0">
-              <i class="bi bi-house-door me-2"></i>
-              Habitaciones disponibles
+              <i class="bi bi-door-open me-2"></i>
+              Habitaciones Disponibles
             </h4>
           </div>
-          <div class="card-body">
+
+          <div class="card-body p-4">
             @if (hotel.rooms && hotel.rooms.length > 0) {
 
-            @for (room of hotel.rooms; track room.code) {
-            <div class="room-option card mb-3" [class.selected]="selectedRoom?.code === room.code">
-              <div class="card-body">
+            <!-- Grid de habitaciones -->
+            <div class="rooms-container">
+              @for (room of hotel.rooms; track room.code) {
 
-                <!-- Nombre de la habitación -->
-                <h5 class="room-name mb-2">
-                  {{ room.name }}
-                  <!-- ✨ NUEVO: Wildcard (nombre propio del hotel) -->
-                  @if (getWildcardRoomName(room.code)) {
-                  <span class="badge bg-info ms-2">{{ getWildcardRoomName(room.code) }}</span>
-                  }
-                </h5>
+              <!-- Card de habitación -->
+              <div class="room-card" [class.selected]="selectedRoom?.code === room.code">
 
-                <!-- ✨ NUEVO: Detalles de capacidad de la habitación -->
-                @if (getRoomDetails(room.code)) {
-                <div class="room-capacity mb-3">
-                  <small class="text-muted">
-                    @if (getRoomDetails(room.code)?.maxAdults) {
-                    <i class="bi bi-person-fill me-1"></i>{{ getRoomDetails(room.code)?.maxAdults }} adultos
-                    }
-                    @if (getRoomDetails(room.code)?.maxChildren) {
-                    <i class="bi bi-people-fill ms-2 me-1"></i>{{ getRoomDetails(room.code)?.maxChildren }} niños
-                    }
-                    @if (getRoomDetails(room.code)?.maxPax) {
-                    <i class="bi bi-people ms-2 me-1"></i>Max: {{ getRoomDetails(room.code)?.maxPax }} personas
-                    }
-                  </small>
-                </div>
-                }
+                <!-- SECCIÓN SUPERIOR: 2 COLUMNAS -->
+                <div class="room-top-section">
 
-                <!-- ✨ NUEVO: Facilities de la habitación -->
-                @if (getAllRoomFacilities(room.code).length > 0) {
-                <div class="room-facilities mb-3">
-                  <h6 class="small text-secondary mb-2">
-                    <i class="bi bi-check2-square me-1"></i>
-                    Comodidades
-                  </h6>
-                  <div class="d-flex flex-wrap gap-1">
-                    @for (facility of getAllRoomFacilities(room.code).slice(0, 10); track facility.facilityCode) {
-                    @if (isFacilityAvailable(facility)) {
-                    <span class="badge bg-light text-dark border">
-                      {{ facility.description?.content || facility.facilityName }}
-                    </span>
-                    }
-                    }
-                    @if (getAllRoomFacilities(room.code).length > 10) {
-                    <span class="badge bg-secondary">
-                      +{{ getAllRoomFacilities(room.code).length - 10 }} más
-                    </span>
-                    }
-                  </div>
-                </div>
-                }
+                  <!-- COLUMNA IZQUIERDA: Imágenes (Galería) -->
+                  <div class="room-gallery-column">
+                    <!-- Header con nombre de habitación -->
+                    <div class="room-header-compact mb-3">
+                      <h5 class="room-title-compact mb-1">{{ room.name }}</h5>
 
-                <!-- Tarifas -->
-                @if (room.rates && room.rates.length > 0) {
-                <div class="rate-options">
-                  @for (rate of room.rates; track rate.rateKey) {
-                  <div class="rate-option p-3 border rounded mb-2"
-                    [class.selected]="selectedRate?.rateKey === rate.rateKey"
-                    (click)="selectRoom(room); selectRate(rate)">
-                    <div class="d-flex justify-content-between align-items-center">
-                      <div>
-                        <!-- ✨ ACTUALIZADO: Régimen alimenticio -->
-                        <div class="board-type fw-semibold">
-                          <i class="bi bi-cup-hot me-1"></i>
-                          {{ getBoardDescription(rate.boardName) }}
-                        </div>
+                      <!-- Nombre personalizado (wildcards) -->
+                      @if (getWildcardRoomName(room.code)) {
+                      <p class="room-subtitle-compact text-muted mb-0">
+                        <i class="bi bi-info-circle me-1"></i>
+                        {{ getWildcardRoomName(room.code) }}
+                      </p>
+                      }
+                    </div>
 
-                        @if (getRateOffers(rate).length > 0) {
-                        <div class="text-success mt-1">
-                          <small>
-                            <i class="bi bi-tag me-1"></i>
-                            {{ getRateOffers(rate)[0].name }}
-                          </small>
-                        </div>
-                        }
 
-                        @if (rate.cancellationPolicies) {
-                        <div class="cancellation-info mt-1">
-                          <small class="text-muted">
-                            <i class="bi bi-info-circle me-1"></i>
-                            {{ formatCancellationPolicy(rate.cancellationPolicies) }}
-                          </small>
+                    <div class="room-mini-gallery">
+                      @if (getRoomImages(room.code).length > 0) {
+                      <div class="gallery-main-image">
+                        <img [src]="getRoomImages(room.code)[currentRoomImageIndex.get(room.code) || 0]"
+                          [alt]="room.name" class="img-fluid" loading="lazy">
+
+                        <!-- Badge de seleccionada -->
+                        @if (selectedRoom?.code === room.code) {
+                        <div class="selected-badge-mini">
+                          <i class="bi bi-check-circle-fill"></i>
                         </div>
                         }
                       </div>
 
-                      <div class="text-end">
-                        <div class="price-from">Total</div>
-                        <div class="rate-price fw-bold text-primary h5">
-                          {{ hotelService.convertToArs(getRateNet(rate)) | currency:'ARS' }}
+                      <div class="thumbnails-container mt-2" #thumbnailsRoom [attr.data-room-code]="room.code"
+                        (mousemove)="onThumbnailsRoomMouseMove($event, room.code)"
+                        (mouseleave)="onThumbnailsRoomMouseLeave(room.code)">
+                        <div class="thumbnails d-flex">
+                          @if (getRoomImages(room.code).length > 1) {
+                          @for (image of getRoomImages(room.code); track $index) {
+                          <div class="thumbnail" [class.active]="(currentRoomImageIndex.get(room.code) || 0) === $index"
+                            (click)="selectRoomImage(room.code, $index)">
+                            <img [src]="image" [alt]="room.name" class="img-fluid">
+                          </div>
+                          }
+                          }
                         </div>
-                        @if(passengers > 1){
-                        <div class="price-night small">{{passengers}} huéspedes</div>
-                        } @else {
-                        <div class="price-night small">{{passengers}} huésped</div>
-                        }
-                        <small class="text-muted">
-                          {{ hotelService.convertToArs(getRateNet(rate) / getNightsCount()) | currency:'ARS' }} / noche
-                        </small>
                       </div>
+
+
+                      } @else {
+                      <!-- Placeholder si no hay imágenes -->
+                      <div class="gallery-placeholder">
+                        <i class="bi bi-image"></i>
+                        <span>Sin imágenes</span>
+                      </div>
+                      }
                     </div>
                   </div>
+
+                  <!-- COLUMNA DERECHA: Comodidades -->
+                  <div class="room-amenities-column">
+                    <h6 class="amenities-title-compact">
+                      Comodidades
+                    </h6>
+
+                    @if (getAllRoomFacilities(room.code).length > 0) {
+                    <div class="amenities-grid-compact">
+                      @for (facility of getAllRoomFacilities(room.code).slice(0, 8); track facility.facilityCode) {
+                      @if (isFacilityAvailable(facility)) {
+                      <div class="amenity-item-compact">
+                        <span>{{ formatFacilityInfo(facility) }}</span>
+                      </div>
+                      }
+                      }
+                    </div>
+
+                    <!-- Ver más comodidades -->
+                    @if (getAllRoomFacilities(room.code).length > 8) {
+                    <button class="btn btn-link btn-sm p-0 mt-2" (click)="toggleRoomAmenities(room.code)">
+                      @if (isRoomAmenitiesExpanded(room.code)) {
+                      <i class="bi bi-chevron-up me-1"></i>
+                      Ver menos
+                      } @else {
+                      <i class="bi bi-chevron-down me-1"></i>
+                      Ver {{ getAllRoomFacilities(room.code).length - 8 }} más
+                      }
+                    </button>
+
+                    <!-- Comodidades adicionales (colapsable) -->
+                    @if (isRoomAmenitiesExpanded(room.code)) {
+                    <div class="amenities-grid-compact mt-2 animate-slide-down">
+                      @for (facility of getAllRoomFacilities(room.code).slice(8); track facility.facilityCode) {
+                      @if (isFacilityAvailable(facility)) {
+                      <div class="amenity-item-compact">
+                        <span>{{ formatFacilityInfo(facility) }}</span>
+                      </div>
+                      }
+                      }
+                    </div>
+                    }
+                    }
+
+                    } @else {
+                    <p class="text-muted mb-0">Sin comodidades registradas</p>
+                    }
+                  </div>
+                </div>
+
+                <!-- SECCIÓN INFERIOR: Tarifas (Full Width) -->
+                <div class="room-rates-section">
+                  <h6 class="rates-title-compact">
+                    <i class="bi bi-tag-fill me-2"></i>
+                    Opciones de Tarifa
+                  </h6>
+
+                  @if (room.rates && room.rates.length > 0) {
+                  <div class="rates-list-compact">
+                    @for (rate of room.rates; track rate.rateKey) {
+
+                    @if(rate.packaging != true){
+                    <!-- Card de tarifa compacta -->
+                    <div class="rate-card-compact" [class.selected]="selectedRate?.rateKey === rate.rateKey"
+                      (click)="selectRoom(room); selectRate(rate)">
+
+                      <div class="rate-content-compact">
+                        <!-- Izquierda: Info -->
+                        <div class="rate-info-compact">
+                          <div class="rate-board-name">
+                            <i class="bi bi-cup-hot-fill"></i>
+                            <span class="fw-semibold">{{ rate.boardName || 'Solo habitación' }}</span>
+                          </div>
+
+                          <div class="rate-details-row">
+                            <!-- Ofertas -->
+                            @if (getRateOffers(rate).length > 0) {
+                            <span class="rate-offer-tag">
+                              <i class="bi bi-gift-fill"></i>
+                              {{ getRateOffers(rate)[0].name }}
+                            </span>
+                            }
+
+                            <!-- Cancelación -->
+                            @if (rate.cancellationPolicies) {
+                            <span class="rate-cancellation-tag">
+                              <i class="bi bi-shield-check"></i>
+                              {{ formatCancellationPolicyShort(rate.cancellationPolicies) }}
+                            </span>
+                            }
+                          </div>
+                        </div>
+
+                        <!-- Derecha: Precio y botón -->
+                        <div class="rate-price-action">
+                          <div class="price-info-compact">
+                            <div class="price-label-compact">Total</div>
+                            <div class="price-amount-compact">
+                              {{ hotelService.convertToArs(getRateNet(rate)) | currency:'ARS':'symbol':'1.0-0' }}
+                            </div>
+                            <div class="price-details-compact">
+                              {{ passengers }} {{ passengers > 1 ? 'huéspedes' : 'huésped' }}
+                              <span class="mx-1">•</span>
+                              {{ hotelService.convertToArs(getRateNet(rate) / getNightsCount()) |
+                              currency:'ARS':'symbol':'1.0-0' }} /noche
+                            </div>
+                          </div>
+
+                          <button class="btn-select-compact"
+                            [class.btn-primary]="selectedRate?.rateKey !== rate.rateKey"
+                            [class.btn-success]="selectedRate?.rateKey === rate.rateKey">
+                            @if (selectedRate?.rateKey === rate.rateKey) {
+                            <i class="bi bi-check-circle-fill"></i>
+                            Seleccionada
+                            } @else {
+                            Seleccionar
+                            }
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                    }
+
+                    }
+                  </div>
+                  } @else {
+                  <p class="text-muted mb-0">
+                    <i class="bi bi-info-circle me-1"></i>
+                    No hay tarifas disponibles
+                  </p>
                   }
                 </div>
-                } @else {
-                <p class="text-muted mt-3">No hay tarifas disponibles para esta habitación</p>
-                }
               </div>
+              }
             </div>
-            }
 
             } @else {
-            <div class="no-rooms p-4 text-center">
-              <p>No hay habitaciones disponibles para las fechas seleccionadas.</p>
-              <button class="btn btn-outline-primary" routerLink="/home/hotels/search">
-                Modificar búsqueda
+            <!-- Sin habitaciones disponibles -->
+            <div class="no-rooms-available">
+              <i class="bi bi-exclamation-circle"></i>
+              <h5>No hay habitaciones disponibles</h5>
+              <p>Para las fechas seleccionadas no encontramos habitaciones disponibles.</p>
+              <button class="btn btn-primary" (click)="router.navigate(['/home/hotels/results'])">
+                <i class="bi bi-arrow-left me-2"></i>
+                Volver a resultados
               </button>
             </div>
             }
           </div>
         </div>
       </div>
-    </div>
 
-    <!-- Barra de reserva flotante -->
-    @if (selectedRoom && selectedRate) {
-    <div class="booking-bar">
-      <div class="container">
-        <div class="row align-items-center">
-          <div class="col-md-7">
-            <div class="selection-summary">
-              <div class="room-name">{{ selectedRoom.name }}</div>
-              <div class="rate-detail">{{ selectedRate.boardName || 'Solo habitación' }}</div>
+      <!-- Barra de reserva flotante -->
+      @if (!inPackageMode && selectedRoom && selectedRate) {
+      <div class="booking-bar-fixed">
+        <div class="container">
+          <div class="booking-bar-content">
+            <div class="selection-info">
+              <div class="selection-room">
+                <i class="bi bi-door-open-fill me-2"></i>
+                <span class="fw-semibold">{{ selectedRoom.name }}</span>
+              </div>
+              <div class="selection-board">
+                <i class="bi bi-cup-hot-fill me-2"></i>
+                <span>{{ selectedRate.boardName || 'Solo habitación' }}</span>
+              </div>
             </div>
-          </div>
-          <div class="col-md-3 text-md-end">
-            <div class="booking-price">{{ hotelService.convertToArs(getRateNet(selectedRate)) | currency:'ARS' }}</div>
-          </div>
-          <div class="col-md-2 text-md-end">
-            <button class="btn btn-primary w-100" (click)="bookHotel()">
-              {{ inPackageMode ? 'Agregar al paquete' : 'Reservar' }}
-            </button>
+
+            <div class="booking-action">
+              <div class="booking-price-info">
+                <span class="price-label">Total</span>
+                <span class="price-value">
+                  {{ hotelService.convertToArs(getRateNet(selectedRate)) | currency:'ARS':'symbol':'1.0-0' }}
+                </span>
+              </div>
+              <button class="btn btn-booking" (click)="bookHotel()">
+                <i class="bi bi-check-circle-fill me-2"></i>
+                Continuar con la reserva
+              </button>
+            </div>
           </div>
         </div>
       </div>
+      }
     </div>
-    }
     }
   </div>
 </div>
