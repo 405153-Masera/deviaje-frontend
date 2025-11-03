@@ -28,6 +28,7 @@
       width: 100%;
       height: 100%;
       object-fit: cover;
+      transition: transform 0.3s ease;
     }
 
     .gallery-controls {
@@ -78,20 +79,20 @@
   overflow-y: hidden;
   -webkit-overflow-scrolling: touch; // Smooth scrolling en iOS
   scrollbar-width: thin; // Firefox
-  
+
   &::-webkit-scrollbar {
     height: 6px;
   }
-  
+
   &::-webkit-scrollbar-track {
     background: #f1f1f1;
     border-radius: 3px;
   }
-  
+
   &::-webkit-scrollbar-thumb {
     background: #888;
     border-radius: 3px;
-    
+
     &:hover {
       background: #555;
     }
@@ -104,7 +105,7 @@
   padding-bottom: 0.25rem; // Espacio para no cortar el borde del último thumbnail // Espacio para no cortar el borde del último thumbnail
   flex-wrap: nowrap; // ← AGREGAR: Evita que las miniaturas se envuelvan en múltiples líneas
   width: max-content;
-  
+
   .thumbnail {
     flex-shrink: 0; // Evita que las miniaturas se compriman
     width: 80px;
@@ -114,17 +115,17 @@
     border-radius: 4px;
     overflow: hidden;
     transition: all 0.3s ease;
-    
+
     &:hover {
       border-color: $primary-color;
       transform: scale(1.05);
     }
-    
+
     &.active {
       border-color: $primary-color;
       box-shadow: 0 0 8px $primary-color;
     }
-    
+
     img {
       width: 100%;
       height: 100%;
@@ -181,7 +182,7 @@ $warning-color: #ffc107;
   background: white;
   overflow: hidden;
   transition: $transition-fast;
-  
+
   &:hover {
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
   }
@@ -196,28 +197,28 @@ $warning-color: #ffc107;
   cursor: pointer;
   border-bottom: 1px solid $gray-300;
   transition: $transition-fast;
-  
+
   &:hover {
     background: $gray-200;
   }
-  
+
   &.expanded {
     background: rgba($primary-color, 0.1);
     border-bottom-color: $primary-color;
   }
-  
+
   .facility-group-title {
     font-size: 0.9rem;
     font-weight: 600;
     color: $gray-800;
     margin: 0;
   }
-  
+
   .facility-count {
     font-size: 0.75rem;
     padding: 0.25rem 0.5rem;
   }
-  
+
   .transition-icon {
     color: $gray-600;
     transition: transform 0.3s ease;
@@ -240,26 +241,26 @@ $warning-color: #ffc107;
   list-style: none;
   padding: 0;
   margin: 0;
-  
+
   .facility-item {
     padding: 0.5rem 0;
     border-bottom: 1px solid $gray-200;
     font-size: 0.875rem;
-    
+
     &:last-child {
       border-bottom: none;
       padding-bottom: 0;
     }
-    
+
     &:first-child {
       padding-top: 0;
     }
-    
+
     .facility-name {
       color: $gray-700;
       line-height: 1.4;
     }
-    
+
     .badge-fee {
       background: rgba($warning-color, 0.15);
       color: darken($warning-color, 25%);
@@ -302,7 +303,7 @@ $warning-color: #ffc107;
         font-size: 0.85rem;
       }
     }
-    
+
     .facility-list .facility-item {
       font-size: 0.8rem;
     }
@@ -313,7 +314,7 @@ $warning-color: #ffc107;
   .btn-group .btn-light {
     font-size: 0.75rem;
     padding: 0.25rem 0.5rem;
-    
+
     span {
       display: none; // Ocultar texto en móvil, solo mostrar icono
     }
@@ -328,7 +329,7 @@ $warning-color: #ffc107;
     outline: 2px solid $primary-color;
     outline-offset: -2px;
   }
-  
+
   &:active {
     transform: scale(0.98);
   }
@@ -349,12 +350,12 @@ $gray-50: #f8f9fa;
   border-radius: $border-radius;
   overflow: hidden;
   transition: $transition;
-  
+
   &:hover {
     border-color: $primary-color;
     box-shadow: 0 4px 20px rgba($primary-color, 0.1);
   }
-  
+
   &.selected {
     border-color: $primary-color;
     box-shadow: 0 6px 24px rgba($primary-color, 0.15);
@@ -373,6 +374,7 @@ $gray-50: #f8f9fa;
   display: flex;
   flex-direction: column;
   gap: 1rem;
+  width: 100%;
 }
 
 .room-header-compact {
@@ -382,7 +384,7 @@ $gray-50: #f8f9fa;
     color: $gray-800;
     margin: 0;
   }
-  
+
   .room-subtitle-compact {
     font-size: 0.85rem;
     color: $gray-600;
@@ -393,12 +395,15 @@ $gray-50: #f8f9fa;
 
 // Mini galería
 .room-mini-gallery {
+  width: 100%;
+  
   .gallery-main-image {
     position: relative;
-    width: 100%;
     height: 220px;
     border-radius: $border-radius;
     overflow: hidden;
+    width: 100%;
+    margin-bottom: 0.75rem;
     
     img {
       width: 100%;
@@ -406,11 +411,11 @@ $gray-50: #f8f9fa;
       object-fit: cover;
       transition: transform 0.3s ease;
     }
-    
+
     &:hover img {
       transform: scale(1.05);
     }
-    
+
     .selected-badge-mini {
       position: absolute;
       top: 0.75rem;
@@ -424,13 +429,13 @@ $gray-50: #f8f9fa;
       align-items: center;
       justify-content: center;
       box-shadow: 0 2px 8px rgba($primary-color, 0.3);
-      
+
       i {
         font-size: 1rem;
       }
     }
   }
-  
+
   .gallery-placeholder {
     width: 100%;
     height: 220px;
@@ -441,16 +446,94 @@ $gray-50: #f8f9fa;
     align-items: center;
     justify-content: center;
     color: $gray-400;
-    
+
     i {
       font-size: 3rem;
       margin-bottom: 0.5rem;
     }
-    
+
     span {
       font-size: 0.9rem;
     }
   }
+}
+
+/* ✅ Thumbnails exclusivos para ROOM (no afecta la galería principal) */
+.room-thumbnails-container {
+
+  width: 100%;
+  overflow-x: auto;
+  overflow-y: hidden;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: thin;
+
+  &::-webkit-scrollbar {
+    height: 6px;
+  }
+
+  &::-webkit-scrollbar-track {
+    background: #f1f1f1;
+    border-radius: 3px;
+  }
+
+  &::-webkit-scrollbar-thumb {
+    background: #888;
+    border-radius: 3px;
+
+    &:hover {
+      background: #555;
+    }
+  }
+}
+
+.room-thumbnails {
+
+  display: flex;
+  flex-wrap: nowrap; /* ← CRÍTICO: No wrap */
+  gap: 0.5rem;
+  padding-bottom: 0.25rem;
+  width: max-content; /* ← Permite crecer más allá del contenedor */
+  min-width: min-content; // ← AGREGAR: Evita que las miniaturas se envuelvan en múltiples líneas
+}
+
+.room-thumbnail {
+  flex-shrink: 0;
+  width: 80px;
+  height: 60px;
+  border-radius: 4px;
+  overflow: hidden;
+  border: 2px solid transparent;
+  cursor: pointer;
+  transition: 0.3s ease;
+  overflow: hidden;
+
+  img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+
+  &:hover {
+    border-color: $primary-color;
+    transform: scale(1.05);
+  }
+
+  &.active {
+    border-color: $primary-color;
+    box-shadow: 0 0 6px rgba($primary-color, 0.5);
+  }
+}
+
+@media (max-width: 800px) {
+  .room-thumbnails .room-thumbnail {
+    width: 50px;
+    height: 45px;
+  }
+
+  .room-thumbnails-container {
+    max-width: 16rem;
+  }
+  
 }
 
 // ============================================
@@ -464,37 +547,37 @@ $gray-50: #f8f9fa;
     margin-bottom: 1rem;
     display: flex;
     align-items: center;
-    
+
     i {
       color: $primary-color;
     }
   }
-  
+
   .amenities-grid-compact {
     display: flex;
     flex-direction: column;
     gap: 0.5rem;
-    
+
     .amenity-item-compact {
       display: flex;
       align-items: center;
       gap: 0.5rem;
       font-size: 0.875rem;
       color: $gray-700;
-      
+
       i {
         font-size: 0.75rem;
         flex-shrink: 0;
       }
     }
   }
-  
+
   .btn-link {
     color: $primary-color;
     text-decoration: none;
     font-size: 0.875rem;
     font-weight: 500;
-    
+
     &:hover {
       text-decoration: underline;
     }
@@ -504,7 +587,7 @@ $gray-50: #f8f9fa;
 .room-rates-section {
   padding: 1.5rem;
   background: $gray-100;
-  
+
   .rates-title-compact {
     font-size: 1rem;
     font-weight: 600;
@@ -512,12 +595,12 @@ $gray-50: #f8f9fa;
     margin-bottom: 1rem;
     display: flex;
     align-items: center;
-    
+
     i {
       color: $primary-color;
     }
   }
-  
+
   .rates-list-compact {
     display: flex;
     flex-direction: column;
@@ -535,19 +618,19 @@ $gray-50: #f8f9fa;
   padding: 1rem;
   cursor: pointer;
   transition: $transition;
-  
+
   &:hover {
     border-color: $primary-color;
     transform: translateY(-2px);
     box-shadow: 0 4px 12px rgba($primary-color, 0.1);
   }
-  
+
   &.selected {
     border-color: $primary-color;
     background: rgba($primary-color, 0.05);
     box-shadow: 0 4px 16px rgba($primary-color, 0.15);
   }
-  
+
   .rate-content-compact {
     display: flex;
     justify-content: space-between;
@@ -559,7 +642,7 @@ $gray-50: #f8f9fa;
 // Info de tarifa compacta
 .rate-info-compact {
   flex: 1;
-  
+
   .rate-board-name {
     display: flex;
     align-items: center;
@@ -567,18 +650,18 @@ $gray-50: #f8f9fa;
     font-size: 1rem;
     color: $gray-800;
     margin-bottom: 0.5rem;
-    
+
     i {
       color: $primary-color;
       font-size: 1.1rem;
     }
   }
-  
+
   .rate-details-row {
     display: flex;
     flex-wrap: wrap;
     gap: 0.75rem;
-    
+
     .rate-offer-tag {
       display: inline-flex;
       align-items: center;
@@ -589,19 +672,19 @@ $gray-50: #f8f9fa;
       border-radius: $border-radius-sm;
       font-size: 0.8rem;
       font-weight: 500;
-      
+
       i {
         font-size: 0.85rem;
       }
     }
-    
+
     .rate-cancellation-tag {
       display: inline-flex;
       align-items: center;
       gap: 0.25rem;
       color: $gray-600;
       font-size: 0.8rem;
-      
+
       i {
         color: $success-color;
         font-size: 0.9rem;
@@ -615,10 +698,10 @@ $gray-50: #f8f9fa;
   display: flex;
   align-items: center;
   gap: 1.5rem;
-  
+
   .price-info-compact {
     text-align: right;
-    
+
     .price-label-compact {
       font-size: 0.7rem;
       color: $gray-600;
@@ -626,21 +709,21 @@ $gray-50: #f8f9fa;
       letter-spacing: 0.5px;
       font-weight: 500;
     }
-    
+
     .price-amount-compact {
       font-size: 1.5rem;
       font-weight: 700;
       color: $primary-color;
       line-height: 1.2;
     }
-    
+
     .price-details-compact {
       font-size: 0.75rem;
       color: $gray-600;
       margin-top: 0.25rem;
     }
   }
-  
+
   .btn-select-compact {
     padding: 0.625rem 1.25rem;
     font-size: 0.9rem;
@@ -649,23 +732,23 @@ $gray-50: #f8f9fa;
     border: none;
     transition: $transition;
     white-space: nowrap;
-    
+
     &.btn-primary {
       background: $primary-color;
       color: $white;
-      
+
       &:hover {
         background: darken($primary-color, 10%);
         transform: translateY(-2px);
         box-shadow: 0 4px 12px rgba($primary-color, 0.3);
       }
     }
-    
+
     &.btn-success {
       background: $success-color;
       color: $white;
       cursor: default;
-      
+
       i {
         margin-right: 0.5rem;
         animation: checkPulse 0.6s ease-out;
@@ -678,7 +761,8 @@ $gray-50: #f8f9fa;
 // ANIMACIONES
 // ============================================
 @keyframes checkPulse {
-  0%, 100% {
+  0%,
+  100% {
     transform: scale(1);
   }
   50% {
@@ -714,49 +798,49 @@ $gray-50: #f8f9fa;
   padding: 1rem 0;
   z-index: 1000;
   animation: slideUpBar 0.3s ease-out;
-  
+
   .booking-bar-content {
     display: flex;
     justify-content: space-between;
     align-items: center;
     gap: 2rem;
   }
-  
+
   .selection-info {
     flex: 1;
-    
+
     .selection-room {
       display: flex;
       align-items: center;
       font-size: 1rem;
       color: $gray-800;
       margin-bottom: 0.25rem;
-      
+
       i {
         color: $primary-color;
       }
     }
-    
+
     .selection-board {
       display: flex;
       align-items: center;
       font-size: 0.875rem;
       color: $gray-600;
-      
+
       i {
         color: $gray-600;
       }
     }
   }
-  
+
   .booking-action {
     display: flex;
     align-items: center;
     gap: 1.5rem;
-    
+
     .booking-price-info {
       text-align: right;
-      
+
       .price-label {
         display: block;
         font-size: 0.75rem;
@@ -764,7 +848,7 @@ $gray-50: #f8f9fa;
         text-transform: uppercase;
         letter-spacing: 0.5px;
       }
-      
+
       .price-value {
         display: block;
         font-size: 1.5rem;
@@ -773,7 +857,7 @@ $gray-50: #f8f9fa;
         line-height: 1.2;
       }
     }
-    
+
     .btn-booking {
       background: $primary-color;
       color: $white;
@@ -784,7 +868,7 @@ $gray-50: #f8f9fa;
       border-radius: $border-radius-sm;
       transition: $transition;
       white-space: nowrap;
-      
+
       &:hover {
         background: darken($primary-color, 10%);
         transform: translateY(-2px);
@@ -809,18 +893,18 @@ $gray-50: #f8f9fa;
 .no-rooms-available {
   text-align: center;
   padding: 3rem 1rem;
-  
+
   i {
     font-size: 4rem;
     color: $gray-300;
     margin-bottom: 1rem;
   }
-  
+
   h5 {
     color: $gray-700;
     margin-bottom: 0.5rem;
   }
-  
+
   p {
     color: $gray-600;
     margin-bottom: 1.5rem;
@@ -834,7 +918,7 @@ $gray-50: #f8f9fa;
   .room-top-section {
     grid-template-columns: 350px 1fr;
   }
-  
+
   .gallery-main-image {
     height: 200px !important;
   }
@@ -845,25 +929,25 @@ $gray-50: #f8f9fa;
     grid-template-columns: 1fr;
     gap: 1.5rem;
   }
-  
+
   .gallery-main-image {
     height: 250px !important;
   }
-  
+
   .rate-card-compact .rate-content-compact {
     flex-direction: column;
     align-items: flex-start;
     gap: 1rem;
   }
-  
+
   .rate-price-action {
     width: 100%;
     justify-content: space-between;
-    
+
     .price-info-compact {
       text-align: left;
     }
-    
+
     .btn-select-compact {
       flex: 1;
       max-width: 150px;
@@ -877,34 +961,34 @@ $gray-50: #f8f9fa;
       font-size: 1.1rem;
     }
   }
-  
+
   .gallery-main-image {
     height: 200px !important;
   }
-  
+
   .gallery-thumbnails {
     grid-template-columns: repeat(4, 1fr) !important;
-    
+
     .thumbnail-item {
       height: 50px !important;
     }
   }
-  
+
   .rate-price-action {
     .btn-select-compact {
       max-width: none;
     }
   }
-  
+
   .booking-bar-fixed {
     .booking-bar-content {
       flex-direction: column;
       gap: 1rem;
     }
-    
+
     .booking-action {
       width: 100%;
-      
+
       .btn-booking {
         flex: 1;
       }

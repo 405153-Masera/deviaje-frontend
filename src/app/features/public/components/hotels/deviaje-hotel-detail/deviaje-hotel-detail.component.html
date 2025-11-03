@@ -311,7 +311,6 @@
                       }
                     </div>
 
-
                     <div class="room-mini-gallery">
                       @if (getRoomImages(room.code).length > 0) {
                       <div class="gallery-main-image">
@@ -326,13 +325,14 @@
                         }
                       </div>
 
-                      <div class="thumbnails-container mt-2" #thumbnailsRoom [attr.data-room-code]="room.code"
+                      <div class="room-thumbnails-container mt-2" #thumbnailsRoom [attr.data-room-code]="room.code"
                         (mousemove)="onThumbnailsRoomMouseMove($event, room.code)"
                         (mouseleave)="onThumbnailsRoomMouseLeave(room.code)">
-                        <div class="thumbnails d-flex">
+                        <div class="room-thumbnails d-flex">
                           @if (getRoomImages(room.code).length > 1) {
                           @for (image of getRoomImages(room.code); track $index) {
-                          <div class="thumbnail" [class.active]="(currentRoomImageIndex.get(room.code) || 0) === $index"
+                          <div class="room-thumbnail"
+                            [class.active]="(currentRoomImageIndex.get(room.code) || 0) === $index"
                             (click)="selectRoomImage(room.code, $index)">
                             <img [src]="image" [alt]="room.name" class="img-fluid">
                           </div>
@@ -502,6 +502,63 @@
           </div>
         </div>
       </div>
+
+      @if (hotelDetails && hotelDetails.interestPoints && hotelDetails.interestPoints.length > 0) {
+      <div class="col-12 mt-4">
+        <div class="card">
+          <div class="card-header">
+            <h5 class="mb-0">
+              <i class="bi bi-pin-map me-2"></i>
+              Puntos de interés cercanos
+            </h5>
+          </div>
+          <div class="card-body">
+            <div class="row">
+              @for (poi of hotelDetails.interestPoints; track poi.facilityCode) {
+              <div class="col-md-6 col-lg-4 mb-2">
+                <small>
+                  <i class="bi bi-geo-alt text-primary me-1"></i>
+                  {{ poi.poiName }}
+                  @if (poi.distance) {
+                  <span class="text-muted">({{ poi.distance }})</span>
+                  }
+                </small>
+              </div>
+              }
+            </div>
+          </div>
+        </div>
+      </div>
+      }
+
+      <!-- ✨ NUEVO: Terminals -->
+      @if (hotelDetails && hotelDetails.terminals && hotelDetails.terminals.length > 0) {
+      <div class="col-12 mt-4">
+        <div class="card">
+          <div class="card-header">
+            <h5 class="mb-0">
+              <i class="bi bi-airplane me-2"></i>
+              Terminales de transporte
+            </h5>
+          </div>
+          <div class="card-body">
+            <div class="row">
+              @for (terminal of hotelDetails.terminals; track terminal.terminalCode) {
+              <div class="col-md-6 mb-2">
+                <small>
+                  <i class="bi bi-pin-angle text-primary me-1"></i>
+                  {{ terminal.description?.content || terminal.terminalCode }}
+                  @if (terminal.distance) {
+                  <span class="text-muted">({{ terminal.distance }}m)</span>
+                  }
+                </small>
+              </div>
+              }
+            </div>
+          </div>
+        </div>
+      </div>
+      }
 
       <!-- Barra de reserva flotante -->
       @if (!inPackageMode && selectedRoom && selectedRate) {
