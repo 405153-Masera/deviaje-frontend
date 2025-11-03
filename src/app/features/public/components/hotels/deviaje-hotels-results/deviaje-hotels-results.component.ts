@@ -664,6 +664,11 @@ export class DeviajeHotelsResultsComponent implements OnInit, OnDestroy {
 
   //####################### METÓDOS PARA DETALLES DE LOS HOTELES ######################
   showHotelDetails(hotel: HotelSearchResponse.Hotel): void {
+
+    if (this.destinationCity) {
+      this.destinationCity.zone = hotel.zoneName;
+    }
+    
     if (this.inPackageMode) {
       // En modo paquete, mostrar modal
       this.selectedHotelForDetail = hotel;

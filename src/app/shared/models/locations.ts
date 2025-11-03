@@ -20,4 +20,5 @@ export interface CityDto {
   name: string;
   iataCode: string;
   country: string;
+  zone?: string
 }

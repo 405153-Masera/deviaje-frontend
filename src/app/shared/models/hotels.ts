@@ -103,7 +103,6 @@ export namespace HotelSearchResponse {
   }
 }
 
-// Resto de interfaces existentes se mantienen igual...
 export interface HotelResponseDto {
   code: string;
   name: string;
@@ -149,7 +148,7 @@ export interface HotelResponseDto {
   }>;
   segments?: Array<{
     code: number;
-    description?: string;
+    content?: string;
   }>;
   terminals?: Array<{
     terminalCode: string;

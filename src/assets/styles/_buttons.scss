@@ -63,21 +63,6 @@
   }
 }
 
-.btn-outline {
-  background-color: transparent;
-  border: 1px solid $gray-300;
-  color: $gray-700;
-
-  &:hover:not(:disabled) {
-    background-color: $gray-100;
-    color: black;
-  }
-
-  &:active:not(:disabled) {
-    background-color: $gray-200;
-  }
-}
-
 // Tamaños de botones
 .btn-sm {
   padding: 6px 12px;

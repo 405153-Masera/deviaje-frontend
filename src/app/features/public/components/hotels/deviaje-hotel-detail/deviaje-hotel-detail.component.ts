@@ -1,11 +1,13 @@
 import {
   Component,
+  ElementRef,
   EventEmitter,
   inject,
   Input,
   OnDestroy,
   OnInit,
   Output,
+  ViewChild,
 } from '@angular/core';
 import { ActivatedRoute, Router, RouterModule } from '@angular/router';
 import { HotelService } from '../../../../../shared/services/hotel.service';
@@ -97,8 +99,8 @@ export class DeviajeHotelDetailComponent implements OnInit, OnDestroy {
 
   private initializeNormalMode(): void {
     this.route.paramMap.subscribe((params) => {
+      
       this.hotelCode = params.get('code');
-
       if (this.hotelCode) {
         if (window.history.state.hotel) {
           this.hotel = window.history.state.hotel;
@@ -138,6 +140,7 @@ export class DeviajeHotelDetailComponent implements OnInit, OnDestroy {
 
   ngOnDestroy(): void {
     this.subscription.unsubscribe();
+    this.stopAutoScroll();
   }
 
   loadHotelDetails(): void {
@@ -157,8 +160,7 @@ export class DeviajeHotelDetailComponent implements OnInit, OnDestroy {
           console.error('Error al cargar detalles del hotel:', error);
           this.isLoading = false;
           this.hasError = true;
-          this.errorMessage =
-            'Error al cargar los detalles del hotel. Por favor, intenta de nuevo.';
+          this.errorMessage = error.message;
         },
       })
     );
@@ -276,6 +278,57 @@ export class DeviajeHotelDetailComponent implements OnInit, OnDestroy {
     this.selectedRate = rate;
   }
 
+  //--------------------------------- Imagénes ---------------------------------
+  @ViewChild('thumbnailsContainer') thumbnailsContainer!: ElementRef;
+  
+  private scrollInterval: any = null;
+  private scrollSpeed = 5; // Velocidad de scroll
+  private edgeThreshold = 100;
+
+  onThumbnailsMouseMove(event: MouseEvent) {
+    if (!this.thumbnailsContainer) return;
+
+    const container = this.thumbnailsContainer.nativeElement;
+    const rect = container.getBoundingClientRect();
+    const mouseX = event.clientX - rect.left;
+    const containerWidth = rect.width;
+
+    // Limpiar cualquier scroll previo
+    this.stopAutoScroll();
+
+    // Zona izquierda - scroll hacia la izquierda
+    if (mouseX < this.edgeThreshold) {
+      const intensity = 1 - (mouseX / this.edgeThreshold);
+      this.startAutoScroll(-this.scrollSpeed * intensity);
+    }
+    // Zona derecha - scroll hacia la derecha
+    else if (mouseX > containerWidth - this.edgeThreshold) {
+      const intensity = (mouseX - (containerWidth - this.edgeThreshold)) / this.edgeThreshold;
+      this.startAutoScroll(this.scrollSpeed * intensity);
+    }
+  }
+
+  onThumbnailsMouseLeave() {
+    this.stopAutoScroll();
+  }
+
+  private startAutoScroll(speed: number) {
+    if (this.scrollInterval) return;
+
+    this.scrollInterval = setInterval(() => {
+      if (this.thumbnailsContainer) {
+        this.thumbnailsContainer.nativeElement.scrollLeft += speed;
+      }
+    }, 16); // ~60fps
+  }
+
+  private stopAutoScroll() {
+    if (this.scrollInterval) {
+      clearInterval(this.scrollInterval);
+      this.scrollInterval = null;
+    }
+  }
+
   nextImage(): void {
     if (!this.hotelDetails || !this.hotelDetails.images) {
       return;
@@ -308,7 +361,7 @@ export class DeviajeHotelDetailComponent implements OnInit, OnDestroy {
     ) {
       const imagePath = this.hotelDetails.images[this.currentImageIndex]?.path;
       if (imagePath) {
-        return `http://photos.hotelbeds.com/giata/bigger/${imagePath}`;
+        return `https://photos.hotelbeds.com/giata/bigger/${imagePath}`;
       }
     }
 
@@ -324,9 +377,9 @@ export class DeviajeHotelDetailComponent implements OnInit, OnDestroy {
       this.hotelDetails.images &&
       this.hotelDetails.images.length > 0
     ) {
-      return this.hotelDetails.images.slice(0, 6).map((image) => ({
+      return this.hotelDetails.images.map((image) => ({
         ...image,
-        path: `http://photos.hotelbeds.com/giata/small/${image.path}`,
+        path: `https://photos.hotelbeds.com/giata/bigger/${image.path}`,
       }));
     }
     return [];
@@ -342,7 +395,7 @@ export class DeviajeHotelDetailComponent implements OnInit, OnDestroy {
         (img) => img.roomCode === roomCode
       );
       if (roomImage && roomImage.path) {
-        return `http://photos.hotelbeds.com/giata/${roomImage.path}`;
+        return `https://photos.hotelbeds.com/giata/${roomImage.path}`;
       }
     }
     return 'https://via.placeholder.com/300x200?text=Habitación';
@@ -354,6 +407,9 @@ export class DeviajeHotelDetailComponent implements OnInit, OnDestroy {
     )}`;
   }
 
+  //--------------------------------- Imagénes ---------------------------------
+
+  //--------------------------------- Datos adicionales ---------------------------------
   getRoomNameForRate(rate: HotelSearchResponse.Rate): string {
     if (!this.hotel?.rooms) return 'Habitación';
 
@@ -373,20 +429,6 @@ export class DeviajeHotelDetailComponent implements OnInit, OnDestroy {
     return `Régimen: ${boardName}`;
   }
 
-  getCategoryStars(categoryName: string): number {
-    if (!categoryName) return 0;
-
-    // Si contiene "ESTRELLAS", extraer número
-    if (categoryName.includes('ESTRELLAS')) {
-      const starsMatch = categoryName.match(/(\d+)\s*ESTRELLAS?/i);
-      if (starsMatch) {
-        return parseInt(starsMatch[1]);
-      }
-    }
-
-    return 0; // Para otros tipos
-  }
-
   getHealthSafetyStars(): number {
     if (!this.hotelDetails?.s2c) return 0;
 
@@ -394,10 +436,20 @@ export class DeviajeHotelDetailComponent implements OnInit, OnDestroy {
     return match ? parseInt(match[0]) : 0;
   }
 
-  // ============================================
-  // FACILITIES DEL HOTEL
-  // ============================================
+  getWildcardRoomName(roomCode: string): string | null {
+    if (!this.hotelDetails?.wildcards) {
+      return null;
+    }
 
+    const wildcard = this.hotelDetails.wildcards.find(
+      (w) => w.roomCode === roomCode
+    );
+    return wildcard?.hotelRoomDescription?.content || null;
+  }
+
+   //--------------------------------- Datos adicionales ---------------------------------
+
+  //--------------------------------- Instalaciones ---------------------------------
   getGroupedFacilities(): GroupedFacility[] {
     if (
       !this.hotelDetails?.facilities ||
@@ -502,15 +554,5 @@ export class DeviajeHotelDetailComponent implements OnInit, OnDestroy {
 
     return this.hotelDetails.rooms.find((r) => r.roomCode === roomCode) || null;
   }
-
-  getWildcardRoomName(roomCode: string): string | null {
-    if (!this.hotelDetails?.wildcards) {
-      return null;
-    }
-
-    const wildcard = this.hotelDetails.wildcards.find(
-      (w) => w.roomCode === roomCode
-    );
-    return wildcard?.hotelRoomDescription?.content || null;
-  }
+  //--------------------------------- Instalaciones ---------------------------------
 }

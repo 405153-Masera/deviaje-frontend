@@ -13,8 +13,8 @@
   <div class="container py-4">
     <!-- Botón para volver a resultados (solo si no es modo paquete) -->
     @if (!inPackageMode) {
-    <div class="back-button mb-4">
-      <button class="btn btn-outline" (click)="router.navigate(['/home/hotels/results'])">
+    <div class="mb-4">
+      <button class="btn btn-outline-secondary" (click)="router.navigate(['/home/hotels/results'])">
         <i class="bi bi-arrow-left me-2"></i> Volver a resultados
       </button>
     </div>
@@ -29,15 +29,13 @@
     }
 
     <!-- Mensaje de error -->
-    @if (hasError || errorMessage) {
-    <div class="alert alert-danger" role="alert">
-      <i class="bi bi-exclamation-triangle me-2"></i>
-      {{ errorMessage || 'Error al cargar los detalles del hotel. Por favor, intenta de nuevo.' }}
-      @if (hasError) {
-      <button class="btn btn-sm btn-outline-danger ms-2" (click)="loadHotelDetails()">
+    @if (hasError) {
+    <div class="error-container">
+      <i class="bi bi-exclamation-triangle"></i>
+      <p>{{ errorMessage }}</p>
+      <button class="btn btn-primary" (click)="loadHotelDetails()">
         Intentar de nuevo
       </button>
-      }
     </div>
     }
 
@@ -49,29 +47,64 @@
         <div class="hotel-header card">
           <div class="card-body">
             <div class="d-flex justify-content-between align-items-start flex-wrap">
+
               <div>
                 <h1 class="hotel-title">{{ hotel.name }}</h1>
-                <div class="hotel-stars mb-2">
-                  @if (getCategoryStars(hotel.categoryName || '') > 0) {
-                  @for (i of [1, 2, 3, 4, 5]; track i) {
-                  <i class="bi bi-star-fill" [class.text-warning]="i <= getCategoryStars(hotel.categoryName || '')"
-                    [class.text-muted]="i > getCategoryStars(hotel.categoryName || '')"></i>
-                  }
-                  } @else {
-                  <span class="badge bg-secondary">{{ hotel.categoryName }}</span>
-                  }
-                </div>
-                <p class="hotel-location">
-                  <i class="bi bi-geo-alt-fill me-1"></i> {{ destinationCity?.name }}, {{ destinationCity?.country }}
+                <p class="address">
+                  <span>
+                    <i class="bi bi-geo-alt"></i>
+                    {{ hotelDetails?.address }}
+                  </span>
+                  <span>
+                    <i class="bi bi-building ms-3"></i>
+                    {{destinationCity?.zone}}, {{ destinationCity?.name }} {{ destinationCity?.country }}
+                  </span>
                 </p>
               </div>
-              <div class="hotel-price text-end">
-                <div class="price-from">Desde</div>
-                <div class="price-amount">{{ hotelService.convertToArs(hotel.minRate || 0) | currency:'ARS' }}</div>
-                @if(passengers > 1){
-                  <div class="price-night">{{passengers}} húespedes</div>
-                } @else {
-                  <div class="price-night">{{passengers}} húesped</div>
+
+              <div class="text-center">
+                <!-- Estrellas de Salud y Seguridad (S2C) -->
+                @if (hotelDetails?.s2c && getHealthSafetyStars() > 0) {
+                <div class="health-safety-stars mb-2"
+                  title="Certificación de Salud y Seguridad. Evalúa los protocolos sanitarios y de higiene del establecimiento.">
+                  <small class="text-muted me-2">
+                    <i class="bi bi-shield-check me-1"></i>
+                    Salud y Seguridad:
+                  </small>
+                  @for (i of [1, 2, 3, 4, 5]; track i) {
+                  <i class="bi bi-star-fill" [class.text-success]="i <= getHealthSafetyStars()"
+                    [class.text-muted]="i > getHealthSafetyStars()"></i>
+                  }
+                </div>
+                }
+
+                <!-- Cadena hotelera y ranking -->
+                <div class="d-flex gap-3 mb-2 flex-wrap">
+                  @if (hotelDetails?.chain) {
+                  <span class="badge bg-info" title="Cadena hotelera a la que pertenece este establecimiento">
+                    <i class="bi bi-buildings me-1"></i>
+                    {{ hotelDetails?.chain }}
+                  </span>
+                  }
+                  @if (hotelDetails?.ranking) {
+                  <span class="badge bg-warning"
+                    title="Posición del hotel en el ranking de Hotelbeds según valoraciones y calidad de servicio">
+                    <i class="bi bi-trophy me-1"></i>
+                    Ranking: {{ hotelDetails?.ranking }}
+                  </span>
+                  }
+                </div>
+                <!-- Enlace al sitio web del hotel -->
+                @if (hotelDetails?.web) {
+                <p class="hotel-web mb-0">
+                  <i class="bi bi-globe me-1"></i>
+                  <a [href]="hotelDetails?.web?.startsWith('http') ? hotelDetails?.web : 'https://' + hotelDetails?.web"
+                    target="_blank" rel="noopener noreferrer" class="text-decoration-none">
+                    Visitar sitio web del hotel
+                    <i class="bi bi-box-arrow-up-right ms-1"></i>
+                  </a>
+                </p>
+
                 }
               </div>
             </div>
@@ -80,8 +113,8 @@
       </div>
 
       <!-- Galería de imágenes (solo si no es modo paquete) -->
-      
-      <div class="col-md-8 mt-4">
+
+      <div class="col-lg-8 mt-4">
         <div class="hotel-gallery card">
           <div class="card-body p-0">
             <div class="main-image position-relative">
@@ -95,45 +128,100 @@
                 </button>
               </div>
             </div>
-            <div class="thumbnails d-flex mt-2">
-              @for (image of getThumbnailImages(); track $index) {
-              <div class="thumbnail" [class.active]="currentImageIndex === $index" (click)="selectImage($index)">
-                <img [src]="image.path" alt="Thumbnail" class="img-fluid">
+            <div class="thumbnails-container mt-2" #thumbnailsContainer (mousemove)="onThumbnailsMouseMove($event)"
+              (mouseleave)="onThumbnailsMouseLeave()">
+              <div class="thumbnails d-flex">
+                @for (image of getThumbnailImages(); track $index) {
+                <div class="thumbnail" [class.active]="currentImageIndex === $index" (click)="selectImage($index)">
+                  <img [src]="image.path" alt="Thumbnail" class="img-fluid">
+                </div>
+                }
               </div>
-              }
             </div>
           </div>
         </div>
       </div>
-      
+
 
       <!-- Información del hotel y detalles (solo si no es modo paquete) -->
-      
-      <div class="col-md-4 mt-4">
-        <div class="hotel-info card mb-4">
+
+      <div class="col-lg-4 mt-4">
+        <div class="hotel-info card">
           <div class="card-header">
-            <h4 class="mb-0">Información del hotel</h4>
+            <h4 class="mb-0">Información</h4>
           </div>
           <div class="card-body">
             @if (hotelDetails) {
             <div class="hotel-description mb-3">
               <p>{{ hotelDetails.description }}</p>
             </div>
-
-            <h5 class="mt-4 mb-3">Ubicación</h5>
-            <p class="address">
-              <i class="bi bi-geo-alt me-2"></i>
-              {{ hotelDetails.address }}
-            </p>
-            <p class="city">
-              <i class="bi bi-building me-2"></i>
-              {{ destinationCity?.name }}, {{ destinationCity?.country }}
-            </p>
             }
+          </div>
+
+          <!-- Segmentos del hotel -->
+          @if (hotelDetails && hotelDetails.segments && hotelDetails.segments.length > 0) {
+          <div class="card">
+            <div class="card-header">
+              <h6 class="mb-0">
+                Características
+              </h6>
+            </div>
+            <div class="card-body text-center">
+              @for (segment of hotelDetails.segments; track segment.code) {
+              <span class="badge bg-info rounded-pill me-2 mb-2">
+                {{ segment?.content }}
+              </span>
+              }
+            </div>
+          </div>
+          }
+        </div>
+      </div>
+
+      <!-- Instalaciones del hotel agrupadas -->
+      @if (getGroupedFacilities().length > 0) {
+      <div class="col-12 mt-4">
+        <div class="card">
+          <div class="card-header bg-success text-white">
+            <h5 class="mb-0">
+              <i class="bi bi-stars me-2"></i>
+              Instalaciones y Servicios
+            </h5>
+          </div>
+          <div class="card-body">
+            <div class="row">
+              @for (group of getGroupedFacilities(); track group.groupCode) {
+              <!-- Excluir el grupo 60 que son facilities de habitaciones -->
+              @if (group.groupCode !== 60) {
+              <div class="col-md-6 mb-4">
+                <h6 class="text-primary mb-3">
+                  <i class="bi bi-collection me-2"></i>
+                  {{ group.groupName }}
+                </h6>
+                <ul class="list-unstyled">
+                  @for (facility of group.items; track facility.facilityCode) {
+                  @if (isFacilityAvailable(facility)) {
+                  <li class="mb-2">
+                    <i class="bi bi-check-circle-fill text-success me-2"></i>
+                    <span>{{ formatFacilityInfo(facility) }}</span>
+                    @if (hasFee(facility)) {
+                    <span class="badge bg-warning text-dark ms-2">
+                      {{ getFeeText(facility) }}
+                    </span>
+                    }
+                  </li>
+                  }
+                  }
+                </ul>
+              </div>
+              }
+              }
+            </div>
           </div>
         </div>
       </div>
-      
+      }
+
 
       <!-- Habitaciones disponibles -->
       <div class="col-12 mt-4">
@@ -178,15 +266,15 @@
                         </div>
                         }
                       </div>
-                      <div class="text-end"> 
+                      <div class="text-end">
                         <div class="price-from">Desde</div>
                         <div class="rate-price fw-bold text-primary h5">
-                          {{  hotelService.convertToArs(getRateNet(rate)) | currency:'ARS' }}
+                          {{ hotelService.convertToArs(getRateNet(rate)) | currency:'ARS' }}
                         </div>
                         @if(passengers > 1){
-                          <div class="price-night">{{passengers}} húespedes</div>
+                        <div class="price-night">{{passengers}} húespedes</div>
                         } @else {
-                          <div class="price-night">{{passengers}} húesped</div>
+                        <div class="price-night">{{passengers}} húesped</div>
                         }
                         <small class="text-muted">
                           {{ hotelService.convertToArs(getRateNet(rate) / getNightsCount()) | currency:'ARS' }} / noche

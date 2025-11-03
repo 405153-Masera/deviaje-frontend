@@ -68,12 +68,6 @@
     animation: slideInRight 0.3s ease forwards;
   }
   
-  // Animación de carga
-  .spinner {
-    display: inline-block;
-    animation: spin 1s linear infinite;
-  }
-  
   // Animación de hover para card o elementos con sombra
   .hover-lift {
     transition: $transition-normal;
