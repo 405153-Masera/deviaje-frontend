@@ -99,7 +99,6 @@ export class DeviajeHotelDetailComponent implements OnInit, OnDestroy {
 
   private initializeNormalMode(): void {
     this.route.paramMap.subscribe((params) => {
-      
       this.hotelCode = params.get('code');
       if (this.hotelCode) {
         if (window.history.state.hotel) {
@@ -280,7 +279,7 @@ export class DeviajeHotelDetailComponent implements OnInit, OnDestroy {
 
   //--------------------------------- Imagénes ---------------------------------
   @ViewChild('thumbnailsContainer') thumbnailsContainer!: ElementRef;
-  
+
   private scrollInterval: any = null;
   private scrollSpeed = 5; // Velocidad de scroll
   private edgeThreshold = 100;
@@ -298,12 +297,13 @@ export class DeviajeHotelDetailComponent implements OnInit, OnDestroy {
 
     // Zona izquierda - scroll hacia la izquierda
     if (mouseX < this.edgeThreshold) {
-      const intensity = 1 - (mouseX / this.edgeThreshold);
+      const intensity = 1 - mouseX / this.edgeThreshold;
       this.startAutoScroll(-this.scrollSpeed * intensity);
     }
     // Zona derecha - scroll hacia la derecha
     else if (mouseX > containerWidth - this.edgeThreshold) {
-      const intensity = (mouseX - (containerWidth - this.edgeThreshold)) / this.edgeThreshold;
+      const intensity =
+        (mouseX - (containerWidth - this.edgeThreshold)) / this.edgeThreshold;
       this.startAutoScroll(this.scrollSpeed * intensity);
     }
   }
@@ -447,9 +447,11 @@ export class DeviajeHotelDetailComponent implements OnInit, OnDestroy {
     return wildcard?.hotelRoomDescription?.content || null;
   }
 
-   //--------------------------------- Datos adicionales ---------------------------------
+  //--------------------------------- Datos adicionales ---------------------------------
 
   //--------------------------------- Instalaciones ---------------------------------
+  expandedFacilityGroups: Set<number> = new Set();
+
   getGroupedFacilities(): GroupedFacility[] {
     if (
       !this.hotelDetails?.facilities ||
@@ -463,13 +465,16 @@ export class DeviajeHotelDetailComponent implements OnInit, OnDestroy {
     this.hotelDetails.facilities.forEach((facility) => {
       const groupCode = facility.facilityGroupCode || 0;
 
+      if (!this.isFacilityAvailable(facility)) {
+        return; // Skipea la facilidad si no existe
+      }
+
       if (!grouped.has(groupCode)) {
-        // ✅ USAR facilityGroupName que viene del BACKEND (enrichFacilities)
         const groupName = facility.facilityGroupName || 'Otros servicios';
 
         grouped.set(groupCode, {
           groupCode,
-          groupName, // 👈 Del backend, NO hardcodeado
+          groupName,
           items: [],
         });
       }
@@ -477,9 +482,12 @@ export class DeviajeHotelDetailComponent implements OnInit, OnDestroy {
       grouped.get(groupCode)!.items.push(facility);
     });
 
-    return Array.from(grouped.values()).sort(
-      (a, b) => a.groupCode - b.groupCode
-    );
+    return Array.from(grouped.values())
+      .filter(
+        (group) =>
+          group.items.length > 0
+      ) // Excluir grupo 60 y grupos vacíos
+      .sort((a, b) => a.groupCode - b.groupCode);
   }
 
   getRoomFacilities(roomCode: string): HotelFacility[] {
@@ -516,15 +524,27 @@ export class DeviajeHotelDetailComponent implements OnInit, OnDestroy {
       info += ` (${facility.number})`;
     }
 
+    if (facility.distance) {
+      info += ` ${facility.distance} m²`;
+    }
+
+    if (facility.timeFrom) {
+      info += `: ${facility.timeFrom.substring(0, 5)} hs`;
+    }
+
+    if (facility.timeTo) {
+      info += ` - ${facility.timeTo.substring(0, 5)} hs`;
+    }
+
     return info;
   }
 
   isFacilityAvailable(facility: HotelFacility): boolean {
-    if (facility.indLogic !== undefined) {
+    if (facility.indLogic !== null) {
       return facility.indLogic === true;
     }
 
-    if (facility.indYesOrNo !== undefined) {
+    if (facility.indYesOrNo !== null) {
       return facility.indYesOrNo === true;
     }
 
@@ -540,7 +560,7 @@ export class DeviajeHotelDetailComponent implements OnInit, OnDestroy {
       return 'Gratis';
     }
 
-    if (facility.amount && facility.currency) {
+    if (facility.amount) {
       return `${facility.amount} ${facility.currency}`;
     }
 
@@ -553,6 +573,43 @@ export class DeviajeHotelDetailComponent implements OnInit, OnDestroy {
     }
 
     return this.hotelDetails.rooms.find((r) => r.roomCode === roomCode) || null;
+  }
+
+  // Expandir/Colapsar grupos
+  toggleFacilityGroup(groupCode: number): void {
+    if (this.expandedFacilityGroups.has(groupCode)) {
+      this.expandedFacilityGroups.delete(groupCode);
+    } else {
+      this.expandedFacilityGroups.add(groupCode);
+    }
+  }
+
+  isGroupExpanded(groupCode: number): boolean {
+    return this.expandedFacilityGroups.has(groupCode);
+  }
+
+  // Expandir y colapsar todos los grupos
+  expandAllGroups(): void {
+    const groups = this.getGroupedFacilities();
+    groups.forEach((group) => {
+      this.expandedFacilityGroups.add(group.groupCode);
+    });
+  }
+
+  collapseAllGroups(): void {
+    this.expandedFacilityGroups.clear();
+  }
+
+  areAllGroupsExpanded(): boolean {
+    const groups = this.getGroupedFacilities();
+    return (
+      groups.length > 0 &&
+      groups.every((group) => this.isGroupExpanded(group.groupCode))
+    );
+  }
+
+  getVisibleFacilitiesCount(group: GroupedFacility): number {
+    return group.items.filter((f) => this.isFacilityAvailable(f)).length;
   }
   //--------------------------------- Instalaciones ---------------------------------
 }

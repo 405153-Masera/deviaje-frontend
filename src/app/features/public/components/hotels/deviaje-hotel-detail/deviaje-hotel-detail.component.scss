@@ -16,14 +16,14 @@
   }
 }
 
-// Galería de imágenes
+// --------------------------------- Galería de imágenes -----------------------------------------------
 .hotel-gallery {
   overflow: hidden;
 
   .main-image {
     height: 400px;
     overflow: hidden;
-    
+
     img {
       width: 100%;
       height: 100%;
@@ -133,13 +133,15 @@
   }
 }
 
-// Responsive: ajustar tamaño de thumbnails en móviles
 @media (max-width: 576px) {
   .thumbnails .thumbnail {
     width: 60px;
     height: 45px;
   }
 }
+// --------------------------------- Galería de imágenes -----------------------------------------------
+
+// Responsive: ajustar tamaño de thumbnails en móviles
 
 // Información del hotel
 .hotel-info {
@@ -171,6 +173,169 @@
     color: $primary-color;
   }
 }
+
+// --------------------------------- Instalaciones -----------------------------------------------
+$warning-color: #ffc107;
+
+.facility-group-card {
+  border: 1px solid $gray-300;
+  border-radius: $border-radius;
+  background: white;
+  overflow: hidden;
+  transition: $transition-fast;
+  
+  &:hover {
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  }
+}
+
+// ============================================
+// Header del grupo (clickeable)
+// ============================================
+.facility-group-header {
+  padding: 0.75rem 1rem;
+  background: $gray-100;
+  cursor: pointer;
+  border-bottom: 1px solid $gray-300;
+  transition: $transition-fast;
+  
+  &:hover {
+    background: $gray-200;
+  }
+  
+  &.expanded {
+    background: rgba($primary-color, 0.1);
+    border-bottom-color: $primary-color;
+  }
+  
+  .facility-group-title {
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: $gray-800;
+    margin: 0;
+  }
+  
+  .facility-count {
+    font-size: 0.75rem;
+    padding: 0.25rem 0.5rem;
+  }
+  
+  .transition-icon {
+    color: $gray-600;
+    transition: transform 0.3s ease;
+    font-size: 1rem;
+  }
+}
+
+// ============================================
+// Contenido del grupo
+// ============================================
+.facility-group-content {
+  padding: 0.75rem 1rem;
+  background: white;
+}
+
+// ============================================
+// Lista de facilities
+// ============================================
+.facility-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  
+  .facility-item {
+    padding: 0.5rem 0;
+    border-bottom: 1px solid $gray-200;
+    font-size: 0.875rem;
+    
+    &:last-child {
+      border-bottom: none;
+      padding-bottom: 0;
+    }
+    
+    &:first-child {
+      padding-top: 0;
+    }
+    
+    .facility-name {
+      color: $gray-700;
+      line-height: 1.4;
+    }
+    
+    .badge-fee {
+      background: rgba($warning-color, 0.15);
+      color: darken($warning-color, 25%);
+      font-size: 0.7rem;
+      padding: 0.25rem 0.5rem;
+      white-space: nowrap;
+      border-radius: 0.25rem;
+      font-weight: 500;
+    }
+  }
+}
+
+// ============================================
+// Animación de slide down
+// ============================================
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    max-height: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    max-height: 1000px;
+    transform: translateY(0);
+  }
+}
+
+.animate-slide-down {
+  animation: slideDown 0.3s ease-out;
+}
+
+// ============================================
+// Responsive adjustments
+// ============================================
+@media (max-width: 991px) {
+  .facility-group-card {
+    .facility-group-header {
+      .facility-group-title {
+        font-size: 0.85rem;
+      }
+    }
+    
+    .facility-list .facility-item {
+      font-size: 0.8rem;
+    }
+  }
+}
+
+@media (max-width: 767px) {
+  .btn-group .btn-light {
+    font-size: 0.75rem;
+    padding: 0.25rem 0.5rem;
+    
+    span {
+      display: none; // Ocultar texto en móvil, solo mostrar icono
+    }
+  }
+}
+
+// ============================================
+// Estados de hover y focus
+// ============================================
+.facility-group-header {
+  &:focus {
+    outline: 2px solid $primary-color;
+    outline-offset: -2px;
+  }
+  
+  &:active {
+    transform: scale(0.98);
+  }
+}
+// --------------------------------- Instalaciones -----------------------------------------------
 
 // Habitaciones disponibles
 .room-options {
