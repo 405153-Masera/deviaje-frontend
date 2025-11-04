@@ -354,7 +354,7 @@ export class DeviajeHotelDetailComponent implements OnInit, OnDestroy {
     this.currentImageIndex = index;
   }
 
-  // Formateo y helpers
+   // Formateo y helpers
   getHotelMainImage(): string {
     if (
       this.hotelDetails &&
@@ -363,11 +363,10 @@ export class DeviajeHotelDetailComponent implements OnInit, OnDestroy {
     ) {
       const imagePath = this.hotelDetails.images[this.currentImageIndex]?.path;
       if (imagePath) {
-        return `https://photos.hotelbeds.com/giata/bigger/${imagePath}`;
+        return `https://photos.hotelbeds.com/giata/xxl/${imagePath}`;
       }
     }
 
-    // Si no hay imágenes disponibles, devolver una imagen genérica
     return `https://via.placeholder.com/800x500?text=${encodeURIComponent(
       this.hotel?.name || 'Hotel'
     )}`;
@@ -513,23 +512,41 @@ export class DeviajeHotelDetailComponent implements OnInit, OnDestroy {
     if (!this.hotelDetails?.images || this.hotelDetails.images.length === 0) {
       return [];
     }
-
     // Filtrar imágenes de esta habitación específica
     const roomImages = this.hotelDetails.images
       .filter((img) => img.roomCode === roomCode)
-      .map((img) => `https://photos.hotelbeds.com/giata/${img.path}`);
+      .map((img) => `https://photos.hotelbeds.com/giata/xxl/${img.path}`);
 
     // Si no hay imágenes específicas de la habitación, buscar imágenes generales del hotel
     if (roomImages.length === 0) {
       const hotelImages = this.hotelDetails.images
         .filter((img) => !img.roomCode || img.roomCode === '')
         .slice(0, 3) // Máximo 3 imágenes del hotel
-        .map((img) => `https://photos.hotelbeds.com/giata/${img.path}`);
+        .map((img) => `https://photos.hotelbeds.com/giata/xxl/${img.path}`);
 
       return hotelImages;
     }
 
     return roomImages;
+  }
+
+  // Método para manejar errores de carga de imagen
+  onImageError(event: any): void {
+    const img = event.target;
+    const currentSrc = img.src;
+
+    // Si falló XXL, intentar XL
+    if (currentSrc.includes('/xxl/')) {
+      img.src = currentSrc.replace('/xxl/', '/xl/');
+    }
+    // Si falló XL, intentar bigger
+    else if (currentSrc.includes('/xl/')) {
+      img.src = currentSrc.replace('/xl/', '/bigger/');
+    }
+    // Si falló bigger, usar placeholder
+    else if (currentSrc.includes('/bigger/')) {
+      img.src = `https://via.placeholder.com/800x500?text=Sin imagen`;
+    }
   }
 
   onThumbnailsRoomMouseMove(event: MouseEvent, roomCode: string) {

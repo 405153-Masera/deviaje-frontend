@@ -15,7 +15,7 @@
     @if (!inPackageMode) {
     <div class="mb-4">
       <button class="btn btn-outline-secondary" (click)="router.navigate(['/home/hotels/results'])">
-        <i class="bi bi-arrow-left me-2"></i> Volver a resultados
+        Volver a resultados
       </button>
     </div>
     }
@@ -44,13 +44,13 @@
     <div class="row">
       <!-- Información principal del hotel -->
       <div class="col-12">
-        <div class="hotel-header card">
+        <div class="card">
           <div class="card-body">
             <div
               class="d-flex flex-column flex-lg-row align-items-center align-items-lg-start justify-content-center justify-content-lg-between text-center text-lg-start w-100">
 
               <div>
-                <h1 class="hotel-title mb-0">{{ hotel.name }}</h1>
+                <h1>{{ hotel.name }}</h1>
                 <p class="address">
                   <span>
                     <i class="bi bi-geo-alt"></i>
@@ -83,7 +83,7 @@
 
                 <!-- Estrellas de Salud y Seguridad (S2C) -->
                 @if (hotelDetails?.s2c && getHealthSafetyStars() > 0) {
-                <div class="health-safety-stars mb-2"
+                <div class="mb-2"
                   title="Certificación de Salud y Seguridad. Evalúa los protocolos sanitarios y de higiene del establecimiento.">
                   <small class="text-muted me-2">
                     <i class="bi bi-shield-check me-1"></i>
@@ -98,7 +98,7 @@
 
                 <!-- Enlace al sitio web del hotel -->
                 @if (hotelDetails?.web) {
-                <p class="hotel-web mb-0">
+                <p>
                   <i class="bi bi-globe me-1"></i>
                   <a [href]="hotelDetails?.web?.startsWith('http') ? hotelDetails?.web : 'https://' + hotelDetails?.web"
                     target="_blank" rel="noopener noreferrer" class="text-decoration-none">
@@ -120,7 +120,8 @@
         <div class="hotel-gallery card">
           <div class="card-body p-0">
             <div class="main-image position-relative">
-              <img [src]="getHotelMainImage()" alt="{{ hotel.name }}" class="img-fluid">
+              <img [src]="getHotelMainImage()" (error)="onImageError($event)" alt="{{ hotel.name }}" class="img-fluid"
+                loading="lazy">
               <div class="gallery-controls">
                 <button class="gallery-control prev" (click)="prevImage()">
                   <i class="bi bi-chevron-left"></i>
@@ -135,7 +136,7 @@
               <div class="thumbnails d-flex">
                 @for (image of getThumbnailImages(); track $index) {
                 <div class="thumbnail" [class.active]="currentImageIndex === $index" (click)="selectImage($index)">
-                  <img [src]="image.path" alt="Thumbnail" class="img-fluid">
+                  <img [src]="image.path" alt="Thumbnail" class="img-fluid" loading="lazy">
                 </div>
                 }
               </div>
@@ -154,7 +155,7 @@
           </div>
           <div class="card-body">
             @if (hotelDetails) {
-            <div class="hotel-description mb-3">
+            <div class="mb-3">
               <p>{{ hotelDetails.description }}</p>
             </div>
             }
@@ -275,10 +276,9 @@
 
       <!-- Habitaciones disponibles -->
       <div class="col-12 mt-4">
-        <div class="card border-0 shadow-sm">
+        <div class="card">
           <div class="card-header bg-primary text-white">
             <h4 class="mb-0">
-              <i class="bi bi-door-open me-2"></i>
               Habitaciones Disponibles
             </h4>
           </div>
@@ -287,76 +287,55 @@
             @if (hotel.rooms && hotel.rooms.length > 0) {
 
             <!-- Grid de habitaciones -->
-            <div class="rooms-container">
-              @for (room of hotel.rooms; track room.code) {
 
-              <!-- Card de habitación -->
-              <div class="room-card" [class.selected]="selectedRoom?.code === room.code">
+            @for (room of hotel.rooms; track room.code) {
 
-                <!-- SECCIÓN SUPERIOR: 2 COLUMNAS -->
-                <div class="room-top-section">
+            <!-- Card de habitación -->
+            <div class="room-card" [class.selected]="selectedRoom?.code === room.code">
 
-                  <!-- COLUMNA IZQUIERDA: Imágenes (Galería) -->
-                  <div class="room-gallery-column">
-                    <!-- Header con nombre de habitación -->
-                    <div class="room-header-compact mb-3">
-                      <h5 class="room-title-compact mb-1">{{ room.name }}</h5>
+              <!-- Imágenes (Galería) y comodidades -->
+              <div class="row room-section">
+                <div class="col col-md-6">
+                  <h4 class="mb-3 text-md-start text-center">{{ room.name }}</h4>
 
-                      <!-- Nombre personalizado (wildcards) -->
-                      @if (getWildcardRoomName(room.code)) {
-                      <p class="room-subtitle-compact text-muted mb-0">
-                        <i class="bi bi-info-circle me-1"></i>
-                        {{ getWildcardRoomName(room.code) }}
-                      </p>
-                      }
+                  <div class="room-mini-gallery">
+                    @if (getRoomImages(room.code).length > 0) {
+                    <div class="gallery-main-image">
+                      <img [src]="getRoomImages(room.code)[currentRoomImageIndex.get(room.code) || 0]" [alt]="room.name"
+                        class="img-fluid" loading="lazy" (error)="onImageError($event)">
                     </div>
 
-                    <div class="room-mini-gallery">
-                      @if (getRoomImages(room.code).length > 0) {
-                      <div class="gallery-main-image">
-                        <img [src]="getRoomImages(room.code)[currentRoomImageIndex.get(room.code) || 0]"
-                          [alt]="room.name" class="img-fluid" loading="lazy">
-
-                        <!-- Badge de seleccionada -->
-                        @if (selectedRoom?.code === room.code) {
-                        <div class="selected-badge-mini">
-                          <i class="bi bi-check-circle-fill"></i>
+                    <div class="thumbnails-container mt-2" #thumbnailsRoom [attr.data-room-code]="room.code"
+                      (mousemove)="onThumbnailsRoomMouseMove($event, room.code)"
+                      (mouseleave)="onThumbnailsRoomMouseLeave(room.code)">
+                      <div class="thumbnails d-flex">
+                        @if (getRoomImages(room.code).length > 1) {
+                        @for (image of getRoomImages(room.code); track $index) {
+                        <div class="thumbnail" [class.active]="(currentRoomImageIndex.get(room.code) || 0) === $index"
+                          (click)="selectRoomImage(room.code, $index)">
+                          <img [src]="image" [alt]="room.name" class="img-fluid" (error)="onImageError($event)"
+                            loading="lazy">
                         </div>
                         }
+                        }
                       </div>
-
-                      <div class="room-thumbnails-container mt-2" #thumbnailsRoom [attr.data-room-code]="room.code"
-                        (mousemove)="onThumbnailsRoomMouseMove($event, room.code)"
-                        (mouseleave)="onThumbnailsRoomMouseLeave(room.code)">
-                        <div class="room-thumbnails d-flex">
-                          @if (getRoomImages(room.code).length > 1) {
-                          @for (image of getRoomImages(room.code); track $index) {
-                          <div class="room-thumbnail"
-                            [class.active]="(currentRoomImageIndex.get(room.code) || 0) === $index"
-                            (click)="selectRoomImage(room.code, $index)">
-                            <img [src]="image" [alt]="room.name" class="img-fluid">
-                          </div>
-                          }
-                          }
-                        </div>
-                      </div>
-
-
-                      } @else {
-                      <!-- Placeholder si no hay imágenes -->
-                      <div class="gallery-placeholder">
-                        <i class="bi bi-image"></i>
-                        <span>Sin imágenes</span>
-                      </div>
-                      }
                     </div>
-                  </div>
 
+
+                    } @else {
+                    <!-- Placeholder si no hay imágenes -->
+                    <div class="gallery-placeholder">
+                      <i class="bi bi-image"></i>
+                      <span>Sin imágenes</span>
+                    </div>
+                    }
+                  </div>
+                </div>
+
+                <div class="col">
                   <!-- COLUMNA DERECHA: Comodidades -->
                   <div class="room-amenities-column">
-                    <h6 class="amenities-title-compact">
-                      Comodidades
-                    </h6>
+                    <h5>Comodidades</h5>
 
                     @if (getAllRoomFacilities(room.code).length > 0) {
                     <div class="amenities-grid-compact">
@@ -400,9 +379,11 @@
                     }
                   </div>
                 </div>
+              </div>
 
+              <div class="row">
                 <!-- SECCIÓN INFERIOR: Tarifas (Full Width) -->
-                <div class="room-rates-section">
+                <div class="room-rates-section col">
                   <h6 class="rates-title-compact">
                     <i class="bi bi-tag-fill me-2"></i>
                     Opciones de Tarifa
@@ -417,9 +398,9 @@
                     <div class="rate-card-compact" [class.selected]="selectedRate?.rateKey === rate.rateKey"
                       (click)="selectRoom(room); selectRate(rate)">
 
-                      <div class="rate-content-compact">
+                      <div class="rate-content-compact row">
                         <!-- Izquierda: Info -->
-                        <div class="rate-info-compact">
+                        <div class="rate-info-compact col">
                           <div class="rate-board-name">
                             <i class="bi bi-cup-hot-fill"></i>
                             <span class="fw-semibold">{{ rate.boardName || 'Solo habitación' }}</span>
@@ -445,7 +426,7 @@
                         </div>
 
                         <!-- Derecha: Precio y botón -->
-                        <div class="rate-price-action">
+                        <div class="rate-price-action col">
                           <div class="price-info-compact">
                             <div class="price-label-compact">Total</div>
                             <div class="price-amount-compact">
@@ -457,9 +438,7 @@
                               {{ hotelService.convertToArs(getRateNet(rate) / getNightsCount()) |
                               currency:'ARS':'symbol':'1.0-0' }} /noche
                             </div>
-                          </div>
-
-                          <button class="btn-select-compact"
+                             <button class="btn btn-primary"
                             [class.btn-primary]="selectedRate?.rateKey !== rate.rateKey"
                             [class.btn-success]="selectedRate?.rateKey === rate.rateKey">
                             @if (selectedRate?.rateKey === rate.rateKey) {
@@ -469,6 +448,9 @@
                             Seleccionar
                             }
                           </button>
+                          </div>
+
+                         
                         </div>
                       </div>
                     </div>
@@ -484,8 +466,9 @@
                   }
                 </div>
               </div>
-              }
             </div>
+            }
+
 
             } @else {
             <!-- Sin habitaciones disponibles -->

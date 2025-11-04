@@ -29,7 +29,7 @@ export interface HotelSearchRequest {
 export interface HotelSearchResponse {
   hotels: {
     hotels: HotelSearchResponse.Hotel[];
-    checkIn: string; 
+    checkIn: string;
     checkOut: string;
     total: number;
   };
@@ -69,26 +69,42 @@ export namespace HotelSearchResponse {
     paymentType?: string;
     packaging?: boolean;
     boardCode?: string;
-    boardName?: string;
+    boardName?: string; 
     cancellationPolicies?: CancellationPolicy[];
+    taxes?: Taxes;
     rooms?: number;
     adults?: number;
     children?: number;
     childrenAges?: string;
+    promotions?: Promotion[];
     offers?: Offer[];
   }
 
   export interface Promotion {
     code: string;
     name: string;
-    remark: string;
+    remark?: string;
   }
-
 
   export interface Offer {
     code: string;
     name: string;
     amount: string | number; // Puede venir como string negativo "-63.95"
+  }
+
+  export interface Taxes {
+    taxes: TaxDetail[];
+    allIncluded: boolean;
+  }
+
+  export interface TaxDetail {
+    included: boolean;
+    amount: number;
+    currency: string;
+    type: string;
+    clientAmount?: number;
+    clientCurrency?: string;
+    subType?: string; // Ej: "City Tax"
   }
 
   export interface CancellationPolicy {
@@ -115,7 +131,7 @@ export interface HotelResponseDto {
   stateCode?: string;
   destination?: string;
   zoneCode?: number;
-  zone?: string;//GUARDA ACA TUVE QUE PONERLO POR UN ERROR EN DEVIAJE HOTEL SUMMARY
+  zone?: string; //GUARDA ACA TUVE QUE PONERLO POR UN ERROR EN DEVIAJE HOTEL SUMMARY
   category?: string;
   chain?: string;
   accommodationType?: string;
@@ -125,7 +141,7 @@ export interface HotelResponseDto {
   city?: string;
   email?: string;
   web?: string;
-   phones?: Array<{
+  phones?: Array<{
     phoneNumber: string;
     phoneType: string;
   }>;
@@ -139,7 +155,7 @@ export interface HotelResponseDto {
     order?: number;
     visualOrder?: string;
   }[];
-   interestPoints?: Array<{
+  interestPoints?: Array<{
     facilityCode?: number;
     facilityGroupCode?: number;
     order?: number;
@@ -157,7 +173,7 @@ export interface HotelResponseDto {
       content: string;
     };
   }>;
-   wildcards?: Array<{
+  wildcards?: Array<{
     roomCode?: string;
     roomType?: string;
     characteristicCode?: string;
