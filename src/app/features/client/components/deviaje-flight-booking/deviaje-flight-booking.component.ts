@@ -22,11 +22,11 @@ import { AuthService } from '../../../../core/auth/services/auth.service';
 import { Subscription } from 'rxjs';
 import { DeviajeFlightBookingSummaryComponent } from '../deviaje-flight-booking-summary/deviaje-flight-booking-summary.component';
 import { DeviajePriceDetailsComponent } from '../deviaje-price-details/deviaje-price-details.component';
-import { BaseResponse } from '../../../../shared/models/baseResponse';
 import {
   UserData,
   UserService,
 } from '../../../../shared/services/user.service';
+import { ValidatorsService } from '../../../../shared/services/validators.service';
 
 @Component({
   selector: 'app-deviaje-flight-booking',
@@ -61,6 +61,7 @@ export class DeviajeFlightBookingComponent implements OnInit, OnDestroy {
   private authService = inject(AuthService);
   private userService = inject(UserService);
   readonly flightUtils = inject(FlightUtilsService);
+  private readonly validatorService = inject(ValidatorsService);
   subscription = new Subscription();
 
   @ViewChild(DeviajePriceDetailsComponent)
@@ -396,14 +397,38 @@ export class DeviajeFlightBookingComponent implements OnInit, OnDestroy {
               dateOfBirth: ['', [Validators.required]],
             }
           : {}),
-        firstName: ['', Validators.required], // Cambiado: firstName directamente en el grupo principal
-        lastName: ['', Validators.required],
+        firstName: [
+          '',
+          [
+            Validators.required,
+            Validators.minLength(2),
+            Validators.maxLength(30),
+            this.validatorService.onlyLetters(),
+          ],
+        ],
+        lastName: [
+          '',
+          [
+            Validators.required,
+            Validators.minLength(2),
+            Validators.maxLength(30),
+            this.validatorService.onlyLetters(),
+          ],
+        ],
         gender: ['MALE', Validators.required],
         travelerType: [travelerType],
         ...(i === 0
           ? {
               contact: this.fb.group({
-                emailAddress: ['', [Validators.required, Validators.email]],
+                emailAddress: [
+                  '',
+                  [
+                    Validators.required,
+                    Validators.email,
+                    this.validatorService.emailWithDomain(),
+                    Validators.maxLength(80),
+                  ],
+                ],
                 phones: this.fb.array([
                   this.fb.group({
                     deviceType: ['MOBILE'],
@@ -550,75 +575,65 @@ export class DeviajeFlightBookingComponent implements OnInit, OnDestroy {
     this.isLoading = true;
     this.errorMessage = '';
 
-    try {
-      console.log('Token de pago generado:', paymentToken);
+    console.log('Token de pago generado:', paymentToken);
 
-      const pricesDto = this.priceDetailsComponent?.getPricesDto() || null;
+    const pricesDto = this.priceDetailsComponent?.getPricesDto() || null;
 
-      // Preparar los datos de la reserva
-      const bookingData: FlightBookingDto = {
-        clientId: this.getClientId(),
-        agentId: this.getAgentId(),
-        origin: this.origin,
-        destination: this.destination,
-        flightOffer: this.selectedOffer,
-        travelers: this.prepareTravelersData(),
-        cancellationFrom: this.calculateFlightCancellationDate(),
-        cancellationAmount: this.calculateFlightCancellationAmount(),
-      };
+    // Preparar los datos de la reserva
+    const bookingData: FlightBookingDto = {
+      clientId: this.getClientId(),
+      agentId: this.getAgentId(),
+      origin: this.origin,
+      destination: this.destination,
+      flightOffer: this.selectedOffer,
+      travelers: this.prepareTravelersData(),
+      cancellationFrom: this.calculateFlightCancellationDate(),
+      cancellationAmount: this.calculateFlightCancellationAmount(),
+    };
 
-      console.log(
-        'DNI DEL PAGADOR:',
-        this.mainForm.get('payment')?.get('payerDni')?.value
-      );
-      // Preparar los datos del pago
-      const paymentData: PaymentDto = {
-        amount: this.mainForm.get('payment')?.get('amount')?.value,
-        currency: this.mainForm.get('payment')?.get('currency')?.value,
-        paymentMethod: 'master',
-        paymentToken: paymentToken,
-        installments: 1,
-        description: 'Reserva de vuelo',
-        payer: {
-          email: this.travelers.at(0)?.get('contact')?.get('emailAddress')
-            ?.value,
-          identification: this.mainForm.get('payment')?.get('payerDni')?.value,
-          identificationType: 'DNI',
+    console.log(
+      'DNI DEL PAGADOR:',
+      this.mainForm.get('payment')?.get('payerDni')?.value
+    );
+    // Preparar los datos del pago
+    const paymentData: PaymentDto = {
+      amount: this.mainForm.get('payment')?.get('amount')?.value,
+      currency: this.mainForm.get('payment')?.get('currency')?.value,
+      paymentMethod: 'master',
+      paymentToken: paymentToken,
+      installments: 1,
+      description: 'Reserva de vuelo',
+      payer: {
+        email: this.travelers.at(0)?.get('contact')?.get('emailAddress')?.value,
+        identification: this.mainForm.get('payment')?.get('payerDni')?.value,
+        identificationType: 'DNI',
+      },
+    };
+
+    this.bookingService
+      .createFlightBooking(bookingData, paymentData, pricesDto)
+      .subscribe({
+        next: (bookingReference: string) => {
+          this.isLoading = false;
+          this.showSuccessMessage = true;
+          this.bookingReference = bookingReference;
+          this.errorMessage = '';
+
+          this.clearPersistedState();
+
+          setTimeout(() => {
+            this.router.navigate(['/bookings'], {
+              queryParams: { reference: this.bookingReference },
+            });
+          }, 3000);
         },
-      };
-
-      this.bookingService
-        .createFlightBooking(bookingData, paymentData, pricesDto)
-        .subscribe({
-          next: (response) => {
-            this.isLoading = false;
-            if (response.success) {
-              this.showSuccessMessage = true;
-              this.bookingReference = response.data || '';
-              this.errorMessage = '';
-
-              this.clearPersistedState();
-
-              setTimeout(() => {
-                this.router.navigate(['/bookings'], {
-                  queryParams: { reference: this.bookingReference },
-                });
-              }, 3000);
-            } else {
-              this.isLoading = false;
-              this.handleBookingError(response);
-            }
-          },
-        });
-    } catch (error: any) {
-      this.isLoading = false;
-      this.errorMessage = error.message || 'Error al procesar el pago';
-      console.error('Error en submitBooking:', error);
-    }
-  }
-
-  private handleBookingError(response: BaseResponse<string>): void {
-    this.errorMessage = response.message || 'Ocurrió un error inesperado';
+        error: (error) => {
+          this.isLoading = false;
+          this.errorMessage =
+            error.error?.message || 'Error al procesar la reserva';
+          console.error('Error en booking:', error);
+        },
+      });
   }
 
   private getClientId(): number | undefined {

@@ -31,6 +31,7 @@ import {
 import { FlightSearchRequest } from '../../../../shared/models/flights';
 import { DeviajeHotelBookingSummaryComponent } from '../deviaje-hotel-booking-summary/deviaje-hotel-booking-summary.component';
 import { BaseResponse } from '../../../../shared/models/baseResponse';
+import { ValidatorsService } from '../../../../shared/services/validators.service';
 
 @Component({
   selector: 'app-deviaje-flight-booking',
@@ -65,6 +66,7 @@ export class DeviajePackageBookingComponent implements OnInit, OnDestroy {
   private bookingService = inject(BookingService);
   private authService = inject(AuthService);
   readonly flightUtils = inject(FlightUtilsService);
+  private readonly validatorService = inject(ValidatorsService);
   subscription = new Subscription();
 
   @ViewChild(DeviajePriceDetailsComponent)
@@ -418,14 +420,38 @@ export class DeviajePackageBookingComponent implements OnInit, OnDestroy {
               dateOfBirth: ['', [Validators.required]],
             }
           : {}),
-        firstName: ['', Validators.required], // Cambiado: firstName directamente en el grupo principal
-        lastName: ['', Validators.required],
+        firstName: [
+          '',
+          [
+            Validators.required,
+            Validators.minLength(2),
+            Validators.maxLength(30),
+            this.validatorService.onlyLetters(),
+          ],
+        ],
+        lastName: [
+          '',
+          [
+            Validators.required,
+            Validators.minLength(2),
+            Validators.maxLength(30),
+            this.validatorService.onlyLetters(),
+          ],
+        ],
         gender: ['MALE', Validators.required],
         travelerType: [travelerType],
         ...(i === 0
           ? {
               contact: this.fb.group({
-                emailAddress: ['', [Validators.required, Validators.email]],
+                emailAddress: [
+                  '',
+                  [
+                    Validators.required,
+                    Validators.email,
+                    this.validatorService.emailWithDomain(),
+                    Validators.maxLength(80),
+                  ],
+                ],
                 phones: this.fb.array([
                   this.fb.group({
                     deviceType: ['MOBILE'],
@@ -824,7 +850,7 @@ export class DeviajePackageBookingComponent implements OnInit, OnDestroy {
       if (cancellationPolicies && cancellationPolicies.length > 0) {
         const amount = cancellationPolicies[0]?.amount;
         if (amount) {
-          return parseFloat(amount); // "357.79" → 357.79
+          return amount; // "357.79" → 357.79
         }
       }
     } catch (error) {
@@ -1086,7 +1112,6 @@ export class DeviajePackageBookingComponent implements OnInit, OnDestroy {
       return new Date().toISOString().split('T')[0];
     }
   }
-  
 
   //**************************METODOS PARA LOS HOTELES********************************
   // En tu componente de package booking

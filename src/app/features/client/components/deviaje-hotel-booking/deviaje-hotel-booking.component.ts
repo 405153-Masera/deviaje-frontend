@@ -28,7 +28,7 @@ import {
 import { HotelBookingDto, PaymentDto } from '../../models/bookings';
 import { DeviajePriceDetailsComponent } from '../deviaje-price-details/deviaje-price-details.component';
 import { HotelService } from '../../../../shared/services/hotel.service';
-import { BaseResponse } from '../../../../shared/models/baseResponse';
+import { ValidatorsService } from '../../../../shared/services/validators.service';
 
 @Component({
   selector: 'app-deviaje-hotel-booking',
@@ -63,8 +63,8 @@ export class DeviajeHotelBookingComponent implements OnInit, OnDestroy {
   private readonly route = inject(ActivatedRoute);
   readonly bookingService = inject(BookingService);
   private readonly authService = inject(AuthService);
-
   private readonly hotelService = inject(HotelService);
+  private readonly validatorService = inject(ValidatorsService);
   calculatedTotalAmount: string = '0';
 
   // Subscription management
@@ -139,7 +139,6 @@ export class DeviajeHotelBookingComponent implements OnInit, OnDestroy {
 
     this.loadCurrentUser();
     this.initializeBookingFlow();
-
     this.setupFormPersistence();
   }
 
@@ -151,8 +150,6 @@ export class DeviajeHotelBookingComponent implements OnInit, OnDestroy {
     this.subscription.unsubscribe();
     this.isReloadedSession = false;
   }
-
-  // ===== MÉTODOS DE PERSISTENCIA (copiados de flight booking) =====
 
   private loadPersistedState(): void {
     try {
@@ -174,8 +171,6 @@ export class DeviajeHotelBookingComponent implements OnInit, OnDestroy {
         this.rateKey = state.rateKey;
         this.recheck = state.recheck;
         this.searchParams = state.searchParams;
-
-        console.log('Hotel booking state restored from sessionStorage');
       }
 
       // Cargar los datos del formulario
@@ -183,7 +178,6 @@ export class DeviajeHotelBookingComponent implements OnInit, OnDestroy {
       if (savedFormData) {
         const formData = JSON.parse(savedFormData);
         this.mainForm.patchValue(formData);
-        console.log('Hotel booking form data restored from sessionStorage');
       }
     } catch (error) {
       console.error('Error al cargar estado persistido:', error);
@@ -256,13 +250,8 @@ export class DeviajeHotelBookingComponent implements OnInit, OnDestroy {
       this.nameRoom = state.nameRoom || '';
       this.rate = state.rate;
       this.rateKey = state.rateKey || '';
-      console.log('Rate key:', this.rateKey);
       this.recheck = state.recheck;
-      console.log('Rate:', state.recheck);
-      console.log('Recheck status:', this.recheck);
       this.searchParams = state.searchParams;
-
-      console.log('Booking data loaded:', state);
     } else {
       console.error('No booking data found in state');
       this.router.navigate(['/home/hotels/search']);
@@ -288,7 +277,6 @@ export class DeviajeHotelBookingComponent implements OnInit, OnDestroy {
 
     this.subscription.add(
       this.authService.activeRole$.subscribe((role) => {
-        console.log('Active role changed to:', role);
         this.userRole = role || '';
         this.setupBookingBasedOnRole(); // Actualizar vista cuando cambie el rol
       })
@@ -359,7 +347,6 @@ export class DeviajeHotelBookingComponent implements OnInit, OnDestroy {
         next: (response) => {
           console.log('Rate verification successful:', response);
           this.isVerifying = false;
-          this.setupPaymentAmount();
 
           if (
             response &&
@@ -370,36 +357,25 @@ export class DeviajeHotelBookingComponent implements OnInit, OnDestroy {
             const room = response.hotel.rooms[0];
             if (room.rates && room.rates.length > 0) {
               const newRate = room.rates[0];
-
-              // Verificar si el precio cambió
               const oldPrice = this.rate?.net || 0;
               const newPrice = parseFloat(newRate.net) || 0;
 
               if (oldPrice !== newPrice) {
                 console.log('Price changed from', oldPrice, 'to', newPrice);
-
-                // Crear nuevo objeto rate con la estructura correcta
-                this.rate = {
-                  ...this.rate,
-                  net: newPrice,
-                  rateKey: newRate.rateKey,
-                };
-
-                // Actualizar el precio en el formulario
-                this.setupPaymentAmount();
-              } else {
-                console.log('Price confirmed:', newPrice);
               }
+              this.hotel = response.hotel;
+              this.rate = response.hotel.rooms[0].rates[0];
+              this.setupPaymentAmount();
             }
           }
-          // Continuar con el flujo normal
           this.setupPaymentAmount();
         },
         error: (error) => {
-          console.error('Rate verification failed:', error);
           this.isVerifying = false;
           this.errorMessage =
-            'La tarifa seleccionada ya no está disponible. Por favor, realice una nueva búsqueda.';
+            error.error?.message ||
+            'Error al verificar la tarifa. Intente nuevamente.';
+          console.error('Verificacion fallida:', error);
         },
       })
     );
@@ -420,14 +396,38 @@ export class DeviajeHotelBookingComponent implements OnInit, OnDestroy {
       // Adultos
       for (let a = 0; a < occupancyData.adults; a++) {
         const travelerForm = this.fb.group({
-          firstName: ['', Validators.required],
-          lastName: ['', Validators.required],
+          firstName: [
+            '',
+            [
+              Validators.required,
+              Validators.minLength(2),
+              Validators.maxLength(30),
+              this.validatorService.onlyLetters(),
+            ],
+          ],
+          lastName: [
+            '',
+            [
+              Validators.required,
+              Validators.minLength(2),
+              Validators.maxLength(30),
+              this.validatorService.onlyLetters(),
+            ],
+          ],
           travelerType: ['AD'], // ✅ CAMBIAR a HotelBeds
           roomIndex: [roomIndex],
           ...(travelerIndex === 0
             ? {
                 contact: this.fb.group({
-                  emailAddress: ['', [Validators.required, Validators.email]],
+                  emailAddress: [
+                    '',
+                    [
+                      Validators.required,
+                      Validators.email,
+                      Validators.maxLength(80),
+                      this.validatorService.emailWithDomain(),
+                    ],
+                  ],
                   phones: this.fb.array([
                     this.fb.group({
                       deviceType: ['MOBILE'],
@@ -440,6 +440,13 @@ export class DeviajeHotelBookingComponent implements OnInit, OnDestroy {
             : {}),
         });
 
+        this.validatorService.autoUppercaseControl(
+          travelerForm.get('firstName')
+        );
+        this.validatorService.autoUppercaseControl(
+          travelerForm.get('lastName')
+        );
+
         travelers.push(travelerForm);
         travelerIndex++;
       }
@@ -447,11 +454,35 @@ export class DeviajeHotelBookingComponent implements OnInit, OnDestroy {
       // Niños
       for (let c = 0; c < occupancyData.children; c++) {
         const travelerForm = this.fb.group({
-          firstName: ['', Validators.required],
-          lastName: ['', Validators.required],
-          travelerType: ['CH'], // ✅ CAMBIAR a HotelBeds
+          firstName: [
+            '',
+            [
+              Validators.required,
+              Validators.minLength(2),
+              Validators.maxLength(30),
+              this.validatorService.onlyLetters(),
+            ],
+          ],
+          lastName: [
+            '',
+            [
+              Validators.required,
+              Validators.minLength(2),
+              Validators.maxLength(30),
+              this.validatorService.onlyLetters(),
+            ],
+          ],
+          travelerType: ['CH'],
           roomIndex: [roomIndex],
         });
+
+        this.validatorService.autoUppercaseControl(
+          travelerForm.get('firstName')
+        );
+
+        this.validatorService.autoUppercaseControl(
+          travelerForm.get('lastName')
+        );
 
         travelers.push(travelerForm);
         travelerIndex++;
@@ -532,9 +563,6 @@ export class DeviajeHotelBookingComponent implements OnInit, OnDestroy {
       });
     }
 
-    //console.log('Payment amount set to:', net, this.searchParams?.currency || 'EUR');
-
-    // Guardar estado actualizado
     this.saveBookingState();
   }
 
@@ -624,12 +652,7 @@ export class DeviajeHotelBookingComponent implements OnInit, OnDestroy {
       }
     });
 
-    console.log('Travelers array valid:', this.travelers.valid);
-    console.log('Travelers array errors:', this.travelers.errors);
-
     const isValid = this.travelers.valid;
-    console.log('Final validation result:', isValid);
-
     return isValid;
   }
 
@@ -702,53 +725,42 @@ export class DeviajeHotelBookingComponent implements OnInit, OnDestroy {
     this.isLoading = true;
     this.errorMessage = '';
 
-    try {
-      console.log('Token de pago generado:', paymentToken);
+    // Preparar los datos de la reserva
+    const bookingData: HotelBookingDto = this.prepareHotelBookingData();
 
-      // Preparar los datos de la reserva
-      const bookingData: HotelBookingDto = this.prepareHotelBookingData();
+    // Preparar los datos del pago
+    const paymentData: PaymentDto = this.preparePaymentData(paymentToken);
 
-      // Preparar los datos del pago
-      const paymentData: PaymentDto = this.preparePaymentData(paymentToken);
+    const pricesDto = this.priceDetailsComponent?.getPricesDto() || null;
 
-      const pricesDto = this.priceDetailsComponent?.getPricesDto() || null;
+    console.log('Booking data:', bookingData);
+    console.log('Payment data:', paymentData);
+    console.log('precios:', pricesDto);
 
-      console.log('Booking data:', bookingData);
-      console.log('Payment data:', paymentData);
-      console.log('precios:', pricesDto);
+    this.bookingService
+      .createHotelBooking(bookingData, paymentData, pricesDto)
+      .subscribe({
+        next: (bookingReference: string) => {
+          this.isLoading = false;
+          this.showSuccessMessage = true;
+          this.bookingReference = bookingReference;
+          this.errorMessage = '';
 
-      this.bookingService
-        .createHotelBooking(bookingData, paymentData, pricesDto)
-        .subscribe({
-          next: (response) => {
-            this.isLoading = false;
-            if (response.success) {
-              this.showSuccessMessage = true;
-              this.bookingReference = response.data || '';
-              this.errorMessage = '';
+          this.clearPersistedState();
 
-              this.clearPersistedState();
-
-              setTimeout(() => {
-                this.router.navigate(['/bookings'], {
-                  queryParams: { reference: this.bookingReference },
-                });
-              }, 3000);
-            } else {
-              this.isLoading = false;
-              this.handleBookingError(response);
-            }
-          },
-        });
-    } catch (error: any) {
-      this.isLoading = false;
-      this.errorMessage = error.message || 'Error al procesar el pago';
-      console.error('Error en submitBooking:', error);
-    }
-  }
-
-  private handleBookingError(response: BaseResponse<string>): void {
-    this.errorMessage = response.message || 'Ocurrió un error inesperado';
+          setTimeout(() => {
+            this.router.navigate(['/bookings'], {
+              queryParams: { reference: this.bookingReference },
+            });
+          }, 3000);
+        },
+        error: (error) => {
+          this.isLoading = false;
+          this.errorMessage =
+            error.error?.message || 'Error al procesar la reserva';
+          console.error('Error en booking:', error);
+        },
+      });
   }
 
   // Prepare booking request for backend
@@ -858,7 +870,7 @@ export class DeviajeHotelBookingComponent implements OnInit, OnDestroy {
       if (cancellationPolicies && cancellationPolicies.length > 0) {
         const amount = cancellationPolicies[0]?.amount;
         if (amount) {
-          return parseFloat(amount); // "357.79" → 357.79
+          return amount; // "357.79" → 357.79
         }
       }
     } catch (error) {

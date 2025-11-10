@@ -128,55 +128,6 @@
                             </div>
                         </div>
 
-                        <!-- Información personal (opcional) -->
-                        <h5 class="mb-3 mt-4">Información Personal (Opcional)</h5>
-                        <div class="row mb-3">
-                            <div class="col-md-6 mb-3 mb-md-0">
-                                <label for="firstName" class="form-label">Nombre</label>
-                                <div class="input-with-icon">
-                                    <i class="bi bi-person-badge"></i>
-                                    <input type="text" formControlName="firstName" class="form-control" id="firstName"
-                                        placeholder="Nombre">
-                                </div>
-                            </div>
-                            <div class="col-md-6">
-                                <label for="lastName" class="form-label">Apellido</label>
-                                <div class="input-with-icon">
-                                    <i class="bi bi-person-badge-fill"></i>
-                                    <input type="text" formControlName="lastName" class="form-control" id="lastName"
-                                        placeholder="Apellido">
-                                </div>
-                            </div>
-                        </div>
-
-                        <div class="row mb-4">
-                            <div class="col-md-6 mb-3 mb-md-0">
-                                <label for="gender" class="form-label">Género</label>
-                                <div class="input-with-icon">
-                                    <i class="bi bi-gender-ambiguous"></i>
-                                    <select formControlName="gender" class="form-select" id="gender">
-                                        <option value="">Seleccionar género</option>
-                                        <option *ngFor="let option of genderOptions" [value]="option.value">
-                                            {{ option.label }}
-                                        </option>
-                                    </select>
-                                </div>
-                            </div>
-                            <div class="col-md-6">
-                                <label for="birthDate" class="form-label">Fecha de Nacimiento</label>
-                                <div class="input-with-icon">
-                                    <i class="bi bi-calendar"></i>
-                                    <input type="date" formControlName="birthDate" class="form-control" id="birthDate"
-                                        [max]="minDate.toISOString().split('T')[0]">
-                                </div>
-                                <div *ngIf="shouldShowError('birthDate')" class="invalid-feedback d-block">
-                                    <div *ngIf="getFieldErrors('birthDate')?.['underage']">
-                                        Debes tener al menos 18 años para registrarte
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-
                         <div class="mb-4 small text-muted">
                             Los campos marcados con * son obligatorios
                         </div>

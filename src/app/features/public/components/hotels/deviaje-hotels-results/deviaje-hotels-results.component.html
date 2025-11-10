@@ -50,7 +50,9 @@
                                     (change)="applyFilters()">
                             </div>
                             <div class="price-labels d-flex justify-content-between flex-column">
-                                <span>{{ priceRange.current |
+                                <span>Desde: {{ priceRange.min |
+                                    currency:(searchParams?.currency || 'USD') }}</span>
+                                <span>Hasta: {{ priceRange.current |
                                     currency:(searchParams?.currency || 'USD') }}</span>
                             </div>
                         </div>
@@ -118,8 +120,10 @@
                                         max="{{ priceRange.max }}" [(ngModel)]="priceRange.current"
                                         (change)="applyFilters()">
                                 </div>
-                                <div class="price-labels">
-                                    <span>{{ priceRange.current |
+                                <div class="price-labels d-flex justify-content-between flex-column">
+                                    <span>Desde: {{ priceRange.min |
+                                    currency:(searchParams?.currency || 'USD') }}</span>
+                                    <span>Hasta: {{ priceRange.current |
                                         currency:(searchParams?.currency || 'USD') }}</span>
                                 </div>
                             </div>
@@ -169,7 +173,7 @@
                             Restablecer
                         </button>
                         <button class="btn btn-primary" (click)="toggleFilters()">
-                            Aplicar filtros
+                            Aplicar
                         </button>
                     </div>
                 </div>
@@ -293,7 +297,7 @@
                                 <div class="price-booking mt-2">
                                     <div class="price">
                                         <div class="price-label">Precio desde</div>
-                                        <div class="price-amount">{{ hotelService.convertToArs(getMinRoomPrice(hotel)) |
+                                        <div class="price-amount">{{ hotelService.getRateTotalWithCommission(getMinRoomPrice(hotel)) |
                                             currency:(searchParams?.currency || 'USD') }}
                                         </div>
                                         <div class="price-details">

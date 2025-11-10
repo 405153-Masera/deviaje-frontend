@@ -105,25 +105,16 @@ export class BookingService {
   }
 
   checkRates(rateKey: string): Observable<any> {
-    // Encodear el rateKey para caracteres especiales
     const encodedRateKey = encodeURIComponent(rateKey);
-
     return this.http
-      .get<any>(`${this.hotelRateCheckUrl}?rateKey=${encodedRateKey}`)
-      .pipe(
-        catchError((error) => {
-          console.error('Error al verificar tarifa:', error);
-          throw error;
-        })
-      );
+      .get<any>(`${this.hotelRateCheckUrl}?rateKey=${encodedRateKey}`);
   }
 
-  // Crear una reserva de vuelo con pago
   createFlightBooking(
     bookingData: FlightBookingDto,
     paymentData: PaymentDto,
     pricesDto?: any // AGREGADO
-  ): Observable<BaseResponse<string>> {
+  ): Observable<string> {
     const bookAndPayRequest = {
       bookingRequest: bookingData,
       paymentRequest: paymentData,
@@ -131,36 +122,14 @@ export class BookingService {
     };
 
     return this.http
-      .post<BaseResponse<string>>(this.flightBookingUrl, bookAndPayRequest)
-      .pipe(
-        catchError((error) => {
-          console.error('Error de conexión:', error);
-
-          // Solo errores de red/infraestructura
-          if (error.status === 0) {
-            return of({
-              success: false,
-              data: null,
-              message:
-                'No hay conexión con el servidor. Verifica tu conexión a internet.',
-            });
-          } else {
-            return of({
-              success: false,
-              data: null,
-              message: 'Error de conexión con el servidor. Intenta nuevamente.',
-            });
-          }
-        })
-      );
+      .post<string>(this.flightBookingUrl, bookAndPayRequest);
   }
 
-  // Crear una reserva de hotel con pago
   createHotelBooking(
     bookingData: HotelBookingDto,
     paymentData: PaymentDto,
     pricesDto?: any
-  ): Observable<BaseResponse<string>> {
+  ): Observable<string> {
     const bookAndPayRequest = {
       bookingRequest: bookingData,
       paymentRequest: paymentData,
@@ -168,28 +137,7 @@ export class BookingService {
     };
 
     return this.http
-      .post<BaseResponse<string>>(this.hotelBookingUrl, bookAndPayRequest)
-      .pipe(
-        catchError((error) => {
-          console.error('Error de conexión:', error);
-
-          // Solo errores de red/infraestructura
-          if (error.status === 0) {
-            return of({
-              success: false,
-              data: null,
-              message:
-                'No hay conexión con el servidor. Verifica tu conexión a internet.',
-            });
-          } else {
-            return of({
-              success: false,
-              data: null,
-              message: 'Error de conexión con el servidor. Intenta nuevamente.',
-            });
-          }
-        })
-      );
+      .post<string>(this.hotelBookingUrl, bookAndPayRequest);
   }
 
   // Obtener las reservas del usuario
@@ -237,12 +185,6 @@ export class BookingService {
         })
       );
   }
-
-  convertToArs(price: number): number {
-    return price * 1250;
-  }
-
-  // Agregar estos métodos al BookingService existente
 
   // Obtener reservas según el rol del usuario
   getBookingsByRole(userId: number, userRole: string): Observable<any[]> {

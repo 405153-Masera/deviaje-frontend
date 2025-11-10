@@ -232,23 +232,6 @@
   }
 }
 
-@keyframes slideDown {
-  from {
-    opacity: 0;
-    max-height: 0;
-    transform: translateY(-10px);
-  }
-  to {
-    opacity: 1;
-    max-height: 1000px;
-    transform: translateY(0);
-  }
-}
-
-.animate-slide-down {
-  animation: slideDown 0.3s ease-out;
-}
-
 @media (max-width: 991px) {
   .facility-group-card {
     .facility-group-header {
@@ -407,160 +390,275 @@ $success-color: #28a745;
   }
 }
 
-.rate-card-compact {
+.rate-card-enhanced {
   background: $white;
   border: 2px solid $gray-200;
   border-radius: $border-radius;
-  padding: 1rem;
-  cursor: pointer;
-  transition: $transition;
+  padding: 1.5rem;
+  margin-bottom: 1rem;
+  transition: all 0.3s ease;
 
   &:hover {
     border-color: $primary-color;
+    box-shadow: 0 4px 16px rgba($primary-color, 0.1);
     transform: translateY(-2px);
-    box-shadow: 0 4px 12px rgba($primary-color, 0.1);
   }
 
   &.selected {
     border-color: $primary-color;
-    background: rgba($primary-color, 0.05);
-    box-shadow: 0 4px 16px rgba($primary-color, 0.15);
-  }
-
-  .rate-content-compact {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    gap: 2rem;
+    background: linear-gradient(135deg, rgba($primary-color, 0.03) 0%, rgba($primary-color, 0.08) 100%);
+    box-shadow: 0 6px 20px rgba($primary-color, 0.2);
   }
 }
 
-// Info de tarifa compacta
-.rate-info-compact {
-  flex: 1;
+.section-label {
+  display: flex;
+  align-items: center;
+  font-weight: 600;
+  font-size: 0.9rem;
+  color: $gray-700;
+}
 
-  .rate-board-name {
+// Promociones
+.promotions-section {
+  .promotion-item {
     display: flex;
-    align-items: center;
-    gap: 0.5rem;
-    font-size: 1rem;
-    color: $gray-800;
+    align-items: flex-start;
+    gap: 0.75rem;
+    padding: 0.75rem;
+    background: linear-gradient(135deg, #d4f4dd 0%, #eafaf1 100%);
+    border-left: 4px solid #28a745;
+    border-radius: $border-radius;
     margin-bottom: 0.5rem;
 
-    i {
-      color: $primary-color;
-      font-size: 1.1rem;
+    .promo-badge {
+      flex-shrink: 0;
+      width: 32px;
+      height: 32px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: #28a745;
+      color: $white;
+      border-radius: 50%;
+
+      i {
+        font-size: 1rem;
+      }
+    }
+
+    .promo-content {
+      flex: 1;
+
+      strong {
+        color: darken(#28a745, 10%);
+      }
+
+      small {
+        font-size: 0.8rem;
+        margin-top: 0.25rem;
+      }
     }
   }
+}
 
-  .rate-details-row {
+// Ofertas
+.offers-section {
+  .offers-list {
     display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+
+  .offer-item {
+    display: flex;
+    align-items: center;
     flex-wrap: wrap;
-    gap: 0.75rem;
-
-    .rate-offer-tag {
-      display: inline-flex;
-      align-items: center;
-      gap: 0.25rem;
-      background: rgba($success-color, 0.1);
-      color: darken($success-color, 10%);
-      padding: 0.25rem 0.625rem;
-      border-radius: $border-radius-sm;
-      font-size: 0.8rem;
-      font-weight: 500;
-
-      i {
-        font-size: 0.85rem;
-      }
-    }
-
-    .rate-cancellation-tag {
-      display: inline-flex;
-      align-items: center;
-      gap: 0.25rem;
-      color: $gray-600;
-      font-size: 0.8rem;
-
-      i {
-        color: $success-color;
-        font-size: 0.9rem;
-      }
-    }
+    padding: 0.5rem 0.75rem;
+    background: linear-gradient(135deg, #fff3cd 0%, #fff8e1 100%);
+    border-left: 4px solid #ffc107;
+    border-radius: $border-radius;
+    font-size: 0.8rem;
+    font-size: clamp(0.6rem, 5vw, 0.8rem);
   }
 }
 
-// Precio y acción compacta
-.rate-price-action {
-  gap: 1.5rem;
+// Impuestos y cancelación
+.btn-collapse-section {
+  display: flex;
+  align-items: center;
+  width: 100%;
+  padding: 0.75rem 1rem;
+  background: $gray-100;
+  border: 1px solid $gray-300;
+  border-radius: $border-radius;
+  color: $gray-700;
+  font-weight: 600;
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: all 0.3s ease;
 
-  .price-info-compact {
-    text-align: right;
-    gap: 1.5rem;
+  &:hover {
+    background: $gray-200;
+  }
 
-    .price-label-compact {
-      font-size: 0.7rem;
-      color: $gray-600;
-      text-transform: uppercase;
-      letter-spacing: 0.5px;
-      font-weight: 500;
-    }
+  i:last-child {
+    transition: transform 0.3s ease;
+  }
 
-    .price-amount-compact {
-      font-size: 1.5rem;
-      font-weight: 700;
-      color: $primary-color;
-      line-height: 1.2;
-    }
+  &[aria-expanded="true"] i:last-child {
+    transform: rotate(180deg);
+  }
+}
 
-    .price-details-compact {
-      font-size: 0.75rem;
-      color: $gray-600;
-      margin-top: 0.25rem;
+.tax-breakdown,
+.cancellation-list {
+  background: $white;
+  border: 1px solid $gray-200;
+  border-radius: $border-radius;
+  padding: 1rem;
+}
+
+.tax-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  padding: 0.75rem 0;
+  border-bottom: 1px solid $gray-200;
+
+  &:last-child {
+    border-bottom: none;
+  }
+
+  .tax-info {
+    display: flex;
+    align-items: center;
+
+    .tax-label {
+      font-size: 0.875rem;
+      color: $gray-700;
     }
   }
 
-  .btn-select-compact {
-    padding: 0.625rem 1.25rem;
-    font-size: 0.9rem;
+  .tax-value {
     font-weight: 600;
-    border-radius: $border-radius-sm;
-    border: none;
-    transition: $transition;
-    white-space: nowrap;
+    color: $gray-800;
   }
 }
 
-// ============================================
-// ANIMACIONES
-// ============================================
-@keyframes checkPulse {
-  0%,
-  100% {
-    transform: scale(1);
+.cancellation-policy-item {
+  display: flex;
+  gap: 1rem;
+  padding: 0.75rem;
+  border-bottom: 1px solid $gray-200;
+
+  &:last-child {
+    border-bottom: none;
   }
-  50% {
-    transform: scale(1.2);
+
+  .policy-icon {
+    flex-shrink: 0;
+    width: 32px;
+    height: 32px;
+
+    i {
+      font-size: 1.5rem;
+    }
+  }
+
+  .policy-details {
+    flex: 1;
+
+    .policy-date {
+      font-size: 0.875rem;
+      color: $gray-600;
+      margin-bottom: 0.25rem;
+    }
+
+    .policy-amount {
+      font-size: 0.95rem;
+    }
   }
 }
 
-.animate-slide-down {
-  animation: slideDown 0.3s ease-out;
+// Columna de precio
+.rate-price-col {
+  display: flex;
+  align-items: center;
 }
 
-@keyframes slideDown {
-  from {
-    opacity: 0;
-    max-height: 0;
+.price-box {
+  width: 100%;
+  padding: 1.5rem;
+  background: linear-gradient(135deg, #f8f9fa 0%, #ffffff 100%);
+  border: 2px solid $gray-200;
+  border-radius: $border-radius;
+  text-align: center;
+
+  .price-header {
+    margin-bottom: 0.5rem;
+
+    .price-label {
+      font-size: 0.75rem;
+      text-transform: uppercase;
+      color: $gray-600;
+      font-weight: 600;
+      letter-spacing: 0.5px;
+    }
   }
-  to {
-    opacity: 1;
-    max-height: 500px;
+
+  .price-amount {
+    font-size: clamp(1rem, 5vw, 1.5rem);
+    font-weight: 700;
+    color: $primary-color;
+    line-height: 1;
+    margin-bottom: 0.5rem;
+  }
+
+  .price-breakdown {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-size: 0.8rem;
+    color: $gray-600;
+  }
+
+  .price-per-night {
+    margin-top: 0.5rem;
+    padding-top: 0.5rem;
+    border-top: 1px solid $gray-200;
+    color: $gray-600;
+    font-size: 0.85rem;
   }
 }
 
+.btn-select-rate {
+  padding: 0.875rem 2rem;
+  background: $primary-color;
+  color: $white;
+  border: none;
+  border-radius: $border-radius;
+  font-weight: 600;
+  transition: all 0.3s ease;
+
+  &:hover {
+    background: darken($primary-color, 10%);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba($primary-color, 0.3);
+  }
+
+  &.selected {
+    background: #28a745;
+
+    &:hover {
+      background: darken(#28a745, 10%);
+    }
+  }
+}
 //-------------------------------- Tarifas --------------------------------
 
-.booking-bar-fixed {
+.booking-bar {
   position: fixed;
   bottom: 0;
   left: 0;
@@ -575,6 +673,8 @@ $success-color: #28a745;
     display: flex;
     justify-content: space-between;
     align-items: center;
+    flex-wrap: wrap;
+    text-align: center;
     gap: 2rem;
   }
 
@@ -608,6 +708,7 @@ $success-color: #28a745;
   .booking-action {
     display: flex;
     align-items: center;
+    flex-wrap: wrap;
     gap: 1.5rem;
 
     .booking-price-info {
@@ -627,24 +728,6 @@ $success-color: #28a745;
         font-weight: 700;
         color: $primary-color;
         line-height: 1.2;
-      }
-    }
-
-    .btn-booking {
-      background: $primary-color;
-      color: $white;
-      border: none;
-      padding: 0.875rem 2rem;
-      font-size: 1rem;
-      font-weight: 600;
-      border-radius: $border-radius-sm;
-      transition: $transition;
-      white-space: nowrap;
-
-      &:hover {
-        background: darken($primary-color, 10%);
-        transform: translateY(-2px);
-        box-shadow: 0 6px 20px rgba($primary-color, 0.3);
       }
     }
   }
@@ -765,5 +848,165 @@ $success-color: #28a745;
         flex: 1;
       }
     }
+  }
+}
+
+// ================================
+// INTEREST POINTS
+// ================================
+.interest-point-card {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 1rem;
+  background: linear-gradient(135deg, #f8f9fa 0%, #ffffff 100%);
+  border: 1px solid $gray-200;
+  border-radius: $border-radius;
+  transition: all 0.3s ease;
+
+  &:hover {
+    border-color: $primary-color;
+    box-shadow: 0 4px 12px rgba($primary-color, 0.15);
+    transform: translateY(-2px);
+  }
+
+  .poi-icon {
+    flex-shrink: 0;
+    width: 50px;
+    height: 50px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: $white;
+    border-radius: 50%;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+
+    i {
+      font-size: 1.5rem;
+    }
+  }
+
+  .poi-content {
+    flex: 1;
+
+    .poi-name {
+      margin-bottom: 0.25rem;
+      font-weight: 600;
+      color: $gray-800;
+    }
+
+    .poi-distance {
+      display: flex;
+      align-items: center;
+      font-size: 0.875rem;
+      color: $gray-600;
+    }
+  }
+}
+
+// ================================
+// TERMINALS
+// ================================
+.terminal-card {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 1rem;
+  background: linear-gradient(135deg, #e3f2fd 0%, #ffffff 100%);
+  border: 1px solid #bbdefb;
+  border-radius: $border-radius;
+  transition: all 0.3s ease;
+
+  &:hover {
+    border-color: #2196f3;
+    box-shadow: 0 4px 12px rgba(33, 150, 243, 0.2);
+    transform: translateY(-2px);
+  }
+
+  .terminal-icon {
+    flex-shrink: 0;
+    width: 50px;
+    height: 50px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: $white;
+    border-radius: 50%;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+
+    i {
+      font-size: 1.5rem;
+    }
+  }
+
+  .terminal-content {
+    flex: 1;
+
+    .terminal-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 0.5rem;
+
+      .terminal-name {
+        margin: 0;
+        font-weight: 600;
+        color: $gray-800;
+      }
+    }
+
+    .terminal-distance {
+      display: flex;
+      align-items: center;
+      font-size: 0.875rem;
+      color: $gray-600;
+
+      strong {
+        color: $gray-800;
+        margin: 0 0.25rem;
+      }
+    }
+  }
+}
+
+// ================================
+// RESPONSIVE
+// ================================
+@media (max-width: 991px) {
+  .amenities-grid-visual {
+    grid-template-columns: 1fr;
+  }
+
+  .rate-price-col {
+    margin-top: 1rem;
+  }
+
+  .price-box {
+    border-top: 3px solid $primary-color;
+  }
+}
+
+@keyframes checkPulse {
+  0%,
+  100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.2);
+  }
+}
+
+.animate-slide-down {
+  animation: slideDown 0.3s ease-out;
+}
+
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    max-height: 0;
+  }
+  to {
+    opacity: 1;
+    max-height: 500px;
   }
 }

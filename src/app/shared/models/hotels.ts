@@ -37,6 +37,8 @@ export interface HotelSearchResponse {
 
 export namespace HotelSearchResponse {
   export interface Hotel {
+    checkout?: string;
+    checkin?: string;
     code: string;
     name: string;
     categoryCode: string;
@@ -47,10 +49,14 @@ export namespace HotelSearchResponse {
     zoneName: string;
     latitude: number;
     longitude: number;
+    giata?: string;
     rooms: Room[];
+    totalNet?: number;
     minRate: number;
     maxRate: number;
     currency: string;
+    paymentDataRequired?: boolean;
+    modificationPolicy?: ModificationPolicy;
   }
 
   export interface Room {
@@ -66,11 +72,13 @@ export namespace HotelSearchResponse {
     net: number;
     allotment?: number;
     rateCommentsId?: string;
+    rateComments?: string;
     paymentType?: string;
     packaging?: boolean;
     boardCode?: string;
     boardName?: string; 
     cancellationPolicies?: CancellationPolicy[];
+    rateBreakDown?: RateBreakDown;
     taxes?: Taxes;
     rooms?: number;
     adults?: number;
@@ -89,7 +97,7 @@ export namespace HotelSearchResponse {
   export interface Offer {
     code: string;
     name: string;
-    amount: string | number; // Puede venir como string negativo "-63.95"
+    amount: number; // Puede venir como string negativo "-63.95"
   }
 
   export interface Taxes {
@@ -108,8 +116,23 @@ export namespace HotelSearchResponse {
   }
 
   export interface CancellationPolicy {
-    amount: string;
+    amount: number;
     from: string; // ISO date string
+  }
+
+  export interface ModificationPolicy {
+    cancellation: boolean;
+    modification: boolean;
+  }
+
+  export interface RateBreakDown {
+    rateDiscounts: RateDiscount[];
+  }
+
+  export interface RateDiscount {
+    code: string;
+    name?: string;
+    amount: number;
   }
 
   export interface Tax {
@@ -131,7 +154,6 @@ export interface HotelResponseDto {
   stateCode?: string;
   destination?: string;
   zoneCode?: number;
-  zone?: string; //GUARDA ACA TUVE QUE PONERLO POR UN ERROR EN DEVIAJE HOTEL SUMMARY
   category?: string;
   chain?: string;
   accommodationType?: string;
@@ -170,6 +192,9 @@ export interface HotelResponseDto {
     terminalCode: string;
     distance?: number;
     description?: {
+      content: string;
+    };
+    name?: {
       content: string;
     };
   }>;

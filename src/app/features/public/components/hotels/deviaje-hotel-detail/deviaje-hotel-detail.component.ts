@@ -167,58 +167,12 @@ export class DeviajeHotelDetailComponent implements OnInit, OnDestroy {
     );
   }
 
-  // Métodos auxiliares para acceder a propiedades de Rate de forma segura
-  getRateOffers(rate: HotelSearchResponse.Rate | null): any[] {
-    return (rate as any)?.offers || [];
-  }
-
-  getRateAdults(rate: HotelSearchResponse.Rate | null): number {
-    return (rate as any)?.adults || 0;
-  }
-
-  getRateChildren(rate: HotelSearchResponse.Rate | null): number {
-    return (rate as any)?.children || 0;
-  }
-
-  getRateClass(rate: HotelSearchResponse.Rate | null): string {
-    return (rate as any)?.rateClass || '';
-  }
-
-  getRateNet(rate: HotelSearchResponse.Rate | null): number {
-    return (rate as any)?.net || 0;
-  }
-
-  formatCancellationPolicy(cancellationPolicies: any[] | undefined): string {
-    if (!cancellationPolicies || cancellationPolicies.length === 0) {
-      return 'Sin política de cancelación especificada';
-    }
-
-    const policy = cancellationPolicies[0];
-    const fromDate = new Date(policy.from);
-    const amount = policy.amount;
-
-    if (amount === '0.00' || amount === 0) {
-      return `Cancelación gratuita hasta ${fromDate.toLocaleDateString()}`;
-    } else {
-      // ⭐ CAMBIAR esta línea:
-      const priceInArs = this.hotelService.convertToArs(Number(amount));
-      const formattedPrice = new Intl.NumberFormat('es-AR', {
-        style: 'currency',
-        currency: 'ARS',
-        minimumFractionDigits: 0,
-      }).format(priceInArs);
-
-      return `Cancelación gratuita hasta ${fromDate.toLocaleDateString()}. Después: ${formattedPrice}`;
-    }
-  }
-
-  getCurrencySymbol(currency: string): string {
-    const symbols: { [key: string]: string } = {
-      EUR: '€',
-      USD: '$',
-      ARS: '$',
-    };
-    return symbols[currency] || currency;
+  /**
+   * Deselecciona la tarifa actual
+   */
+  deselectRate(): void {
+    this.selectedRate = null;
+    this.selectedRoom = null;
   }
 
   getNightsCount(): number {
@@ -277,6 +231,29 @@ export class DeviajeHotelDetailComponent implements OnInit, OnDestroy {
 
   selectRate(rate: HotelSearchResponse.Rate): void {
     this.selectedRate = rate;
+  }
+
+  /**
+   * Obtiene las tarifas únicas de una habitación (sin rateKeys duplicados)
+   * @param room Habitación con sus tarifas
+   * @returns Array de tarifas sin duplicados
+   */
+  getUniqueRates(room: HotelSearchResponse.Room): HotelSearchResponse.Rate[] {
+    if (!room.rates || room.rates.length === 0) {
+      return [];
+    }
+
+    const seenRateKeys = new Set<string>();
+    const uniqueRates: HotelSearchResponse.Rate[] = [];
+
+    for (const rate of room.rates) {
+      if (rate.packaging !== true && !seenRateKeys.has(rate.rateKey)) {
+        seenRateKeys.add(rate.rateKey);
+        uniqueRates.push(rate);
+      }
+    }
+
+    return uniqueRates;
   }
 
   //--------------------------------- Imagénes ---------------------------------
@@ -354,7 +331,7 @@ export class DeviajeHotelDetailComponent implements OnInit, OnDestroy {
     this.currentImageIndex = index;
   }
 
-   // Formateo y helpers
+  // Formateo y helpers
   getHotelMainImage(): string {
     if (
       this.hotelDetails &&
@@ -482,7 +459,6 @@ export class DeviajeHotelDetailComponent implements OnInit, OnDestroy {
     }
 
     const room = this.hotelDetails.rooms.find((r) => r.roomCode === roomCode);
-    console.log(room?.roomCode);
     return room?.roomFacilities || [];
   }
 
@@ -758,32 +734,57 @@ export class DeviajeHotelDetailComponent implements OnInit, OnDestroy {
   getVisibleFacilitiesCount(group: GroupedFacility): number {
     return group.items.filter((f) => this.isFacilityAvailable(f)).length;
   }
+  //--------------------------------- Instalaciones ---------------------------------
+
+  //--------------------------------- Metodos auxiliares ---------------------------------
+
+  // Formatear fecha para políticas de cancelación
+  formatDate(dateString: string): string {
+    const date = new Date(dateString);
+    return date.toLocaleDateString('es-AR', {
+      day: '2-digit',
+      month: 'long',
+      year: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit',
+    });
+  }
 
   /**
-   * Formatea la política de cancelación de forma corta para las cards
-   * @param cancellationPolicies Políticas de cancelación
-   * @returns Texto corto
+   * Sanitiza el rateKey para usarlo como ID en HTML
+   * Remueve o reemplaza caracteres especiales que no son válidos en selectores CSS
+   * @param rateKey El rateKey original
+   * @returns Un ID válido para usar en HTML
    */
-  formatCancellationPolicyShort(
-    cancellationPolicies: any[] | undefined
-  ): string {
-    if (!cancellationPolicies || cancellationPolicies.length === 0) {
-      return 'Sin política';
-    }
+  sanitizeRateKey(rateKey: string): string {
+    if (!rateKey) return '';
+    return rateKey.replace(/[^a-zA-Z0-9-]/g, '-');
+  }
 
-    const policy = cancellationPolicies[0];
-    const fromDate = new Date(policy.from);
-    const amount = policy.amount;
+  openSectionsTaxes = new Set<string>();
+  openSectionsCancelPolity = new Set<string>();
 
-    if (amount === '0.00' || amount === 0) {
-      return `Gratis hasta ${fromDate.toLocaleDateString('es-AR', {
-        day: 'numeric',
-        month: 'short',
-      })}`;
+  toggleRateSectionTaxes(rateKey: string) {
+    if (this.openSectionsCancelPolity.has(rateKey)) {
+      this.openSectionsCancelPolity.delete(rateKey);
     } else {
-      return `Cancela con cargo`;
+      this.openSectionsCancelPolity.add(rateKey);
     }
   }
 
-  //--------------------------------- Instalaciones ---------------------------------
+  isRateSectionOpenTaxes(rateKey: string): boolean {
+    return this.openSectionsCancelPolity.has(rateKey);
+  }
+
+  toggleRateSectionCancelPolity(rateKey: string) {
+    if (this.openSectionsTaxes.has(rateKey)) {
+      this.openSectionsTaxes.delete(rateKey);
+    } else {
+      this.openSectionsTaxes.add(rateKey);
+    }
+  }
+
+  isRateSectionOpenCancelPolity(rateKey: string): boolean {
+    return this.openSectionsTaxes.has(rateKey);
+  }
 }

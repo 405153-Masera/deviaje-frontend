@@ -50,7 +50,6 @@ export class TrendingDestinationsComponent implements OnInit, AfterViewInit, OnD
     // Re-verificar después de que la vista esté inicializada
     setTimeout(() => {
       this.checkScreenSize();
-      console.log('✅ Vista inicializada - Verificando pantalla');
     }, 200);
   }
 
@@ -63,16 +62,6 @@ export class TrendingDestinationsComponent implements OnInit, AfterViewInit, OnD
     if (isPlatformBrowser(this.platformId)) {
       const previousState = this.isMobile;
       this.isMobile = window.innerWidth < 992;
-      
-      // Log solo cuando cambia el estado
-      if (previousState !== this.isMobile || !this.isLoading) {
-        console.log('🔍 Detección de pantalla:', {
-          width: window.innerWidth,
-          isMobile: this.isMobile,
-          isLoading: this.isLoading,
-          cambio: previousState !== this.isMobile ? 'SÍ' : 'NO'
-        });
-      }
     }
   }
 
@@ -98,7 +87,6 @@ export class TrendingDestinationsComponent implements OnInit, AfterViewInit, OnD
         // Re-verificar el tamaño después de cargar
         setTimeout(() => {
           this.checkScreenSize();
-          console.log('✅ Imágenes cargadas:', destinations.length);
         }, 150);
       },
       error: (err) => {

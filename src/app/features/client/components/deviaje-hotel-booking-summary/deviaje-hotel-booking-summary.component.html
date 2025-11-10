@@ -9,54 +9,37 @@
   <div class="card-body">
     <!-- Layout horizontal -->
     <div class="row">
-      
+
       <!-- Información principal -->
       <div class="col">
         <div class="row">
           <!-- Columna 1: Hotel y ubicación -->
-          <div class="col-md-4">
-            <h6 class="mb-1">{{ hotelDetails?.name || 'Hotel' }}</h6>
-            
+          <div class="col-md-4 mb-2">
+            <h5 class="mb-2">{{ hotelDetails?.name || 'Hotel' }}</h5>
+            <div class="mb-2">
+              <i class="bi bi-geo-alt"></i>
+              <span>{{getHotelLocation()}}</span>
+            </div>
             <!-- Estrellas o Categoría -->
             <div class="mb-2">
-              @if (getCategoryDisplay().type === 'stars') {
-                <div class="text-warning">
-                  @for (i of [1, 2, 3, 4, 5]; track i) {
-                    <i class="bi bi-star-fill" 
-                       [class.text-warning]="i <= getCategoryStars()"
-                       [class.text-muted]="i > getCategoryStars()"
-                       ></i>
-                  }
-                </div>
-              } @else {
-                <span class="badge bg-secondary">{{ getCategoryDisplay().value }}</span>
-              }
+              <span class="badge bg-info rounded-pill">{{ getCategoryDisplay().value }}</span>
             </div>
-            
-            <!-- <small class="text-muted">
-              <i class="bi bi-geo-alt me-1"></i>
-              {{ getHotelLocation() }}
-            </small> -->
-
-            <img [src]="getHotelMainImage()" 
-             alt="{{ hotelDetails?.name }}" 
-             class="img-fluid rounded"
-             style="width: 18rem; height: 15rem; object-fit: cover;">
           </div>
-          
+
           <!-- Columna 2: Fechas -->
-          <div class="col-md-3">
+          <div class="col-md-3 mb-2">
             <small class="text-muted">Check-in</small>
             <div class="fw-bold small">{{ getCheckInDate() }}</div>
             <small class="text-muted">Check-out</small>
             <div class="fw-bold small">{{ getCheckOutDate() }}</div>
-            <span class="badge bg-info mt-1">
+            <small class="mt-1">
               {{ calculateNights() }} noche{{ calculateNights() > 1 ? 's' : '' }}
-            </span>
+            </small>
           </div>
-          
+
           <!-- Columna 3: Habitación -->
-          <div class="col-md-3">
+          <div class="col-md-3 mb-2">
+            <h5>Habitación</h5>
             <div class="mb-2">
               <i class="bi bi-door-open me-1 text-primary"></i>
               <strong class="small">{{ nameRoom }}</strong>
@@ -71,16 +54,60 @@
             </div>
           </div>
         </div>
-        
-        <!-- Política de cancelación -->
-        <!-- <div class="row mt-3">
+
+        <!-- Comentarios de la tarifa -->
+        <div class="row mt-3" *ngIf="getRateComment()">
           <div class="col-12">
-            <div class="alert alert-info py-2 mb-0">
-              <i class="bi bi-info-circle me-2"></i>
-              <small>{{ getCancellationPolicy() }}</small>
+            <div class="alert alert-warning py-2 mb-2">
+              <i class="bi bi-exclamation-triangle me-2"></i>
+              <small class="fw-semibold">{{ getRateComment() }}</small>
             </div>
           </div>
-        </div> -->
+        </div>
+
+        <!-- Políticas de cancelación -->
+        <div class="row mt-2" *ngIf="hasCancellationPolicies()">
+          <div class="col-12">
+            <div class="card border-info">
+              <div class="card-header bg-warning py-2">
+                <small class="fw-semibold text-white">
+                  <i class="bi bi-shield-check me-2"></i>
+                  Políticas de Cancelación
+                </small>
+              </div>
+              <div class="card-body py-2">
+                <ul class="list-unstyled mb-0">
+                  <li *ngFor="let policy of rate?.cancellationPolicies" class="mb-2">
+                    <small>
+                      <div class="policy-date">
+                        @if (policy.amount === 0) {
+                        <i class="bi bi-check-circle-fill text-success"></i>
+                        } @else {
+                        <i class="bi bi-exclamation-circle-fill text-warning"></i>
+                        }
+                        Desde: <strong>{{ formatDate(policy.from) }}</strong>
+                      </div>
+                      <div class="policy-amount">
+                        @if (policy.amount === 0) {
+                        <span class="text-success fw-semibold">
+                          <i class="bi bi-check-lg me-1"></i>
+                          Cancelación gratuita
+                        </span>
+                        } @else {
+                        <span class="text-danger">
+                          Cargo: {{ hotelService.getRateTotalWithCommission(policy.amount) |
+                          currency:'ARS':'symbol':'1.0-0' }}
+                        </span>
+                        }
+                      </div>
+                    </small>
+                  </li>
+                </ul>
+              </div>
+            </div>
+          </div>
+        </div>
+
       </div>
     </div>
   </div>

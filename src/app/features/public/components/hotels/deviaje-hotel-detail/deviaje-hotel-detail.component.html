@@ -285,11 +285,8 @@
 
           <div class="card-body p-4">
             @if (hotel.rooms && hotel.rooms.length > 0) {
-
             <!-- Grid de habitaciones -->
-
             @for (room of hotel.rooms; track room.code) {
-
             <!-- Card de habitación -->
             <div class="room-card" [class.selected]="selectedRoom?.code === room.code">
 
@@ -335,7 +332,7 @@
                 <div class="col">
                   <!-- COLUMNA DERECHA: Comodidades -->
                   <div class="room-amenities-column">
-                    <h5>Comodidades</h5>
+                    <h5 class="text-md-start text-center">Comodidades</h5>
 
                     @if (getAllRoomFacilities(room.code).length > 0) {
                     <div class="amenities-grid-compact">
@@ -391,72 +388,195 @@
 
                   @if (room.rates && room.rates.length > 0) {
                   <div class="rates-list-compact">
-                    @for (rate of room.rates; track rate.rateKey) {
+                    @for (rate of getUniqueRates(room); track rate.rateKey) {
 
-                    @if(rate.packaging != true){
+
+
                     <!-- Card de tarifa compacta -->
-                    <div class="rate-card-compact" [class.selected]="selectedRate?.rateKey === rate.rateKey"
-                      (click)="selectRoom(room); selectRate(rate)">
+                    <div class="rate-card-enhanced" [class.selected]="selectedRate?.rateKey === rate.rateKey">
 
-                      <div class="rate-content-compact row">
-                        <!-- Izquierda: Info -->
-                        <div class="rate-info-compact col">
-                          <div class="rate-board-name">
-                            <i class="bi bi-cup-hot-fill"></i>
-                            <span class="fw-semibold">{{ rate.boardName || 'Solo habitación' }}</span>
+                      <div class="rate-content row g-3">
+                        <!-- COLUMNA IZQUIERDA: Info principal -->
+                        <div class="rate-info-col col-lg-8">
+                          <!-- Régimen de comida -->
+                          <div class="mb-3 text-center text-lg-start">
+                            <span class="fw-bold">Régimen de comida: {{ rate.boardName || 'Solo habitación' }}</span>
                           </div>
 
-                          <div class="rate-details-row">
-                            <!-- Ofertas -->
-                            @if (getRateOffers(rate).length > 0) {
-                            <span class="rate-offer-tag">
-                              <i class="bi bi-gift-fill"></i>
-                              {{ getRateOffers(rate)[0].name }}
-                            </span>
+                          <!-- Promociones -->
+                          @if (rate.promotions && rate.promotions.length > 0) {
+                          <div class="promotions-section mb-3">
+                            <div class="section-label">
+                              <i class="bi bi-tag-fill text-success me-1"></i>
+                              <span>Promociones activas</span>
+                            </div>
+                            @for (promo of rate.promotions; track promo.code) {
+                            <div class="promotion-item">
+                              <div class="promo-content">
+                                <strong>{{ promo.name }}</strong>
+                                @if (promo.remark) {
+                                <small class="d-block text-muted">{{ promo.remark }}</small>
+                                }
+                              </div>
+                            </div>
                             }
+                          </div>
+                          }
 
-                            <!-- Cancelación -->
-                            @if (rate.cancellationPolicies) {
-                            <span class="rate-cancellation-tag">
-                              <i class="bi bi-shield-check"></i>
-                              {{ formatCancellationPolicyShort(rate.cancellationPolicies) }}
-                            </span>
-                            }
+                          <!-- Ofertas -->
+                          @if (rate.offers && rate.offers.length > 0) {
+                          <div class="offers-section mb-3">
+                            <div class="section-label">
+                              <i class="bi bi-gift-fill text-primary me-1"></i>
+                              <span>Ofertas especiales</span>
+                            </div>
+                            <div class="offers-list">
+                              @for (offer of rate.offers; track offer.code) {
+                              <div class="offer-item">
+                                <i class="bi bi-arrow-right-circle-fill text-success me-2 d-none d-md-inline"></i>
+                                <span>{{ offer.name }}</span>
+                                @if (offer.amount) {
+                                <strong class="text-success ms-2">
+                                  {{ hotelService.convertToArs(offer.amount) |
+                                  currency:'ARS':'symbol':'1.0-0' }}
+                                </strong>
+                                }
+                              </div>
+                              }
+                            </div>
+                          </div>
+                          }
+
+                          <!-- Impuestos -->
+                          @if (rate.taxes && rate.taxes.taxes && rate.taxes.taxes.length > 0) {
+                          <div class="mb-3">
+                            <button class="btn-collapse-section" type="button"
+                              (click)="toggleRateSectionTaxes(rate.rateKey)">
+                              <span>Desglose de impuestos</span>
+                              <i class="bi bi-chevron-down ms-auto"></i>
+                            </button>
+
+                            <div class="collapse mt-2" [id]="'taxes-' + sanitizeRateKey(rate.rateKey)"
+                              [class.show]="isRateSectionOpenTaxes(rate.rateKey)">
+                              <div class="tax-breakdown">
+                                @for (tax of rate.taxes.taxes; track $index) {
+                                <div class="tax-row">
+                                  <div class="tax-info">
+                                    <span class="tax-label">{{ tax.subType || tax.type }}</span>
+                                    @if (tax.included) {
+                                    <span class="badge bg-success-subtle text-success ms-2">Incluido</span>
+                                    } @else {
+                                    <span class="badge bg-warning-subtle text-warning ms-2" title="Se debe pagar en el hotel">No incluido</span>
+                                    }
+                                  </div>
+                                  <span class="tax-value">
+                                    {{ hotelService.convertToArs(tax.amount) | currency:'ARS':'symbol':'1.0-0' }}
+                                  </span>
+                                </div>
+                                }
+                              </div>
+                            </div>
+                          </div>
+                          }
+
+                          <!-- Políticas de Cancelación -->
+                          @if (rate.cancellationPolicies && rate.cancellationPolicies.length > 0) {
+                          <div class="mb-3">
+                            <button class="btn-collapse-section" type="button"
+                              (click)="toggleRateSectionCancelPolity(rate.rateKey)">
+                              <span>Políticas de cancelación</span>
+                              <i class="bi bi-chevron-down ms-auto"></i>
+                            </button>
+
+                            <div class="collapse mt-2" [id]="'cancel-' +  sanitizeRateKey(rate.rateKey)"
+                              [class.show]="isRateSectionOpenCancelPolity(rate.rateKey)">
+                              <div class="cancellation-list">
+                                @for (policy of rate.cancellationPolicies; track $index) {
+                                <div class="cancellation-policy-item">
+                                  <div class="policy-icon  d-none d-md-inline">
+                                    @if (policy.amount === 0) {
+                                    <i class="bi bi-check-circle-fill text-success"></i>
+                                    } @else {
+                                    <i class="bi bi-exclamation-circle-fill text-warning"></i>
+                                    }
+                                  </div>
+                                  <div class="policy-details">
+                                    <div class="policy-date">
+                                      Desde: <strong>{{ formatDate(policy.from) }}</strong>
+                                    </div>
+                                    <div class="policy-amount">
+                                      @if (policy.amount === 0) {
+                                      <span class="text-success fw-semibold">
+                                        <i class="bi bi-check-lg me-1"></i>
+                                        Cancelación gratuita
+                                      </span>
+                                      } @else {
+                                      <span class="text-danger">
+                                        Cargo: {{ hotelService.getRateTotalWithCommission(policy.amount) |
+                                        currency:'ARS':'symbol':'1.0-0' }}
+                                      </span>
+                                      }
+                                    </div>
+                                  </div>
+                                </div>
+                                }
+                              </div>
+                            </div>
+                          </div>
+                          }
+
+                          <!-- Info adicional -->
+                          <div class="mt-2 text-center text-md-start">
+                            @if (rate.allotment && rate.allotment <= 5) { <small class="text-warning ms-3">
+                              <i class="bi bi-exclamation-triangle-fill me-1"></i>
+                              ¡Solo {{ rate.allotment }} disponibles!
+                              </small>
+                              }
                           </div>
                         </div>
 
-                        <!-- Derecha: Precio y botón -->
-                        <div class="rate-price-action col">
-                          <div class="price-info-compact">
-                            <div class="price-label-compact">Total</div>
-                            <div class="price-amount-compact">
-                              {{ hotelService.convertToArs(getRateNet(rate)) | currency:'ARS':'symbol':'1.0-0' }}
+                        <!-- COLUMNA DERECHA: Precio y acción -->
+                        <div class="rate-price-col col-lg-4">
+                          <div class="price-box">
+                            <div class="price-header">
+                              <span class="price-label">Precio total</span>
                             </div>
-                            <div class="price-details-compact">
-                              {{ passengers }} {{ passengers > 1 ? 'huéspedes' : 'huésped' }}
-                              <span class="mx-1">•</span>
-                              {{ hotelService.convertToArs(getRateNet(rate) / getNightsCount()) |
-                              currency:'ARS':'symbol':'1.0-0' }} /noche
+                            <div class="price-amount">
+                              {{ hotelService.getRateTotalWithCommission(rate.net) | currency:'ARS':'symbol':'1.0-0' }}
                             </div>
-                             <button class="btn btn-primary"
-                            [class.btn-primary]="selectedRate?.rateKey !== rate.rateKey"
-                            [class.btn-success]="selectedRate?.rateKey === rate.rateKey">
-                            @if (selectedRate?.rateKey === rate.rateKey) {
-                            <i class="bi bi-check-circle-fill"></i>
-                            Seleccionada
-                            } @else {
-                            Seleccionar
-                            }
-                          </button>
-                          </div>
+                            <div class="price-breakdown">
+                              <span class="text-muted">
+                                {{ passengers }} {{ passengers > 1 ? 'huéspedes' : 'huésped' }}
+                              </span>
+                              <small class="text-muted mx-1">•</small>
+                              <span class="text-muted">
+                                {{ getNightsCount() }} {{ getNightsCount() > 1 ? 'noches' : 'noche' }}
+                              </span>
+                            </div>
+                            <div class="price-per-night">
+                              <span>
+                                {{ hotelService.getRateTotalWithCommission(rate.net) / getNightsCount() |
+                                currency:'ARS':'symbol':'1.0-0' }} por noche
+                              </span>
+                            </div>
 
-                         
+                            <button class="btn btn-primary btn-sm mt-3" (click)="selectRoom(room); selectRate(rate)"
+                              [class.selected]="selectedRate?.rateKey === rate.rateKey">
+                              @if (selectedRate?.rateKey === rate.rateKey) {
+                              <i class="bi bi-check-circle-fill me-2"></i>
+                              Seleccionada
+                              } @else {
+                              <i class="bi bi-cursor-fill me-2"></i>
+                              Seleccionar
+                              }
+                            </button>
+                          </div>
                         </div>
                       </div>
                     </div>
                     }
 
-                    }
+
                   </div>
                   } @else {
                   <p class="text-muted mb-0">
@@ -486,26 +606,41 @@
         </div>
       </div>
 
+      <!-- Puntos de Interés Cercanos -->
       @if (hotelDetails && hotelDetails.interestPoints && hotelDetails.interestPoints.length > 0) {
       <div class="col-12 mt-4">
         <div class="card">
-          <div class="card-header">
-            <h5 class="mb-0">
-              <i class="bi bi-pin-map me-2"></i>
-              Puntos de interés cercanos
+          <div class="card-header bg-info">
+            <h5 class="mb-0 text-white">
+              <i class="bi bi-geo-alt-fill me-2"></i>
+              Puntos de Interés Cercanos
             </h5>
           </div>
-          <div class="card-body">
-            <div class="row">
+          <div class="card-body p-4">
+            <div class="row g-3">
               @for (poi of hotelDetails.interestPoints; track poi.facilityCode) {
-              <div class="col-md-6 col-lg-4 mb-2">
-                <small>
-                  <i class="bi bi-geo-alt text-primary me-1"></i>
-                  {{ poi.poiName }}
-                  @if (poi.distance) {
-                  <span class="text-muted">({{ poi.distance }})</span>
-                  }
-                </small>
+              <div class="col-md-6 col-lg-4">
+                <div class="interest-point-card">
+                  <div class="poi-icon">
+                    @switch (poi.poiName?.toLowerCase()) {
+                    @case ('park') { <i class="bi bi-tree-fill text-success"></i> }
+                    @case ('restaurant') { <i class="bi bi-shop text-danger"></i> }
+                    @case ('shopping center') { <i class="bi bi-cart-fill text-primary"></i> }
+                    @case ('supermarket') { <i class="bi bi-basket-fill text-warning"></i> }
+                    @case ('city center') { <i class="bi bi-building text-info"></i> }
+                    @default { <i class="bi bi-pin-map-fill text-secondary"></i> }
+                    }
+                  </div>
+                  <div class="poi-content">
+                    <h6 class="poi-name">{{ poi.poiName }}</h6>
+                    @if (poi.distance) {
+                    <div class="poi-distance">
+                      <i class="bi bi-signpost-2 me-1"></i>
+                      <span>{{ poi.distance }} metros</span>
+                    </div>
+                    }
+                  </div>
+                </div>
               </div>
               }
             </div>
@@ -514,27 +649,38 @@
       </div>
       }
 
-      <!-- ✨ NUEVO: Terminals -->
+      <!-- Terminales de Transporte -->
       @if (hotelDetails && hotelDetails.terminals && hotelDetails.terminals.length > 0) {
       <div class="col-12 mt-4">
         <div class="card">
-          <div class="card-header">
-            <h5 class="mb-0">
-              <i class="bi bi-airplane me-2"></i>
-              Terminales de transporte
+          <div class="card-header bg-info">
+            <h5 class="mb-0 text-white">
+              <i class="bi bi-airplane-fill me-2"></i>
+              Terminales de Transporte
             </h5>
           </div>
-          <div class="card-body">
-            <div class="row">
+          <div class="card-body p-4">
+            <div class="row g-3">
               @for (terminal of hotelDetails.terminals; track terminal.terminalCode) {
-              <div class="col-md-6 mb-2">
-                <small>
-                  <i class="bi bi-pin-angle text-primary me-1"></i>
-                  {{ terminal.description?.content || terminal.terminalCode }}
-                  @if (terminal.distance) {
-                  <span class="text-muted">({{ terminal.distance }}m)</span>
-                  }
-                </small>
+              <div class="col-md-6">
+                <div class="terminal-card">
+                  <div class="terminal-content">
+                    <div class="terminal-header">
+                      <h6 class="terminal-name">
+                        {{ terminal.name?.content || terminal.terminalCode }}
+                      </h6>
+                      <span class="badge bg-info rounded-pill">
+                        {{ terminal.description?.content }}
+                      </span>
+                    </div>
+                    @if (terminal.distance) {
+                    <div class="terminal-distance">
+                      <i class="bi bi-geo me-1"></i>
+                      <strong>{{ terminal.distance }}m</strong> del hotel
+                    </div>
+                    }
+                  </div>
+                </div>
               </div>
               }
             </div>
@@ -545,9 +691,12 @@
 
       <!-- Barra de reserva flotante -->
       @if (!inPackageMode && selectedRoom && selectedRate) {
-      <div class="booking-bar-fixed">
+      <div class="booking-bar">
         <div class="container">
           <div class="booking-bar-content">
+            <button class="btn btn-close" (click)="deselectRate()" title="Deseleccionar tarifa">
+              <i class="bi bi-x-lg"></i>
+            </button>
             <div class="selection-info">
               <div class="selection-room">
                 <i class="bi bi-door-open-fill me-2"></i>
@@ -563,12 +712,11 @@
               <div class="booking-price-info">
                 <span class="price-label">Total</span>
                 <span class="price-value">
-                  {{ hotelService.convertToArs(getRateNet(selectedRate)) | currency:'ARS':'symbol':'1.0-0' }}
+                  {{ hotelService.getRateTotalWithCommission(selectedRate.net) | currency:'ARS':'symbol':'1.0-0' }}
                 </span>
               </div>
-              <button class="btn btn-booking" (click)="bookHotel()">
-                <i class="bi bi-check-circle-fill me-2"></i>
-                Continuar con la reserva
+              <button class="btn btn-booking btn-primary" (click)="bookHotel()">
+                Continuar
               </button>
             </div>
           </div>

@@ -24,7 +24,7 @@ export class DeviajeTravelerFormComponent implements OnInit {
   @Input() mode: 'flight' | 'hotel' = 'flight';
 
   private http = inject(HttpClient);
-  private validatorsService = inject(ValidatorsService);
+  private validatorService = inject(ValidatorsService);
 
   countries: Country[] = [];
   filteredCountries: Country[] = [];
@@ -100,7 +100,7 @@ export class DeviajeTravelerFormComponent implements OnInit {
     if (phoneControl) {
       phoneControl.setValidators([
         Validators.required,
-        this.validatorsService.validatePhoneNumber(),
+        this.validatorService.validatePhoneNumber(),
       ]);
 
       // Revalidar cuando cambie el código de país
@@ -286,6 +286,16 @@ export class DeviajeTravelerFormComponent implements OnInit {
       'is-invalid': control?.invalid && (control?.dirty || control?.touched),
       'is-valid': control?.valid,
     };
+  }
+
+  trimField(fieldPath: string): void {
+    const control = this.travelerForm.get(fieldPath);
+    if (control && control.value && typeof control.value === 'string') {
+      const trimmedValue = control.value.trim(); // ← SOLO inicio/final
+      if (control.value !== trimmedValue) {
+        control.setValue(trimmedValue);
+      }
+    }
   }
 }
 

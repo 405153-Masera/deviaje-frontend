@@ -32,6 +32,20 @@ type HotelBedsErrorCode =
   | 'BOOKING_CONFIRMATION_ERROR'
   | 'RELEASE_VIOLATED';
 
+type MercadoPagoErrorCode =
+  | 'MISSING_TOKEN'
+  | 'INVALID_PAYMENT_ID'
+  | 'cc_rejected_insufficient_amount'
+  | 'cc_rejected_bad_filled_security_code'
+  | 'cc_rejected_bad_filled_date'
+  | 'cc_rejected_bad_filled_other'
+  | 'cc_rejected_call_for_authorize'
+  | 'cc_rejected_card_disabled'
+  | 'cc_rejected_duplicated_payment'
+  | 'cc_rejected_high_risk'
+  | 'cc_rejected_invalid_installments'
+  | 'cc_rejected_max_attempts';
+
 export const errorInterceptor: HttpInterceptorFn = (req, next) => {
   return next(req).pipe(
     catchError((error: HttpErrorResponse) => {
@@ -80,6 +94,16 @@ function getErrorMessage(
     }
   }
 
+  if (source === 'MERCADO_PAGO' && codeErrorApi) {
+    const mercadoPagoMessage = getMercadoPagoSpecificMessage(
+      codeErrorApi,
+      status
+    );
+    if (mercadoPagoMessage) {
+      return mercadoPagoMessage;
+    }
+  }
+
   const errorMessages: ErrorMessages = {
     HOTELBEDS: {
       400: 'Los criterios de búsqueda de hoteles no son válidos.',
@@ -97,12 +121,17 @@ function getErrorMessage(
       404: 'No se encontraron vuelos disponibles.',
       429: 'Has realizado demasiadas solicitudes de vuelos. Por favor, espera.',
       500: 'Error en el servicio de vuelos. Intenta más tarde.',
-      502: 'El servicio de vuelos está temporalmente no disponible.'
+      502: 'El servicio de vuelos está temporalmente no disponible.',
     },
     MERCADO_PAGO: {
-      400: 'Error al procesar el pago. Verifica los datos de tu tarjeta.',
-      402: 'Pago rechazado. Intenta con otro método de pago.',
+      400: 'Los datos del pago no son válidos. Verifica la tarjeta o el formulario.',
+      401: 'Error de autenticación con Mercado Pago. Verifica tus credenciales.',
+      403: 'Error de autenticación con Mercado Pago. Verifica tus credenciales.',
+      404: 'No se encontró la operación de pago solicitada.',
+      402: 'Pago rechazado. Intenta con otro medio de pago.', // <-- lo agregaste vos, está bien
+      422: 'No se pudo procesar el pago. Verifica los datos o intenta más tarde.',
       500: 'Error en el procesador de pagos. Intenta más tarde.',
+      503: 'Servicio de Mercado Pago no disponible temporalmente.',
     },
     BACKEND: {
       400: 'Los datos ingresados no son válidos.',
@@ -139,33 +168,45 @@ function getErrorMessage(
  * Obtiene mensajes específicos para códigos de error de HotelBeds.
  */
 function getHotelBedsSpecificMessage(
-  codeErrorApi: string, 
+  codeErrorApi: string,
   status: number
 ): string | null {
   const hotelBedsMessages: Record<string, string> = {
     // Errores 400
-    'INVALID_REQUEST': 'La solicitud no cumple con el formato requerido. Por favor, verifica los datos.',
-    'INVALID_DATA': 'Los datos son incorrectos. Verifica las fechas, número de huéspedes y habitaciones.',
-    'ALLOTMENT_EXCEEDED': 'Se ha excedido el límite de habitaciones disponibles. Por favor, reduce la cantidad.',
-    
+    INVALID_REQUEST:
+      'La solicitud no cumple con el formato requerido. Por favor, verifica los datos.',
+    INVALID_DATA:
+      'Los datos son incorrectos. Verifica las fechas, número de huéspedes y habitaciones.',
+    ALLOTMENT_EXCEEDED:
+      'Se ha excedido el límite de habitaciones disponibles. Por favor, reduce la cantidad.',
+
     // Errores 401
-    'AUTHORIZATION_MISSING': 'Error de autenticación con el servicio de hoteles.',
-    'SIGNATURE_FAILED': 'Error de verificación con el servicio de hoteles.',
-    
+    AUTHORIZATION_MISSING: 'Error de autenticación con el servicio de hoteles.',
+    SIGNATURE_FAILED: 'Error de verificación con el servicio de hoteles.',
+
     // Errores 500
-    'SYSTEM_ERROR': 'Error interno del servicio de hoteles. Nuestro equipo ha sido notificado. Intenta más tarde.',
-    
+    SYSTEM_ERROR:
+      'Error interno del servicio de hoteles. Nuestro equipo ha sido notificado. Intenta más tarde.',
+
     // PRODUCT_ERROR - Errores relacionados con el producto/reserva
-    'PRODUCT_ERROR': 'No se puede completar la reserva debido a restricciones del hotel.',
-    'INSUFFICIENT_ALLOTMENT': 'Esta habitación ya no está disponible. Por favor, realiza una nueva búsqueda.',
-    'PRICE_INCREASED': 'El precio del hotel ha aumentado desde la búsqueda inicial. Por favor, verifica el nuevo precio.',
-    'CONTRACT_CLOSED': 'El hotel no está disponible para reservas en este momento. Por favor, intenta con otro hotel.',
-    'STOP_SALES': 'El hotel no acepta reservas para las fechas seleccionadas. Por favor, elige otras fechas.',
-    'BOOKING_CONFIRMATION_ERROR': 'Error al confirmar la reserva. Por favor, intenta nuevamente en unos minutos.',
-    'RELEASE_VIOLATED': 'No se puede reservar con tan poca antelación. El hotel requiere más tiempo de anticipación.',
-    
+    PRODUCT_ERROR:
+      'No se puede completar la reserva debido a restricciones del hotel.',
+    INSUFFICIENT_ALLOTMENT:
+      'Esta habitación ya no está disponible. Por favor, realiza una nueva búsqueda.',
+    PRICE_INCREASED:
+      'El precio del hotel ha aumentado desde la búsqueda inicial. Por favor, verifica el nuevo precio.',
+    CONTRACT_CLOSED:
+      'El hotel no está disponible para reservas en este momento. Por favor, intenta con otro hotel.',
+    STOP_SALES:
+      'El hotel no acepta reservas para las fechas seleccionadas. Por favor, elige otras fechas.',
+    BOOKING_CONFIRMATION_ERROR:
+      'Error al confirmar la reserva. Por favor, intenta nuevamente en unos minutos.',
+    RELEASE_VIOLATED:
+      'No se puede reservar con tan poca antelación. El hotel requiere más tiempo de anticipación.',
+
     // CONFIGURATION_ERROR
-    'CONFIGURATION_ERROR': 'Hay un problema de configuración con el servicio de hoteles. Contacta con soporte.',
+    CONFIGURATION_ERROR:
+      'Hay un problema de configuración con el servicio de hoteles. Contacta con soporte.',
   };
 
   // Buscar mensaje específico
@@ -176,23 +217,27 @@ function getHotelBedsSpecificMessage(
 
   // Si el código contiene palabras clave, buscar coincidencias parciales
   const lowerCode = codeErrorApi.toLowerCase();
-  
+
   if (lowerCode.includes('insufficient') || lowerCode.includes('allotment')) {
     return 'Esta habitación ya no está disponible. Por favor, realiza una nueva búsqueda.';
   }
-  
+
   if (lowerCode.includes('price') && lowerCode.includes('increase')) {
     return 'El precio del hotel ha aumentado. Por favor, verifica el nuevo precio.';
   }
-  
-  if (lowerCode.includes('contract') || lowerCode.includes('office') || lowerCode.includes('branch')) {
+
+  if (
+    lowerCode.includes('contract') ||
+    lowerCode.includes('office') ||
+    lowerCode.includes('branch')
+  ) {
     return 'El hotel no está disponible para reservas en este momento.';
   }
-  
+
   if (lowerCode.includes('stop') && lowerCode.includes('sales')) {
     return 'El hotel no acepta reservas para las fechas seleccionadas.';
   }
-  
+
   if (lowerCode.includes('release')) {
     return 'No se puede reservar con tan poca antelación para este hotel.';
   }
@@ -204,7 +249,6 @@ function getHotelBedsSpecificMessage(
   // Si no hay coincidencia específica, retornar null para usar mensajes por defecto
   return null;
 }
-
 
 /**
  * Convierte mensajes técnicos del backend en mensajes amigables.
@@ -280,3 +324,94 @@ function getGenericMessage(status: number): string {
   return 'Ocurrió un error inesperado. Por favor, intenta más tarde.';
 }
 
+/**
+ * ✅ NUEVO: Obtiene mensajes específicos para códigos de error de MercadoPago.
+ */
+function getMercadoPagoSpecificMessage(
+  codeErrorApi: string,
+  status: number
+): string | null {
+  const mercadoPagoMessages: Record<string, string> = {
+    // Validación
+    MISSING_TOKEN: 'Falta el token de pago. Por favor, intenta nuevamente.',
+    INVALID_PAYMENT_ID: 'El ID de pago es inválido.',
+
+    // Pagos rechazados - Status Detail
+    cc_rejected_insufficient_amount:
+      'No tienes fondos suficientes en tu tarjeta.',
+    cc_rejected_bad_filled_security_code:
+      'El código de seguridad (CVV) es incorrecto. Verifícalo e intenta nuevamente.',
+    cc_rejected_bad_filled_date:
+      'La fecha de vencimiento de tu tarjeta es incorrecta.',
+    cc_rejected_bad_filled_other:
+      'Los datos de tu tarjeta son incorrectos. Verifícalos e intenta nuevamente.',
+    cc_rejected_call_for_authorize:
+      'Debes autorizar este pago con tu banco. Comunícate con ellos.',
+    cc_rejected_card_disabled:
+      'Tu tarjeta está deshabilitada. Contacta a tu banco o usa otra tarjeta.',
+    cc_rejected_duplicated_payment: 'Este pago ya fue procesado anteriormente.',
+    cc_rejected_high_risk:
+      'Tu pago fue rechazado por motivos de seguridad. Intenta con otro método de pago.',
+    cc_rejected_invalid_installments:
+      'La cantidad de cuotas seleccionada no es válida para esta tarjeta.',
+    cc_rejected_max_attempts:
+      'Excediste el número máximo de intentos permitidos. Por favor, intenta más tarde.',
+
+    // Errores de API (códigos numéricos como strings)
+    '2067':
+      'El número de tarjeta es inválido. Verifícalo e intenta nuevamente.',
+    '2131':
+      'No se pudo identificar el método de pago. Verifica los datos de tu tarjeta.',
+    '3034': 'El banco emisor es inválido.',
+    '3035': 'La cantidad de cuotas no es válida.',
+
+    // Errores generales
+    bad_request:
+      'Los datos del pago son inválidos. Verifícalos e intenta nuevamente.',
+    unauthorized: 'Error de autenticación con el procesador de pagos.',
+  };
+
+  // Buscar mensaje específico
+  const message = mercadoPagoMessages[codeErrorApi];
+  if (message) {
+    return message;
+  }
+
+  // Si el código contiene palabras clave, buscar coincidencias parciales
+  const lowerCode = codeErrorApi.toLowerCase();
+
+  if (lowerCode.includes('insufficient') || lowerCode.includes('amount')) {
+    return 'No tienes fondos suficientes en tu tarjeta.';
+  }
+
+  if (lowerCode.includes('security') || lowerCode.includes('cvv')) {
+    return 'El código de seguridad (CVV) es incorrecto.';
+  }
+
+  if (lowerCode.includes('date') || lowerCode.includes('expir')) {
+    return 'La fecha de vencimiento de tu tarjeta es incorrecta.';
+  }
+
+  if (lowerCode.includes('disabled') || lowerCode.includes('blocked')) {
+    return 'Tu tarjeta está deshabilitada. Contacta a tu banco.';
+  }
+
+  if (lowerCode.includes('duplicat')) {
+    return 'Este pago ya fue procesado anteriormente.';
+  }
+
+  if (lowerCode.includes('high_risk') || lowerCode.includes('fraud')) {
+    return 'Pago rechazado por motivos de seguridad.';
+  }
+
+  if (lowerCode.includes('installments') || lowerCode.includes('cuotas')) {
+    return 'La cantidad de cuotas no es válida.';
+  }
+
+  if (lowerCode.includes('max_attempts') || lowerCode.includes('attempts')) {
+    return 'Excediste el número máximo de intentos.';
+  }
+
+  // Si no hay coincidencia específica, retornar null para usar mensajes por defecto
+  return null;
+}

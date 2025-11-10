@@ -1,10 +1,11 @@
-import { Component, Input } from '@angular/core';
+import { Component, inject, Input } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import {
   HotelResponseDto,
   HotelSearchRequest,
   HotelSearchResponse,
 } from '../../../../shared/models/hotels';
+import { HotelService } from '../../../../shared/services/hotel.service';
 
 @Component({
   selector: 'app-deviaje-hotel-booking-summary',
@@ -14,43 +15,30 @@ import {
   styleUrl: './deviaje-hotel-booking-summary.component.scss',
 })
 export class DeviajeHotelBookingSummaryComponent {
+
+  hotelService: HotelService = inject(HotelService);
+
   @Input() hotelDetails: HotelResponseDto | null = null;
   @Input() hotel: HotelSearchResponse.Hotel | null = null;
   @Input() nameRoom: string = '';
   @Input() rate: HotelSearchResponse.Rate | null = null;
   @Input() searchParams: HotelSearchRequest | null = null;
 
-  // Obtener imagen del hotel
-    getHotelMainImage(): string {
-    if (
-      this.hotelDetails &&
-      this.hotelDetails.images &&
-      this.hotelDetails.images.length > 0
-    ) {
-      const imagePath = this.hotelDetails.images[0]?.path;
-      if (imagePath) {
-        return `http://photos.hotelbeds.com/giata/bigger/${imagePath}`;
-      }
-    }
-
-    // Si no hay imágenes disponibles, devolver una imagen genérica
-    return `https://via.placeholder.com/800x500?text=${encodeURIComponent(
-      this.hotel?.name || 'Hotel'
-    )}`;
-  }
-
   // Obtener ubicación completa
   getHotelLocation(): string {
+    const address = this.hotelDetails?.address || '';
     const city = this.hotelDetails?.city || '';
     const country = this.hotelDetails?.country?.name || '';
-    const zoneName = this.hotelDetails?.zone;
+    const zoneName = this.hotel?.zoneName;
 
     let location = '';
-    if (city && country) {
-      location = `${city}, ${country}`;
+
+    if (address) {
+      location = `${address}`;
     }
-    if (zoneName) {
-      location += ` - ${zoneName}`;
+
+    if (city && country) {
+      location += ` - ${city}, ${country}`;
     }
 
     return location;
@@ -61,29 +49,12 @@ export class DeviajeHotelBookingSummaryComponent {
     if (!this.hotel?.categoryName) {
       return { type: 'text', value: 'Hotel' };
     }
-
-    // Si contiene "ESTRELLAS", mostrar estrellas visuales
-    if (this.hotel.categoryName.includes('ESTRELLAS')) {
-      const starsMatch = this.hotel.categoryName.match(/(\d+)\s*ESTRELLAS?/i);
-      if (starsMatch) {
-        const stars = parseInt(starsMatch[1]);
-        return { type: 'stars', value: stars };
-      }
-    }
-
-    // Para otros tipos (LLAVES, BOUTIQUE, etc.), mostrar el texto
     return { type: 'text', value: this.hotel.categoryName };
   }
 
   onImageError(event: Event) {
     const imgElement = event.target as HTMLImageElement;
     imgElement.src = 'https://via.placeholder.com/100x80?text=Hotel';
-  }
-
-  // Obtener número de estrellas para comparación
-  getCategoryStars(): number {
-    const display = this.getCategoryDisplay();
-    return display.type === 'stars' ? (display.value as number) : 0;
   }
 
   // Calcular cantidad de noches
@@ -106,7 +77,6 @@ export class DeviajeHotelBookingSummaryComponent {
     });
   }
 
-  // Obtener fechas de check-in y check-out
   getCheckInDate(): string {
     if (!this.searchParams?.stay?.checkIn) return '';
     return this.formatDate(this.searchParams.stay.checkIn.toString());
@@ -117,25 +87,50 @@ export class DeviajeHotelBookingSummaryComponent {
     return this.formatDate(this.searchParams.stay.checkOut.toString());
   }
 
-  // Formatear política de cancelación
-  getCancellationPolicy(): string {
+  // Método para obtener el rateComment
+  getRateComment(): string {
+    const rateComments = (this.rate as any)?.rateComments;
+
+    if (!rateComments) {
+      return '';
+    }
+
+    return rateComments;
+  }
+
+  // Método para obtener todas las políticas de cancelación (no solo la primera)
+  getCancellationPolicies(): Array<{
+    from: string;
+    amount: string;
+    formattedAmount: string;
+    isFree: boolean;
+  }> {
     const cancellationPolicies = (this.rate as any)?.cancellationPolicies;
 
     if (!cancellationPolicies || cancellationPolicies.length === 0) {
-      return 'Sin política de cancelación especificada';
+      return [];
     }
 
-    const policy = cancellationPolicies[0];
-    const fromDate = this.formatDate(policy.from);
-    const amount = policy.amount;
+    return cancellationPolicies.map((policy: any) => {
+      const fromDate = this.formatDate(policy.from);
+      const amount = policy.amount;
+      const isFree = amount === '0.00' || amount === 0 || amount === '0';
 
-    if (amount === '0.00' || amount === 0 || amount === '0') {
-      return `Cancelación gratuita hasta ${fromDate}`;
-    } else {
-      return `Cancelación gratuita hasta ${fromDate}. Después se paga ${this.formatPrice(
-        parseFloat(amount)
-      )}`;
-    }
+      return {
+        from: fromDate,
+        amount: amount,
+        formattedAmount: isFree
+          ? 'Gratis'
+          : this.formatPrice(parseFloat(amount)),
+        isFree: isFree,
+      };
+    });
+  }
+
+  // Método auxiliar para verificar si hay políticas de cancelación
+  hasCancellationPolicies(): boolean {
+    const cancellationPolicies = (this.rate as any)?.cancellationPolicies;
+    return cancellationPolicies.length > 0;
   }
 
   // Obtener cantidad de huéspedes
@@ -198,5 +193,16 @@ export class DeviajeHotelBookingSummaryComponent {
   // Obtener board name
   getBoardName(): string {
     return (this.rate as any)?.boardName || 'Solo habitación';
+  }
+
+  formatDatePoliticy(dateString: string): string {
+    const date = new Date(dateString);
+    return date.toLocaleDateString('es-AR', {
+      day: '2-digit',
+      month: 'long',
+      year: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit',
+    });
   }
 }

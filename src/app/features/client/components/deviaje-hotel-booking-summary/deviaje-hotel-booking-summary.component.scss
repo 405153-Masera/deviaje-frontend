@@ -1,0 +1,28 @@
+// Alertas de comentarios de tarifa
+.alert-rate-comment {
+  background-color: #fff3cd;
+  border-left: 4px solid #ffc107;
+  
+  .bi-exclamation-triangle {
+    color: #ffc107;
+  }
+}
+
+// Card de políticas de cancelación
+.cancellation-policy-card {
+  border-left: 4px solid #17a2b8;
+  
+  .card-header {
+    background-color: #f8f9fa;
+    border-bottom: 1px solid #dee2e6;
+  }
+}
+
+// Iconos de políticas
+.policy-free {
+  color: #28a745;
+}
+
+.policy-charge {
+  color: #ffc107;
+}

@@ -33,7 +33,7 @@ export class DeviajePriceDetailsComponent implements OnInit, OnChanges {
 
   @Output() pricesCalculated = new EventEmitter<any>();
 
-  private readonly hotelService = inject(HotelService);
+  hotelService = inject(HotelService);
 
   priceBreakdown: PriceBreakdown = {
     grandTotal: 0,

@@ -207,10 +207,10 @@ export class DeviajeHotelsResultsComponent implements OnInit, OnDestroy {
   private initializeFilters(hotels: HotelSearchResponse.Hotel[]): void {
     // Rango de precios
     const prices = hotels.map((hotel) => hotel.minRate || 0);
-    this.priceRange.min = this.hotelService.convertToArs(
+    this.priceRange.min = this.hotelService.getRateTotalWithCommission(
       Math.floor(Math.min(...prices))
     );
-    this.priceRange.max = this.hotelService.convertToArs(
+    this.priceRange.max = this.hotelService.getRateTotalWithCommission(
       Math.ceil(Math.max(...prices))
     );
     this.priceRange.current = this.priceRange.max;
@@ -236,7 +236,7 @@ export class DeviajeHotelsResultsComponent implements OnInit, OnDestroy {
 
     // Filtrar por precio
     filtered = filtered.filter((hotel) => {
-      const price = this.hotelService.convertToArs(hotel.minRate);
+      const price = this.hotelService.getRateTotalWithCommission(hotel.minRate);
       return price >= this.priceRange.min && price <= this.priceRange.current;
     });
 
@@ -445,8 +445,6 @@ export class DeviajeHotelsResultsComponent implements OnInit, OnDestroy {
 
     // Generar filtros de zonas
     this.generateZoneFilters();
-
-    console.log('Zonas únicas encontradas:', this.availableZones);
   }
 
   /**
@@ -457,8 +455,6 @@ export class DeviajeHotelsResultsComponent implements OnInit, OnDestroy {
       value: zone.zoneCode,
       label: zone.zoneName,
     }));
-
-    console.log('Filtros de zona generados:', this.zoneFilters);
   }
 
   /**
@@ -712,7 +708,6 @@ export class DeviajeHotelsResultsComponent implements OnInit, OnDestroy {
   // Obtener URL de Google Maps para el hotel
   getGoogleMapsUrl(hotel: HotelSearchResponse.Hotel): SafeResourceUrl {
     if (this.hotelMapsUrls.has(hotel.code)) {
-      console.log('Aca llamamos al mapa ya generado');
       return this.hotelMapsUrls.get(hotel.code)!;
     }
 

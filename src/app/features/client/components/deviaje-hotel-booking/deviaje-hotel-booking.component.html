@@ -14,14 +14,9 @@
       [searchParams]="searchParams">
     </app-deviaje-hotel-booking-summary>
 
-     <app-deviaje-price-details
-      #priceDetailsComponent
-      [mode]="'HOTEL'"
-      [hotelPrice]="rate"
-      [currency]="'ARS'"
-      (pricesCalculated)="onPricesCalculated($event)"
-      >
-  </app-deviaje-price-details>
+    <app-deviaje-price-details #priceDetailsComponent [mode]="'HOTEL'" [hotelPrice]="rate" [currency]="'ARS'"
+      (pricesCalculated)="onPricesCalculated($event)">
+    </app-deviaje-price-details>
 
     <!-- Proceso de Reserva -->
     <div class="card">
@@ -113,7 +108,6 @@
             </div>
 
             <!-- Información del Huésped Principal -->
-            <!-- Información del Huésped Principal -->
 
             <div formArrayName="travelers">
               <div *ngFor="let travelerForm of travelers.controls; let i = index" class="mb-4">
@@ -122,7 +116,7 @@
                     <div class="d-flex justify-content-between align-items-center">
                       <h6 class="mb-0">
                         Huésped {{ i + 1 }}
-                       <span class="badge" [ngClass]="{
+                        <span class="badge" [ngClass]="{
                                 'bg-primary': travelerForm.get('travelerType')?.value === 'AD',
                                 'bg-info': travelerForm.get('travelerType')?.value === 'CH'
                               }">
@@ -198,14 +192,14 @@
                       <p class="mb-1">
                         <strong>{{ traveler.get('firstName')?.value }} {{ traveler.get('lastName')?.value }}</strong>
                       </p>
-                     @if(i==0){
-                       <small class="text-muted">
+                      @if(i==0){
+                      <small class="text-muted">
                         Email: {{ traveler.get('contact')?.get('emailAddress')?.value }}
                       </small><br>
                       <small class="text-muted">
                         Teléfono: {{ traveler.get('contact')?.get('phones')?.get('0')?.get('number')?.value }}
                       </small>
-                     }
+                      }
                     </div>
                   </div>
                 </div>
@@ -214,33 +208,27 @@
           </div>
 
           <!-- Botones de navegación -->
-          <div class="card-footer">
+          <div>
             <div class="d-flex justify-content-between">
-              <button [disabled]="currentStep === 1 || isLoading" type="button" class="btn btn-secondary"
+              <button [disabled]="currentStep === 1 || isLoading" type="button" class="btn btn-outline-secondary"
                 (click)="previousStep()">
                 <i class="bi bi-arrow-left me-1"></i>
                 Anterior
               </button>
-              
-            <div>
-              <button *ngIf="currentStep < totalSteps" type="button" class="btn btn-primary"
-                (click)="nextStep()">
-                Siguiente
-                <i class="bi bi-arrow-right ms-1"></i>
-              </button>
 
-              <button *ngIf="currentStep === totalSteps" class="btn btn-primary"
-                (click)="submitBooking()" [disabled]="isLoading">
-                <span *ngIf="isLoading" class="spinner-border spinner-border-sm me-2"></span>
-                {{ isLoading ? 'Procesando...' : 'Confirmar reserva' }}
-              </button>
+              <div>
+                <button *ngIf="currentStep < totalSteps" type="button" class="btn btn-primary" (click)="nextStep()">
+                  Siguiente
+                  <i class="bi bi-arrow-right ms-1"></i>
+                </button>
 
-              <!-- <button *ngIf="showSuccessMessage" type="button" class="btn btn-primary" (click)="goToBookings()">
-                <i class="bi bi-list-ul me-1"></i>
-                Ver mis reservas
-              </button> -->
+                <button *ngIf="currentStep === totalSteps" class="btn btn-success" (click)="submitBooking()"
+                  [disabled]="isLoading">
+                  <span *ngIf="isLoading" class="spinner-border spinner-border-sm me-2"></span>
+                  {{ isLoading ? 'Procesando...' : 'Confirmar reserva' }}
+                </button>
+              </div>
             </div>
-          </div>
           </div>
         </form>
       </div>
