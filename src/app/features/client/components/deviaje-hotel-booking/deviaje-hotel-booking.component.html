@@ -8,6 +8,15 @@
     <p class="text-muted">Un momento por favor</p>
   </div>
 
+  <!-- Mensaje de éxito -->
+  <div *ngIf="showSuccessMessage" class="alert alert-success text-center">
+    <i class="bi bi-check-circle-fill me-2"></i>
+    <h5 class="mb-2">¡Reserva confirmada!</h5>
+    <p class="mb-2">Su reserva ha sido procesada exitosamente.</p>
+    <p class="mb-0"><strong>Referencia:</strong> {{ bookingReference }}</p>
+    <small class="text-muted">Será redirigido automáticamente en unos segundos...</small>
+  </div>
+
   <div *ngIf="!isVerifying">
     <!-- Resumen del Hotel -->
     <app-deviaje-hotel-booking-summary [hotelDetails]="hotelDetails" [hotel]="hotel" [nameRoom]="nameRoom" [rate]="rate"
@@ -19,7 +28,8 @@
     </app-deviaje-price-details>
 
     <!-- Proceso de Reserva -->
-    <div class="card">
+    @if(!isVerifying && !showSuccessMessage){
+    <div class="card mb-4">
       <div class="card-header bg-primary text-white">
         <div class="d-flex justify-content-between align-items-center">
           <h5 class="mb-0">Proceso de reserva</h5>
@@ -35,19 +45,13 @@
       </div>
 
       <div class="card-body">
-        <!-- Mensaje de error -->
-        <div *ngIf="errorMessage" class="alert alert-danger">
-          <i class="bi bi-exclamation-triangle me-2"></i>
-          {{ errorMessage }}
-        </div>
 
-        <!-- Mensaje de éxito -->
-        <div *ngIf="showSuccessMessage" class="alert alert-success text-center">
-          <i class="bi bi-check-circle-fill me-2"></i>
-          <h5 class="mb-2">¡Reserva confirmada!</h5>
-          <p class="mb-2">Su reserva ha sido procesada exitosamente.</p>
-          <p class="mb-0"><strong>Referencia:</strong> {{ bookingReference }}</p>
-          <small class="text-muted">Será redirigido automáticamente en unos segundos...</small>
+        <!-- Alerta de error -->
+        <div *ngIf="errorMessage" class="alert alert-danger alert-dismissible fade show" role="alert">
+          <i class="bi bi-exclamation-triangle-fill me-2"></i>
+          {{ errorMessage }}
+          <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"
+            (click)="errorMessage = ''"></button>
         </div>
 
         <form [formGroup]="mainForm" *ngIf="!showSuccessMessage">
@@ -158,49 +162,45 @@
               Por favor revisa la información antes de confirmar la reserva.
             </div>
 
-            <!-- Resumen de la reserva -->
-            <div class="row">
-              <!-- Información del hotel -->
-              <div class="col-md-6">
-                <div class="card mb-3">
-                  <div class="card-header bg-light">
-                    <h6 class="mb-0">Detalles del hotel</h6>
-                  </div>
-                  <div class="card-body">
-                    <h6>{{ hotelDetails?.name || 'Hotel' }}</h6>
-                    <p class="text-muted mb-2">{{ nameRoom }}</p>
-                    <small class="text-muted">
-                      <i class="bi bi-calendar-check me-1"></i>
-                      Check-in: {{ searchParams?.stay?.checkIn | date:'dd/MM/yyyy' }}
-                    </small><br>
-                    <small class="text-muted">
-                      <i class="bi bi-calendar-x me-1"></i>
-                      Check-out: {{ searchParams?.stay?.checkOut | date:'dd/MM/yyyy' }}
-                    </small>
-                  </div>
+            <!-- Información del huésped -->
+            <div class="card mb-4">
+              <div class="card-header bg-info text-white">
+                <h6 class="mb-0">Información del huésped</h6>
+              </div>
+              <div class="card-body">
+                <div *ngFor="let traveler of travelers.controls; let i = index">
+                  <p class="mb-1">
+                    <strong>{{ traveler.get('firstName')?.value }} {{ traveler.get('lastName')?.value }}</strong>
+                  </p>
+                  @if(i==0){
+                  <small class="text-muted">
+                    Email: {{ traveler.get('contact')?.get('emailAddress')?.value }}
+                  </small><br>
+                  <small class="text-muted">
+                    Teléfono: {{ traveler.get('contact')?.get('phones')?.get('0')?.get('number')?.value }}
+                  </small>
+                  }
                 </div>
               </div>
+            </div>
 
-              <!-- Información del huésped -->
-              <div class="col-md-6">
-                <div class="card mb-3">
-                  <div class="card-header bg-light">
-                    <h6 class="mb-0">Información del huésped</h6>
+            <!-- Resumen de pago -->
+            <div class="card mb-4">
+              <div class="card-header bg-info text-white">
+                <h6 class="mb-0">Información de pago</h6>
+              </div>
+              <div class="card-body">
+                <div class="row">
+                  <div class="col-md-6">
+                    <p><strong>Método:</strong> Tarjeta de crédito</p>
+                    <p><strong>Titular:</strong> {{ mainForm.get('payment')?.get('cardholderName')?.value }}</p>
+                    <p><strong>Número:</strong> **** **** **** {{
+                      mainForm.get('payment')?.get('cardNumber')?.value.substring(12) }}</p>
                   </div>
-                  <div class="card-body">
-                    <div *ngFor="let traveler of travelers.controls; let i = index">
-                      <p class="mb-1">
-                        <strong>{{ traveler.get('firstName')?.value }} {{ traveler.get('lastName')?.value }}</strong>
-                      </p>
-                      @if(i==0){
-                      <small class="text-muted">
-                        Email: {{ traveler.get('contact')?.get('emailAddress')?.value }}
-                      </small><br>
-                      <small class="text-muted">
-                        Teléfono: {{ traveler.get('contact')?.get('phones')?.get('0')?.get('number')?.value }}
-                      </small>
-                      }
-                    </div>
+                  <div class="col-md-6">
+                    <p><strong>Monto total:</strong> {{ calculatedTotalAmount | currency:'ARS'}}</p>
+                    <p><strong>Moneda:</strong>ARS</p>
+                    <p><strong>Cuotas:</strong> 1</p>
                   </div>
                 </div>
               </div>
@@ -212,20 +212,18 @@
             <div class="d-flex justify-content-between">
               <button [disabled]="currentStep === 1 || isLoading" type="button" class="btn btn-outline-secondary"
                 (click)="previousStep()">
-                <i class="bi bi-arrow-left me-1"></i>
                 Anterior
               </button>
 
               <div>
                 <button *ngIf="currentStep < totalSteps" type="button" class="btn btn-primary" (click)="nextStep()">
                   Siguiente
-                  <i class="bi bi-arrow-right ms-1"></i>
                 </button>
 
                 <button *ngIf="currentStep === totalSteps" class="btn btn-success" (click)="submitBooking()"
                   [disabled]="isLoading">
                   <span *ngIf="isLoading" class="spinner-border spinner-border-sm me-2"></span>
-                  {{ isLoading ? 'Procesando...' : 'Confirmar reserva' }}
+                  {{ isLoading ? 'Procesando...' : 'Reservar' }}
                 </button>
               </div>
             </div>
@@ -233,5 +231,6 @@
         </form>
       </div>
     </div>
+    }
   </div>
 </div>

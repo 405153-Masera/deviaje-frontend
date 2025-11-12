@@ -75,6 +75,7 @@ export interface HotelBookingDto {
   agentId?: number;
   branchId?: number;
   holder: HolderDto;
+  countryName?: string;
   rooms: RoomBookingDto[];
   clientReference?: string;
   remark?: string;
@@ -88,6 +89,7 @@ export interface HolderDto {
   surname: string;
   email: string;
   phone: string;
+  countryCallingCode?: string;
 }
 
 export interface RoomBookingDto {

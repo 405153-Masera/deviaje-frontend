@@ -56,15 +56,10 @@
 
     <div class="col-md-6" *ngIf="travelerForm.get('travelerType')?.value === 'INFANT'">
       <label for="birthDate" class="form-label">Fecha de nacimiento <span class="text-danger">*</span></label>
-      <input 
-        type="date" 
-        class="form-control" 
-        id="birthDate" 
-        formControlName="dateOfBirth"
-        [ngClass]="onValidate('dateOfBirth')"
-        [min]="getDateConstraints(travelerForm.get('travelerType')?.value).min"
+      <input type="date" class="form-control" id="birthDate" formControlName="dateOfBirth"
+        [ngClass]="onValidate('dateOfBirth')" [min]="getDateConstraints(travelerForm.get('travelerType')?.value).min"
         [max]="getDateConstraints(travelerForm.get('travelerType')?.value).max">
-      
+
       <div *ngIf="shouldShowError('dateOfBirth')" class="invalid-feedback d-block">
         <div *ngIf="getFieldErrors('dateOfBirth')?.['required']">La fecha de nacimiento es obligatoria para bebés</div>
       </div>
@@ -82,8 +77,10 @@
     <div class="mb-3">
       <div class="col mb-3 mb-md-0">
         <label for="emailAddress" class="form-label">Email <span class="text-danger">*</span></label>
-        <input type="email" class="form-control" id="emailAddress" formControlName="emailAddress"
-          [ngClass]="onValidate('contact.emailAddress')" placeholder="ejemplo@correo.com" (blur)="trimField('contact.emailAddress')">
+        <input type="text" inputmode="email" autocomplete="email" formControlName="emailAddress"
+          (blur)="trimField('contact.emailAddress')" class="form-control" id="emailAddress"
+          formControlName="emailAddress" [ngClass]="onValidate('contact.emailAddress')"
+          placeholder="ejemplo@correo.com">
         <div *ngIf="shouldShowError('contact.emailAddress')" class="invalid-feedback d-block">
           <div *ngIf="getFieldErrors('contact.emailAddress')?.['required']">El email es obligatorio</div>
           <div *ngIf="getFieldErrors('contact.emailAddress')?.['invalidEmail']">
@@ -108,8 +105,14 @@
             <div *ngIf="getFieldErrors('contact.emailAddress')?.['invalidEmailFormat']">
               El formato del email es inválido
             </div>
+            <div *ngIf="getFieldErrors('contact.emailAddress')?.['email']">
+              El formato del email es inválido
+            </div>
             <div *ngIf="getFieldErrors('contact.emailAddress')?.['invalidDomainExtension']">
               La extensión del dominio debe tener al menos 2 caracteres
+            </div>
+            <div *ngIf="getFieldErrors('contact.emailAddress')?.['domainExtensionTooLong']">
+              La extensión del dominio no debe exceder los 6 caracteres
             </div>
           </div>
         </div>
@@ -231,8 +234,8 @@
 
     <div class="mb-3">
       <label for="email" class="form-label">Correo electrónico <span class="text-danger">*</span></label>
-      <input type="email" class="form-control" id="email" formControlName="emailAddress" (blur)="trimField('emailAddress')"
-        [ngClass]="onValidate('contact.emailAddress')">
+      <input type="email" class="form-control" id="email" formControlName="emailAddress"
+        (blur)="trimField('contact.emailAddress')" [ngClass]="onValidate('contact.emailAddress')">
       <div *ngIf="shouldShowError('contact.emailAddress')" class="invalid-feedback d-block">
         <div *ngIf="getFieldErrors('contact.emailAddress')?.['required']">El correo electrónico es obligatorio</div>
         <div *ngIf="getFieldErrors('contact.emailAddress')?.['email']">Ingrese un correo electrónico válido</div>

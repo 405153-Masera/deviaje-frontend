@@ -140,10 +140,7 @@ export class DeviajeFlightBookingComponent implements OnInit, OnDestroy {
       this.loadFromRouterState();
     }
 
-    // AGREGAR: Cargar usuario actual y roles
     this.loadCurrentUser();
-
-    // Configurar la suscripción para guardar cambios automáticamente
     this.setupFormPersistence();
   }
 

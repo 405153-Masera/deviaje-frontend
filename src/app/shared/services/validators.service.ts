@@ -155,18 +155,6 @@ export class ValidatorsService {
     };
   }
 
-  /**
-   * Validador para email que requiere dominio completo
-   * Requisito de API Amadeus: El email debe tener un dominio válido (ej: .com, .ar, etc.)
-   *
-   * Valida en pasos para dar mensajes de error específicos:
-   * 1. Que tenga @
-   * 2. Que tenga un dominio después del @
-   * 3. Que el dominio tenga una extensión válida (.com, .ar, etc.)
-   *
-   * Ejemplo de uso:
-   * emailAddress: ['', [Validators.required, Validators.email, this.validatorsService.emailWithDomain()]]
-   */
   emailWithDomain(): ValidatorFn {
     return (control: AbstractControl): ValidationErrors | null => {
       if (!control.value) {
@@ -212,12 +200,17 @@ export class ValidatorsService {
         return { invalidEmailFormat: true };
       }
 
-      // 7. Verificar que la extensión del dominio tenga al menos 2 caracteres
+      // 7. Verificar que la extensión del dominio tenga entre 2 y 6 caracteres
       const domainParts = domain.split('.');
       const extension = domainParts[domainParts.length - 1];
 
       if (extension.length < 2) {
         return { invalidDomainExtension: true };
+      }
+
+      // 🆕 8. Verificar que la extensión no sea mayor a 6 caracteres
+      if (extension.length > 6) {
+        return { domainExtensionTooLong: true };
       }
 
       return null;
@@ -277,6 +270,8 @@ export class ValidatorsService {
         'El dominio debe tener una extensión (ej: .com, .ar)',
       invalidDomainExtension:
         'La extensión del dominio debe tener al menos 2 caracteres',
+      domainExtensionTooLong:
+        'La extensión del dominio no puede tener más de 6 caracteres', // 🆕
       invalidEmailFormat: 'El formato del email no es válido',
       invalidEmailDomain:
         'El email debe tener un dominio válido (ej: .com, .ar)',
@@ -305,26 +300,6 @@ export class ValidatorsService {
     };
 
     return errorMessages[errorKey] || 'Error de validación';
-  }
-
-  /**
-   * Método helper para hacer trim automático de un FormControl
-   * Llama este método en el ngOnInit o cuando se cree el control
-   *
-   * Ejemplo de uso:
-   * this.validatorsService.autoTrimControl(this.travelerForm.get('firstName'));
-   */
-  autoTrimControl(control: AbstractControl | null): void {
-    if (!control) return;
-
-    control.valueChanges.subscribe((value) => {
-      if (value && typeof value === 'string') {
-        const trimmedValue = value.trim();
-        if (value !== trimmedValue) {
-          control.setValue(trimmedValue, { emitEvent: false });
-        }
-      }
-    });
   }
 
   /**

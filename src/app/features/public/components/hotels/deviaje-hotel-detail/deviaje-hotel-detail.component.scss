@@ -426,8 +426,8 @@ $success-color: #28a745;
     align-items: flex-start;
     gap: 0.75rem;
     padding: 0.75rem;
-    background: linear-gradient(135deg, #d4f4dd 0%, #eafaf1 100%);
-    border-left: 4px solid #28a745;
+    background: linear-gradient(135deg, #89def3 0%, #eafaf1 100%);
+    border-left: 4px solid #28b1c4;
     border-radius: $border-radius;
     margin-bottom: 0.5rem;
 
@@ -449,10 +449,6 @@ $success-color: #28a745;
 
     .promo-content {
       flex: 1;
-
-      strong {
-        color: darken(#28a745, 10%);
-      }
 
       small {
         font-size: 0.8rem;

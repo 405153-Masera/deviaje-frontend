@@ -390,11 +390,8 @@
                   <div class="rates-list-compact">
                     @for (rate of getUniqueRates(room); track rate.rateKey) {
 
-
-
                     <!-- Card de tarifa compacta -->
                     <div class="rate-card-enhanced" [class.selected]="selectedRate?.rateKey === rate.rateKey">
-
                       <div class="rate-content row g-3">
                         <!-- COLUMNA IZQUIERDA: Info principal -->
                         <div class="rate-info-col col-lg-8">
@@ -406,10 +403,6 @@
                           <!-- Promociones -->
                           @if (rate.promotions && rate.promotions.length > 0) {
                           <div class="promotions-section mb-3">
-                            <div class="section-label">
-                              <i class="bi bi-tag-fill text-success me-1"></i>
-                              <span>Promociones activas</span>
-                            </div>
                             @for (promo of rate.promotions; track promo.code) {
                             <div class="promotion-item">
                               <div class="promo-content">

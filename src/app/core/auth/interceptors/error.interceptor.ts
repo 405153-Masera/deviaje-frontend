@@ -356,6 +356,8 @@ function getMercadoPagoSpecificMessage(
       'La cantidad de cuotas seleccionada no es válida para esta tarjeta.',
     cc_rejected_max_attempts:
       'Excediste el número máximo de intentos permitidos. Por favor, intenta más tarde.',
+    cc_rejected_other_reason:
+      'Tu tarjeta fue rechazada. Contacta a tu banco para más información o intenta con otra tarjeta.',
 
     // Errores de API (códigos numéricos como strings)
     '2067':

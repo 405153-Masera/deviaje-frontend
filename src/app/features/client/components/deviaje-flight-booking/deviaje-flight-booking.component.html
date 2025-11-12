@@ -1,33 +1,21 @@
 <div class="container my-4">
-  <!-- Alerta de error -->
-  <div *ngIf="errorMessage" class="alert alert-danger alert-dismissible fade show" role="alert">
-    <i class="bi bi-exclamation-triangle-fill me-2"></i>
-    {{ errorMessage }}
-    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"
-      (click)="errorMessage = ''"></button>
+
+  <!-- Verificando disponibilidad -->
+  <div *ngIf="isVerifying" class="text-center py-5">
+    <div class="spinner-border text-primary mb-3" role="status">
+      <span class="visually-hidden">Verificando...</span>
+    </div>
+    <h5>Verificando disponibilidad de la tarifa...</h5>
+    <p class="text-muted">Un momento por favor</p>
   </div>
 
-  <!-- Alerta de éxito -->
-  <div *ngIf="showSuccessMessage" class="alert alert-success" role="alert">
+  <!-- Mensaje de éxito -->
+  <div *ngIf="showSuccessMessage" class="alert alert-success text-center">
     <i class="bi bi-check-circle-fill me-2"></i>
-    <strong>¡Reserva exitosa!</strong> Tu reserva ha sido procesada correctamente. Número de referencia: {{
-    bookingReference }}
-    <div class="mt-2">
-      Redirigiendo a la página de tus reservas...
-      <div class="spinner-border spinner-border-sm ms-2" role="status">
-        <span class="visually-hidden">Cargando...</span>
-      </div>
-    </div>
-  </div>
-
-  <!-- Verificación de disponibilidad -->
-  <div *ngIf="isVerifying" class="card mb-4">
-    <div class="card-body d-flex justify-content-center align-items-center p-4">
-      <div class="spinner-border text-primary me-3" role="status">
-        <span class="visually-hidden">Cargando...</span>
-      </div>
-      <span>Verificando disponibilidad y precio actual...</span>
-    </div>
+    <h5 class="mb-2">¡Reserva confirmada!</h5>
+    <p class="mb-2">Su reserva ha sido procesada exitosamente.</p>
+    <p class="mb-0"><strong>Referencia:</strong> {{ bookingReference }}</p>
+    <small class="text-muted">Será redirigido automáticamente en unos segundos...</small>
   </div>
 
   <!-- Panel de información del vuelo -->
@@ -59,6 +47,14 @@
       </div>
 
       <div class="card-body">
+        <!-- Alerta de error -->
+        <div *ngIf="errorMessage" class="alert alert-danger alert-dismissible fade show" role="alert">
+          <i class="bi bi-exclamation-triangle-fill me-2"></i>
+          {{ errorMessage }}
+          <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"
+            (click)="errorMessage = ''"></button>
+        </div>
+
         <form [formGroup]="mainForm">
           <!-- Paso 1: Información de los pasajeros -->
           <div *ngIf="currentStep === 1">
@@ -110,8 +106,7 @@
                     <i class="bi bi-check-circle me-2"></i>
                     Cliente seleccionado {{ userSearchInput.value }}
                   </div>
-                  <div *ngIf="userErrorMessage"
-                    class="alert alert-danger mt-2">
+                  <div *ngIf="userErrorMessage" class="alert alert-danger mt-2">
                     <i class="bi bi-exclamation-triangle me-2"></i>
                     {{ userErrorMessage }}
                   </div>
@@ -170,7 +165,7 @@
 
             <!-- Resumen de pasajeros -->
             <div class="card mb-4">
-              <div class="card-header bg-light">
+              <div class="card-header bg-info text-white">
                 <h6 class="mb-0">Pasajeros</h6>
               </div>
               <div class="card-body">
@@ -212,7 +207,7 @@
 
             <!-- Información de contacto -->
             <div class="card mb-4">
-              <div class="card-header bg-light">
+              <div class="card-header bg-info text-white">
                 <h6 class="mb-0">Información de contacto</h6>
               </div>
               <div class="card-body">
@@ -231,7 +226,7 @@
 
             <!-- Resumen de pago -->
             <div class="card mb-4">
-              <div class="card-header bg-light">
+              <div class="card-header bg-info text-white">
                 <h6 class="mb-0">Información de pago</h6>
               </div>
               <div class="card-body">
@@ -255,26 +250,23 @@
         </form>
       </div>
 
-      <div class="card-footer">
+      <div>
         <div class="d-flex justify-content-between">
-          <button class="btn btn-secondary" type="button" [disabled]="currentStep === 1 || isLoading"
+          <button class="btn btn-outline-secondary" type="button" [disabled]="currentStep === 1 || isLoading"
             (click)="previousStep()">
-            <i class="bi bi-arrow-left me-1"></i> Anterior
+            Anterior
           </button>
 
           <div>
             <button *ngIf="currentStep < totalSteps" class="btn btn-primary" [disabled]="isLoading"
               (click)="nextStep()">
-              Siguiente <i class="bi bi-arrow-right ms-1"></i>
+              Siguiente
             </button>
 
-            <button *ngIf="currentStep === totalSteps" class="btn btn-primary" [disabled]="isLoading"
+            <button *ngIf="currentStep === totalSteps" class="btn btn-success" [disabled]="isLoading"
               (click)="submitBooking()">
-              <span *ngIf="!isLoading">Confirmar reserva</span>
-              <span *ngIf="isLoading">
-                <span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
-                Procesando...
-              </span>
+              <span *ngIf="isLoading" class="spinner-border spinner-border-sm me-2"></span>
+              {{ isLoading ? 'Procesando...' : 'Reservar' }}
             </button>
           </div>
         </div>

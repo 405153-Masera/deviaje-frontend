@@ -177,7 +177,15 @@ export class DeviajeHotelBookingComponent implements OnInit, OnDestroy {
       const savedFormData = sessionStorage.getItem(this.FORM_DATA_KEY);
       if (savedFormData) {
         const formData = JSON.parse(savedFormData);
-        this.mainForm.patchValue(formData);
+       
+        if (this.searchParams) {
+          this.setupTravelersForm();
+        }
+
+        // Luego cargar los valores guardados
+        setTimeout(() => {
+          this.mainForm.patchValue(formData);
+        }, 100);
       }
     } catch (error) {
       console.error('Error al cargar estado persistido:', error);
@@ -756,8 +764,16 @@ export class DeviajeHotelBookingComponent implements OnInit, OnDestroy {
         },
         error: (error) => {
           this.isLoading = false;
-          this.errorMessage =
-            error.error?.message || 'Error al procesar la reserva';
+
+          if (error.source === 'MERCADO_PAGO') {
+            this.mainForm.get('payment')?.get('paymentToken')?.setValue(null);
+            this.currentStep = 2;
+            this.errorMessage = error.message;
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+
+          } else {
+            this.errorMessage = error.message;
+          }
           console.error('Error en booking:', error);
         },
       });
@@ -787,6 +803,9 @@ export class DeviajeHotelBookingComponent implements OnInit, OnDestroy {
     const contactInfo = travelerData.contact || {};
     const emailAddress = contactInfo.emailAddress || '';
     const phoneNumber = contactInfo.phones?.[0]?.number || '';
+    const countryCallingCode =
+      contactInfo.phones?.[0]?.countryCallingCode || '';
+    const countryName = this.hotelDetails?.country?.name;
 
     // For guest booking or no login: both remain null
     const paxes = this.travelers.controls.map((travelerControl, index) => {
@@ -805,9 +824,11 @@ export class DeviajeHotelBookingComponent implements OnInit, OnDestroy {
       holder: {
         name: travelerData.firstName,
         surname: travelerData.lastName,
-        email: emailAddress, // ✅ AGREGADO
-        phone: phoneNumber, // ✅ AGREGADO
+        email: emailAddress, 
+        phone: phoneNumber,
+        countryCallingCode: countryCallingCode,
       },
+      countryName: countryName || '',
       rooms: [
         {
           rateKey: this.rateKey,
