@@ -459,7 +459,8 @@
                                     @if (tax.included) {
                                     <span class="badge bg-success-subtle text-success ms-2">Incluido</span>
                                     } @else {
-                                    <span class="badge bg-warning-subtle text-warning ms-2" title="Se debe pagar en el hotel">No incluido</span>
+                                    <span class="badge bg-warning-subtle text-warning ms-2"
+                                      title="Se debe pagar en el hotel">No incluido</span>
                                     }
                                   </div>
                                   <span class="tax-value">
@@ -505,8 +506,14 @@
                                       </span>
                                       } @else {
                                       <span class="text-danger">
-                                        Cargo: {{ hotelService.getRateTotalWithCommission(policy.amount) |
+                                        Cargo:
+                                        @if(inPackageMode){
+                                        {{ hotelService.convertToArs(policy.amount) |
+                                        currency:'ARS':'symbol':'1.0-0'}} 
+                                        } @else {
+                                        {{ hotelService.getRateTotalWithCommission(policy.amount) |
                                         currency:'ARS':'symbol':'1.0-0' }}
+                                        }
                                       </span>
                                       }
                                     </div>
@@ -529,40 +536,55 @@
                         </div>
 
                         <!-- COLUMNA DERECHA: Precio y acción -->
-                        <div class="rate-price-col col-lg-4">
-                          <div class="price-box">
-                            <div class="price-header">
-                              <span class="price-label">Precio total</span>
-                            </div>
-                            <div class="price-amount">
-                              {{ hotelService.getRateTotalWithCommission(rate.net) | currency:'ARS':'symbol':'1.0-0' }}
-                            </div>
-                            <div class="price-breakdown">
-                              <span class="text-muted">
-                                {{ passengers }} {{ passengers > 1 ? 'huéspedes' : 'huésped' }}
-                              </span>
-                              <small class="text-muted mx-1">•</small>
-                              <span class="text-muted">
-                                {{ getNightsCount() }} {{ getNightsCount() > 1 ? 'noches' : 'noche' }}
-                              </span>
-                            </div>
-                            <div class="price-per-night">
-                              <span>
-                                {{ hotelService.getRateTotalWithCommission(rate.net) / getNightsCount() |
-                                currency:'ARS':'symbol':'1.0-0' }} por noche
-                              </span>
-                            </div>
+                        <div class="col-lg-4">
+                          <div class="row">
+                            <div class="rate-price-col">
+                              <div class="price-box">
+                                <div class="price-header">
+                                  <span class="price-label">Precio total</span>
+                                </div>
+                                <div class="price-amount">
+                                  @if (inPackageMode) {
+                                  {{ hotelService.convertToArs(rate.net) | currency:'ARS':'symbol':'1.0-0' }}
+                                  } @else {
+                                  {{ hotelService.getRateTotalWithCommission(rate.net) | currency:'ARS':'symbol':'1.0-0'
+                                  }}
+                                  }
+                                </div>
+                                <div class="price-breakdown">
+                                  <span class="text-muted">
+                                    {{ passengers }} {{ passengers > 1 ? 'huéspedes' : 'huésped' }}
+                                  </span>
+                                  <small class="text-muted mx-1">•</small>
+                                  <span class="text-muted">
+                                    {{ getNightsCount() }} {{ getNightsCount() > 1 ? 'noches' : 'noche' }}
+                                  </span>
+                                </div>
+                                <div class="price-per-night">
+                                  <span>
+                                    @if(inPackageMode) {
+                                    {{ hotelService.convertToArs(rate.net) / getNightsCount() |
+                                    currency:'ARS':'symbol':'1.0-0' }} por noche
+                                    } @else {
 
-                            <button class="btn btn-primary btn-sm mt-3" (click)="selectRoom(room); selectRate(rate)"
-                              [class.selected]="selectedRate?.rateKey === rate.rateKey">
-                              @if (selectedRate?.rateKey === rate.rateKey) {
-                              <i class="bi bi-check-circle-fill me-2"></i>
-                              Seleccionada
-                              } @else {
-                              <i class="bi bi-cursor-fill me-2"></i>
-                              Seleccionar
-                              }
-                            </button>
+                                    {{ hotelService.getRateTotalWithCommission(rate.net) / getNightsCount() |
+                                    currency:'ARS':'symbol':'1.0-0' }} por noche
+                                    }
+                                  </span>
+                                </div>
+
+                                <button class="btn btn-primary btn-sm mt-3" (click)="selectRoom(room); selectRate(rate)"
+                                  [class.selected]="selectedRate?.rateKey === rate.rateKey">
+                                  @if (selectedRate?.rateKey === rate.rateKey) {
+                                  <i class="bi bi-check-circle-fill me-2"></i>
+                                  Seleccionada
+                                  } @else {
+                                  <i class="bi bi-cursor-fill me-2"></i>
+                                  Seleccionar
+                                  }
+                                </button>
+                              </div>
+                            </div>
                           </div>
                         </div>
                       </div>
@@ -683,8 +705,8 @@
       }
 
       <!-- Barra de reserva flotante -->
-      @if (!inPackageMode && selectedRoom && selectedRate) {
-      <div class="booking-bar">
+      @if (selectedRoom && selectedRate) {
+      <div class="booking-bar" [class.in-modal]="inPackageMode">
         <div class="container">
           <div class="booking-bar-content">
             <button class="btn btn-close" (click)="deselectRate()" title="Deseleccionar tarifa">
@@ -705,7 +727,11 @@
               <div class="booking-price-info">
                 <span class="price-label">Total</span>
                 <span class="price-value">
+                  @if (inPackageMode) {
+                  {{ hotelService.convertToArs(selectedRate.net) | currency:'ARS':'symbol':'1.0-0' }}
+                  } @else {
                   {{ hotelService.getRateTotalWithCommission(selectedRate.net) | currency:'ARS':'symbol':'1.0-0' }}
+                  }
                 </span>
               </div>
               <button class="btn btn-booking btn-primary" (click)="bookHotel()">

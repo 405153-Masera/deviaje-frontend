@@ -35,7 +35,7 @@
                         <app-deviaje-city-input label="Salgo de" formControlName="origin"></app-deviaje-city-input>
                         <span class="error-message position-absolute"
                             [class.visible]="formSearch.get('origin')?.invalid && formSearch.get('origin')?.touched">
-                            Por favor seleccione una ciudad de origen
+                            Este campo es obligatorio
                         </span>
                     </div>
 
@@ -49,7 +49,7 @@
                         <app-deviaje-city-input label="Voy a" formControlName="destination"></app-deviaje-city-input>
                         <span class="error-message position-absolute"
                             [class.visible]="formSearch.get('destination')?.invalid && formSearch.get('destination')?.touched">
-                            Por favor seleccione una ciudad de destino
+                            Este campo es obligatorio
                         </span>
                     </div>
                 </div>
@@ -87,12 +87,12 @@
                         </span>
                     </div>
 
-                    <div class="col-lg col-md-4 mb-4">
+                    <div class="col-lg col-md-6 mb-4">
                         <app-deviaje-passenger-select [adults]="adults" [children]="children" [infants]="infants"
                             (passengersChanged)="handlePassengersChanged($event)"></app-deviaje-passenger-select>
                     </div>
 
-                    <div class="col-lg col-md-4 mb-4">
+                    <div class="col-lg col-md-6 mb-4">
                         <label class="mb-1" for="selectClass">Clase</label>
                         <div class="input-with-icon">
                             <i class="bi bi-star"></i>

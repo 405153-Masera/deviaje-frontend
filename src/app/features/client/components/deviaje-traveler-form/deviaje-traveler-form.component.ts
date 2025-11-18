@@ -9,11 +9,12 @@ import {
   Validators,
 } from '@angular/forms';
 import { ValidatorsService } from '../../../../shared/services/validators.service';
+import { NgSelectModule } from '@ng-select/ng-select';
 
 @Component({
   selector: 'app-deviaje-traveler-form',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule],
+  imports: [CommonModule, ReactiveFormsModule, NgSelectModule],
   templateUrl: './deviaje-traveler-form.component.html',
   styleUrl: './deviaje-traveler-form.component.scss',
 })

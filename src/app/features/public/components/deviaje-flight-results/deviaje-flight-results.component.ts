@@ -1,4 +1,5 @@
 import {
+  AfterViewInit,
   Component,
   EventEmitter,
   inject,
@@ -7,6 +8,7 @@ import {
   OnInit,
   Output,
 } from '@angular/core';
+import * as bootstrap from 'bootstrap';
 import {
   FlightOffer,
   FlightSearchRequest,
@@ -20,6 +22,7 @@ import { Subscription } from 'rxjs';
 import { DeviajeFlightDetailComponent } from '../deviaje-flight-detail/deviaje-flight-detail.component';
 import { CityDto } from '../../../../shared/models/locations';
 import { CountryService } from '../../../../shared/services/country.service';
+import { LocationFormatterService } from '../../../../shared/services/locationFormater.service';
 
 @Component({
   selector: 'app-deviaje-flight-results',
@@ -33,11 +36,14 @@ import { CountryService } from '../../../../shared/services/country.service';
   templateUrl: './deviaje-flight-results.component.html',
   styleUrl: './deviaje-flight-results.component.scss',
 })
-export class DeviajeFlightResultsComponent implements OnInit, OnDestroy {
+export class DeviajeFlightResultsComponent
+  implements OnInit, OnDestroy, AfterViewInit
+{
   private readonly router: Router = inject(Router);
   subscription: Subscription = new Subscription();
   private readonly flightService: FlightService = inject(FlightService);
-  private readonly countryService: CountryService = inject(CountryService);
+  countryService: CountryService = inject(CountryService);
+  locationService: LocationFormatterService = inject(LocationFormatterService);
   readonly flightUtils: FlightUtilsService = inject(FlightUtilsService);
 
   flightOffers: FlightOffer[] = [];
@@ -76,9 +82,18 @@ export class DeviajeFlightResultsComponent implements OnInit, OnDestroy {
   itemsPerPage: number = 10;
   // Estado de carga
   isLoading: boolean = false;
+  hasError: boolean = false;
+  errorMessage: string = '';
 
   // Variables para controlar el estado de los filtros móviles
   showFilters: boolean = false;
+
+  ngAfterViewInit() {
+    const tooltipTriggerList = [].slice.call(
+      document.querySelectorAll('[data-bs-toggle="tooltip"]')
+    );
+    tooltipTriggerList.map((el) => new bootstrap.Tooltip(el));
+  }
 
   ngOnInit(): void {
     if (!this.inPackageMode) {
@@ -86,10 +101,12 @@ export class DeviajeFlightResultsComponent implements OnInit, OnDestroy {
         const state = window.history.state;
 
         if (state && state.searchParams) {
+          console.log(state.originCity);
           this.searchParams = state.searchParams;
           this.originCity = state.originCity;
           this.destinationCity = state.destinationCity;
 
+          console.log(this.originCity);
           this.searchFlights();
         } else {
           try {
@@ -102,10 +119,10 @@ export class DeviajeFlightResultsComponent implements OnInit, OnDestroy {
                 storedParams
               ) as FlightSearchRequest;
               this.originCity = storedOriginCity
-                ? JSON.parse(storedOriginCity)
+                ? JSON.parse(storedOriginCity) as CityDto
                 : null;
               this.destinationCity = storedDestinationCity
-                ? JSON.parse(storedDestinationCity)
+                ? JSON.parse(storedDestinationCity) as CityDto
                 : null;
               this.searchFlights();
             } else {
@@ -125,7 +142,14 @@ export class DeviajeFlightResultsComponent implements OnInit, OnDestroy {
   }
 
   searchFlights(): void {
+    if (!this.searchParams) {
+      this.router.navigate(['/home/flight/search']);
+      return;
+    }
+
     this.isLoading = true;
+    this.hasError = false;
+    this.errorMessage = '';
 
     this.subscription.add(
       this.flightService.searchFlights(this.searchParams!).subscribe({
@@ -133,33 +157,42 @@ export class DeviajeFlightResultsComponent implements OnInit, OnDestroy {
           this.isLoading = false;
           this.flightOffers = flightOffers;
           this.flightUtils.extractBrandedFaresFromOffers(flightOffers);
-
           this.preloadAirportCodes();
 
-          try {
-            localStorage.setItem(
-              'flightSearchParams',
-              JSON.stringify(this.searchParams)
-            );
-            localStorage.setItem('cityOrigin', JSON.stringify(this.originCity));
-            localStorage.setItem(
-              'cityDestination',
-              JSON.stringify(this.destinationCity)
-            );
-          } catch (e) {
-            console.warn('No se pudo guardar en localStorage:', e);
+          if (!this.inPackageMode) {
+            try {
+              localStorage.setItem(
+                'flightSearchParams',
+                JSON.stringify(this.searchParams)
+              );
+              localStorage.setItem(
+                'cityOrigin',
+                JSON.stringify(this.originCity)
+              );
+              localStorage.setItem(
+                'cityDestination',
+                JSON.stringify(this.destinationCity)
+              );
+            } catch (e) {
+              console.warn('No se pudo guardar en localStorage:', e);
+            }
           }
 
           this.initializeFilters();
           this.applyFilters();
-          console.log('Resultados de búsqueda:', flightOffers);
         },
         error: (error) => {
           console.error('Error en la búsqueda de vuelos:', error);
           this.isLoading = false;
-          alert(
-            'Ocurrió un error al buscar los vuelos. Por favor, intenta de nuevo.'
-          );
+          this.hasError = true;
+
+          this.errorMessage =
+            error.message ||
+            'Error al buscar vuelos. Por favor, intenta de nuevo.';
+          
+          if (error.codeErrorApi === '4926') {
+            this.errorMessage = 'No se encontraron vuelos para el destino'
+          }
         },
       })
     );
@@ -209,7 +242,7 @@ export class DeviajeFlightResultsComponent implements OnInit, OnDestroy {
       });
       this.availableCabins = Array.from(cabins);
       this.selectedCabins = [];
-
+      this.directFlightsOnly = false;
       // Aca establezco la duración máxima
       const durations = this.flightOffers.map((offer) =>
         this.flightUtils.getItineraryDurationMinutes(offer)
@@ -297,29 +330,6 @@ export class DeviajeFlightResultsComponent implements OnInit, OnDestroy {
     this.isLoading = false;
   }
 
-  toggleSelectedFilters(): void {
-    // Obtener referencias a todos los checkboxes
-    const airlineCheckboxes = document.querySelectorAll(
-      'input[id^="airline-"]'
-    );
-    const cabinCheckboxes = document.querySelectorAll('input[id^="cabin-"]');
-
-    // Actualizar el array de aerolíneas seleccionadas
-    this.selectedAirlines = Array.from(airlineCheckboxes)
-      .filter((checkbox: any) => checkbox.checked)
-      .map((checkbox: any) => checkbox.id.replace('airline-', ''));
-
-    // Actualizar el array de cabinas seleccionadas
-    this.selectedCabins = Array.from(cabinCheckboxes)
-      .filter((checkbox: any) => checkbox.checked)
-      .map((checkbox: any) => checkbox.id.replace('cabin-', ''));
-
-    // Actualizar el filtro de vuelos directos
-    this.directFlightsOnly =
-      (document.getElementById('direct-flights') as HTMLInputElement)
-        ?.checked || false;
-  }
-
   sortResults(): void {
     switch (this.sortOption) {
       case 'price_asc':
@@ -398,13 +408,49 @@ export class DeviajeFlightResultsComponent implements OnInit, OnDestroy {
     this.showFilters = !this.showFilters;
   }
 
-  onFilterChange(): void {
-    this.toggleSelectedFilters();
+  resetFilters(): void {
+    this.initializeFilters();
+    this.directFlightsOnly = false;
     this.applyFilters();
   }
 
-  resetFilters(): void {
-    this.initializeFilters();
+  onAirlineChange(airlineCode: string, event: Event): void {
+    const target = event.target as HTMLInputElement;
+
+    if (target.checked) {
+      if (!this.selectedAirlines.includes(airlineCode)) {
+        this.selectedAirlines.push(airlineCode);
+      }
+    } else {
+      this.selectedAirlines = this.selectedAirlines.filter(
+        (airline) => airline !== airlineCode
+      );
+    }
+
+    this.applyFilters();
+  }
+
+  onCabinChange(cabinCode: string, event: Event): void {
+    const target = event.target as HTMLInputElement;
+
+    if (target.checked) {
+      if (!this.selectedCabins.includes(cabinCode)) {
+        this.selectedCabins.push(cabinCode);
+      }
+    } else {
+      this.selectedCabins = this.selectedCabins.filter(
+        (cabin) => cabin !== cabinCode
+      );
+    }
+
+    this.applyFilters();
+  }
+
+  onDirectFlightChange(): void {
+    this.applyFilters();
+  }
+
+  onPriceRangeChange(): void {
     this.applyFilters();
   }
 
@@ -549,20 +595,20 @@ export class DeviajeFlightResultsComponent implements OnInit, OnDestroy {
   }
 
   getAirportInfo(iataCode: string): string {
-     return this.countryService.getAirportInfo(iataCode);
+    return this.countryService.getAirportInfo(iataCode);
   }
 
   private preloadAirportCodes(): void {
     const codes: string[] = [];
-    this.flightOffers.forEach(offer => {
-      offer.itineraries.forEach(itinerary => {
-        itinerary.segments.forEach(segment => {
+    this.flightOffers.forEach((offer) => {
+      offer.itineraries.forEach((itinerary) => {
+        itinerary.segments.forEach((segment) => {
           codes.push(segment.departure.iataCode);
           codes.push(segment.arrival.iataCode);
         });
       });
     });
-    
+
     // Pre-cargar todos los códigos únicos
     const uniqueCodes = [...new Set(codes)];
     this.countryService.preloadAirports(uniqueCodes);

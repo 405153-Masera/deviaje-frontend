@@ -1,6 +1,6 @@
 <div class="container py-4">
   <!-- Verificando disponibilidad -->
-  <div *ngIf="isVerifying" class="text-center py-5">
+  <div *ngIf="isVerifying" class="d-flex flex-column py-5 align-items-center text-center vh-100">
     <div class="spinner-border text-primary mb-3" role="status">
       <span class="visually-hidden">Verificando...</span>
     </div>
@@ -13,7 +13,7 @@
     <i class="bi bi-check-circle-fill me-2"></i>
     <h5 class="mb-2">¡Reserva confirmada!</h5>
     <p class="mb-2">Su reserva ha sido procesada exitosamente.</p>
-    <p class="mb-0"><strong>Referencia:</strong> {{ bookingReference }}</p>
+    <p class="mb-0"><strong>Referencia:</strong> {{ bookingReference?.bookingReference }}</p>
     <small class="text-muted">Será redirigido automáticamente en unos segundos...</small>
   </div>
 
@@ -45,15 +45,6 @@
       </div>
 
       <div class="card-body">
-
-        <!-- Alerta de error -->
-        <div *ngIf="errorMessage" class="alert alert-danger alert-dismissible fade show" role="alert">
-          <i class="bi bi-exclamation-triangle-fill me-2"></i>
-          {{ errorMessage }}
-          <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"
-            (click)="errorMessage = ''"></button>
-        </div>
-
         <form [formGroup]="mainForm" *ngIf="!showSuccessMessage">
 
           <!-- PASO 1: Información del Huésped y Contacto -->
@@ -147,7 +138,7 @@
           <div *ngIf="currentStep === 2">
             <h5 class="card-title mb-4">Información de pago</h5>
             <div *ngIf="mainForm.get('payment')">
-              <app-deviaje-payments-form [paymentForm]="paymentFormGroup" [amount]="calculatedTotalAmount || '0'"
+              <app-deviaje-payments-form [paymentForm]="paymentFormGroup" [amount]="calculatedTotalAmount || 0"
                 currency="ARS">
               </app-deviaje-payments-form>
             </div>
@@ -192,7 +183,6 @@
               <div class="card-body">
                 <div class="row">
                   <div class="col-md-6">
-                    <p><strong>Método:</strong> Tarjeta de crédito</p>
                     <p><strong>Titular:</strong> {{ mainForm.get('payment')?.get('cardholderName')?.value }}</p>
                     <p><strong>Número:</strong> **** **** **** {{
                       mainForm.get('payment')?.get('cardNumber')?.value.substring(12) }}</p>
@@ -200,34 +190,55 @@
                   <div class="col-md-6">
                     <p><strong>Monto total:</strong> {{ calculatedTotalAmount | currency:'ARS'}}</p>
                     <p><strong>Moneda:</strong>ARS</p>
-                    <p><strong>Cuotas:</strong> 1</p>
                   </div>
                 </div>
               </div>
             </div>
           </div>
 
+          <div *ngIf="errorMessage" class="alert alert-danger alert-dismissible fade show" role="alert">
+            <i class="bi bi-exclamation-triangle-fill me-2"></i>
+            {{ errorMessage }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"
+              (click)="errorMessage = ''"></button>
+          </div>
+
           <!-- Botones de navegación -->
-          <div>
-            <div class="d-flex justify-content-between">
-              <button [disabled]="currentStep === 1 || isLoading" type="button" class="btn btn-outline-secondary"
-                (click)="previousStep()">
-                Anterior
-              </button>
-
-              <div>
-                <button *ngIf="currentStep < totalSteps" type="button" class="btn btn-primary" (click)="nextStep()">
-                  Siguiente
-                </button>
-
-                <button *ngIf="currentStep === totalSteps" class="btn btn-success" (click)="submitBooking()"
+          <div class="mt-4">
+            <div class="row g-3">
+              <!-- Botón Volver a Resultados (izquierda, separado) -->
+              <div class="col-12 col-md-4">
+                <button type="button" class="btn btn-outline-info w-100" (click)="goBackToResults()"
                   [disabled]="isLoading">
-                  <span *ngIf="isLoading" class="spinner-border spinner-border-sm me-2"></span>
-                  {{ isLoading ? 'Procesando...' : 'Reservar' }}
+                  Ir a Resultados
                 </button>
+              </div>
+
+              <!-- Botones de navegación de pasos (derecha, agrupados) -->
+              <div class="col-12 col-md-8">
+                <div class="d-flex justify-content-end gap-2">
+                  <button [disabled]="currentStep === 1 || isLoading" type="button" class="btn btn-outline-secondary"
+                    (click)="previousStep()">
+                    <i class="bi bi-chevron-left me-1 d-none d-sm-inline"></i>
+                    Anterior
+                  </button>
+
+                  <button *ngIf="currentStep < totalSteps" type="button" class="btn btn-primary" (click)="nextStep()">
+                    Siguiente
+                    <i class="bi bi-chevron-right ms-1 d-none d-sm-inline"></i>
+                  </button>
+
+                  <button *ngIf="currentStep === totalSteps" class="btn btn-success" (click)="submitBooking()"
+                    [disabled]="isLoading">
+                    <span *ngIf="isLoading" class="spinner-border spinner-border-sm me-2"></span>
+                    <i *ngIf="!isLoading" class="bi bi-check-circle me-1 d-none d-sm-inline"></i>
+                    {{ isLoading ? 'Procesando...' : 'Reservar' }}
+                  </button>
+                </div>
               </div>
             </div>
           </div>
+
         </form>
       </div>
     </div>

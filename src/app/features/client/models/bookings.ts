@@ -1,5 +1,9 @@
 import { FlightOffer } from '../../../shared/models/flights';
 
+export interface BookingReferenceResponse {
+  bookingReference: string
+}
+
 // DTOs para reserva de vuelos
 export interface FlightBookingDto {
   clientId?: number;
@@ -9,8 +13,15 @@ export interface FlightBookingDto {
   branchId?: number;
   flightOffer: FlightOfferDto;
   travelers: TravelerDto[];
-  cancellationFrom?: string;
-  cancellationAmount?: number;
+  cancellationRules?: CancellationRulesDto;
+}
+
+export interface CancellationRulesDto {
+  cancellationPolicy: 'NON_REFUNDABLE' | 'REFUNDABLE' | 'REFUNDABLE_WITH_PENALTY' | 'UNKNOWN';
+  penaltyAmount?: number;
+  penaltyCurrency?: string;
+  deadline?: string; 
+  rawText?: string;
 }
 
 export interface FlightOfferDto extends FlightOffer {
@@ -54,6 +65,7 @@ export interface PaymentDto {
   amount: number;
   currency: string;
   paymentMethod: string;
+  type?: string;
   paymentToken: string;
   installments: number;
   description?: string;
@@ -80,8 +92,6 @@ export interface HotelBookingDto {
   clientReference?: string;
   remark?: string;
   tolerance?: number;
-  cancellationFrom?: string;
-  cancellationAmount?: number;
 }
 
 export interface HolderDto {

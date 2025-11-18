@@ -125,10 +125,9 @@ export class DeviajePriceDetailsComponent implements OnInit, OnChanges {
     // Impuestos del hotel (si hay)
     this.priceBreakdown.taxesHotel = 0;
     this.priceBreakdown.taxesFlight = 0;
-    
+
     // Comisión 20% sobre precio base sin impuestos
-    this.priceBreakdown.commission = this.priceBreakdown.basePrice * 0.20;
-    
+    this.priceBreakdown.commission = Math.round(this.priceBreakdown.basePrice * 0.20* 100) / 100;
     // Total = precio de API + comisión + impuestos - descuento
     this.priceBreakdown.totalAmount = this.priceBreakdown.net + this.priceBreakdown.commission + this.priceBreakdown.taxesHotel - this.priceBreakdown.discount;
   }
@@ -147,8 +146,8 @@ export class DeviajePriceDetailsComponent implements OnInit, OnChanges {
     let hotelSubtotal = 0;
     let hotelTaxes = 0;
     if (this.hotelPrice) {
-      hotelSubtotal = parseFloat(this.hotelPrice.total) || 0;
-      hotelTaxes = parseFloat(this.hotelPrice.taxes) || 0;
+      hotelSubtotal = this.hotelService.convertToArs(this.hotelPrice.net)
+      hotelTaxes = 0;
     }
 
     // Asignar valores

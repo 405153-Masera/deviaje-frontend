@@ -52,7 +52,6 @@ export class AuthService {
   // Agrega estos logs TEMPORALES en tu AuthService actual:
 
   private initializeAuthState(): void {
-
     if (typeof localStorage !== 'undefined') {
       // 1. ¿Qué hay en localStorage?
       const token = localStorage.getItem('token');
@@ -70,7 +69,6 @@ export class AuthService {
 
       // 3. ¿El token es válido?
       if (token && user) {
-
         // Verificar expiración paso a paso
         const expirationDate = expiration ? new Date(expiration) : null;
         const now = new Date();
@@ -289,7 +287,8 @@ export class AuthService {
   // ================== MÉTODOS PRIVADOS ==================
 
   private handleAuthentication(jwtResponse: JwtResponse): void {
-    const expirationDate = new Date(new Date().getTime() + 3600 * 1000); // 1 hora
+    const expirationMs = 24 * 60 * 60 * 1000;
+    const expirationDate = new Date(new Date().getTime() + expirationMs); // 1 hora
 
     // Guardar tokens
     this.saveToken(jwtResponse.token);
@@ -315,7 +314,7 @@ export class AuthService {
     this.isAuthenticatedSubject.next(true);
 
     // Configurar auto-logout
-    this.autoLogout(3600 * 1000);
+    this.autoLogout(expirationMs);
   }
 
   private clearSession(): void {

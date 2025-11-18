@@ -1,19 +1,27 @@
-import { Component, EventEmitter, Input, OnInit, Output, inject } from '@angular/core';
+import {
+  Component,
+  EventEmitter,
+  Input,
+  OnInit,
+  Output,
+  inject,
+} from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FlightUtilsService } from '../../../../shared/services/flight-utils.service';
 import { CountryService } from '../../../../shared/services/country.service';
+import { CancellationRulesDto } from '../../models/bookings';
 
 @Component({
   selector: 'app-deviaje-flight-booking-summary',
   standalone: true,
   imports: [CommonModule],
   templateUrl: './deviaje-flight-booking-summary.component.html',
-  styleUrl: './deviaje-flight-booking-summary.component.scss'
+  styleUrl: './deviaje-flight-booking-summary.component.scss',
 })
 export class DeviajeFlightBookingSummaryComponent implements OnInit {
   @Input() flightOffer: any = null;
   @Input() title: string = 'Detalles del vuelo';
-
+  @Input() cancellationPolity: CancellationRulesDto | null = null;
   @Output() originChange = new EventEmitter<string>();
   @Output() destinationChange = new EventEmitter<string>();
 
@@ -25,7 +33,7 @@ export class DeviajeFlightBookingSummaryComponent implements OnInit {
   }
 
   getAirportInfo(iataCode: string): string {
-     return this.countryService.getAirportInfo(iataCode);
+    return this.countryService.getAirportInfo(iataCode);
   }
 
   sendFlightData() {

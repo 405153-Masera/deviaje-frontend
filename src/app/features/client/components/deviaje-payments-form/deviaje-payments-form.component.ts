@@ -1,16 +1,10 @@
 import { CommonModule } from '@angular/common';
+import { Component, inject, Input, OnDestroy, OnInit } from '@angular/core';
+import { FormGroup, ReactiveFormsModule } from '@angular/forms';
 import {
-  Component,
-  inject,
-  Input,
-  OnDestroy,
-  OnInit,
-} from '@angular/core';
-import {
-  FormGroup,
-  ReactiveFormsModule,
-} from '@angular/forms';
-import { MercadoPagoService } from '../../../../shared/services/mercado-pago.service';
+  MercadoPagoService,
+  PaymentMethodInfo,
+} from '../../../../shared/services/mercado-pago.service';
 
 @Component({
   selector: 'app-deviaje-payments-form',
@@ -21,7 +15,7 @@ import { MercadoPagoService } from '../../../../shared/services/mercado-pago.ser
 })
 export class DeviajePaymentsFormComponent implements OnInit, OnDestroy {
   @Input() paymentForm: FormGroup | null = null;
-  @Input() amount: string = '0';
+  @Input() amount: number = 0;
   @Input() currency: string = 'USD';
 
   private mercadoPagoService = inject(MercadoPagoService);
@@ -30,6 +24,7 @@ export class DeviajePaymentsFormComponent implements OnInit, OnDestroy {
   isSDKLoaded = false;
   isGeneratingToken = false;
   tokenError = '';
+  isValidatingCard = false;
 
   // Banderas para mostrar la tarjeta según el primer dígito
   cardType: string = '';
@@ -40,11 +35,14 @@ export class DeviajePaymentsFormComponent implements OnInit, OnDestroy {
   previewCardNumber: string = '•••• •••• •••• ••••';
   previewCardHolder: string = 'NOMBRE DEL TITULAR';
   previewCardExpiry: string = 'MM/YY';
+  detectedPaymentMethod: string = '';
+  cardThumbnail: string = '';
+  cardName: string = '';
 
   async ngOnInit(): Promise<void> {
     if (this.paymentForm) {
       // Actualizar la cantidad y moneda en el formulario
-      this.paymentForm.get('amount')?.setValue(parseFloat(this.amount));
+      this.paymentForm.get('amount')?.setValue(this.amount);
       this.paymentForm.get('currency')?.setValue(this.currency);
 
       // Suscribirse a cambios en los campos para actualizar la vista previa
@@ -53,6 +51,11 @@ export class DeviajePaymentsFormComponent implements OnInit, OnDestroy {
 
     // Inicializar SDK de Mercado Pago
     await this.initializeMercadoPago();
+
+    const savedCardNumber = this.paymentForm?.get('cardNumber')?.value;
+    if (savedCardNumber) {
+      this.updateCardNumberPreview(savedCardNumber);
+    }
   }
 
   ngOnDestroy(): void {
@@ -63,7 +66,11 @@ export class DeviajePaymentsFormComponent implements OnInit, OnDestroy {
     try {
       await this.mercadoPagoService.initializeMercadoPago();
       this.isSDKLoaded = true;
-      console.log('SDK de Mercado Pago cargado correctamente');
+
+      const savedCardNumber = this.paymentForm?.get('cardNumber')?.value;
+      if (savedCardNumber && savedCardNumber.length >= 6) {
+        await this.updateCardType(savedCardNumber);
+      }
     } catch (error) {
       console.error('Error al cargar SDK de Mercado Pago:', error);
       this.tokenError =
@@ -77,7 +84,7 @@ export class DeviajePaymentsFormComponent implements OnInit, OnDestroy {
     // Suscribirse a cambios en los campos para actualizar la vista previa
     this.paymentForm.get('cardNumber')?.valueChanges.subscribe((value) => {
       this.updateCardNumberPreview(value);
-      this.updateCardType(value);
+      //this.updateCardType(value);
     });
 
     this.paymentForm.get('cardholderName')?.valueChanges.subscribe((value) => {
@@ -96,15 +103,31 @@ export class DeviajePaymentsFormComponent implements OnInit, OnDestroy {
     if (!cardNumber || cardNumber.length < 6) {
       this.cardType = '';
       this.cardTypeIcon = '';
+      this.detectedPaymentMethod = '';
+      this.cardThumbnail = '';
+      this.cardName = '';
+      this.isValidatingCard = false;
+      this.paymentForm?.get('detectedPaymentMethod')?.setValue('');
+      return;
+    }
+
+    if (!this.isSDKLoaded) {
+      console.log('SDK no está listo aún, esperando...');
       return;
     }
 
     try {
-      const paymentMethodId = await this.mercadoPagoService.getPaymentMethod(
-        cardNumber
-      );
-      console.log('Método de pago detectado:', paymentMethodId);
-      switch (paymentMethodId) {
+      this.isValidatingCard = true;
+      const paymentMethodInfo: PaymentMethodInfo =
+        await this.mercadoPagoService.getPaymentMethod(cardNumber);
+
+      this.detectedPaymentMethod = paymentMethodInfo.id;
+      this.cardThumbnail =
+        paymentMethodInfo.secureThumbnail || paymentMethodInfo.thumbnail; // Preferir HTTPS
+      this.cardName = paymentMethodInfo.name;
+      this.paymentForm?.get('detectedPaymentMethod')?.setValue(paymentMethodInfo.id);
+
+      switch (paymentMethodInfo.id) {
         case 'visa':
           this.cardType = 'visa';
           this.cardTypeIcon = 'bi-credit-card';
@@ -121,15 +144,26 @@ export class DeviajePaymentsFormComponent implements OnInit, OnDestroy {
           this.cardType = '';
           this.cardTypeIcon = 'bi-credit-card';
       }
+
+      this.isValidatingCard = false;
+      this.tokenError = '';
+      this.paymentForm?.get('cardNumber')?.updateValueAndValidity({ emitEvent: false });
+
     } catch (error) {
       console.error('Error al detectar tipo de tarjeta:', error);
       this.cardType = '';
       this.cardTypeIcon = 'bi-credit-card';
-      this.paymentForm
-        ?.get('cardNumber')
-        ?.setErrors({ invalidPaymentMethod: true });
-      this.tokenError = 'No se pudo identificar el tipo de tarjeta';
+      this.detectedPaymentMethod = '';
+      this.cardThumbnail = '';
+      this.cardName = '';
+      this.isValidatingCard = false;
+      this.paymentForm?.get('detectedPaymentMethod')?.setValue('');
+      this.paymentForm?.get('cardNumber')?.updateValueAndValidity({ emitEvent: false });
     }
+  }
+
+  getPaymentMethod(): string {
+    return this.detectedPaymentMethod;
   }
 
   // Actualizar la vista previa del número de tarjeta
@@ -159,7 +193,6 @@ export class DeviajePaymentsFormComponent implements OnInit, OnDestroy {
         formattedNumber = spacedPlaceholders;
       }
     }
-
     this.previewCardNumber = formattedNumber.trim();
   }
 
@@ -179,7 +212,37 @@ export class DeviajePaymentsFormComponent implements OnInit, OnDestroy {
 
     // Actualizar la vista previa manualmente
     this.updateCardNumberPreview(value);
-    this.updateCardType(value);
+    if (value.length >= 6) {
+      this.updateCardType(value);
+    } else {
+      // Limpiar si hay menos de 6 dígitos
+      this.cardType = '';
+      this.cardTypeIcon = '';
+      this.detectedPaymentMethod = '';
+    }
+  }
+
+  onCardNumberPaste(event: ClipboardEvent): void {
+    event.preventDefault();
+
+    const pastedText = event.clipboardData?.getData('text') || '';
+    let cleanedNumber = pastedText.replace(/\s/g, '').replace(/\D/g, '');
+
+    // Limitar a 16 dígitos
+    if (cleanedNumber.length > 16) {
+      cleanedNumber = cleanedNumber.substring(0, 16);
+    }
+
+    // Actualizar el formulario
+    this.paymentForm?.get('cardNumber')?.setValue(cleanedNumber);
+
+    // Actualizar la preview
+    this.updateCardNumberPreview(cleanedNumber);
+
+    // Detectar tipo de tarjeta si hay suficientes dígitos
+    if (cleanedNumber.length >= 6) {
+      this.updateCardType(cleanedNumber);
+    }
   }
 
   // Formatear la fecha de vencimiento mientras se escribe (MM/YY)
@@ -281,8 +344,7 @@ export class DeviajePaymentsFormComponent implements OnInit, OnDestroy {
       return token;
     } catch (error: any) {
       console.error('Error al generar token:', error);
-      this.tokenError =
-        error.message || 'Error al procesar los datos de la tarjeta';
+      this.tokenError = 'Error al procesar los datos de la tarjeta';
       return null;
     } finally {
       this.isGeneratingToken = false;
@@ -323,5 +385,14 @@ export class DeviajePaymentsFormComponent implements OnInit, OnDestroy {
     }
 
     this.paymentForm.get('payerDni')?.setValue(value);
+  }
+
+  shouldShowError(fieldName: string): boolean {
+    const field = this.paymentForm?.get(fieldName);
+    return !!(field && field.invalid && (field.dirty || field.touched));
+  }
+
+  getFieldErrors(fieldName: string): any {
+    return this.paymentForm?.get(fieldName)?.errors;
   }
 }

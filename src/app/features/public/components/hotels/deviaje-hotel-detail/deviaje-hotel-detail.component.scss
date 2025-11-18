@@ -729,6 +729,15 @@ $success-color: #28a745;
   }
 }
 
+.booking-bar.in-modal {
+  position: fixed !important;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  z-index: 2000 !important;
+  border-radius: 0;
+}
+
 @keyframes slideUpBar {
   from {
     transform: translateY(100%);

@@ -247,9 +247,16 @@ export class DeviajeHotelDetailComponent implements OnInit, OnDestroy {
     const uniqueRates: HotelSearchResponse.Rate[] = [];
 
     for (const rate of room.rates) {
-      if (rate.packaging !== true && !seenRateKeys.has(rate.rateKey)) {
-        seenRateKeys.add(rate.rateKey);
-        uniqueRates.push(rate);
+      if (this.inPackageMode) {
+        if (!seenRateKeys.has(rate.rateKey)) {
+          seenRateKeys.add(rate.rateKey);
+          uniqueRates.push(rate);
+        }
+      } else {
+        if (rate.packaging !== true && !seenRateKeys.has(rate.rateKey)) {
+          seenRateKeys.add(rate.rateKey);
+          uniqueRates.push(rate);
+        }
       }
     }
 

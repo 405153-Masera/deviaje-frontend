@@ -8,6 +8,7 @@ import { FlightService } from '../../../../shared/services/flight.service';
 import { FlightUtilsService } from '../../../../shared/services/flight-utils.service';
 import { CommonModule } from '@angular/common';
 import { CountryService } from '../../../../shared/services/country.service';
+import { FlightAmenitiesService } from '../../../../shared/services/flightAmenities.service';
 
 @Component({
   selector: 'app-deviaje-flight-detail',
@@ -18,7 +19,8 @@ import { CountryService } from '../../../../shared/services/country.service';
 })
 export class DeviajeFlightDetailComponent implements OnInit, OnDestroy {
   private readonly flightService: FlightService = inject(FlightService);
-  private readonly countryService: CountryService = inject(CountryService);
+  readonly countryService: CountryService = inject(CountryService);
+  readonly amenitiesService = inject(FlightAmenitiesService);
   readonly flightUtils: FlightUtilsService = inject(FlightUtilsService);
 
   @Input() flightOffer!: FlightOffer;

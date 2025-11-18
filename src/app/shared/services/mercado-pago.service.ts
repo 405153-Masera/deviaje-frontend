@@ -111,9 +111,9 @@ export class MercadoPagoService {
   /**
    * Obtiene el método de pago basado en el número de tarjeta
    */
-  async getPaymentMethod(cardNumber: string): Promise<string> {
+  async getPaymentMethod(cardNumber: string): Promise<PaymentMethodInfo> {
     if (!this.mp) {
-      throw new Error('SDK no inicializado');
+      console.error('SDK no inicializado');
     }
 
     try {
@@ -138,10 +138,34 @@ export class MercadoPagoService {
         );
       }
 
-      return paymentMethod.id; // Ejemplo: 'master' para el BIN 503175
+      return {
+        id: paymentMethod.id,
+        name: paymentMethod.name,
+        secureThumbnail: paymentMethod.secure_thumbnail,
+        thumbnail: paymentMethod.thumbnail,
+        settings: paymentMethod.settings,
+      };
     } catch (error) {
       console.error('Error al obtener método de pago:', error);
       throw error;
     }
   }
+}
+
+export interface PaymentMethodInfo {
+  id: string;
+  name: string;
+  secureThumbnail: string;
+  thumbnail: string;
+  settings?: {
+    card_number?: {
+      length: number;
+      validation: string;
+    };
+    security_code?: {
+      mode: string;
+      length: number;
+      card_location: string;
+    };
+  };
 }

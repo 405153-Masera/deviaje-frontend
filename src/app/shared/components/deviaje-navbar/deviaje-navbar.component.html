@@ -14,7 +14,7 @@
     </div>
 
     <!-- Selector de rol para usuarios con múltiples roles -->
-    <div *ngIf="isAuthenticated && hasMultipleRoles()" class="role-selector">
+    <div *ngIf="isAuthenticated && hasMultipleRoles()" class="role-selector d-none d-md-flex">
       <div class="current-role" (click)="toggleRoleMenu()" #roleMenuTrigger>
         <span class="role-badge">{{ getRoleName(currentRole) }}</span>
         <i class="bi" [ngClass]="isRoleMenuOpen ? 'bi-chevron-up' : 'bi-chevron-down'"></i>
@@ -43,7 +43,6 @@
     <ng-container *ngIf="isAuthenticated">
       <div class="dropdown user-dropdown">
         <a class="user-menu" (click)="toggleUserMenu()" #userMenuTrigger>
-          <!-- <img [src]="userAvatarUrl || '../../../../assets/icons/user-default.png'" alt="User" class="user"> -->
           <span class="user-name d-none d-md-inline">{{ userName }}</span>
           <i class="bi" [ngClass]="isUserMenuOpen ? 'bi-chevron-up' : 'bi-chevron-down'"></i>
         </a>
@@ -58,6 +57,27 @@
           <a *ngIf="userRoles.includes('CLIENTE')" class="dropdown-item" routerLink="/membership">
             <i class="bi bi-award"></i> Membresía
           </a>
+
+          <!-- Submenú de roles solo visible en móviles -->
+          <ng-container *ngIf="isAuthenticated && hasMultipleRoles()">
+            <div class="dropdown-divider d-md-none"></div>
+            <div class="dropdown-submenu d-md-none">
+              <a class="dropdown-item dropdown-toggle"  [class.rotate]="isRolesSubmenuOpen" (click)="toggleRolesSubmenu($event)">
+                Cambiar rol
+              </a>
+              <div class="dropdown-menu d-md-none" [class.show]="isRolesSubmenuOpen">
+                @for (role of availableRoles; track $index) {
+                <div class="role-item" [class.active]="role === currentRole" (click)="switchRole(role)">
+                  <i class="bi" [ngClass]="role === 'ADMINISTRADOR' ? 'bi-shield-lock' :
+                    role === 'AGENTE'       ? 'bi-briefcase'  :
+                    role === 'GERENTE'      ? 'bi-bar-chart' : 'bi-person'"></i>
+                  <span>{{ getRoleName(role) }}</span>
+                </div>
+                }
+              </div>
+            </div>
+          </ng-container>
+
           <div class="dropdown-divider"></div>
           <a class="dropdown-item" (click)="logout()">
             <i class="bi bi-box-arrow-right"></i> Cerrar Sesión
@@ -70,9 +90,9 @@
       <a (click)="goToLogin()" class="auth-btn login-btn" style="cursor: pointer;">
         <i class="bi bi-box-arrow-in-right"></i> Iniciar Sesión
       </a>
-      <a routerLink="/user/signup" class="auth-btn signup-btn">
+      <!-- <a routerLink="/user/signup" class="auth-btn signup-btn">
         <i class="bi bi-person-plus"></i> Registrarse
-      </a>
+      </a> -->
     </ng-container>
   </div>
 </nav>

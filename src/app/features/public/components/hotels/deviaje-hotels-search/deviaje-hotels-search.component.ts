@@ -154,11 +154,12 @@ export class DeviajeHotelsSearchComponent implements OnInit, OnDestroy {
   searchHotels(): void {
     if (this.formSearch.invalid) {
       this.formSearch.markAllAsTouched();
+      this.isLoading = false;
       return;
     }
 
     if (!this.roomGuestComponent.isFormValid()) {
-      return; // No permitir búsqueda si hay errores en huéspedes
+      return;
     }
 
     this.isLoading = true;
@@ -180,15 +181,13 @@ export class DeviajeHotelsSearchComponent implements OnInit, OnDestroy {
         }));
     }
 
-    console.log('Ocupación:', occupancy);
-
     // Crear solicitud completa - array con 1 elemento
     const searchParams: HotelSearchRequest = {
       stay: {
         checkIn: this.formSearch.get('checkInDate')?.value,
         checkOut: this.formSearch.get('checkOutDate')?.value,
       },
-      occupancies: [occupancy], // Array con 1 ocupación
+      occupancies: [occupancy],
       destination: {
         code: this.formSearch.get('destination')?.value.iataCode,
       },
@@ -197,15 +196,9 @@ export class DeviajeHotelsSearchComponent implements OnInit, OnDestroy {
     };
 
     const destination = this.formSearch.get('destination')?.value;
-    
-    console.log('Hotel Search Request:', searchParams);
-    console.log('Ciudad hotel mapeada:', destination);
-    
-    // Navegar a la página de resultados
     this.router.navigate(['/home/hotels/results'], {
       state: { searchParams, destination },
     });
-
     this.isLoading = false;
   }
 }

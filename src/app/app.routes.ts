@@ -139,8 +139,8 @@ export const routes: Routes = [
     children: [
       {
         path: '',
-        loadComponent: () => import('./features/client/components/mis-reservas/mis-reservas.component')
-          .then(m => m.MisReservasComponent)
+        loadComponent: () => import('./features/client/components/deviaje-bookings/deviaje-bookings.component')
+          .then(m => m.DeviajeBookingsComponent)
       },
       // {
       //   path: ':id',

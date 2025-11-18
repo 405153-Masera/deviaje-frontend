@@ -13,7 +13,7 @@
                             mode="hotel"></app-deviaje-city-input>
                         <span class="error-message"
                             [class.visible]="formSearch.get('destination')?.invalid && formSearch.get('destination')?.touched">
-                            Por favor seleccione un destino
+                            Este campo es obligatorio
                         </span>
                     </div>
 
@@ -65,8 +65,6 @@
                     </div>
                 </div>
             </form>
-
-
         </div>
     </section>
 </div>

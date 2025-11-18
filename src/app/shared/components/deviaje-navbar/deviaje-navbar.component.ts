@@ -33,6 +33,7 @@ export class DeviajeNavbarComponent implements OnInit, OnDestroy {
   isSidebarOpen: boolean = false;
   isUserMenuOpen: boolean = false;
   isRoleMenuOpen: boolean = false;
+  isRolesSubmenuOpen = false;
 
   // Estado reactivo
   isAuthenticated: boolean = false;
@@ -102,9 +103,8 @@ export class DeviajeNavbarComponent implements OnInit, OnDestroy {
   switchRole(role: string): void {
     this.isRoleMenuOpen = false;
     this.authService.changeActiveRoleWithoutRedirect(role);
-
-    // No hay navegación aquí - los componentes se actualizarán automáticamente
-    console.log(`Cambiando a rol: ${role} sin redirección`);
+    this.isRolesSubmenuOpen = false;
+    this.isUserMenuOpen = false;
   }
 
   logout(): void {
@@ -161,5 +161,11 @@ export class DeviajeNavbarComponent implements OnInit, OnDestroy {
     ) {
       this.isRoleMenuOpen = false;
     }
+  }
+
+  toggleRolesSubmenu(event: Event): void {
+    event.preventDefault();
+    event.stopPropagation();
+    this.isRolesSubmenuOpen = !this.isRolesSubmenuOpen;
   }
 }

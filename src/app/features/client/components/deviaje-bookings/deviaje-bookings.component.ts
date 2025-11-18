@@ -28,10 +28,10 @@ export interface Booking {
   selector: 'app-mis-reservas',
   standalone: true,
   imports: [CommonModule, FormsModule],
-  templateUrl: './mis-reservas.component.html',
-  styleUrls: ['./mis-reservas.component.scss']
+  templateUrl: './deviaje-bookings.component.html',
+  styleUrls: ['./deviaje-bookings.component.scss']
 })
-export class MisReservasComponent implements OnInit, OnDestroy {
+export class DeviajeBookingsComponent implements OnInit, OnDestroy {
   // Estados de carga y datos
   bookings: Booking[] = [];
   filteredBookings: Booking[] = [];

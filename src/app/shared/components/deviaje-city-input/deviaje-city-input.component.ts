@@ -17,6 +17,7 @@ import {
 } from 'rxjs';
 import { CityService } from '../../services/city.service';
 import { ControlValueAccessor, NG_VALUE_ACCESSOR } from '@angular/forms';
+import { LocationFormatterService } from '../../services/locationFormater.service';
 
 @Component({
   selector: 'app-deviaje-city-input',
@@ -52,6 +53,7 @@ export class DeviajeCityInputComponent
   isDisabled: boolean = false;
 
   private readonly cityService: CityService = inject(CityService);
+  locationService: LocationFormatterService = inject(LocationFormatterService);
   private citySearch = new Subject<string>();
   private subscription: Subscription = new Subscription();
 
@@ -109,7 +111,7 @@ export class DeviajeCityInputComponent
 
   selectCity(city: CityDto): void {
     this.selectedCity = city;
-    this.displayValue = `${city.name}, (${city.country})`;
+    this.displayValue = `${city.name}${this.locationService.getStateName(city)}, ${city.country}`;
     this.isSuggestionsOpen = false;
     this.onChange(city); // Notificar al formulario del nuevo valor
     this.onTouched(); // Marcar como tocado

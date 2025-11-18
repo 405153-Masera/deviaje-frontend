@@ -21,6 +21,7 @@ import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
 import { CityDto } from '../../../../../shared/models/locations';
 import { DeviajeHotelDetailComponent } from '../deviaje-hotel-detail/deviaje-hotel-detail.component';
 import { environment } from '../../../../../shared/enviroments/enviroment';
+import { LocationFormatterService } from '../../../../../shared/services/locationFormater.service';
 
 @Component({
   selector: 'app-deviaje-hotels-results',
@@ -37,6 +38,7 @@ import { environment } from '../../../../../shared/enviroments/enviroment';
 export class DeviajeHotelsResultsComponent implements OnInit, OnDestroy {
   private readonly router: Router = inject(Router);
   hotelService: HotelService = inject(HotelService);
+  locationService: LocationFormatterService = inject(LocationFormatterService);
   private sanitizer: DomSanitizer = inject(DomSanitizer);
   subscription: Subscription = new Subscription();
 
@@ -155,7 +157,9 @@ export class DeviajeHotelsResultsComponent implements OnInit, OnDestroy {
           console.error('Error al buscar hoteles:', error);
           this.isLoading = false;
           this.hasError = true;
-          this.errorMessage = error.message || 'Error al buscar hoteles. Por favor, intenta de nuevo.';
+          this.errorMessage =
+            error.message ||
+            'Error al buscar hoteles. Por favor, intenta de nuevo.';
         },
       })
     );
@@ -207,12 +211,22 @@ export class DeviajeHotelsResultsComponent implements OnInit, OnDestroy {
   private initializeFilters(hotels: HotelSearchResponse.Hotel[]): void {
     // Rango de precios
     const prices = hotels.map((hotel) => hotel.minRate || 0);
-    this.priceRange.min = this.hotelService.getRateTotalWithCommission(
-      Math.floor(Math.min(...prices))
-    );
-    this.priceRange.max = this.hotelService.getRateTotalWithCommission(
-      Math.ceil(Math.max(...prices))
-    );
+
+    if (this.inPackageMode) {
+      this.priceRange.min = this.hotelService.convertToArs(
+        Math.floor(Math.min(...prices))
+      );
+      this.priceRange.max = this.hotelService.convertToArs(
+        Math.ceil(Math.max(...prices))
+      );
+    } else {
+      this.priceRange.min = this.hotelService.getRateTotalWithCommission(
+        Math.floor(Math.min(...prices))
+      );
+      this.priceRange.max = this.hotelService.getRateTotalWithCommission(
+        Math.ceil(Math.max(...prices))
+      );
+    }
     this.priceRange.current = this.priceRange.max;
     this.selectedCategories = [];
   }
@@ -236,7 +250,14 @@ export class DeviajeHotelsResultsComponent implements OnInit, OnDestroy {
 
     // Filtrar por precio
     filtered = filtered.filter((hotel) => {
-      const price = this.hotelService.getRateTotalWithCommission(hotel.minRate);
+      const minRate = Number(hotel.minRate) || 0;
+
+      // Obtener el precio final según modo
+      const price = this.inPackageMode
+        ? this.hotelService.convertToArs(minRate)
+        : this.hotelService.getRateTotalWithCommission(minRate);
+
+      // Filtrar por rango elegido
       return price >= this.priceRange.min && price <= this.priceRange.current;
     });
 
@@ -660,11 +681,10 @@ export class DeviajeHotelsResultsComponent implements OnInit, OnDestroy {
 
   //####################### METÓDOS PARA DETALLES DE LOS HOTELES ######################
   showHotelDetails(hotel: HotelSearchResponse.Hotel): void {
-
     if (this.destinationCity) {
       this.destinationCity.zone = hotel.zoneName;
     }
-    
+
     if (this.inPackageMode) {
       // En modo paquete, mostrar modal
       this.selectedHotelForDetail = hotel;
@@ -695,7 +715,10 @@ export class DeviajeHotelsResultsComponent implements OnInit, OnDestroy {
     for (const room of hotel.rooms) {
       if (room.rates && room.rates.length > 0) {
         for (const rate of room.rates) {
-          if (rate.net !== undefined && rate.net < minPrice) {
+          if (
+            rate.net !== undefined &&
+            rate.net < minPrice
+          ) {
             minPrice = rate.net;
           }
         }

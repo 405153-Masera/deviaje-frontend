@@ -58,7 +58,8 @@
                                     }}</span>
                             </div>
                             <div class="d-flex justify-content-between text-secondary small">
-                                <span>{{ getAirportInfo(segment.departure.iataCode) }} → {{ getAirportInfo(segment.arrival.iataCode) }}</span>
+                                <span>{{ getAirportInfo(segment.departure.iataCode) }} → {{
+                                    getAirportInfo(segment.arrival.iataCode) }}</span>
                                 <span>{{ flightUtils.getAircraftName(segment.aircraft.code) }}</span>
                             </div>
                         </div>
@@ -73,10 +74,12 @@
                         <div class="row">
                             <div class="col-md-6">
                                 <div class="departure-details">
-                                    <h6 class="mb-2">Salida</h6>
+                                    <h5 class="mb-2 fw-bold">Salida</h5>
                                     <p class="mb-1">{{ flightUtils.formatDate(segment.departure.at) }} - {{
                                         flightUtils.formatTime(segment.departure.at) }}</p>
                                     <p class="mb-1">{{ getAirportInfo(segment.departure.iataCode) }}</p>
+                                    <p class="mb-1">Aeropuerto:
+                                        {{countryService.getAirportName(segment.departure.iataCode)}}</p>
                                     @if (segment.departure.terminal) {
                                     <p class="mb-0">Terminal {{ segment.departure.terminal }}</p>
                                     }
@@ -85,10 +88,12 @@
 
                             <div class="col-md-6">
                                 <div class="arrival-details">
-                                    <h6 class="mb-2">Llegada</h6>
+                                    <h5 class="mb-2 fw-bold">Llegada</h5>
                                     <p class="mb-1">{{ flightUtils.formatDate(segment.arrival.at) }} - {{
                                         flightUtils.formatTime(segment.arrival.at) }}</p>
                                     <p class="mb-1">{{ getAirportInfo(segment.arrival.iataCode) }}</p>
+                                    <p class="mb-1">Aeropuerto:
+                                        {{countryService.getAirportName(segment.arrival.iataCode)}}</p>
                                     @if (segment.arrival.terminal) {
                                     <p class="mb-0">Terminal {{ segment.arrival.terminal }}</p>
                                     }
@@ -99,7 +104,7 @@
                         <div class="row mt-3">
                             <div class="col-md-6">
                                 <div class="flight-details">
-                                    <h6 class="mb-2">Detalles del vuelo</h6>
+                                    <h5 class="mb-2 fw-bold">Detalles del vuelo</h5>
                                     <p class="mb-1"><strong>Aerolínea operadora:</strong> {{
                                         flightUtils.getAirlineName(segment.carrierCode) }}</p>
                                     <p class="mb-1"><strong>Aeronave:</strong> {{
@@ -109,28 +114,104 @@
                                     </p>
                                 </div>
                             </div>
-
-                            <div class="col-md-6">
+                        </div>
+                        <div class="row mt-3">
+                            <div class="col-12">
                                 <div class="cabin-info">
-                                    <h6 class="mb-2">Información de cabina</h6>
+                                    <h5 class="mb-2 fw-bold">Información de cabina y comodidades</h5>
                                     @if (flightOffer.travelerPricings && flightOffer.travelerPricings.length > 0) {
-                                    @for (pricing of flightOffer.travelerPricings; track pricing.travelerId) {
-                                    @for (fareDetail of pricing.fareDetailsBySegment; track fareDetail.segmentId) {
-                                    @if (fareDetail.segmentId === segment.id) {
-                                    <div class="traveler-info mb-2">
-                                        <strong>{{ getTravelerTypeLabel(pricing.travelerType) }}:</strong>
-                                        <p class="mb-1 ms-3">Clase: {{ flightUtils.getCabinClass(fareDetail.cabin) }}
-                                        </p>
-                                        @if (fareDetail.includedCheckedBags) {
-                                        <p class="mb-0 ms-3">Equipaje en bodega incluido: {{
-                                            fareDetail.includedCheckedBags.quantity }} maleta(s)</p>
-                                        } @else {
-                                        <p class="mb-0 ms-3">Equipaje en bodega incluido: 0 maleta(s)</p>
+                                    <div class="traveler-list d-flex flex-wrap gap-2">
+                                        @for (pricing of flightOffer.travelerPricings; track pricing.travelerId) {
+                                        @for (fareDetail of pricing.fareDetailsBySegment; track fareDetail.segmentId) {
+                                        @if (fareDetail.segmentId === segment.id) {
+                                        <div class="traveler-info mb-3 p-3 border rounded">
+                                            <!-- Header del pasajero -->
+                                            <div class="d-flex justify-content-between align-items-center mb-2">
+                                                <strong class="text-primary">
+                                                    <i class="bi bi-person-circle me-2"></i>
+                                                    {{ getTravelerTypeLabel(pricing.travelerType) }}
+                                                </strong>
+                                                <span class="badge bg-primary">{{
+                                                    flightUtils.getCabinClass(fareDetail.cabin) }}</span>
+                                            </div>
+
+                                            <!-- Info de tarifa -->
+                                            <div class="row mb-2">
+                                                <div class="col-6">
+                                                    <small class="text-muted">Tarifa:</small>
+                                                    <div class="fw-semibold small">{{ fareDetail.brandedFareLabel ||
+                                                        'Estándar' }}</div>
+                                                </div>
+                                            </div>
+
+                                            <!-- Equipaje -->
+                                            <div class="baggage-info mb-3">
+                                                <div class="row">
+                                                    <div class="col-6">
+                                                        <small class="text-muted">
+                                                            <i class="bi bi-luggage me-1"></i>Equipaje facturado:
+                                                        </small>
+                                                        @if (fareDetail.includedCheckedBags) {
+                                                        <div class="small fw-semibold">{{
+                                                            fareDetail.includedCheckedBags.quantity }} maleta(s)</div>
+                                                        } @else {
+                                                        <div class="small fw-semibold">0 maleta(s)</div>
+                                                        }
+                                                    </div>
+                                                    <div class="col-6">
+                                                        <small class="text-muted">
+                                                            <i class="bi bi-bag me-1"></i>Equipaje de mano:
+                                                        </small>
+                                                        @if (fareDetail.includedCabinBags) {
+                                                        <div class="small fw-semibold">
+                                                            {{ fareDetail.includedCabinBags.weight }} {{
+                                                            fareDetail.includedCabinBags.weightUnit }}
+                                                        </div>
+                                                        } @else {
+                                                        <div class="small fw-semibold">No incluido</div>
+                                                        }
+                                                    </div>
+                                                </div>
+                                            </div>
+
+                                            <!-- Amenidades -->
+                                            @if (fareDetail.amenities && fareDetail.amenities.length > 0) {
+                                            <div class="amenities-section">
+                                                <small class="text-muted fw-semibold d-block mb-2">
+                                                    <i class="bi bi-star me-1"></i>Comodidades:
+                                                </small>
+                                                <div class="amenities-list">
+                                                    @for (amenity of fareDetail.amenities; track $index) {
+                                                    <div class="amenity-item mb-1"
+                                                        [class.amenity-included]="!amenity.isChargeable"
+                                                        [class.amenity-paid]="amenity.isChargeable">
+                                                        <i class="bi me-1"
+                                                            [class.bi-check-circle-fill]="!amenity.isChargeable"
+                                                            [class.bi-currency-dollar]="amenity.isChargeable"></i>
+                                                        <span class="amenity-text">{{
+                                                            amenitiesService.translateAmenity(amenity.description)
+                                                            }}</span>
+                                                        <span class="amenity-badge ms-auto">
+                                                            {{
+                                                            amenitiesService.getAmenityBadgeText(amenity.isChargeable)
+                                                            }}
+                                                        </span>
+                                                    </div>
+                                                    }
+                                                </div>
+                                            </div>
+                                            } @else {
+                                            <small class="text-muted">
+                                                <i class="bi bi-info-circle me-1"></i>No hay información de amenidades
+                                            </small>
+                                            }
+                                        </div>
                                         }
+                                        }
+                                        }
+
                                     </div>
-                                    }
-                                    }
-                                    }
+
                                     }
                                 </div>
                             </div>
@@ -146,7 +227,8 @@
                         <div>
                             <span class="fw-medium">Escala de {{
                                 flightUtils.minutesToString(flightUtils.getLayoverDuration(segment,
-                                flightOffer.itineraries[0].segments[i+1])) }} en {{ getAirportInfo(segment.arrival.iataCode) }}</span>
+                                flightOffer.itineraries[0].segments[i+1])) }} en {{
+                                getAirportInfo(segment.arrival.iataCode) }}</span>
                         </div>
                     </div>
             </div>
@@ -204,7 +286,8 @@
                                 flightUtils.minutesToString(flightUtils.durationToMinutes(segment.duration)) }}</span>
                         </div>
                         <div class="d-flex justify-content-between text-secondary small">
-                            <span>{{ getAirportInfo(segment.departure.iataCode) }} → {{ getAirportInfo(segment.arrival.iataCode) }}</span>
+                            <span>{{ getAirportInfo(segment.departure.iataCode) }} → {{
+                                getAirportInfo(segment.arrival.iataCode) }}</span>
                             <span>{{ flightUtils.getAircraftName(segment.aircraft.code) }}</span>
                         </div>
                     </div>
@@ -218,21 +301,25 @@
                     <div class="row">
                         <div class="col-md-6">
                             <div class="departure-details">
-                                <h6 class="mb-2">Salida</h6>
+                                <h5 class="mb-2 fw-bold">Salida</h5>
                                 <p class="mb-1">{{ flightUtils.formatDate(segment.departure.at) }} - {{
                                     flightUtils.formatTime(segment.departure.at) }}</p>
                                 <p class="mb-1">{{ getAirportInfo(segment.departure.iataCode) }}</p>
+                                <p class="mb-1">Aeropuerto:
+                                    {{countryService.getAirportName(segment.departure.iataCode)}}</p>
                                 @if (segment.departure.terminal) {
                                 <p class="mb-0">Terminal {{ segment.departure.terminal }}</p>
                                 }
                             </div>
                         </div>
-                        <div class="col-md-6">
+                        <div class="col-md-6 mt-md-0 mt-4">
                             <div class="arrival-details">
-                                <h6 class="mb-2">Llegada</h6>
+                                <h5 class="mb-2 fw-bold">Llegada</h5>
                                 <p class="mb-1">{{ flightUtils.formatDate(segment.arrival.at) }} - {{
                                     flightUtils.formatTime(segment.arrival.at) }}</p>
                                 <p class="mb-1">{{ getAirportInfo(segment.arrival.iataCode) }}</p>
+                                <p class="mb-1">Aeropuerto: {{countryService.getAirportName(segment.arrival.iataCode)}}
+                                </p>
                                 @if (segment.arrival.terminal) {
                                 <p class="mb-0">Terminal {{ segment.arrival.terminal }}</p>
                                 }
@@ -240,10 +327,10 @@
                         </div>
                     </div>
 
-                    <div class="row mt-3">
+                    <div class="row mt-4">
                         <div class="col-md-6">
                             <div class="flight-details">
-                                <h6 class="mb-2">Detalles del vuelo</h6>
+                                <h5 class="mb-2 fw-bold">Detalles del vuelo</h5>
                                 <p class="mb-1"><strong>Aerolínea operadora:</strong> {{
                                     flightUtils.getAirlineName(segment.carrierCode) }}</p>
                                 <p class="mb-1"><strong>Aeronave:</strong> {{
@@ -252,28 +339,104 @@
                                     flightUtils.minutesToString(flightUtils.durationToMinutes(segment.duration)) }}</p>
                             </div>
                         </div>
-
-                        <div class="col-md-6">
+                    </div>
+                    <div class="row mt-4">
+                        <div class="col-12">
                             <div class="cabin-info">
-                                <h6 class="mb-2">Información de cabina</h6>
+                                <h5 class="mb-3 fw-bold">Información de cabina y comodidades</h5>
                                 @if (flightOffer.travelerPricings && flightOffer.travelerPricings.length > 0) {
-                                @for (pricing of flightOffer.travelerPricings; track pricing.travelerId) {
-                                @for (fareDetail of pricing.fareDetailsBySegment; track fareDetail.segmentId) {
-                                @if (fareDetail.segmentId === segment.id) {
-                                <div class="traveler-info mb-2">
-                                    <strong>{{ getTravelerTypeLabel(pricing.travelerType) }}:</strong>
-                                    <p class="mb-1 ms-3">Clase: {{ flightUtils.getCabinClass(fareDetail.cabin) }}
-                                    </p>
-                                    @if (fareDetail.includedCheckedBags) {
-                                    <p class="mb-0 ms-3">Equipaje en bodega incluido: {{
-                                        fareDetail.includedCheckedBags.quantity }} maleta(s)</p>
-                                    } @else {
-                                    <p class="mb-0 ms-3">Equipaje en bodega incluido: 0 maleta(s)</p>
+                                <div class="traveler-list d-flex flex-wrap gap-2">
+                                    @for (pricing of flightOffer.travelerPricings; track pricing.travelerId) {
+                                    @for (fareDetail of pricing.fareDetailsBySegment; track fareDetail.segmentId) {
+                                    @if (fareDetail.segmentId === segment.id) {
+                                    <div class="traveler-info mb-3 p-3 border rounded">
+                                        <!-- Header del pasajero -->
+                                        <div class="d-flex justify-content-between align-items-center mb-2">
+                                            <strong class="text-primary">
+                                                <i class="bi bi-person-circle me-2"></i>
+                                                {{ getTravelerTypeLabel(pricing.travelerType) }}
+                                            </strong>
+                                            <span class="badge bg-primary">{{
+                                                flightUtils.getCabinClass(fareDetail.cabin) }}</span>
+                                        </div>
+
+                                        <!-- Info de tarifa -->
+                                        <div class="row mb-2">
+                                            <div class="col-6">
+                                                <small class="text-muted">Tarifa:</small>
+                                                <div class="fw-semibold small">{{ fareDetail.brandedFareLabel ||
+                                                    'Estándar' }}</div>
+                                            </div>
+                                        </div>
+
+                                        <!-- Equipaje -->
+                                        <div class="baggage-info mb-3">
+                                            <div class="row">
+                                                <div class="col-6">
+                                                    <small class="text-muted">
+                                                        <i class="bi bi-luggage me-1"></i>Equipaje facturado:
+                                                    </small>
+                                                    @if (fareDetail.includedCheckedBags) {
+                                                    <div class="small fw-semibold">{{
+                                                        fareDetail.includedCheckedBags.quantity }} maleta(s)</div>
+                                                    } @else {
+                                                    <div class="small fw-semibold">0 maleta(s)</div>
+                                                    }
+                                                </div>
+                                                <div class="col-6">
+                                                    <small class="text-muted">
+                                                        <i class="bi bi-bag me-1"></i>Equipaje de mano:
+                                                    </small>
+                                                    @if (fareDetail.includedCabinBags) {
+                                                    <div class="small fw-semibold">
+                                                        {{ fareDetail.includedCabinBags.weight }} {{
+                                                        fareDetail.includedCabinBags.weightUnit }}
+                                                    </div>
+                                                    } @else {
+                                                    <div class="small fw-semibold">No incluido</div>
+                                                    }
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <!-- Amenidades -->
+                                        @if (fareDetail.amenities && fareDetail.amenities.length > 0) {
+                                        <div class="amenities-section">
+                                            <small class="text-muted fw-semibold d-block mb-2">
+                                                <i class="bi bi-star me-1"></i>Comodidades:
+                                            </small>
+                                            <div class="amenities-list">
+                                                @for (amenity of fareDetail.amenities; track $index) {
+                                                <div class="amenity-item mb-1"
+                                                    [class.amenity-included]="!amenity.isChargeable"
+                                                    [class.amenity-paid]="amenity.isChargeable">
+                                                    <i class="bi me-1"
+                                                        [class.bi-check-circle-fill]="!amenity.isChargeable"
+                                                        [class.bi-currency-dollar]="amenity.isChargeable"></i>
+                                                    <span class="amenity-text">{{
+                                                        amenitiesService.translateAmenity(amenity.description)
+                                                        }}</span>
+                                                    <span class="amenity-badge ms-auto">
+                                                        {{
+                                                        amenitiesService.getAmenityBadgeText(amenity.isChargeable)
+                                                        }}
+                                                    </span>
+                                                </div>
+                                                }
+                                            </div>
+                                        </div>
+                                        } @else {
+                                        <small class="text-muted">
+                                            <i class="bi bi-info-circle me-1"></i>No hay información de amenidades
+                                        </small>
+                                        }
+                                    </div>
                                     }
+                                    }
+                                    }
+
                                 </div>
-                                }
-                                }
-                                }
+
                                 }
                             </div>
                         </div>
@@ -289,7 +452,8 @@
                     <div>
                         <span class="fw-medium">Escala de {{
                             flightUtils.minutesToString(flightUtils.getLayoverDuration(segment,
-                            flightOffer.itineraries[1].segments[i+1])) }} en {{ getAirportInfo(segment.arrival.iataCode) }}</span>
+                            flightOffer.itineraries[1].segments[i+1])) }} en {{ getAirportInfo(segment.arrival.iataCode)
+                            }}</span>
                     </div>
                 </div>
         </div>

@@ -3,7 +3,7 @@
         <div class="container py-4">
             <div class="row align-items-center">
                 <div class="col-md-8">
-                    <h1 class="results-title">Hoteles en {{ destinationCity?.name }} ({{destinationCity?.country}})</h1>
+                    <h1 class="results-title">Hoteles en {{ destinationCity?.name }}{{locationService.getStateName(destinationCity)}} ({{destinationCity?.country}})</h1>
                     <div class="travel-info">
                         <span class="travel-dates">
                             <i class="bi bi-calendar3"></i>
@@ -169,7 +169,7 @@
                     </div>
 
                     <div class="mobile-filters-footer">
-                        <button class="btn btn-outline" (click)="resetFilters()">
+                        <button class="btn btn-outline-secondary" (click)="resetFilters()">
                             Restablecer
                         </button>
                         <button class="btn btn-primary" (click)="toggleFilters()">
@@ -297,8 +297,13 @@
                                 <div class="price-booking mt-2">
                                     <div class="price">
                                         <div class="price-label">Precio desde</div>
-                                        <div class="price-amount">{{ hotelService.getRateTotalWithCommission(getMinRoomPrice(hotel)) |
-                                            currency:(searchParams?.currency || 'USD') }}
+                                        <div class="price-amount">
+                                            @if (inPackageMode){
+                                                {{ hotelService.convertToArs(getMinRoomPrice(hotel)) | currency:(searchParams?.currency || 'USD') }}
+                                            } @else {
+                                                {{ hotelService.getRateTotalWithCommission(getMinRoomPrice(hotel)) |
+                                                    currency:(searchParams?.currency || 'USD') }}
+                                            }
                                         </div>
                                         <div class="price-details">
                                             {{ getTotalGuests() }} {{ getTotalGuests() === 1 ? 'huésped' : 'huéspedes'}}

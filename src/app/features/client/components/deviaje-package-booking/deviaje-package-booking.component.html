@@ -1,63 +1,38 @@
 <div class="container my-4">
-  <!-- Alerta de error -->
-  <div *ngIf="errorMessage" class="alert alert-danger alert-dismissible fade show" role="alert">
-    <i class="bi bi-exclamation-triangle-fill me-2"></i>
-    {{ errorMessage }}
-    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"
-      (click)="errorMessage = ''"></button>
+
+  <!-- Verificando disponibilidad -->
+  <div *ngIf="isVerifying" class="d-flex flex-column py-5 align-items-center text-center vh-100">
+    <div class="spinner-border text-primary mb-3" role="status">
+      <span class="visually-hidden">Verificando...</span>
+    </div>
+    <h5>Verificando disponibilidad de las tarifas...</h5>
+    <p class="text-muted">Un momento por favor</p>
   </div>
 
-  <!-- Alerta de éxito -->
-  <div *ngIf="showSuccessMessage" class="alert alert-success" role="alert">
+  <!-- Mensaje de éxito -->
+  <div *ngIf="showSuccessMessage" class="alert alert-success text-center">
     <i class="bi bi-check-circle-fill me-2"></i>
-    <strong>¡Reserva exitosa!</strong> Tu reserva ha sido procesada correctamente. Número de referencia: {{
-    bookingReference }}
-    <div class="mt-2">
-      Redirigiendo a la página de tus reservas...
-      <div class="spinner-border spinner-border-sm ms-2" role="status">
-        <span class="visually-hidden">Cargando...</span>
-      </div>
-    </div>
+    <h5 class="mb-2">¡Reserva confirmada!</h5>
+    <p class="mb-2">Su reserva ha sido procesada exitosamente.</p>
+    <p class="mb-0"><strong>Referencia:</strong> {{ bookingReference?.bookingReference }}</p>
+    <small class="text-muted">Será redirigido automáticamente en unos segundos...</small>
   </div>
 
-  <!-- Verificación de disponibilidad -->
-  <div *ngIf="isVerifying" class="card mb-4">
-    <div class="card-body d-flex justify-content-center align-items-center p-4">
-      <div class="spinner-border text-primary me-3" role="status">
-        <span class="visually-hidden">Cargando...</span>
-      </div>
-      <span>Verificando disponibilidad y precio actual...</span>
-    </div>
-  </div>
+  <!-- Panel de información del vuelo -->
+  <ng-container *ngIf="!isVerifying">
+    <app-deviaje-flight-booking-summary [flightOffer]="flightOffer" (originChange)="onOriginReceived($event)"
+      (destinationChange)="onDestinationReceived($event)" [title]="'Detalles del vuelo'">
+    </app-deviaje-flight-booking-summary>
 
- <!-- Panel de información del vuelo -->
-<ng-container *ngIf="!isVerifying">
-  <app-deviaje-flight-booking-summary 
-    [flightOffer]="flightOffer"
-    (originChange)="onOriginReceived($event)"
-    (destinationChange)="onDestinationReceived($event)"
-    [title]="'Detalles del vuelo'"
-  >
-  </app-deviaje-flight-booking-summary>
+    <app-deviaje-hotel-booking-summary [hotelDetails]="hotelDetails" [hotel]="hotel" [nameRoom]="nameRoom" [rate]="rate"
+      [searchParams]="hotelSearchParams">
+    </app-deviaje-hotel-booking-summary>
 
-  <app-deviaje-hotel-booking-summary 
-  [hotelDetails]="hotelDetails" 
-  [hotel]="hotel" 
-  [nameRoom]="nameRoom" 
-  [rate]="rate"
-  [searchParams]="hotelSearchParams">
-</app-deviaje-hotel-booking-summary>
-
-  <app-deviaje-price-details
-    #priceDetailsComponent
-    [mode]="'FLIGHT'"
-    [flightPrice]="flightOffer.price"
-    [currency]="flightOffer.price.currency || 'ARS'"
-    [passengerCount]="flightOffer.travelerPricings.length"
-    (pricesCalculated)="onPricesCalculated($event)"
-    >
-  </app-deviaje-price-details>
-</ng-container>
+    <app-deviaje-price-details #priceDetailsComponent [mode]="'PACKAGE'" [flightPrice]="flightOffer.price"
+      [hotelPrice]="rate" [currency]="flightOffer.price.currency || 'ARS'"
+      [passengerCount]="flightOffer.travelerPricings.length" (pricesCalculated)="onPricesCalculated($event)">
+    </app-deviaje-price-details>
+  </ng-container>
 
   <!-- Formulario principal -->
   <div *ngIf="!isVerifying && !showSuccessMessage">
@@ -152,12 +127,8 @@
                   </div>
 
                   <div class="card-body">
-                    <app-deviaje-traveler-form 
-                      [travelerForm]="getTravelerFormGroup(i)" 
-                      [isPrimaryTraveler]="i === 0"
-                      mode="flight"
-                      [lastArrivalDate]="getLastArrivalDate()"
-                      ></app-deviaje-traveler-form>
+                    <app-deviaje-traveler-form [travelerForm]="getTravelerFormGroup(i)" [isPrimaryTraveler]="i === 0"
+                      mode="flight" [lastArrivalDate]="getLastArrivalDate()"></app-deviaje-traveler-form>
                   </div>
                 </div>
               </div>
@@ -168,7 +139,7 @@
           <div *ngIf="currentStep === 2">
             <h5 class="card-title mb-4">Información de pago</h5>
             <ng-container *ngIf="mainForm.get('payment')">
-              <app-deviaje-payments-form [paymentForm]="paymentFormGroup" [amount]="calculatedTotalAmount || '0'"
+              <app-deviaje-payments-form [paymentForm]="paymentFormGroup" [amount]="calculatedTotalAmount || 0"
                 [currency]="calculatedCurrency || 'ARS'">
               </app-deviaje-payments-form>
             </ng-container>
@@ -227,7 +198,7 @@
 
             <!-- Información de contacto -->
             <div class="card mb-4">
-              <div class="card-header bg-light">
+              <div class="card-header bg-info">
                 <h6 class="mb-0">Información de contacto</h6>
               </div>
               <div class="card-body">
@@ -246,21 +217,20 @@
 
             <!-- Resumen de pago -->
             <div class="card mb-4">
-              <div class="card-header bg-light">
+              <div class="card-header bg-info">
                 <h6 class="mb-0">Información de pago</h6>
               </div>
               <div class="card-body">
                 <div class="row">
                   <div class="col-md-6">
-                    <p><strong>Método:</strong> Tarjeta de crédito</p>
                     <p><strong>Titular:</strong> {{ mainForm.get('payment')?.get('cardholderName')?.value }}</p>
                     <p><strong>Número:</strong> **** **** **** {{
                       mainForm.get('payment')?.get('cardNumber')?.value.substring(12) }}</p>
                   </div>
                   <div class="col-md-6">
-                    <p><strong>Monto total:</strong> {{ calculatedTotalAmount | currency:(flightOffer.price.currency || 'USD') }}</p>
+                    <p><strong>Monto total:</strong> {{ calculatedTotalAmount | currency:(flightOffer.price.currency ||
+                      'USD') }}</p>
                     <p><strong>Moneda:</strong> {{ flightOffer.price.currency }}</p>
-                    <p><strong>Cuotas:</strong> 1</p>
                   </div>
                 </div>
               </div>
@@ -269,27 +239,44 @@
         </form>
       </div>
 
-      <div class="card-footer">
-        <div class="d-flex justify-content-between">
-          <button class="btn btn-outline-secondary" [disabled]="currentStep === 1 || isLoading"
-            (click)="previousStep()">
-            <i class="bi bi-arrow-left me-1"></i> Anterior
-          </button>
+      <div *ngIf="errorMessage" class="alert alert-danger alert-dismissible fade show" role="alert">
+        <i class="bi bi-exclamation-triangle-fill me-2"></i>
+        {{ errorMessage }}
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"
+          (click)="errorMessage = ''"></button>
+      </div>
 
-          <div>
-            <button *ngIf="currentStep < totalSteps" class="btn btn-primary" [disabled]="isLoading"
-              (click)="nextStep()">
-              Siguiente <i class="bi bi-arrow-right ms-1"></i>
+      <!-- Botones de navegación -->
+      <div class="mt-4">
+        <div class="row g-3">
+          <!-- Botón Volver a Resultados (izquierda, separado) -->
+          <div class="col-12 col-md-4">
+            <button type="button" class="btn btn-outline-info w-100" (click)="goBackToResults()" [disabled]="isLoading">
+              Ir a Resultados
             </button>
+          </div>
 
-            <button *ngIf="currentStep === totalSteps" class="btn btn-success" [disabled]="isLoading"
-              (click)="submitBooking()">
-              <span *ngIf="!isLoading">Confirmar reserva</span>
-              <span *ngIf="isLoading">
-                <span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
-                Procesando...
-              </span>
-            </button>
+          <!-- Botones de navegación de pasos (derecha, agrupados) -->
+          <div class="col-12 col-md-8">
+            <div class="d-flex justify-content-end gap-2">
+              <button [disabled]="currentStep === 1 || isLoading" type="button" class="btn btn-outline-secondary"
+                (click)="previousStep()">
+                <i class="bi bi-chevron-left me-1 d-none d-sm-inline"></i>
+                Anterior
+              </button>
+
+              <button *ngIf="currentStep < totalSteps" type="button" class="btn btn-primary" (click)="nextStep()">
+                Siguiente
+                <i class="bi bi-chevron-right ms-1 d-none d-sm-inline"></i>
+              </button>
+
+              <button *ngIf="currentStep === totalSteps" class="btn btn-success" (click)="submitBooking()"
+                [disabled]="isLoading">
+                <span *ngIf="isLoading" class="spinner-border spinner-border-sm me-2"></span>
+                <i *ngIf="!isLoading" class="bi bi-check-circle me-1 d-none d-sm-inline"></i>
+                {{ isLoading ? 'Procesando...' : 'Reservar' }}
+              </button>
+            </div>
           </div>
         </div>
       </div>

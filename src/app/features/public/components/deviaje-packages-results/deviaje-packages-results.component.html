@@ -1,4 +1,4 @@
-<div class="">
+<div class="pt-4">
   <!-- Header con información del paquete -->
   <header class="results-header">
     <div class="container py-4">
@@ -6,12 +6,13 @@
         <div class="col-md-8">
           <h1 class="results-title">
             <i class="bi bi-airplane me-2"></i>
-            Paquete {{ originCity.name }} → {{ destinationCity.name }}
+            Paquete {{ originCity.name }}{{locationService.getStateName(originCity)}} ({{originCity.country}})→ {{
+            destinationCity.name }}{{locationService.getStateName(destinationCity)}} ({{destinationCity.country}})
           </h1>
           <div class="travel-info">
             <span class="travel-dates">
               <i class="bi bi-calendar3"></i>
-              {{ formatDate(packageInfo.departureDate) }} - {{ formatDate(packageInfo.returnDate) }}
+              {{ packageInfo.departureDate | date:'dd MMM' }} - {{ packageInfo.returnDate | date:'dd MMM' }}
             </span>
             <span class="travel-guests">
               <i class="bi bi-person"></i>
@@ -27,8 +28,7 @@
           </div>
         </div>
         <div class="col-md-4 text-md-end">
-          <button class="btn btn-outline mt-2 mt-md-0" (click)="goBackToSearch()">
-            <i class="bi bi-arrow-left"></i>
+          <button class="btn btn-secondary mt-2 mt-md-0" (click)="goBackToSearch()">
             Modificar búsqueda
           </button>
         </div>
@@ -44,71 +44,70 @@
         <div class="row align-items-center">
           <div class="col-md-8">
             <div class="selected-items">
-                <!-- Vuelo seleccionado -->
-                @if (selectedFlight) {
-                <div class="selected-item flight-item">
-                  <div class="item-icon">
-                    <i class="bi bi-airplane"></i>
-                  </div>
-                  <div class="item-details">
-                    <div class="item-title">Vuelo seleccionado</div>
-                    <div class="item-description">
-                      {{ originCity.name }} → {{ destinationCity.name }}
-                    </div>
-                    <div class="item-price">{{ selectedFlight.flightOffer.price.total | currency:('ARS') }}</div>
-                  </div>
-                  <button class="btn btn-sm btn-danger" (click)="removeFlightSelection()">
-                    <i class="bi bi-x"></i>
-                  </button>
+              <!-- Vuelo seleccionado -->
+              @if (selectedFlight) {
+              <div class="selected-item flight-item">
+                <div class="item-icon">
+                  <i class="bi bi-airplane"></i>
                 </div>
-                } @else {
-                <div class="selected-item placeholder">
-                  <div class="item-icon">
-                    <i class="bi bi-airplane text-muted"></i>
+                <div class="item-details">
+                  <div class="item-title">Vuelo seleccionado</div>
+                  <div class="item-description">
+                    {{ originCity.name }} → {{ destinationCity.name }}
                   </div>
-                  <div class="item-details">
-                    <div class="item-title text-muted">Selecciona un vuelo</div>
-                  </div>
+                  <div class="item-price">{{ selectedFlight.flightOffer.price.total | currency:('ARS') }}</div>
                 </div>
-                }
+                <button class="btn btn-sm btn-danger" (click)="removeFlightSelection()">
+                  <i class="bi bi-x"></i>
+                </button>
+              </div>
+              } @else {
+              <div class="selected-item placeholder">
+                <div class="item-icon">
+                  <i class="bi bi-airplane"></i>
+                </div>
+                <div class="item-details">
+                  <div class="item-title">Selecciona un vuelo</div>
+                </div>
+              </div>
+              }
 
-                <!-- Hotel seleccionado -->
-                @if (selectedHotel) {
-                <div class="selected-item hotel-item">
-                  <div class="item-icon">
-                    <i class="bi bi-building"></i>
-                  </div>
-                  <div class="item-details">
-                    <div class="item-title">{{ selectedHotel.hotel.name }}</div>
-                    <div class="item-description">{{ selectedHotel.nameRoom }}</div>
-                    <div class="item-price">{{ getHotelRateNet(selectedHotel.rate) | currency:('ARS') }}</div>
-                  </div>
-                  <button class="btn btn-sm btn-danger" (click)="removeHotelSelection()">
-                    <i class="bi bi-x"></i>
-                  </button>
+              <!-- Hotel seleccionado -->
+              @if (selectedHotel) {
+              <div class="selected-item hotel-item">
+                <div class="item-icon">
+                  <i class="bi bi-building"></i>
                 </div>
-                } @else {
-                <div class="selected-item placeholder">
-                  <div class="item-icon">
-                    <i class="bi bi-building text-muted"></i>
-                  </div>
-                  <div class="item-details">
-                    <div class="item-title text-muted">Selecciona un hotel</div>
-                  </div>
+                <div class="item-details">
+                  <div class="item-title">{{ selectedHotel.hotel.name }}</div>
+                  <div class="item-description">{{ selectedHotel.nameRoom }}</div>
+                  <div class="item-price">{{ getHotelRateNet(selectedHotel.rate) | currency:('ARS') }}</div>
                 </div>
-                }
+                <button class="btn btn-sm btn-danger" (click)="removeHotelSelection()">
+                  <i class="bi bi-x"></i>
+                </button>
+              </div>
+              } @else {
+              <div class="selected-item placeholder">
+                <div class="item-icon">
+                  <i class="bi bi-building"></i>
+                </div>
+                <div class="item-details">
+                  <div class="item-title">Selecciona un hotel</div>
+                </div>
+              </div>
+              }
 
             </div>
           </div>
 
-          <div class="col-md-4">
+          <div class="col-md-4 mt-md-0 mt-5">
             <div class="cart-summary">
               <div class="total-price">
                 <div class="total-label">Total del paquete</div>
                 <div class="total-amount">{{ getTotalPrice() | currency:('ARS') }}</div>
               </div>
-              <button class="btn btn-primary btn-lg" [disabled]="!canProceedToBooking()"
-                (click)="proceedToBooking()">
+              <button class="btn btn-primary" [disabled]="!canProceedToBooking()" (click)="proceedToBooking()">
                 Reservar paquete
               </button>
             </div>
@@ -145,12 +144,16 @@
           }
         </button>
         <button class="nav-link" id="hotels-tab" data-bs-toggle="tab" data-bs-target="#hotels-pane" type="button"
-          role="tab">
+          role="tab" [disabled]="!isHotelTabEnabled" [class.disabled]="!isHotelTabEnabled">
           <i class="bi bi-building me-2"></i>
           Hoteles
           @if (selectedHotel) {
           <span class="badge bg-success ms-2">
             <i class="bi bi-check"></i>
+          </span>
+          } @else if (!isHotelTabEnabled) {
+          <span class="badge bg-secondary ms-2">
+            <i class="bi bi-lock"></i>
           </span>
           }
         </button>
@@ -164,7 +167,7 @@
             <div class="container py-4">
               <h3 class="results-title">
                 <i class="bi bi-airplane me-2"></i>
-                Selecciona tu vuelo
+                Paso 1: Selecciona tu vuelo
               </h3>
               <p>{{ originCity.name }} → {{ destinationCity.name }}</p>
             </div>
@@ -181,15 +184,155 @@
             <div class="container py-4">
               <h3 class="results-title">
                 <i class="bi bi-building me-2"></i>
-                Selecciona tu hotel
+                Paso 2: Selecciona tu hotel
               </h3>
               <p>{{ hotelDestinationCity.name }}</p>
             </div>
           </div>
 
-          <app-deviaje-hotels-results [inPackageMode]="true" [searchParams]="hotelSearchRequest"
-            [destinationCity]="hotelDestinationCity" (hotelSelected)="onHotelSelected($event)">
-          </app-deviaje-hotels-results>
+          <!-- Pantalla de bloqueo (sin vuelo seleccionado) -->
+          @if (!isHotelTabEnabled) {
+          <div class="container py-5 text-center">
+            <h4 class="mt-3 text-muted">Primero debes seleccionar un vuelo</h4>
+            <p class="text-muted">Vuelve a la pestaña de vuelos para elegir tu vuelo.</p>
+          </div>
+          }
+
+          <!-- Selector de fechas (después de seleccionar vuelo) -->
+          @else if (showHotelDateSelector) {
+          <div class="container py-4">
+            <div class="card border-secondary">
+              <div class="card-body p-5">
+                <!-- Información del vuelo -->
+                <div class="flight-info-summary mb-4">
+                  <h5 class="mb-3">
+                    <i class="bi bi-info-circle-fill text-primary me-2"></i>
+                    Información de tu vuelo
+                  </h5>
+
+                  @if (flightArrivalInfo) {
+                  <div class="info-row mb-2">
+                    <span class="text-muted">
+                      <i class="bi bi-airplane-fill me-2"></i>
+                      Tu vuelo de salida llega el:
+                    </span>
+                    <strong>{{ flightArrivalInfo.dateFormatted }}, {{ flightArrivalInfo.time }}</strong>
+                  </div>
+                  }
+
+                  @if (flightDepartureInfo) {
+                  <div class="info-row">
+                    <span class="text-muted">
+                      <i class="bi bi-airplane-engines-fill me-2"></i>
+                      Tu vuelo de regreso parte el:
+                    </span>
+                    <strong>{{ flightDepartureInfo.dateFormatted }}, {{ flightDepartureInfo.time }}</strong>
+                  </div>
+                  }
+                </div>
+
+                <hr>
+
+                <!-- Formulario de fechas -->
+                <h5 class="mb-3">
+                  Selecciona tus fechas de estadía
+                </h5>
+
+                <form [formGroup]="hotelDatesForm" class="hotel-dates-form">
+                  <div class="row">
+                    <div class="col-md-6 mb-3">
+                      <label class="form-label fw-bold">
+                        Check-in
+                      </label>
+                      <input type="date" class="form-control" formControlName="checkIn"
+                        [min]="formatDateForInput(flightArrivalInfo?.date!)" placeholder="Selecciona fecha de entrada">
+
+                      @if (suggestedCheckIn && suggestionReason.checkIn) {
+                      <small class="text-muted d-block mt-1">
+                        <i class="bi bi-lightbulb me-1"></i>
+                        {{ suggestionReason.checkIn }}
+                      </small>
+                      }
+                    </div>
+
+                    <div class="col-md-6 mb-3">
+                      <label class="form-label fw-bold">
+                        Check-out
+                      </label>
+                      <input type="date" class="form-control" formControlName="checkOut"
+                        [max]="formatDateForInput(flightDepartureInfo?.date!)" placeholder="Selecciona fecha de salida">
+
+                      @if (suggestedCheckOut && suggestionReason.checkOut) {
+                      <small class="text-muted d-block mt-1">
+                        <i class="bi bi-lightbulb me-1"></i>
+                        {{ suggestionReason.checkOut }}
+                      </small>
+                      }
+                    </div>
+                  </div>
+                  @if (hotelDatesForm.hasError('dateRange') && hotelDatesForm.touched) {
+                  <div class="alert alert-danger mt-2">
+                    <i class="bi bi-exclamation-triangle me-2"></i>
+                    La fecha de salida debe ser posterior a la fecha de entrada
+                  </div>
+                  }
+                  <!-- Botones de acción -->
+                  <div class="d-grid gap-2">
+                    <!-- Sugerencia destacada -->
+                    @if (suggestedCheckIn && suggestedCheckOut) {
+                    <div class="alert alert-info mb-3">
+                      <div class="d-flex align-items-center justify-content-between flex-column flex-lg-row gap-2">
+                        <div>
+                          <i class="bi bi-stars me-2"></i>
+                          <strong>Fechas sugeridas:</strong>
+                          {{ suggestedCheckIn | dateFormat }} - {{ suggestedCheckOut | dateFormat }}
+                        </div>
+                        <button type="button" class="btn btn-sm btn-primary" (click)="useSuggestedDates()">
+                          <i class="bi bi-check2 me-1"></i>
+                          Usar sugeridas
+                        </button>
+                      </div>
+                    </div>
+                    }
+
+                    <div class="row">
+                      <div class="col-md d-flex justify-content-end">
+                        <button type="button" class="btn btn-primary" [disabled]="hotelDatesForm.invalid"
+                          (click)="searchHotelsWithSelectedDates()">
+                          Buscar
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                </form>
+              </div>
+            </div>
+          </div>
+          }
+
+          <!-- Resultados de hoteles (después de buscar) -->
+          @else if (hasSearchedHotels) {
+          <div class="container py-3">
+            <!-- Botón para modificar fechas -->
+            <div
+              class="alert alert-success d-flex align-items-center justify-content-between mb-3 flex-column flex-md-row gap-2">
+              <div>
+                <i class="bi bi-calendar-check me-2"></i>
+                <strong>Buscando hoteles:</strong>
+                {{ hotelSearchRequest.stay.checkIn | dateFormat }} - {{ hotelSearchRequest.stay.checkOut | dateFormat }}
+              </div>
+              <button class="btn btn-sm btn-outline-primary" (click)="modifyHotelDates()">
+                <i class="bi bi-pencil me-1"></i>
+                Cambiar fechas
+              </button>
+            </div>
+
+            <!-- Componente de resultados de hoteles -->
+            <app-deviaje-hotels-results [inPackageMode]="true" [searchParams]="hotelSearchRequest"
+              [destinationCity]="hotelDestinationCity" (hotelSelected)="onHotelSelected($event)">
+            </app-deviaje-hotels-results>
+          </div>
+          }
         </div>
       </div>
     </div>

@@ -2,14 +2,15 @@ import { inject, Injectable } from '@angular/core';
 import { environment } from '../../../shared/enviroments/enviroment';
 import { HttpClient } from '@angular/common/http';
 import {
+  BookingReferenceResponse,
   BookingResponseDto,
   FlightBookingDto,
   FlightOfferDto,
   HotelBookingDto,
   PaymentDto,
 } from '../models/bookings';
-import { catchError, map, Observable, of, throwError } from 'rxjs';
-import { BaseResponse } from '../../../shared/models/baseResponse';
+import { catchError, Observable, of} from 'rxjs';
+import {  FlightVerifyResponse } from '../../../shared/models/flights';
 
 @Injectable({
   providedIn: 'root',
@@ -29,8 +30,8 @@ export class BookingService {
     hotelBookingData: HotelBookingDto,
     paymentData: PaymentDto,
     pricesDto?: any
-  ): Observable<BaseResponse<string>> {
-    // ✅ CORRECCIÓN: Estructura correcta según BookPackageAndPayRequest del backend
+  ): Observable<BookingReferenceResponse> {
+    
     const bookAndPayRequest = {
       packageBookingRequest: {
         clientId: flightBookingData.clientId,
@@ -47,61 +48,15 @@ export class BookingService {
       prices: pricesDto,
     };
 
-    console.log(
-      '📦 Enviando al backend (estructura corregida):',
-      bookAndPayRequest
-    );
-
     return this.http
-      .post<BaseResponse<string>>(this.packageBookingUrl, bookAndPayRequest)
-      .pipe(
-        catchError((error) => {
-          console.error('Error de conexión:', error);
-
-          // Solo errores de red/infraestructura
-          if (error.status === 0) {
-            return of({
-              success: false,
-              data: null,
-              message:
-                'No hay conexión con el servidor. Verifica tu conexión a internet.',
-            });
-          } else {
-            return of({
-              success: false,
-              data: null,
-              message: 'Error de conexión con el servidor. Intenta nuevamente.',
-            });
-          }
-        })
-      );
+      .post<BookingReferenceResponse>(this.packageBookingUrl, bookAndPayRequest);
   }
 
   // Verificar disponibilidad y precio de vuelo
   verifyFlightOfferPrice(
     flightOffer: FlightOfferDto
-  ): Observable<FlightOfferDto | null> {
-    return this.http.post<any>(this.flightVerifyUrl, flightOffer).pipe(
-      map((response) => {
-        if (
-          response &&
-          response.data &&
-          response.data.flightOffers &&
-          response.data.flightOffers.length > 0
-        ) {
-          console.log(
-            'Precio del vuelo verificado:',
-            response.data.flightOffers[0]
-          );
-          return response.data.flightOffers[0];
-        }
-        return null;
-      }),
-      catchError((error) => {
-        console.error('Error al verificar precio del vuelo:', error);
-        return of(null);
-      })
-    );
+  ): Observable<FlightVerifyResponse | null> {
+    return this.http.post<any>(this.flightVerifyUrl, flightOffer);
   }
 
   checkRates(rateKey: string): Observable<any> {
@@ -114,7 +69,7 @@ export class BookingService {
     bookingData: FlightBookingDto,
     paymentData: PaymentDto,
     pricesDto?: any // AGREGADO
-  ): Observable<string> {
+  ): Observable<BookingReferenceResponse> {
     const bookAndPayRequest = {
       bookingRequest: bookingData,
       paymentRequest: paymentData,
@@ -122,14 +77,14 @@ export class BookingService {
     };
 
     return this.http
-      .post<string>(this.flightBookingUrl, bookAndPayRequest);
+      .post<BookingReferenceResponse>(this.flightBookingUrl, bookAndPayRequest);
   }
 
   createHotelBooking(
     bookingData: HotelBookingDto,
     paymentData: PaymentDto,
     pricesDto?: any
-  ): Observable<string> {
+  ): Observable<BookingReferenceResponse> {
     const bookAndPayRequest = {
       bookingRequest: bookingData,
       paymentRequest: paymentData,
@@ -137,7 +92,7 @@ export class BookingService {
     };
 
     return this.http
-      .post<string>(this.hotelBookingUrl, bookAndPayRequest);
+      .post<BookingReferenceResponse>(this.hotelBookingUrl, bookAndPayRequest);
   }
 
   // Obtener las reservas del usuario

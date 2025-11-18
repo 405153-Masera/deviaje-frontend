@@ -1,10 +1,13 @@
 import { Component, inject, OnDestroy, OnInit, ViewChild } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import {
+  AbstractControl,
   FormArray,
   FormBuilder,
   FormGroup,
   ReactiveFormsModule,
+  ValidationErrors,
+  ValidatorFn,
   Validators,
 } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
@@ -25,7 +28,7 @@ import {
   HotelSearchRequest,
   HotelSearchResponse,
 } from '../../../../shared/models/hotels';
-import { HotelBookingDto, PaymentDto } from '../../models/bookings';
+import { BookingReferenceResponse, HotelBookingDto, PaymentDto } from '../../models/bookings';
 import { DeviajePriceDetailsComponent } from '../deviaje-price-details/deviaje-price-details.component';
 import { HotelService } from '../../../../shared/services/hotel.service';
 import { ValidatorsService } from '../../../../shared/services/validators.service';
@@ -65,7 +68,7 @@ export class DeviajeHotelBookingComponent implements OnInit, OnDestroy {
   private readonly authService = inject(AuthService);
   private readonly hotelService = inject(HotelService);
   private readonly validatorService = inject(ValidatorsService);
-  calculatedTotalAmount: string = '0';
+  calculatedTotalAmount: number = 0;
 
   // Subscription management
   private subscription = new Subscription();
@@ -83,6 +86,7 @@ export class DeviajeHotelBookingComponent implements OnInit, OnDestroy {
   currentUser: any = null;
   isLoggedIn: boolean = false;
   userRole: string = '';
+  userErrorMessage = '';
 
   // Booking flow state
   currentStep = 1;
@@ -90,7 +94,7 @@ export class DeviajeHotelBookingComponent implements OnInit, OnDestroy {
   isLoading = false;
   isVerifying = false;
   showSuccessMessage = false;
-  bookingReference = '';
+  bookingReference: BookingReferenceResponse | null = null;
   errorMessage = '';
 
   // User selection for agents
@@ -106,8 +110,24 @@ export class DeviajeHotelBookingComponent implements OnInit, OnDestroy {
       phone: ['', [Validators.required]],
     }),
     payment: this.fb.group({
-      cardNumber: ['', [Validators.required]],
-      cardholderName: ['', Validators.required],
+      cardNumber: [
+        '',
+        [
+          Validators.required,
+          Validators.minLength(13),
+          Validators.maxLength(19),
+          this.paymentMethodValidator(),
+        ],
+      ],
+      cardholderName: [
+        '',
+        [
+          Validators.required,
+          Validators.minLength(2),
+          Validators.maxLength(30),
+          Validators.pattern(/^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]+$/),
+        ],
+      ],
       expiryDate: [
         '',
         [Validators.required, Validators.pattern(/^(0[1-9]|1[0-2])\/\d{2}$/)],
@@ -116,14 +136,8 @@ export class DeviajeHotelBookingComponent implements OnInit, OnDestroy {
       amount: [0, Validators.required],
       currency: ['ARS', Validators.required],
       paymentToken: [''],
-      payerDni: [
-        '',
-        [
-          Validators.required,
-          Validators.pattern(/^\d{7,8}$/),
-          Validators.minLength(7),
-        ],
-      ],
+      payerDni: ['', [Validators.required, Validators.pattern(/^\d{7,8}$/)]],
+      detectedPaymentMethod: [''],
     }),
   });
 
@@ -177,7 +191,7 @@ export class DeviajeHotelBookingComponent implements OnInit, OnDestroy {
       const savedFormData = sessionStorage.getItem(this.FORM_DATA_KEY);
       if (savedFormData) {
         const formData = JSON.parse(savedFormData);
-       
+
         if (this.searchParams) {
           this.setupTravelersForm();
         }
@@ -261,7 +275,6 @@ export class DeviajeHotelBookingComponent implements OnInit, OnDestroy {
       this.recheck = state.recheck;
       this.searchParams = state.searchParams;
     } else {
-      console.error('No booking data found in state');
       this.router.navigate(['/home/hotels/search']);
     }
   }
@@ -293,13 +306,10 @@ export class DeviajeHotelBookingComponent implements OnInit, OnDestroy {
 
   // Setup booking flow based on user role
   setupBookingBasedOnRole(): void {
-    console.log('Setting up booking based on role:', this.userRole);
     if (this.userRole === 'ADMINISTRADOR') {
       this.router.navigate(['/home']);
       return;
     }
-
-    console.log('Usuario logueado:', this.isLoggedIn);
 
     if (!this.isLoggedIn) {
       // Usuario no logueado - reserva como invitado
@@ -508,13 +518,8 @@ export class DeviajeHotelBookingComponent implements OnInit, OnDestroy {
     const parts = rateKey.split('|');
     const occupancyPart = parts[9]; // 1~1~1
 
-    console.log('RateKey parts:', parts);
-    console.log('Occupancy part:', occupancyPart);
-
     if (occupancyPart) {
       const [rooms, adults, children] = occupancyPart.split('~').map(Number);
-
-      console.log('adults:', adults, 'children:', children, 'rooms:', rooms);
 
       return {
         rooms: rooms || 1,
@@ -588,14 +593,13 @@ export class DeviajeHotelBookingComponent implements OnInit, OnDestroy {
           // Generar el token de pago antes de avanzar al paso 3
           if (!this.paymentComponent) {
             this.errorMessage = 'El componente de pago no está disponible';
-            console.error('paymentComponent es undefined');
             return;
           }
           try {
             const paymentToken =
               await this.paymentComponent.requestPaymentToken();
             if (!paymentToken) {
-              this.errorMessage = 'No se pudo generar el token de pago';
+              this.errorMessage = 'No se pudo procesar los datos';
               return;
             }
             // Guardar el token en el formulario
@@ -603,19 +607,14 @@ export class DeviajeHotelBookingComponent implements OnInit, OnDestroy {
               .get('payment')
               ?.get('paymentToken')
               ?.setValue(paymentToken);
-            console.log('Token de pago generado en paso 2:', paymentToken);
           } catch (error: any) {
-            this.errorMessage =
-              error.message || 'Error al generar el token de pago';
-            console.error('Error al generar token:', error);
+            this.errorMessage = 'No se pudo procesar los datos';
             return;
           }
         }
         this.currentStep++;
-        this.saveCurrentStep(); // Guardar el paso actual en sessionStorage
-        console.log('Avanzando al paso:', this.currentStep);
+        this.saveCurrentStep(); // Guardar el paso actual en
       } else {
-        console.log('Validación fallida para el paso:', this.currentStep);
         this.errorMessage =
           'Por favor, complete todos los campos requeridos correctamente.';
       }
@@ -643,8 +642,6 @@ export class DeviajeHotelBookingComponent implements OnInit, OnDestroy {
   }
 
   validateTravelersAndContact(): boolean {
-    console.log('=== VALIDATING TRAVELERS AND CONTACT ===');
-
     // Mark travelers as touched
     this.travelers.controls.forEach((control, index) => {
       if (control) {
@@ -726,7 +723,7 @@ export class DeviajeHotelBookingComponent implements OnInit, OnDestroy {
       ?.get('paymentToken')?.value;
     if (!paymentToken) {
       this.errorMessage =
-        'Error: Token de pago no disponible. Regrese al paso anterior.';
+        'No se pudo procesar los datos de la tarjeta. Regrese al paso anterior.';
       return;
     }
 
@@ -738,17 +735,12 @@ export class DeviajeHotelBookingComponent implements OnInit, OnDestroy {
 
     // Preparar los datos del pago
     const paymentData: PaymentDto = this.preparePaymentData(paymentToken);
-
     const pricesDto = this.priceDetailsComponent?.getPricesDto() || null;
-
-    console.log('Booking data:', bookingData);
-    console.log('Payment data:', paymentData);
-    console.log('precios:', pricesDto);
 
     this.bookingService
       .createHotelBooking(bookingData, paymentData, pricesDto)
       .subscribe({
-        next: (bookingReference: string) => {
+        next: (bookingReference: BookingReferenceResponse) => {
           this.isLoading = false;
           this.showSuccessMessage = true;
           this.bookingReference = bookingReference;
@@ -768,11 +760,14 @@ export class DeviajeHotelBookingComponent implements OnInit, OnDestroy {
           if (error.source === 'MERCADO_PAGO') {
             this.mainForm.get('payment')?.get('paymentToken')?.setValue(null);
             this.currentStep = 2;
+            this.saveCurrentStep();
             this.errorMessage = error.message;
-            window.scrollTo({ top: 0, behavior: 'smooth' });
-
           } else {
             this.errorMessage = error.message;
+          }
+
+          if (error.status === 410) {
+            this.errorMessage = 'No repita la misma operación. Por favor, regrese a los resultados de búsqueda y seleccione una nueva tarifa.';
           }
           console.error('Error en booking:', error);
         },
@@ -824,7 +819,7 @@ export class DeviajeHotelBookingComponent implements OnInit, OnDestroy {
       holder: {
         name: travelerData.firstName,
         surname: travelerData.lastName,
-        email: emailAddress, 
+        email: emailAddress,
         phone: phoneNumber,
         countryCallingCode: countryCallingCode,
       },
@@ -837,74 +832,34 @@ export class DeviajeHotelBookingComponent implements OnInit, OnDestroy {
           paxes: paxes,
         },
       ],
-      cancellationFrom: this.extractHotelCancellationDate(),
-      cancellationAmount: this.extractHotelCancellationAmount(),
     };
   }
 
   preparePaymentData(paymentToken: string): PaymentDto {
     const travelerData = this.travelers.at(0).value;
     const paymentData = this.mainForm.get('payment')?.value;
+    const detectedPaymentMethod = this.mainForm
+      .get('payment')
+      ?.get('detectedPaymentMethod')?.value;
+    
+    console.log('Preparando datos de pago:', paymentData.amount);
+    const amount = Math.round(paymentData.amount * 100) / 100;
 
+    console.log('Metodo de pago:', amount);
     return {
-      amount: this.mainForm.get('payment')?.get('amount')?.value,
+      amount: amount,
       currency: 'ARS',
-      paymentMethod: 'master',
+      paymentMethod: detectedPaymentMethod,
+      type: 'HOTEL',
       paymentToken: paymentToken,
       installments: 1,
       description: 'Reserva de hotel',
       payer: {
         email: travelerData.contact?.emailAddress || '',
-        identification: '', // TODO: Add if needed
+        identification: paymentData.payerDni,
         identificationType: 'DNI',
       },
     };
-  }
-
-  private extractHotelCancellationDate(): string {
-    try {
-      // Usar this.rate directamente si tienes acceso a él, o this.hotelDetails
-      const cancellationPolicies = this.rate?.cancellationPolicies;
-      if (cancellationPolicies && cancellationPolicies.length > 0) {
-        const from = cancellationPolicies[0]?.from;
-        if (from) {
-          // Convertir "2025-08-02T23:59:00-03:00" a "2025-08-02"
-          return from.split('T')[0];
-        }
-      }
-    } catch (error) {
-      console.error(
-        'Error extrayendo fecha de cancelación de HotelBeds:',
-        error
-      );
-    }
-
-    // Default: mañana si no hay política
-    const tomorrow = new Date();
-    tomorrow.setDate(tomorrow.getDate() + 1);
-    return tomorrow.toISOString().split('T')[0];
-  }
-
-  private extractHotelCancellationAmount(): number {
-    try {
-      const cancellationPolicies = this.rate?.cancellationPolicies;
-      if (cancellationPolicies && cancellationPolicies.length > 0) {
-        const amount = cancellationPolicies[0]?.amount;
-        if (amount) {
-          return amount; // "357.79" → 357.79
-        }
-      }
-    } catch (error) {
-      console.error(
-        'Error extrayendo monto de cancelación de HotelBeds:',
-        error
-      );
-    }
-
-    // Default: precio total del hotel
-    return this.calculatedTotalAmount
-      ? parseFloat(this.calculatedTotalAmount)
-      : 0;
   }
 
   // Navigate to search
@@ -921,7 +876,7 @@ export class DeviajeHotelBookingComponent implements OnInit, OnDestroy {
   onPricesCalculated(pricesDto: any): void {
     console.log('Precios calculados recibidos:', pricesDto);
 
-    this.calculatedTotalAmount = String(pricesDto.totalAmount);
+    this.calculatedTotalAmount = pricesDto.totalAmount;
     //this.calculatedCurrency = pricesDto.currency;
 
     this.mainForm
@@ -929,5 +884,38 @@ export class DeviajeHotelBookingComponent implements OnInit, OnDestroy {
       ?.get('amount')
       ?.setValue(pricesDto.totalAmount);
     this.mainForm.get('payment')?.get('currency')?.setValue(pricesDto.currency);
+  }
+
+  // En deviaje-hotel-booking.component.ts
+
+  goBackToResults(): void {
+    // Navegar de vuelta a los resultados de búsqueda
+    this.router.navigate(['/home/hotels/results']);
+  }
+
+  paymentMethodValidator(): ValidatorFn {
+    return (control: AbstractControl): ValidationErrors | null => {
+      const value = control.value;
+
+      // Si no hay valor o es muy corto, no validar aún
+      if (!value || value.length < 6) {
+        return null;
+      }
+
+      // Si no tenemos acceso al paymentComponent aún, no validar
+      if (!this.paymentComponent) {
+        return null;
+      }
+
+      // Si no se detectó un método de pago válido, marcar error
+      if (
+        !this.paymentComponent.detectedPaymentMethod &&
+        !this.paymentComponent.isValidatingCard
+      ) {
+        return { invalidPaymentMethod: true };
+      }
+
+      return null;
+    };
   }
 }

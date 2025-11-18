@@ -104,6 +104,13 @@ function getErrorMessage(
     }
   }
 
+  if (source === 'AMADEUS' && codeErrorApi) {
+    const amadeusMessage = getAmadeusSpecificMessage(codeErrorApi, status);
+    if (amadeusMessage) {
+      return amadeusMessage;
+    }
+  }
+
   const errorMessages: ErrorMessages = {
     HOTELBEDS: {
       400: 'Los criterios de búsqueda de hoteles no son válidos.',
@@ -179,32 +186,12 @@ function getHotelBedsSpecificMessage(
       'Los datos son incorrectos. Verifica las fechas, número de huéspedes y habitaciones.',
     ALLOTMENT_EXCEEDED:
       'Se ha excedido el límite de habitaciones disponibles. Por favor, reduce la cantidad.',
-
-    // Errores 401
     AUTHORIZATION_MISSING: 'Error de autenticación con el servicio de hoteles.',
     SIGNATURE_FAILED: 'Error de verificación con el servicio de hoteles.',
-
-    // Errores 500
     SYSTEM_ERROR:
       'Error interno del servicio de hoteles. Nuestro equipo ha sido notificado. Intenta más tarde.',
-
-    // PRODUCT_ERROR - Errores relacionados con el producto/reserva
     PRODUCT_ERROR:
-      'No se puede completar la reserva debido a restricciones del hotel.',
-    INSUFFICIENT_ALLOTMENT:
-      'Esta habitación ya no está disponible. Por favor, realiza una nueva búsqueda.',
-    PRICE_INCREASED:
-      'El precio del hotel ha aumentado desde la búsqueda inicial. Por favor, verifica el nuevo precio.',
-    CONTRACT_CLOSED:
-      'El hotel no está disponible para reservas en este momento. Por favor, intenta con otro hotel.',
-    STOP_SALES:
-      'El hotel no acepta reservas para las fechas seleccionadas. Por favor, elige otras fechas.',
-    BOOKING_CONFIRMATION_ERROR:
-      'Error al confirmar la reserva. Por favor, intenta nuevamente en unos minutos.',
-    RELEASE_VIOLATED:
-      'No se puede reservar con tan poca antelación. El hotel requiere más tiempo de anticipación.',
-
-    // CONFIGURATION_ERROR
+      'No se puede completar la reserva debido a que la oferta ya no esta disponible o debido a cambios en el precio.',
     CONFIGURATION_ERROR:
       'Hay un problema de configuración con el servicio de hoteles. Contacta con soporte.',
   };
@@ -324,9 +311,6 @@ function getGenericMessage(status: number): string {
   return 'Ocurrió un error inesperado. Por favor, intenta más tarde.';
 }
 
-/**
- * ✅ NUEVO: Obtiene mensajes específicos para códigos de error de MercadoPago.
- */
 function getMercadoPagoSpecificMessage(
   codeErrorApi: string,
   status: number
@@ -357,7 +341,7 @@ function getMercadoPagoSpecificMessage(
     cc_rejected_max_attempts:
       'Excediste el número máximo de intentos permitidos. Por favor, intenta más tarde.',
     cc_rejected_other_reason:
-      'Tu tarjeta fue rechazada. Contacta a tu banco para más información o intenta con otra tarjeta.',
+      'Tu tarjeta fue rechazada. Verifica los datos de la tarjeta.',
 
     // Errores de API (códigos numéricos como strings)
     '2067':
@@ -366,6 +350,8 @@ function getMercadoPagoSpecificMessage(
       'No se pudo identificar el método de pago. Verifica los datos de tu tarjeta.',
     '3034': 'El banco emisor es inválido.',
     '3035': 'La cantidad de cuotas no es válida.',
+    '3003':
+      'Por seguridad, el token de la tarjeta expiró. Volvé a ingresar los datos.',
 
     // Errores generales
     bad_request:
@@ -416,4 +402,40 @@ function getMercadoPagoSpecificMessage(
 
   // Si no hay coincidencia específica, retornar null para usar mensajes por defecto
   return null;
+}
+
+function getAmadeusSpecificMessage(
+  codeErrorApi: string,
+  status: number
+): string | null {
+  const amadeusMessages: Record<string, string> = {
+    // --- Errores de Formato / Datos ---
+    '425': 'La fecha ingresada no es válida. Verifica la fecha del viaje.',
+    '477':
+      'Formato inválido en los datos enviados. Verifica aeropuertos, fechas o pasajeros.',
+    '2781': 'La longitud de un dato es inválida.',
+    '2668': 'La combinación de parámetros no es válida.',
+    '32171': 'Faltan datos obligatorios en la búsqueda.',
+    '4926': 'Los datos enviados no son válidos para realizar la búsqueda.',
+    '10661': 'Se excedió el número máximo permitido (pasajeros o segmentos).',
+
+    // --- Tarifas / disponibilidad ---
+    '34107': 'La tarifa seleccionada ya no está disponible.',
+    '34651': 'Uno de los segmentos del vuelo ya no está disponible.',
+    '37200': 'El precio del vuelo cambió. Actualiza la búsqueda.',
+
+    // --- Pago / ticketing ---
+    '1304': 'La tarjeta no es aceptada por la aerolínea.',
+    '9112': 'Error al emitir el ticket.',
+    '34733': 'No se pudo crear la tarjeta virtual para la reserva.',
+    '36870': 'La reserva del vuelo falló. Intenta nuevamente.',
+
+    // --- Servicios no disponibles ---
+    '38034': 'Uno o más servicios del vuelo no están disponibles.',
+
+    // --- Error interno ---
+    '141': 'Error interno en el sistema de vuelos. Intenta más tarde.',
+  };
+
+  return amadeusMessages[codeErrorApi] || null;
 }

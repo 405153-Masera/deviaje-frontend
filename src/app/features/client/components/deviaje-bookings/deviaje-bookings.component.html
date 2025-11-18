@@ -1,0 +1,264 @@
+<div class="container my-4">
+
+  <!-- Header -->
+  <div class="row mb-4">
+    <div class="col-12">
+      <div class="card border-0 bg-primary text-white shadow-sm">
+        <div class="card-body">
+          <h1 class="card-title mb-1">{{ pageTitle }}</h1>
+
+          <p class="mb-0 opacity-75" *ngIf="!loading">
+            {{ filteredBookings.length }} reserva{{ filteredBookings.length !== 1 ? 's' : '' }}
+            encontrada{{ filteredBookings.length !== 1 ? 's' : '' }}
+          </p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Filtros -->
+  <div class="row mb-4">
+    <div class="col-12">
+      <div class="card shadow-sm">
+        <div class="card-body">
+          <div class="row g-3">
+
+            <!-- Búsqueda -->
+            <div class="col-md-4">
+              <label class="form-label text-muted">Buscar reserva</label>
+              <div class="input-group">
+                <span class="input-group-text bg-light">
+                  <i class="bi bi-search text-muted"></i>
+                </span>
+                <input type="text" class="form-control" placeholder="ID, titular, email..." [value]="searchTerm"
+                  (input)="onSearchChange($event)">
+              </div>
+            </div>
+
+            <!-- Tipo -->
+            <div class="col-md-3">
+              <label class="form-label text-muted">Tipo de reserva</label>
+              <select class="form-select" [(ngModel)]="selectedType" (change)="onFilterChange()">
+                <option *ngFor="let type of bookingTypes" [value]="type.value">
+                  {{ type.label }}
+                </option>
+              </select>
+            </div>
+
+            <!-- Estado -->
+            <div class="col-md-3">
+              <label class="form-label text-muted">Estado</label>
+              <select class="form-select" [(ngModel)]="selectedStatus" (change)="onFilterChange()">
+                <option *ngFor="let status of bookingStatuses" [value]="status.value">
+                  {{ status.label }}
+                </option>
+              </select>
+            </div>
+
+            <!-- Botón recargar -->
+            <div class="col-md-2 d-flex align-items-end">
+              <button type="button" class="btn btn-outline-primary w-100" (click)="reloadBookings()"
+                [disabled]="loading">
+                <i class="bi bi-arrow-clockwise me-1"></i>
+                Actualizar
+              </button>
+            </div>
+
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Loading -->
+  <div *ngIf="loading" class="row">
+    <div class="col-12">
+      <div class="card shadow-sm">
+        <div class="card-body text-center py-5">
+          <div class="spinner-border text-primary"></div>
+          <p class="mt-3 text-muted">Cargando reservas...</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Error -->
+  <div *ngIf="error && !loading" class="row">
+    <div class="col-12">
+      <div class="alert alert-danger shadow-sm">
+        <i class="bi bi-exclamation-triangle-fill me-2"></i>
+        {{ error }}
+      </div>
+    </div>
+  </div>
+
+  <!-- Lista móvil -->
+  <div *ngIf="!loading && !error && paginatedBookings.length > 0" class="row">
+
+    <div class="col-12 d-md-none">
+      <div *ngFor="let booking of paginatedBookings" class="card shadow-sm mb-3">
+        <div class="card-body">
+
+          <div class="d-flex justify-content-between align-items-start mb-2">
+            <h6 class="mb-0">
+              <i class="bi bi-bookmark-fill text-primary me-1"></i>
+              Reserva #{{ booking.id }}
+            </h6>
+            <span class="badge" [ngClass]="getStatusBadgeClass(booking.status)">
+              {{ getBookingStatusName(booking.status) }}
+            </span>
+          </div>
+
+          <div class="row g-2 mb-3">
+            <div class="col-6">
+              <small class="text-muted">Tipo:</small>
+              <div class="fw-semibold">
+                {{ getBookingTypeName(booking.type) }}
+              </div>
+            </div>
+            <div class="col-6">
+              <small class="text-muted">Monto:</small>
+              <div class="fw-semibold text-success">
+                {{ formatCurrency(booking.totalAmount, booking.currency) }}
+              </div>
+            </div>
+          </div>
+
+          <div class="mb-2">
+            <small class="text-muted">Titular:</small>
+            <div>{{ booking.holderName || 'No especificado' }}</div>
+          </div>
+
+          <div class="mb-3">
+            <small class="text-muted">Fecha:</small>
+            <div>{{ formatDate(booking.createdDatetime) }}</div>
+          </div>
+
+          <button class="btn btn-primary btn-sm w-100" (click)="viewBookingDetails(booking)">
+            <i class="bi bi-eye me-1"></i> Ver detalles
+          </button>
+
+        </div>
+      </div>
+    </div>
+
+    <!-- Lista desktop -->
+    <div class="col-12 d-none d-md-block">
+      <div class="card shadow-sm">
+        <div class="table-responsive">
+          <table class="table table-hover align-middle mb-0">
+
+            <thead class="bg-light">
+              <tr>
+                <th>ID</th>
+                <th>Tipo</th>
+                <th>Estado</th>
+                <th>Titular</th>
+                <th *ngIf="showClientInfo">Cliente</th>
+                <th *ngIf="showAgentInfo">Agente</th>
+                <th>Monto</th>
+                <th>Fecha</th>
+                <th>Acciones</th>
+              </tr>
+            </thead>
+
+            <tbody>
+              <tr *ngFor="let booking of paginatedBookings">
+                <td class="fw-semibold">#{{ booking.id }}</td>
+                <td>
+                  <span class="badge bg-secondary-subtle text-dark border">
+                    {{ getBookingTypeName(booking.type) }}
+                  </span>
+                </td>
+                <td>
+                  <span class="badge" [ngClass]="getStatusBadgeClass(booking.status)">
+                    {{ getBookingStatusName(booking.status) }}
+                  </span>
+                </td>
+                <td>
+                  <div class="d-flex flex-column">
+                    <span class="fw-semibold">{{ booking.holderName || 'No especificado' }}</span>
+                    <small class="text-muted">{{ booking.email || '' }}</small>
+                  </div>
+                </td>
+
+                <td *ngIf="showClientInfo">
+                  <small class="text-muted">Cliente #{{ booking.clientId }}</small>
+                </td>
+
+                <td *ngIf="showAgentInfo">
+                  <small class="text-muted">
+                    {{ booking.agentId ? 'Agente #' + booking.agentId : 'Sin agente' }}
+                  </small>
+                </td>
+
+                <td class="fw-semibold text-success">
+                  {{ formatCurrency(booking.totalAmount, booking.currency) }}
+                </td>
+
+                <td class="text-muted">
+                  {{ formatDate(booking.createdDatetime) }}
+                </td>
+
+                <td>
+                  <button class="btn btn-primary btn-sm" (click)="viewBookingDetails(booking)">
+                    <i class="bi bi-eye"></i>
+                  </button>
+                </td>
+
+              </tr>
+            </tbody>
+
+          </table>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Sin resultados -->
+  <div *ngIf="!loading && !error && paginatedBookings.length === 0" class="row">
+    <div class="col-12">
+      <div class="card shadow-sm text-center py-5">
+        <i class="bi bi-inbox display-1 text-muted"></i>
+        <h5 class="mt-3">No se encontraron reservas</h5>
+        <p class="text-muted mb-4">
+          {{ bookings.length === 0 ? 'Aún no tienes reservas realizadas.' : 'Prueba ajustando los filtros.' }}
+        </p>
+        <button class="btn btn-primary" (click)="router.navigate(['/home'])">
+          <i class="bi bi-plus-lg me-1"></i>
+          Hacer una reserva
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Paginación -->
+  <div *ngIf="!loading && !error && totalPages > 1" class="row mt-4">
+    <div class="col-12">
+      <nav>
+        <ul class="pagination justify-content-center">
+
+          <li class="page-item" [class.disabled]="currentPage === 1">
+            <button class="page-link" (click)="goToPage(currentPage - 1)">
+              <i class="bi bi-chevron-left"></i>
+            </button>
+          </li>
+
+          <li *ngFor="let page of totalPagesArray" class="page-item" [class.active]="page === currentPage">
+            <button class="page-link" (click)="goToPage(page)">
+              {{ page }}
+            </button>
+          </li>
+
+          <li class="page-item" [class.disabled]="currentPage === totalPages">
+            <button class="page-link" (click)="goToPage(currentPage + 1)">
+              <i class="bi bi-chevron-right"></i>
+            </button>
+          </li>
+
+        </ul>
+      </nav>
+    </div>
+  </div>
+</div>

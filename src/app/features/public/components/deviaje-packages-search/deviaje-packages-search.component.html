@@ -1,6 +1,6 @@
 <!-- Componente de búsqueda de paquetes usando la estructura existente de vuelos y hoteles -->
 <div class="hero-background">
-    <section class="container">
+    <section class="container py-2">
         <div class="search-panel">
             <!-- Header principal -->
             <div class="search-header">
@@ -10,114 +10,109 @@
 
             <form [formGroup]="formSearch" class="search-form">
 
-                <!-- Sección VUELOS -->
-                <div class="flight-section">
-
-                    <div class="row">
-                        <!-- Origen y Destino -->
-                        <div class="col-md mb-4 position-relative">
-                            <app-deviaje-city-input label="Salgo de" formControlName="origin">
-                            </app-deviaje-city-input>
-                            <span class="error-message position-absolute" [class.visible]="hasErrors('origin')">
-                                Por favor seleccione una ciudad de origen
-                            </span>
-                        </div>
-
-                        <div class="col-md-auto col-12 col align-self-center swap-button d-flex justify-content-center">
-                            <button type="button" aria-label="Intercambiar origen y destino"
-                                (click)="swapFlightLocations()">
-                                <i class="bi bi-arrow-left-right"></i>
-                            </button>
-                        </div>
-
-                        <div class="col-md mb-4 position-relative">
-                            <app-deviaje-city-input label="Voy a" formControlName="destination">
-                            </app-deviaje-city-input>
-                            <span class="error-message position-absolute" [class.visible]="hasErrors('destination')">
-                                Por favor seleccione una ciudad de destino
-                            </span>
-                        </div>
+                <div class="row">
+                    <!-- Origen y Destino -->
+                    <div class="col-md mb-4 position-relative">
+                        <app-deviaje-city-input label="Salgo de" formControlName="origin">
+                        </app-deviaje-city-input>
+                        <span class="error-message position-absolute" [class.visible]="hasErrors('origin')">
+                            Este campo es obligatorio
+                        </span>
                     </div>
 
-                    <div class="row">
-                        <!-- Fechas de vuelo (IGUALES para hotel) -->
-                        <div class="col-lg col-md-6 mb-4 position-relative">
-                            <label class="mb-1" for="departureDate">Fecha de salida</label>
-                            <div class="input-with-icon date-input">
-                                <i class="bi bi-calendar3"></i>
-                                <input id="departureDate" type="text" placeholder="dd/mm/aaaa"
-                                    class="date-picker-trigger"
-                                    [value]="formSearch.get('departureDate')?.value | dateFormat" readonly
-                                    (click)="openFlightCalendar()">
-                            </div>
-                            <span class="error-message position-absolute" [class.visible]="hasErrors('departureDate')">
-                                Seleccione la fecha de salida
-                            </span>
-                        </div>
+                    <div class="col-md-auto col-12 col align-self-center swap-button d-flex justify-content-center">
+                        <button type="button" aria-label="Intercambiar origen y destino"
+                            (click)="swapFlightLocations()">
+                            <i class="bi bi-arrow-left-right"></i>
+                        </button>
+                    </div>
 
-                        <div class="col-lg col-md-6 mb-4 position-relative">
-                            <label class="mb-1" for="returnDate">Fecha de regreso</label>
-                            <div class="input-with-icon date-input">
-                                <i class="bi bi-calendar3"></i>
-                                <input id="returnDate" type="text" placeholder="dd/mm/aaaa" class="date-picker-trigger"
-                                    [value]="formSearch.get('returnDate')?.value | dateFormat" readonly
-                                    (click)="openFlightCalendar()">
-                            </div>
-                            <span class="error-message position-absolute" [class.visible]="hasErrors('returnDate')">
-                                Seleccione la fecha de regreso
-                            </span>
-                        </div>
+                    <div class="col-md mb-4 position-relative">
+                        <app-deviaje-city-input label="Voy a" formControlName="destination">
+                        </app-deviaje-city-input>
+                        <span class="error-message position-absolute" [class.visible]="hasErrors('destination')">
+                            Este campo es obligatorio
+                        </span>
+                        <span class="error-message position-absolute" [class.visible]="isNotMatch">
+                            {{errorMessage}}
+                        </span>
+                    </div>
+                </div>
 
-                        <!-- Huéspedes - AGREGAR #roomGuestComponent para ViewChild -->
-                        <div class="col-lg col-md-4 mb-4">
-                            <app-deviaje-room-guest-select #roomGuestComponent label="Huéspedes"
-                                [occupancies]="occupancies" (occupanciesChanged)="handleOccupanciesChanged($event)">
-                            </app-deviaje-room-guest-select>
+                <div class="row">
+                    <!-- Fechas de vuelo -->
+                    <div class="col-lg col-md-6 mb-4 position-relative">
+                        <label class="mb-1" for="departureDate">Fecha de salida</label>
+                        <div class="input-with-icon date-input">
+                            <i class="bi bi-calendar3"></i>
+                            <input id="departureDate" type="text" placeholder="dd/mm/aaaa" class="date-picker-trigger"
+                                [value]="formSearch.get('departureDate')?.value | dateFormat" readonly
+                                (click)="openFlightCalendar()">
                         </div>
+                        <span class="error-message position-absolute" [class.visible]="hasErrors('departureDate')">
+                            La fecha de salida es obligatoria
+                        </span>
+                    </div>
 
-                        <!-- Clase de vuelo -->
-                        <div class="col-lg col-md-4 mb-4">
-                            <label class="mb-1" for="selectClass">Clase</label>
-                            <div class="input-with-icon">
-                                <i class="bi bi-star"></i>
-                                <select formControlName="travelClass" id="selectClass">
-                                    <option value="">Sin seleccionar</option>
-                                    <option value="ECONOMY">Económica</option>
-                                    <option value="PREMIUM_ECONOMY">Premium</option>
-                                    <option value="BUSINESS">Negocio</option>
-                                    <!-- <option value="FIRST">Primera</option> -->
-                                </select>
-                            </div>
+                    <div class="col-lg col-md-6 mb-4 position-relative">
+                        <label class="mb-1" for="returnDate">Fecha de regreso</label>
+                        <div class="input-with-icon date-input">
+                            <i class="bi bi-calendar3"></i>
+                            <input id="returnDate" type="text" placeholder="dd/mm/aaaa" class="date-picker-trigger"
+                                [value]="formSearch.get('returnDate')?.value | dateFormat" readonly
+                                (click)="openFlightCalendar()">
+                        </div>
+                        <span class="error-message position-absolute" [class.visible]="hasErrors('returnDate')">
+                            La fecha de regreso es obligatoria
+                        </span>
+                    </div>
+
+                    <!-- Huéspedes - AGREGAR #roomGuestComponent para ViewChild -->
+                    <div class="col-lg col-md mb-4">
+                        <app-deviaje-room-guest-select #roomGuestComponent label="Huéspedes" [occupancies]="occupancies"
+                            (occupanciesChanged)="handleOccupanciesChanged($event)">
+                        </app-deviaje-room-guest-select>
+                    </div>
+
+                    <!-- Clase de vuelo -->
+                    <div class="col-lg col-md-6 mb-4">
+                        <label class="mb-1" for="selectClass">Clase</label>
+                        <div class="input-with-icon">
+                            <i class="bi bi-star"></i>
+                            <select formControlName="travelClass" id="selectClass">
+                                <option value="">Sin seleccionar</option>
+                                <option value="ECONOMY">Económica</option>
+                                <option value="PREMIUM_ECONOMY">Premium</option>
+                                <option value="BUSINESS">Negocio</option>
+                                <!-- <option value="FIRST">Primera</option> -->
+                            </select>
                         </div>
                     </div>
                 </div>
 
-                <!-- Sección HOTELES (solo resumen) -->
-                <div class="hotel-section">
-                    <!-- Huéspedes y resumen -->
-                    <div class="row">
-                        <!-- Resumen del viaje -->
-                        <div class="col-md d-flex justify-content-end">
-                            <div class="trip-summary">
-                                <label class="mb-1">Resumen del viaje</label>
-                                <div class="summary-content">
-                                    <div class="summary-item">
-                                        <i class="bi bi-people-fill"></i>
-                                        <span>{{ getTotalAdults() }} adulto{{ getTotalAdults() !== 1 ? 's' : ''
-                                            }}</span>
-                                    </div>
-                                    @if (getTotalChildren() > 0) {
-                                    <div class="summary-item">
-                                        <i class="bi bi-person"></i>
-                                        <span>{{ getTotalChildren() }} niño{{ getTotalChildren() !== 1 ? 's' : ''
-                                            }}</span>
-                                    </div>
-                                    }
-                                    <div class="summary-item">
-                                        <i class="bi bi-door-open"></i>
-                                        <span>{{ getTotalRooms() }} habitación{{ getTotalRooms() !== 1 ? 'es' : ''
-                                            }}</span>
-                                    </div>
+                <!-- Huéspedes y resumen -->
+                <div class="row">
+                    <!-- Resumen del viaje -->
+                    <div class="col-md d-flex justify-content-end">
+                        <div class="trip-summary">
+                            <label class="mb-1">Resumen del viaje</label>
+                            <div class="summary-content">
+                                <div class="summary-item">
+                                    <i class="bi bi-people-fill"></i>
+                                    <span>{{ getTotalAdults() }} adulto{{ getTotalAdults() !== 1 ? 's' : ''
+                                        }}</span>
+                                </div>
+                                @if (getTotalChildren() > 0) {
+                                <div class="summary-item">
+                                    <i class="bi bi-person"></i>
+                                    <span>{{ getTotalChildren() }} niño{{ getTotalChildren() !== 1 ? 's' : ''
+                                        }}</span>
+                                </div>
+                                }
+                                <div class="summary-item">
+                                    <i class="bi bi-door-open"></i>
+                                    <span>{{ getTotalRooms() }} habitación{{ getTotalRooms() !== 1 ? 'es' : ''
+                                        }}</span>
                                 </div>
                             </div>
                         </div>

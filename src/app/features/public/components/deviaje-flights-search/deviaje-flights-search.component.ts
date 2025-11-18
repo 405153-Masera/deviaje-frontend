@@ -224,8 +224,6 @@ export class DeviajeFlightsSearchComponent implements OnInit, OnDestroy {
       searchParams.nonStop = nonStop;
     }
 
-    console.log('Flight Search Request:', searchParams);
-
     this.router.navigate(['/home/flight/results'], {
       state: { searchParams, originCity, destinationCity }
     });

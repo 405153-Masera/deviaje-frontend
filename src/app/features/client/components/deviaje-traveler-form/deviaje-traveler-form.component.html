@@ -122,7 +122,7 @@
       <div class="row mt-4" formArrayName="phones">
         <div formGroupName="0">
           <div class="row">
-            <div class="col-md-4 mb-3">
+            <div class="col-lg-4 mb-3">
               <label for="phoneCode" class="form-label">Código de país <span class="text-danger">*</span></label>
               <div class="input-group">
                 <span class="input-group-text">📞</span>
@@ -138,7 +138,7 @@
               </div>
             </div>
 
-            <div class="col-md-8 mb-3">
+            <div class="col-lg-8 mb-3">
               <label for="phoneNumber" class="form-label">Número de teléfono <span class="text-danger">*</span></label>
               <input type="tel" class="form-control" id="phoneNumber" formControlName="number"
                 [ngClass]="onValidate('contact.phones.0.number')" (blur)="trimField('contact.phones.0.number')">
@@ -235,11 +235,43 @@
     <div class="mb-3">
       <label for="email" class="form-label">Correo electrónico <span class="text-danger">*</span></label>
       <input type="email" class="form-control" id="email" formControlName="emailAddress"
-        (blur)="trimField('contact.emailAddress')" [ngClass]="onValidate('contact.emailAddress')">
-      <div *ngIf="shouldShowError('contact.emailAddress')" class="invalid-feedback d-block">
-        <div *ngIf="getFieldErrors('contact.emailAddress')?.['required']">El correo electrónico es obligatorio</div>
-        <div *ngIf="getFieldErrors('contact.emailAddress')?.['email']">Ingrese un correo electrónico válido</div>
-      </div>
+        (blur)="trimField('contact.emailAddress')" [ngClass]="onValidate('contact.emailAddress')"
+          placeholder="ejemplo@correo.com">
+        <div *ngIf="shouldShowError('contact.emailAddress')" class="invalid-feedback d-block">
+          <div *ngIf="getFieldErrors('contact.emailAddress')?.['required']">El email es obligatorio</div>
+          <div *ngIf="getFieldErrors('contact.emailAddress')?.['invalidEmail']">
+            El email debe contener un solo símbolo '&#64;'
+          </div>
+          <div *ngIf="getFieldErrors('contact.emailAddress')?.['maxlength']">
+            El email debe tener como máximo 80 caracteres
+          </div>
+          <div>
+            <div *ngIf="getFieldErrors('contact.emailAddress')?.['missingAt']">
+              El email debe contener el símbolo '&#64;'
+            </div>
+            <div *ngIf="getFieldErrors('contact.emailAddress')?.['missingUsername']">
+              El email debe tener un nombre de usuario antes del '&#64;'
+            </div>
+            <div *ngIf="getFieldErrors('contact.emailAddress')?.['missingDomain']">
+              El email debe tener un dominio después del '&#64;'
+            </div>
+            <div *ngIf="getFieldErrors('contact.emailAddress')?.['missingDomainExtension']">
+              El dominio del email debe contener una extensión (ej: .com, .ar)
+            </div>
+            <div *ngIf="getFieldErrors('contact.emailAddress')?.['invalidEmailFormat']">
+              El formato del email es inválido
+            </div>
+            <div *ngIf="getFieldErrors('contact.emailAddress')?.['email']">
+              El formato del email es inválido
+            </div>
+            <div *ngIf="getFieldErrors('contact.emailAddress')?.['invalidDomainExtension']">
+              La extensión del dominio debe tener al menos 2 caracteres
+            </div>
+            <div *ngIf="getFieldErrors('contact.emailAddress')?.['domainExtensionTooLong']">
+              La extensión del dominio no debe exceder los 6 caracteres
+            </div>
+          </div>
+        </div>
     </div>
 
     <!-- Teléfono -->

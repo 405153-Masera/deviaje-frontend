@@ -1,6 +1,7 @@
 import { HttpClient } from '@angular/common/http';
 import { inject, Injectable } from '@angular/core';
 import { forkJoin, map, catchError, of } from 'rxjs';
+import { AirportCacheData } from '../../features/client/models/airports';
 
 @Injectable({
   providedIn: 'root',
@@ -11,7 +12,7 @@ export class CountryService {
   private readonly restCountriesUrl = 'https://restcountries.com/v3.1';
 
   // Cache simple
-  private readonly cache = new Map<string, string>();
+  private cache = new Map<string, AirportCacheData>();
   private readonly countryCache = new Map<string, string>(); // Cache para países
   private readonly loading = new Set<string>(); // Para evitar múltiples llamadas al mismo código
 
@@ -28,7 +29,29 @@ export class CountryService {
 
     // Si está en cache, devolverlo
     if (this.cache.has(cleanCode)) {
-      return this.cache.get(cleanCode)!;
+      return this.cache.get(cleanCode)!.displayText;
+    }
+
+    // Si no está en cache y no se está cargando, cargar en background
+    if (!this.loading.has(cleanCode)) {
+      this.loadAirportInBackground(cleanCode);
+    }
+
+    // Mientras tanto, devolver el código original
+    return cleanCode;
+  }
+
+  getAirportName(iataCode: string): string {
+
+    if (!iataCode || iataCode.length !== 3) {
+      return iataCode;
+    }
+
+    const cleanCode = iataCode.toUpperCase();
+
+    // Si está en cache, devolverlo
+    if (this.cache.has(cleanCode)) {
+      return this.cache.get(cleanCode)!.airportName;
     }
 
     // Si no está en cache y no se está cargando, cargar en background
@@ -58,24 +81,39 @@ export class CountryService {
           this.getCountryNameInSpanish(airportResponse.country).subscribe({
             next: (countryName: string) => {
               const displayText = `${airportResponse.city}, ${countryName}`;
-              this.cache.set(iataCode, displayText);
-              console.log(`✅ Aeropuerto ${iataCode} cargado: ${displayText}`);
+              this.cache.set(iataCode, {
+                displayText: displayText,
+                airportName: airportResponse.name,
+                iataCode: iataCode,
+              });
               this.loading.delete(iataCode);
             },
             error: () => {
               const displayText = `${airportResponse.city}, ${airportResponse.country}`;
-              this.cache.set(iataCode, displayText);
+              this.cache.set(iataCode, {
+                displayText: displayText,
+                airportName: airportResponse.name,
+                iataCode: iataCode,
+              });
 
               this.loading.delete(iataCode);
             },
           });
         } else {
-          this.cache.set(iataCode, iataCode);
+          this.cache.set(iataCode, {
+            displayText: iataCode,
+            airportName: iataCode,
+            iataCode: iataCode,
+          });
           this.loading.delete(iataCode);
         }
       },
       error: (error) => {
-        this.cache.set(iataCode, iataCode);
+        this.cache.set(iataCode, {
+          displayText: iataCode,
+          airportName: iataCode,
+          iataCode: iataCode,
+        });
         this.loading.delete(iataCode);
       },
     });
@@ -103,11 +141,6 @@ export class CountryService {
       )
       .pipe(
         map((response) => {
-          console.log(
-            `🔍 Respuesta REST Countries para ${cleanCode}:`,
-            response
-          );
-
           // REST Countries puede devolver array o objeto individual
           const country = Array.isArray(response) ? response[0] : response;
 
@@ -137,9 +170,6 @@ export class CountryService {
           else {
             spanishName = countryCode;
           }
-
-          console.log(`🌍 País encontrado: ${cleanCode} -> ${spanishName}`);
-
           // Guardar en cache de países
           this.countryCache.set(cleanCode, spanishName);
 
@@ -212,7 +242,6 @@ export class CountryService {
           };
 
           const fallbackName = fallbackCountries[cleanCode] || cleanCode;
-          console.log(`🔧 Fallback aplicado: ${cleanCode} -> ${fallbackName}`);
 
           this.countryCache.set(cleanCode, fallbackName);
           return of(fallbackName);

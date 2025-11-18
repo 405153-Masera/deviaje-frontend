@@ -23,7 +23,11 @@
                 <div class="card-front">
                     <div class="card-bg" [ngClass]="cardType">
                         <div class="card-chip"></div>
-                        <div class="card-logo" [ngClass]="cardType"></div>
+                        <div class="card-logo">
+                            <img *ngIf="cardThumbnail" [src]="cardThumbnail" [alt]="cardName" class="card-logo-img">
+                            <span *ngIf="!cardThumbnail && cardType" class="card-logo-text">{{ cardType.toUpperCase()
+                                }}</span>
+                        </div>
                         <div class="card-number">{{ previewCardNumber }}</div>
                         <div class="card-info">
                             <div class="card-holder">
@@ -66,10 +70,18 @@
                         </span>
                         <input type="text" class="form-control" id="cardNumber" formControlName="cardNumber"
                             placeholder="1234 5678 9012 3456" (input)="formatCardNumber($event)"
-                            [ngClass]="{'is-invalid': paymentForm.get('cardNumber')?.invalid && paymentForm.get('cardNumber')?.touched}"
-                            maxlength="16">
-                        <div class="invalid-feedback">
-                            Ingrese un número de tarjeta válido
+                            (paste)="onCardNumberPaste($event)"
+                            [ngClass]="{'is-invalid': shouldShowError('cardNumber')}">
+                        <div *ngIf="shouldShowError('cardNumber')" class="invalid-feedback d-block">
+                            <div *ngIf="getFieldErrors('cardNumber')?.['required']">
+                                El número de tarjeta es obligatorio
+                            </div>
+                            <div *ngIf="getFieldErrors('cardNumber')?.['minlength']">
+                                El número de tarjeta debe tener al menos 13 dígitos
+                            </div>
+                            <div *ngIf="getFieldErrors('cardNumber')?.['invalidPaymentMethod']">
+                                No se pudo identificar el tipo de tarjeta
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -81,10 +93,20 @@
                     </label>
                     <input type="text" class="form-control" id="cardholderName" formControlName="cardholderName"
                         placeholder="Nombre como aparece en la tarjeta"
-                        [ngClass]="{'is-invalid': paymentForm.get('cardholderName')?.invalid && paymentForm.get('cardholderName')?.touched}"
-                        >
-                    <div class="invalid-feedback">
-                        El nombre del titular es obligatorio
+                        [ngClass]="{'is-invalid': shouldShowError('cardholderName')}">
+                    <div *ngIf="shouldShowError('cardholderName')" class="invalid-feedback d-block">
+                        <div *ngIf="getFieldErrors('cardholderName')?.['required']">
+                            El nombre del titular es obligatorio
+                        </div>
+                        <div *ngIf="getFieldErrors('cardholderName')?.['minlength']">
+                            El nombre debe tener al menos 3 caracteres
+                        </div>
+                        <div *ngIf="getFieldErrors('cardholderName')?.['maxlength']">
+                            El nombre debe tener al menos 30 caracteres
+                        </div>
+                        <div *ngIf="getFieldErrors('cardholderName')?.['pattern']">
+                            El nombre solo puede contener letras y espacios
+                        </div>
                     </div>
                 </div>
 
@@ -96,10 +118,14 @@
                         </label>
                         <input type="text" class="form-control" id="expiryDate" formControlName="expiryDate"
                             placeholder="MM/YY" (input)="formatExpiryDate($event)"
-                            [ngClass]="{'is-invalid': paymentForm.get('expiryDate')?.invalid && paymentForm.get('expiryDate')?.touched}"
-                            maxlength="5">
-                        <div class="invalid-feedback">
-                            Ingrese una fecha de vencimiento válida (MM/YY)
+                            [ngClass]="{'is-invalid': shouldShowError('expiryDate')}" maxlength="5">
+                        <div *ngIf="shouldShowError('expiryDate')" class="invalid-feedback d-block">
+                            <div *ngIf="getFieldErrors('expiryDate')?.['required']">
+                                La fecha de vencimiento es obligatoria
+                            </div>
+                            <div *ngIf="getFieldErrors('expiryDate')?.['pattern']">
+                                Ingrese una fecha válida (MM/YY)
+                            </div>
                         </div>
                     </div>
 
@@ -110,16 +136,19 @@
                         </label>
                         <div class="input-group">
                             <input type="text" class="form-control" id="cvv" formControlName="cvv" placeholder="123"
-                                (input)="formatCvv($event)"
-                                [ngClass]="{'is-invalid': paymentForm.get('cvv')?.invalid && paymentForm.get('cvv')?.touched}"
-                                maxlength="4" (focus)="flipCard(true)" (blur)="flipCard(false)"
-                                >
+                                (input)="formatCvv($event)" [ngClass]="{'is-invalid': shouldShowError('cvv')}"
+                                maxlength="4" (focus)="flipCard(true)" (blur)="flipCard(false)">
                             <span class="input-group-text">
                                 <i class="bi bi-question-circle" data-bs-toggle="tooltip" data-bs-placement="top"
                                     title="Código de 3 o 4 dígitos en la parte posterior de su tarjeta"></i>
                             </span>
-                            <div class="invalid-feedback">
-                                Ingrese un código de seguridad válido
+                        </div>
+                        <div *ngIf="shouldShowError('cvv')" class="invalid-feedback d-block">
+                            <div *ngIf="getFieldErrors('cvv')?.['required']">
+                                El código de seguridad es obligatorio
+                            </div>
+                            <div *ngIf="getFieldErrors('cvv')?.['pattern']">
+                                El código debe tener 3 o 4 dígitos
                             </div>
                         </div>
                     </div>
@@ -130,7 +159,8 @@
                     <label for="amount" class="form-label">Monto a pagar</label>
                     <div class="input-group">
                         <span class="input-group-text">{{ currency }}</span>
-                        <input type="text" class="form-control" id="amount" [value]="amount" readonly>
+                        <input type="text" class="form-control" id="amount"
+                            [value]="(amount | currency:currency:'symbol':'1.2-2')?.replace(currency, '')" readonly>
                     </div>
                 </div>
 
@@ -144,17 +174,13 @@
                         </span>
                         <input type="text" class="form-control" id="payerDni" formControlName="payerDni"
                             placeholder="12345678" maxlength="8" (input)="formatDni($event)"
-                            [ngClass]="{'is-invalid': paymentForm.get('payerDni')?.invalid && paymentForm.get('payerDni')?.touched}"
-                            >
-                        <div class="invalid-feedback">
-                            <div *ngIf="paymentForm.get('payerDni')?.errors?.['required']">
+                            [ngClass]="{'is-invalid': shouldShowError('payerDni')}">
+                        <div *ngIf="shouldShowError('payerDni')" class="invalid-feedback d-block">
+                            <div *ngIf="getFieldErrors('payerDni')?.['required']">
                                 El DNI es obligatorio
                             </div>
-                            <div *ngIf="paymentForm.get('payerDni')?.errors?.['pattern']">
+                            <div *ngIf="getFieldErrors('payerDni')?.['pattern']">
                                 Ingrese un DNI válido (solo números, 7-8 dígitos)
-                            </div>
-                            <div *ngIf="paymentForm.get('payerDni')?.errors?.['minlength']">
-                                El DNI debe tener al menos 7 dígitos
                             </div>
                         </div>
                     </div>
