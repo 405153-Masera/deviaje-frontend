@@ -23,7 +23,7 @@
     </div>
 
 
-    <div class="col-md-6">
+    <div class="col-md-6 mb-3 mb-md-0">
       <label for="lastName" class="form-label">Apellido <span class="text-danger">*</span></label>
       <small class="text-muted d-block" *ngIf="mode === 'flight'">Indica el apellido tal y como figura en el
         pasaporte</small>
@@ -54,7 +54,7 @@
       </select>
     </div>
 
-    <div class="col-md-6" *ngIf="travelerForm.get('travelerType')?.value === 'INFANT'">
+    <div class="col-md-6 mb-3 mb-md-0" *ngIf="travelerForm.get('travelerType')?.value === 'INFANT'">
       <label for="birthDate" class="form-label">Fecha de nacimiento <span class="text-danger">*</span></label>
       <input type="date" class="form-control" id="birthDate" formControlName="dateOfBirth"
         [ngClass]="onValidate('dateOfBirth')" [min]="getDateConstraints(travelerForm.get('travelerType')?.value).min"
@@ -102,10 +102,7 @@
             <div *ngIf="getFieldErrors('contact.emailAddress')?.['missingDomainExtension']">
               El dominio del email debe contener una extensión (ej: .com, .ar)
             </div>
-            <div *ngIf="getFieldErrors('contact.emailAddress')?.['invalidEmailFormat']">
-              El formato del email es inválido
-            </div>
-            <div *ngIf="getFieldErrors('contact.emailAddress')?.['email']">
+            <div *ngIf="getFieldErrors('contact.emailAddress')?.['invalidEmailFormat'] || getFieldErrors('contact.emailAddress')?.['email']">
               El formato del email es inválido
             </div>
             <div *ngIf="getFieldErrors('contact.emailAddress')?.['invalidDomainExtension']">
@@ -169,7 +166,6 @@
 
     <div formGroupName="0">
       <div class="row mb-3">
-
         <div class="col-md-6 mb-3 mb-md-0">
           <label for="documentNumber" class="form-label">Pasaporte Nº<span class="text-danger">*</span></label>
           <input type="text" class="form-control" id="documentNumber" formControlName="number"
@@ -178,12 +174,14 @@
             <div *ngIf="getFieldErrors('documents.0.number')?.['required']">El número de documento es obligatorio</div>
             <div *ngIf="getFieldErrors('documents.0.number')?.['minlength']">El número debe tener al menos 6 caracteres
             </div>
+             <div *ngIf="getFieldErrors('documents.0.number')?.['maxlength']">El número no debe exceder los 9 caracteres
+            </div>
             <div *ngIf="getFieldErrors('documents.0.number')?.['pattern']">El número solo debe contener letras y números
             </div>
           </div>
         </div>
 
-        <div class="col-md-6">
+        <div class="col-md-6 mb-3 mb-md-0">
           <label for="nationality" class="form-label">Nacionalidad <span class="text-danger">*</span></label>
           <select class="form-select" id="nationality" formControlName="nationality"
             [ngClass]="onValidate('documents.0.nationality')">
@@ -200,7 +198,7 @@
 
       <div class="row mb-3">
 
-        <div class="col-md-6">
+        <div class="col-md-6 mb-3 mb-md-0">
           <label for="issuanceCountry" class="form-label">País de emisión <span class="text-danger">*</span></label>
           <select class="form-select" id="issuanceCountry" formControlName="issuanceCountry"
             [ngClass]="onValidate('documents.0.issuanceCountry')">
@@ -214,7 +212,7 @@
           </div>
         </div>
 
-        <div class="col-md-6">
+        <div class="col-md-6 mb-3 mb-md-0">
           <label class="form-label">Fecha de caducidad <span class="text-danger">*</span></label>
           <input type="date" class="form-control" id="expiryDate" formControlName="expiryDate"
             [ngClass]="onValidate('documents.0.expiryDate')" [min]="formatDateForInput(today)">
@@ -234,7 +232,7 @@
 
     <div class="mb-3">
       <label for="email" class="form-label">Correo electrónico <span class="text-danger">*</span></label>
-      <input type="email" class="form-control" id="email" formControlName="emailAddress"
+      <input type="text" inputmode="email" autocomplete="email" class="form-control" id="email" formControlName="emailAddress"
         (blur)="trimField('contact.emailAddress')" [ngClass]="onValidate('contact.emailAddress')"
           placeholder="ejemplo@correo.com">
         <div *ngIf="shouldShowError('contact.emailAddress')" class="invalid-feedback d-block">
@@ -258,10 +256,7 @@
             <div *ngIf="getFieldErrors('contact.emailAddress')?.['missingDomainExtension']">
               El dominio del email debe contener una extensión (ej: .com, .ar)
             </div>
-            <div *ngIf="getFieldErrors('contact.emailAddress')?.['invalidEmailFormat']">
-              El formato del email es inválido
-            </div>
-            <div *ngIf="getFieldErrors('contact.emailAddress')?.['email']">
+            <div *ngIf="getFieldErrors('contact.emailAddress')?.['invalidEmailFormat'] || getFieldErrors('contact.emailAddress')?.['email']">
               El formato del email es inválido
             </div>
             <div *ngIf="getFieldErrors('contact.emailAddress')?.['invalidDomainExtension']">

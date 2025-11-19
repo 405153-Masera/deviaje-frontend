@@ -15,7 +15,6 @@ import { FlightUtilsService } from '../../../../shared/services/flight-utils.ser
 import { CommonModule } from '@angular/common';
 import {
   BookingReferenceResponse,
-  CancellationRulesDto,
   FlightBookingDto,
   FlightOfferDto,
   HotelBookingDto,
@@ -35,9 +34,7 @@ import {
 } from '../../../../shared/models/hotels';
 import { FlightSearchRequest } from '../../../../shared/models/flights';
 import { DeviajeHotelBookingSummaryComponent } from '../deviaje-hotel-booking-summary/deviaje-hotel-booking-summary.component';
-import { BaseResponse } from '../../../../shared/models/baseResponse';
 import { ValidatorsService } from '../../../../shared/services/validators.service';
-import { CancellationParserService } from '../../../../shared/services/cancellationParser.service';
 
 @Component({
   selector: 'app-deviaje-flight-booking',
@@ -73,7 +70,6 @@ export class DeviajePackageBookingComponent implements OnInit, OnDestroy {
   private authService = inject(AuthService);
   readonly flightUtils = inject(FlightUtilsService);
   private readonly validatorService = inject(ValidatorsService);
-  private readonly cancellationService = inject(CancellationParserService);
   subscription = new Subscription();
 
   @ViewChild(DeviajePriceDetailsComponent)
@@ -95,7 +91,6 @@ export class DeviajePackageBookingComponent implements OnInit, OnDestroy {
   recheck: boolean = false;
   hotelSearchParams: HotelSearchRequest | null = null;
   packageInfo: any = null;
-  cancellationRules: CancellationRulesDto | null = null;
   bookingReference: BookingReferenceResponse | null = null;
 
   isLoading = false;
@@ -148,21 +143,18 @@ export class DeviajePackageBookingComponent implements OnInit, OnDestroy {
 
   loadPackageData(): void {
     const state = window.history.state;
-    console.log('📦 Loading package data from state:', state);
 
     if (state && state.flightOffer && state.hotelDetails) {
       // Datos de vuelo
       this.flightOffer = state.flightOffer;
       this.flightSearchParams = state.flightSearchParams;
 
-      // ✅ CORRECCIÓN: Extraer searchParams del flightSearchParams
       if (this.flightSearchParams) {
         this.searchParams = {
           adults: this.flightSearchParams.adults || 1,
           children: this.flightSearchParams.children || 0,
           infants: this.flightSearchParams.infants || 0,
         };
-        console.log('👥 SearchParams extraídos:', this.searchParams);
       } else {
         // Fallback si no hay flightSearchParams
         console.log('⚠️ No flightSearchParams, usando valores por defecto');
@@ -185,13 +177,12 @@ export class DeviajePackageBookingComponent implements OnInit, OnDestroy {
       // Datos del paquete
       this.packageInfo = state.packageInfo;
 
-      // ✅ CORRECCIÓN: Inicializar el formulario de travelers después de cargar los datos
-      this.initializeTravelersForm();
-
-      // Guardar el estado en sessionStorage
       this.saveBookingState();
+      if (this.flightOffer) {
+        this.verifyFlightOffer(this.flightOffer);
+      }// Guardar el estado en sessionStorage
+      this.initializeTravelersForm();
     } else {
-      console.error('❌ No package data found in state');
       this.router.navigate(['/home/packages/search']);
     }
   }
@@ -211,39 +202,25 @@ export class DeviajePackageBookingComponent implements OnInit, OnDestroy {
   }
 
   ngOnInit(): void {
-    console.log('📦 DeviajePackageBookingComponent iniciando...');
+    if (typeof window !== 'undefined') {
+      this.loadPersistedState();
+    }
 
-    this.loadPackageData(); // ✅ Ahora incluye inicialización del formulario
+    if (!this.isReloadedSession){
+      this.loadPackageData();
+    }
+    
     this.loadCurrentUser();
     this.setupFormPersistence();
-
-    // Verificar oferta de vuelo solo si existe
-    if (this.flightOffer && Object.keys(this.flightOffer).length > 0) {
-      this.verifyFlightOffer(this.flightOffer);
-    }
-
-    // Verificar hotel solo si es necesario
-    if (this.recheck) {
-      this.verifyHotelRateAvailability();
-    }
-
-    // ✅ DEBUG: Verificar estado después de la inicialización
-    setTimeout(() => {
-      console.log('🔍 Estado final después de ngOnInit:');
-      console.log('   - SearchParams:', this.searchParams);
-      console.log('   - Travelers FormArray length:', this.travelers.length);
-      console.log('   - FlightOffer presente:', !!this.flightOffer);
-      console.log('   - HotelDetails presente:', !!this.hotelDetails);
-    }, 100);
+    this.verifyHotelRateAvailability();
   }
 
   ngOnDestroy(): void {
-    // Limpiar datos de sessionStorage cuando se destruye el componente
     if (typeof window !== 'undefined') {
       this.clearPersistedState();
     }
-    this.isReloadedSession = false; // Resetear el estado de recarga
-    this.subscription.unsubscribe(); // Limpiar suscripciones
+    this.isReloadedSession = false;
+    this.subscription.unsubscribe();
   }
 
   onPricesCalculated(pricesDto: any): void {
@@ -288,7 +265,6 @@ export class DeviajePackageBookingComponent implements OnInit, OnDestroy {
     );
   }
 
-  // Setup booking flow based on user role (AGREGAR MÉTODO COMPLETO)
   setupBookingBasedOnRole(): void {
     console.log('Flight booking - Setting up based on role:', this.userRole);
 
@@ -313,13 +289,6 @@ export class DeviajePackageBookingComponent implements OnInit, OnDestroy {
       this.showUserSelection = true;
       this.isGuestBooking = true; // Por defecto invitado
     }
-
-    console.log(
-      'Flight booking - Updated flags - showUserSelection:',
-      this.showUserSelection,
-      'isGuestBooking:',
-      this.isGuestBooking
-    );
   }
 
   // Agent functions - User selection (AGREGAR MÉTODOS)
@@ -373,26 +342,26 @@ export class DeviajePackageBookingComponent implements OnInit, OnDestroy {
         if (verifiedOffer) {
           this.flightOffer = verifiedOffer.data.flightOffers[0];
 
-          const cancellationRules =
-            this.cancellationService.parseCancellationRules(verifiedOffer);
-          if (cancellationRules) {
-            console.log('Reglas de cancelación parseadas:', cancellationRules);
-            this.cancellationRules = cancellationRules; // Guardar en variable del componente
-          }
           this.saveBookingState();
         } else {
-          // Mostrar mensaje temporal y redirigir
           this.errorMessage =
-            'La oferta de vuelo ya no está disponible. Regresa a los resultados...';
+            'La oferta de vuelo ya no está disponible. Regresando a los resultados...';
+          setTimeout(() => {
+            this.router.navigate(['/home/packages/results'], {
+              queryParamsHandling: 'preserve',
+            });
+          }, 2000);
         }
       },
       error: (error) => {
         this.isVerifying = false;
         this.errorMessage = error.message;
         console.error('Error verificando oferta:', error);
+        this.errorMessage =
+          'Hubo un error al verificar la oferta. Regresando a los resultados...';
 
         setTimeout(() => {
-          this.router.navigate(['/home/flight/results'], {
+          this.router.navigate(['/home/package/results'], {
             queryParamsHandling: 'preserve', // Mantener los parámetros de búsqueda
           });
         }, 2000);
@@ -491,6 +460,9 @@ export class DeviajePackageBookingComponent implements OnInit, OnDestroy {
 
       this.validatorService.autoUppercaseControl(travelerForm.get('firstName'));
       this.validatorService.autoUppercaseControl(travelerForm.get('lastName'));
+      this.validatorService.autoUppercaseControl(
+        travelerForm.get('documents.0.number')
+      );
 
       this.travelers.push(travelerForm);
     }
@@ -584,8 +556,6 @@ export class DeviajePackageBookingComponent implements OnInit, OnDestroy {
     });
   }
 
-  // REEMPLAZAR el método submitBooking() existente con este:
-  // REEMPLAZAR el método submitBooking() con esta versión optimizada:
   async submitBooking(): Promise<void> {
     // Validar que el formulario básico esté completo
     if (!this.validateCurrentStep()) {
@@ -620,7 +590,6 @@ export class DeviajePackageBookingComponent implements OnInit, OnDestroy {
       destination: this.destination,
       flightOffer: this.flightOffer,
       travelers: this.prepareTravelersData(),
-      cancellationRules: this.cancellationRules || undefined,
     };
 
     const hotelBookingData: HotelBookingDto = this.prepareHotelBookingData();
@@ -667,15 +636,9 @@ export class DeviajePackageBookingComponent implements OnInit, OnDestroy {
         },
         error: (error) => {
           this.isLoading = false;
-
-          if (error.source === 'MERCADO_PAGO') {
-            this.mainForm.get('payment')?.get('paymentToken')?.setValue(null);
-            this.currentStep = 2;
-            this.saveCurrentStep();
-            this.errorMessage = error.message;
-          } else {
-            this.errorMessage = error.message;
-          }
+          this.currentStep = 2;
+          this.saveCurrentStep();
+          this.errorMessage = error.message;
 
           if (error.status === 410) {
             this.errorMessage =
@@ -813,14 +776,15 @@ export class DeviajePackageBookingComponent implements OnInit, OnDestroy {
   //METODOS PRIVADOS PARA GUARDAR LA SESION
   private loadPersistedState(): void {
     try {
-      console.log('📂 Cargando estado persistido...');
-
       // Cargar el paso actual
       const savedStep = sessionStorage.getItem(this.CURRENT_STEP_KEY);
       if (savedStep) {
-        this.currentStep = parseInt(savedStep, 10);
-        this.isReloadedSession = true;
-        console.log(`📋 Paso cargado: ${this.currentStep}`);
+        const stepNumber = parseInt(savedStep, 10);
+        if (stepNumber >= 2) {
+          this.currentStep = 2;
+        } else {
+          this.currentStep = stepNumber;
+        }
       }
 
       // Cargar los datos del estado de la reserva
@@ -842,14 +806,6 @@ export class DeviajePackageBookingComponent implements OnInit, OnDestroy {
         this.recheck = state.recheck;
         this.hotelSearchParams = state.hotelSearchParams;
         this.packageInfo = state.packageInfo;
-
-        this.isReloadedSession = true;
-        console.log('📦 Estado de paquete cargado desde sessionStorage');
-
-        // ✅ Inicializar formulario si hay searchParams
-        if (this.searchParams) {
-          this.initializeTravelersForm();
-        }
       }
 
       // Verificar oferta de vuelo si existe
@@ -862,10 +818,12 @@ export class DeviajePackageBookingComponent implements OnInit, OnDestroy {
       if (savedFormData) {
         const formData = JSON.parse(savedFormData);
 
-        // Luego cargar los valores guardados
+        if (this.searchParams) {
+          this.initializeTravelersForm();
+        }
+
         setTimeout(() => {
           this.mainForm.patchValue(formData);
-          console.log('📝 Datos del formulario restaurados');
         }, 100);
 
         this.isReloadedSession = true;
@@ -915,7 +873,7 @@ export class DeviajePackageBookingComponent implements OnInit, OnDestroy {
       const state = {
         flightOffer: this.flightOffer,
         flightSearchParams: this.flightSearchParams,
-        searchParams: this.searchParams, // ✅ Guardar también searchParams
+        searchParams: this.searchParams,
         hotelDetails: this.hotelDetails,
         hotel: this.hotel,
         nameRoom: this.nameRoom,
@@ -935,7 +893,14 @@ export class DeviajePackageBookingComponent implements OnInit, OnDestroy {
 
   private saveFormData(): void {
     try {
-      const formData = this.mainForm.value;
+      const formData = { ...this.mainForm.value };
+      if (formData.payment) {
+        delete formData.payment.cardNumber;
+        delete formData.payment.expiryDate;
+        delete formData.payment.cvv;
+        delete formData.payment.paymentToken;
+      }
+
       sessionStorage.setItem(this.FORM_DATA_KEY, JSON.stringify(formData));
     } catch (error) {
       console.error('Error al guardar datos del formulario:', error);
@@ -993,13 +958,6 @@ export class DeviajePackageBookingComponent implements OnInit, OnDestroy {
         }
       });
     });
-
-    console.log('¿El formulario de viajeros es válido?', !hasErrors);
-    console.log(
-      'Estado del FormArray:',
-      this.travelers.valid,
-      this.travelers.errors
-    );
 
     return this.travelers.valid;
   }
@@ -1083,14 +1041,9 @@ export class DeviajePackageBookingComponent implements OnInit, OnDestroy {
     const emailAddress = contactInfo.emailAddress || '';
     const phoneNumber = contactInfo.phones?.[0]?.number || '';
 
-    // ✅ CONVERSIÓN DE TRAVELERS: flight mode → hotel mode
     const paxes = this.travelers.controls.map((travelerControl, index) => {
       const traveler = travelerControl.value;
 
-      // Conversión de tipos:
-      // 'ADULT' → 'AD'
-      // 'CHILD' → 'CH'
-      // 'INFANT' → 'CH'
       let hotelType = 'AD';
       if (
         traveler.travelerType === 'CHILD' ||

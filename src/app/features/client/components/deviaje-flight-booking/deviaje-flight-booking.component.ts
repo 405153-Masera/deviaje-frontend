@@ -15,7 +15,6 @@ import { FlightUtilsService } from '../../../../shared/services/flight-utils.ser
 import { CommonModule } from '@angular/common';
 import {
   BookingReferenceResponse,
-  CancellationRulesDto,
   FlightBookingDto,
   FlightOfferDto,
   PaymentDto,
@@ -32,7 +31,6 @@ import {
   UserService,
 } from '../../../../shared/services/user.service';
 import { ValidatorsService } from '../../../../shared/services/validators.service';
-import { CancellationParserService } from '../../../../shared/services/cancellationParser.service';
 
 @Component({
   selector: 'app-deviaje-flight-booking',
@@ -68,7 +66,6 @@ export class DeviajeFlightBookingComponent implements OnInit, OnDestroy {
   private userService = inject(UserService);
   readonly flightUtils = inject(FlightUtilsService);
   private readonly validatorService = inject(ValidatorsService);
-  private readonly cancellationService = inject(CancellationParserService);
   subscription = new Subscription();
 
   @ViewChild(DeviajePriceDetailsComponent)
@@ -82,7 +79,6 @@ export class DeviajeFlightBookingComponent implements OnInit, OnDestroy {
   currentUser: any = null;
   origin: string = '';
   destination: string = '';
-  cancellationRules: CancellationRulesDto | null = null;
   bookingReference: BookingReferenceResponse | null = null;
 
   isLoading = false;
@@ -228,7 +224,6 @@ export class DeviajeFlightBookingComponent implements OnInit, OnDestroy {
       this.isGuestBooking = false;
       this.selectedClientId = this.currentUser?.id;
       this.showUserSelection = false; // CLIENTE no ve selector
-
       this.loadUserDataAndPrefill(this.currentUser.username);
     } else if (this.userRole === 'AGENTE') {
       this.showUserSelection = true;
@@ -338,26 +333,19 @@ export class DeviajeFlightBookingComponent implements OnInit, OnDestroy {
   verifyFlightOffer(offer: FlightOfferDto): void {
     this.isVerifying = true;
     this.errorMessage = '';
-    console.log('Verificando oferta de vuelo:', offer);
 
     this.bookingService.verifyFlightOfferPrice(offer).subscribe({
       next: (verifiedOffer) => {
         this.isVerifying = false;
         if (verifiedOffer) {
           this.selectedOffer = verifiedOffer.data.flightOffers[0];
-          const cancellationRules =
-            this.cancellationService.parseCancellationRules(verifiedOffer);
-          if (cancellationRules) {
-            console.log('Reglas de cancelación parseadas:', cancellationRules);
-            this.cancellationRules = cancellationRules; // Guardar en variable del componente
-          }
           this.saveBookingState();
         } else {
           this.errorMessage =
             'La oferta de vuelo ya no está disponible. Regresando a los resultados...';
           setTimeout(() => {
             this.router.navigate(['/home/flight/results'], {
-              queryParamsHandling: 'preserve', // Mantener los parámetros de búsqueda
+              queryParamsHandling: 'preserve',
             });
           }, 2000);
         }
@@ -366,12 +354,14 @@ export class DeviajeFlightBookingComponent implements OnInit, OnDestroy {
         this.isVerifying = false;
         this.errorMessage = error.message;
         console.error('Error verificando oferta:', error);
+        this.errorMessage =
+          'Hubo un error al verificar la oferta. Regresando a los resultados...';
 
-        setTimeout(() => {
-          this.router.navigate(['/home/flight/results'], {
-            queryParamsHandling: 'preserve', // Mantener los parámetros de búsqueda
-          });
-        }, 2000);
+        // setTimeout(() => {
+        //   this.router.navigate(['/home/flight/results'], {
+        //     queryParamsHandling: 'preserve', // Mantener los parámetros de búsqueda
+        //   });
+        // }, 2000);
       },
     });
   }
@@ -467,7 +457,9 @@ export class DeviajeFlightBookingComponent implements OnInit, OnDestroy {
 
       this.validatorService.autoUppercaseControl(travelerForm.get('firstName'));
       this.validatorService.autoUppercaseControl(travelerForm.get('lastName'));
-
+      this.validatorService.autoUppercaseControl(
+        travelerForm.get('documents.0.number')
+      );
       this.travelers.push(travelerForm);
     }
   }
@@ -594,7 +586,6 @@ export class DeviajeFlightBookingComponent implements OnInit, OnDestroy {
       destination: this.destination,
       flightOffer: this.selectedOffer,
       travelers: this.prepareTravelersData(),
-      cancellationRules: this.cancellationRules || undefined,
     };
 
     // Preparar los datos del pago
@@ -632,15 +623,9 @@ export class DeviajeFlightBookingComponent implements OnInit, OnDestroy {
         },
         error: (error) => {
           this.isLoading = false;
-
-          if (error.source === 'MERCADO_PAGO') {
-            this.mainForm.get('payment')?.get('paymentToken')?.setValue(null);
-            this.currentStep = 2;
-            this.saveCurrentStep();
-            this.errorMessage = error.message;
-          } else {
-            this.errorMessage = error.message;
-          }
+          this.currentStep = 2;
+          this.saveCurrentStep();
+          this.errorMessage = error.message;
           console.error('Error en booking:', error);
         },
       });
@@ -757,8 +742,12 @@ export class DeviajeFlightBookingComponent implements OnInit, OnDestroy {
       // Cargar el paso actual
       const savedStep = sessionStorage.getItem(this.CURRENT_STEP_KEY);
       if (savedStep) {
-        this.currentStep = parseInt(savedStep, 10);
-        this.isReloadedSession = true;
+        const stepNumber = parseInt(savedStep, 10);
+        if (stepNumber >= 2) {
+          this.currentStep = 2;
+        } else {
+          this.currentStep = stepNumber;
+        }
       }
 
       // Cargar los datos del estado de la reserva
@@ -768,7 +757,6 @@ export class DeviajeFlightBookingComponent implements OnInit, OnDestroy {
         this.flightOffer = state.flightOffer;
         this.selectedOffer = state.selectedOffer;
         this.searchParams = state.searchParams;
-        this.isReloadedSession = true;
       }
 
       if (this.flightOffer) {
@@ -780,7 +768,6 @@ export class DeviajeFlightBookingComponent implements OnInit, OnDestroy {
       if (savedFormData) {
         const formData = JSON.parse(savedFormData);
 
-        // Primero inicializar la estructura del formulario
         if (this.searchParams) {
           this.initializeTravelersForm();
         }
@@ -799,11 +786,7 @@ export class DeviajeFlightBookingComponent implements OnInit, OnDestroy {
   }
 
   private loadFromRouterState(): void {
-    let state: any;
-
-    if (typeof window !== 'undefined') {
-      state = window.history.state;
-    }
+    const state = window.history.state;
 
     if (state && state.flightOffer) {
       this.flightOffer = state.flightOffer;
@@ -849,7 +832,14 @@ export class DeviajeFlightBookingComponent implements OnInit, OnDestroy {
 
   private saveFormData(): void {
     try {
-      const formData = this.mainForm.value;
+      const formData = { ...this.mainForm.value };
+      if (formData.payment) {
+        delete formData.payment.cardNumber;
+        delete formData.payment.expiryDate;
+        delete formData.payment.cvv;
+        delete formData.payment.paymentToken;
+      }
+
       sessionStorage.setItem(this.FORM_DATA_KEY, JSON.stringify(formData));
     } catch (error) {
       console.error('Error al guardar datos del formulario:', error);

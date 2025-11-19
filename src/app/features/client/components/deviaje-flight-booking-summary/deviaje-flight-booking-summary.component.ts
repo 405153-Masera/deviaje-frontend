@@ -21,7 +21,7 @@ import { CancellationRulesDto } from '../../models/bookings';
 export class DeviajeFlightBookingSummaryComponent implements OnInit {
   @Input() flightOffer: any = null;
   @Input() title: string = 'Detalles del vuelo';
-  @Input() cancellationPolity: CancellationRulesDto | null = null;
+  @Input() cancellationRules: CancellationRulesDto | null = null;
   @Output() originChange = new EventEmitter<string>();
   @Output() destinationChange = new EventEmitter<string>();
 

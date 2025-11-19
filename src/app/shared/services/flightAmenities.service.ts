@@ -9,6 +9,7 @@ export class FlightAmenitiesService {
     'BAGGAGE UP TO 50 LB 23 KG': 'Equipaje de hasta 23 KG',
     'BAGGAGE UP TO 44 LB 20 KG': 'Equipaje de hasta 20 KG',
     'BAGGAGE UP TO 33 LB 15 KG': 'Equipaje de hasta 15 KG',
+    'BAGGAGE DELIVERY AIRPORT': 'Entrega de equipaje en el aeropuerto',
     'CARRY ON UP TO 22LB 10KG': 'Equipaje de mano de hasta 10 KG',
     'CARRY ON UP TO 18LB 8KG': 'Equipaje de mano de hasta 8 KG',
     'CARRY ON UP TO 15LB 7KG': 'Equipaje de mano de hasta 7 KG',
@@ -27,6 +28,17 @@ export class FlightAmenitiesService {
     'FIRST EXCESS BAG': 'Primera maleta adicional',
     'SECOND EXCESS BAG': 'Segunda maleta adicional',
 
+    // 🔥 NUEVOS BAGGAGE
+    'FIRST BAG': 'Primera maleta',
+    '1ST BAG UPTO50LB23KG 62LI158CM': 'Primera maleta hasta 23 KG y 158 cm lineales',
+    '1 CHECKED BAG UP TO 23KG': '1 equipaje facturado de hasta 23 KG',
+    'CHECKED BAG FIRST': 'Primera maleta facturada',
+    'SECOND BAG': 'Segunda maleta',
+    'FIRST PREPAID BAG': 'Primera maleta prepagada',
+    'PREPAID BAG': 'Maleta prepagada',
+    'UP TO 50LB 23KG 62LI 158LCM': 'Hasta 23 KG y 158 cm lineales',
+    'PREPAID TO 23KG OR EXC DIM': 'Equipaje prepagado hasta 23 KG o dimensiones excedidas',
+
     // MEALS
     SNACK: 'Refrigerio',
     MEAL: 'Comida',
@@ -37,6 +49,12 @@ export class FlightAmenitiesService {
     'HOT MEAL': 'Comida caliente',
     'COLD MEAL': 'Comida fría',
 
+    // 🔥 NUEVAS COMIDAS
+    'FOOD AND BEVERAGE': 'Comida y bebida',
+    'CATERING ON EUROPE FLTS': 'Catering en vuelos europeos',
+    'CATERING ON INTERCONT FLTS': 'Catering en vuelos intercontinentales',
+    'COMPLIMENTARY FOOD AND BEV': 'Comida y bebida de cortesía',
+
     // SEATS
     'BASIC SEAT': 'Asiento básico',
     'COMFORT SEAT': 'Asiento confort',
@@ -45,6 +63,11 @@ export class FlightAmenitiesService {
     'PREMIUM SEAT SELECTION': 'Selección de asiento premium',
     'PREMIUM SEAT RESERVATION': 'Reserva de asiento premium',
     'EXTRA LEGROOM': 'Espacio extra para piernas',
+
+    // 🔥 NUEVOS SEATS
+    'PRE RESERVED SEAT ASSIGNMENT': 'Asignación de asiento pre-reservado',
+    'ADVANCE SEAT RESERVATION': 'Reserva anticipada de asiento',
+    'STANDARD SEAT RESERVATION': 'Reserva de asiento estándar',
 
     // BRANDED FARES
     'CHANGEABLE TICKET': 'Ticket modificable',
@@ -60,6 +83,11 @@ export class FlightAmenitiesService {
     'CHANGE AFTER DEPARTURE': 'Cambio después de la salida',
     'REFUND BEFORE DEPARTURE': 'Reembolso antes de la salida',
 
+    // 🔥 NUEVOS BRANDED FARES
+    'PRIORITY SECURITY': 'Seguridad prioritaria',
+    'TICKET MODIFICABLE': 'Ticket modificable',
+    'UPGRADE ELIGIBILITY': 'Elegible para upgrade',
+
     // LOUNGE
     'LOUNGE ACCESS': 'Acceso a sala VIP',
     'LOUNGE ACCESS SALON CONDOR EZE': 'Acceso a Salón Cóndor en EZE',
@@ -72,7 +100,8 @@ export class FlightAmenitiesService {
 
     // UPGRADES
     'UPGRADE FLYUP': 'Mejora FlyUp',
-  };
+};
+
 
   /**
    * Traduce una amenidad al español

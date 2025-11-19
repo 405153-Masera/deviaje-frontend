@@ -94,7 +94,6 @@ export class DeviajeHotelBookingSummaryComponent {
     if (!rateComments) {
       return '';
     }
-
     return rateComments;
   }
 

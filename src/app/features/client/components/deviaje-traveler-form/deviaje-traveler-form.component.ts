@@ -61,6 +61,7 @@ export class DeviajeTravelerFormComponent implements OnInit {
       ?.setValidators([
         Validators.required,
         Validators.minLength(6),
+        Validators.maxLength(9),
         Validators.pattern(/^[A-Z0-9]+$/i),
       ]);
 

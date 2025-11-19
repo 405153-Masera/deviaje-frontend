@@ -28,10 +28,18 @@ import {
   HotelSearchRequest,
   HotelSearchResponse,
 } from '../../../../shared/models/hotels';
-import { BookingReferenceResponse, HotelBookingDto, PaymentDto } from '../../models/bookings';
+import {
+  BookingReferenceResponse,
+  HotelBookingDto,
+  PaymentDto,
+} from '../../models/bookings';
 import { DeviajePriceDetailsComponent } from '../deviaje-price-details/deviaje-price-details.component';
 import { HotelService } from '../../../../shared/services/hotel.service';
 import { ValidatorsService } from '../../../../shared/services/validators.service';
+import {
+  UserData,
+  UserService,
+} from '../../../../shared/services/user.service';
 
 @Component({
   selector: 'app-deviaje-hotel-booking',
@@ -68,6 +76,7 @@ export class DeviajeHotelBookingComponent implements OnInit, OnDestroy {
   private readonly authService = inject(AuthService);
   private readonly hotelService = inject(HotelService);
   private readonly validatorService = inject(ValidatorsService);
+  private readonly userService = inject(UserService);
   calculatedTotalAmount: number = 0;
 
   // Subscription management
@@ -151,8 +160,8 @@ export class DeviajeHotelBookingComponent implements OnInit, OnDestroy {
       this.loadBookingData();
     }
 
-    this.loadCurrentUser();
     this.initializeBookingFlow();
+    this.loadCurrentUser();
     this.setupFormPersistence();
   }
 
@@ -170,7 +179,12 @@ export class DeviajeHotelBookingComponent implements OnInit, OnDestroy {
       // Cargar el paso actual
       const savedStep = sessionStorage.getItem(this.CURRENT_STEP_KEY);
       if (savedStep) {
-        this.currentStep = parseInt(savedStep, 10);
+        const stepNumber = parseInt(savedStep, 10);
+        if (stepNumber >= 2) {
+          this.currentStep = 2;
+        } else {
+          this.currentStep = stepNumber;
+        }
         this.isReloadedSession = true;
       }
 
@@ -200,9 +214,11 @@ export class DeviajeHotelBookingComponent implements OnInit, OnDestroy {
         setTimeout(() => {
           this.mainForm.patchValue(formData);
         }, 100);
+        this.isReloadedSession = true;
       }
     } catch (error) {
       console.error('Error al cargar estado persistido:', error);
+      this.clearPersistedState();
     }
   }
 
@@ -234,7 +250,14 @@ export class DeviajeHotelBookingComponent implements OnInit, OnDestroy {
 
   private saveFormData(): void {
     try {
-      const formData = this.mainForm.value;
+      const formData = { ...this.mainForm.value };
+      if (formData.payment) {
+        delete formData.payment.cardNumber;
+        delete formData.payment.expiryDate;
+        delete formData.payment.cvv;
+        delete formData.payment.paymentToken;
+      }
+
       sessionStorage.setItem(this.FORM_DATA_KEY, JSON.stringify(formData));
     } catch (error) {
       console.error('Error al guardar datos del formulario:', error);
@@ -274,6 +297,9 @@ export class DeviajeHotelBookingComponent implements OnInit, OnDestroy {
       this.rateKey = state.rateKey || '';
       this.recheck = state.recheck;
       this.searchParams = state.searchParams;
+
+      this.saveBookingState();
+      this.setupTravelersForm();
     } else {
       this.router.navigate(['/home/hotels/search']);
     }
@@ -286,12 +312,11 @@ export class DeviajeHotelBookingComponent implements OnInit, OnDestroy {
         next: (user) => {
           this.currentUser = user;
           this.isLoggedIn = !!user;
-
-          console.log('Usuario selecionado:', user);
+          this.setupBookingBasedOnRole();
         },
-        error: (error) => {
-          console.log('Usuario no logueado');
+        error: () => {
           this.isLoggedIn = false;
+          this.setupBookingBasedOnRole();
         },
       })
     );
@@ -311,38 +336,39 @@ export class DeviajeHotelBookingComponent implements OnInit, OnDestroy {
       return;
     }
 
+    this.clearTravelersForm();
+
     if (!this.isLoggedIn) {
       // Usuario no logueado - reserva como invitado
       this.isGuestBooking = true;
       this.showUserSelection = false;
-      this.setupTravelersForm();
     } else if (this.userRole === 'CLIENTE') {
       // Cliente logueado - NO mostrar selector, auto-llenar
       this.isGuestBooking = false;
       this.selectedClientId = this.currentUser.id;
-      this.showUserSelection = false; // CLIENTE no ve selector
-      this.setupTravelersForm();
-      this.prefillUserData();
-      this.loadUserDataFromBackend(); // Nuevo método
+      this.showUserSelection = false;
+      this.loadUserDataAndPrefill(this.currentUser.username);
     } else if (this.userRole === 'AGENTE') {
       // Solo AGENTE ve el selector
       this.showUserSelection = true;
       this.isGuestBooking = true;
-      this.setupTravelersForm();
     }
-
-    console.log(
-      'Updated flags - showUserSelection:',
-      this.showUserSelection,
-      'isGuestBooking:',
-      this.isGuestBooking
-    );
   }
 
-  // Agregar método para cargar datos del backend
-  private loadUserDataFromBackend(): void {
-    // TODO: Llamar al getUserById del backend para auto-llenar
-    console.log('Loading user data for client:', this.currentUser.id);
+  private clearTravelersForm(): void {
+    this.setupTravelersForm();
+    this.errorMessage = '';
+  }
+
+  private loadUserDataAndPrefill(username: string): void {
+    this.userService.getUserByUsername(username).subscribe({
+      next: (userData) => {
+        this.prefillUserData(userData);
+      },
+      error: (error) => {
+        console.error('Error cargando datos del usuario:', error);
+      },
+    });
   }
 
   // Initialize booking flow
@@ -350,7 +376,6 @@ export class DeviajeHotelBookingComponent implements OnInit, OnDestroy {
     if (this.recheck) {
       this.verifyRateAvailability();
     } else {
-      this.setupTravelersForm();
       this.setupPaymentAmount();
     }
   }
@@ -363,7 +388,6 @@ export class DeviajeHotelBookingComponent implements OnInit, OnDestroy {
     this.subscription.add(
       this.bookingService.checkRates(this.rateKey).subscribe({
         next: (response) => {
-          console.log('Rate verification successful:', response);
           this.isVerifying = false;
 
           if (
@@ -532,26 +556,28 @@ export class DeviajeHotelBookingComponent implements OnInit, OnDestroy {
   }
 
   // Prefill user data for logged clients
-  prefillUserData(): void {
-    if (this.currentUser && this.userRole === 'CLIENTE') {
-      const travelerForm = this.travelers.at(0) as FormGroup;
+  prefillUserData(userData: UserData): void {
+    if (!userData) return;
 
-      travelerForm.patchValue({
-        firstName: this.currentUser.firstName || '',
-        lastName: this.currentUser.lastName || '',
+    const firstTraveler = this.travelers.at(0) as FormGroup;
+    if (firstTraveler) {
+      firstTraveler.patchValue({
+        firstName: userData.firstName || '',
+        lastName: userData.lastName || '',
       });
 
-      // Contact info in traveler form for hotel mode
-      const contactGroup = travelerForm.get('contact') as FormGroup;
+      const contactGroup = firstTraveler.get('contact') as FormGroup;
       if (contactGroup) {
         contactGroup.patchValue({
-          emailAddress: this.currentUser.email || '',
+          emailAddress: userData.email || '',
         });
 
         const phonesArray = contactGroup.get('phones') as FormArray;
         if (phonesArray && phonesArray.length > 0) {
           phonesArray.at(0)?.patchValue({
-            number: this.currentUser.phone || '',
+            deviceType: 'MOBILE',
+            countryCallingCode: userData.countryCallingCode || '',
+            number: userData.phone || '',
           });
         }
       }
@@ -756,18 +782,13 @@ export class DeviajeHotelBookingComponent implements OnInit, OnDestroy {
         },
         error: (error) => {
           this.isLoading = false;
-
-          if (error.source === 'MERCADO_PAGO') {
-            this.mainForm.get('payment')?.get('paymentToken')?.setValue(null);
-            this.currentStep = 2;
-            this.saveCurrentStep();
-            this.errorMessage = error.message;
-          } else {
-            this.errorMessage = error.message;
-          }
+          this.currentStep = 2;
+          this.saveCurrentStep();
+          this.errorMessage = error.message;
 
           if (error.status === 410) {
-            this.errorMessage = 'No repita la misma operación. Por favor, regrese a los resultados de búsqueda y seleccione una nueva tarifa.';
+            this.errorMessage =
+              'No repita la misma operación. Por favor, regrese a los resultados de búsqueda y seleccione una nueva tarifa.';
           }
           console.error('Error en booking:', error);
         },
@@ -841,11 +862,9 @@ export class DeviajeHotelBookingComponent implements OnInit, OnDestroy {
     const detectedPaymentMethod = this.mainForm
       .get('payment')
       ?.get('detectedPaymentMethod')?.value;
-    
-    console.log('Preparando datos de pago:', paymentData.amount);
+
     const amount = Math.round(paymentData.amount * 100) / 100;
 
-    console.log('Metodo de pago:', amount);
     return {
       amount: amount,
       currency: 'ARS',
