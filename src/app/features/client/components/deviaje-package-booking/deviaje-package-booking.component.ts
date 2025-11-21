@@ -35,6 +35,11 @@ import {
 import { FlightSearchRequest } from '../../../../shared/models/flights';
 import { DeviajeHotelBookingSummaryComponent } from '../deviaje-hotel-booking-summary/deviaje-hotel-booking-summary.component';
 import { ValidatorsService } from '../../../../shared/services/validators.service';
+import {
+  UserData,
+  UserService,
+} from '../../../../shared/services/user.service';
+import { CountryService } from '../../../../shared/services/country.service';
 
 @Component({
   selector: 'app-deviaje-flight-booking',
@@ -70,6 +75,8 @@ export class DeviajePackageBookingComponent implements OnInit, OnDestroy {
   private authService = inject(AuthService);
   readonly flightUtils = inject(FlightUtilsService);
   private readonly validatorService = inject(ValidatorsService);
+  private readonly userService = inject(UserService);
+  private readonly countryService = inject(CountryService);
   subscription = new Subscription();
 
   @ViewChild(DeviajePriceDetailsComponent)
@@ -99,6 +106,7 @@ export class DeviajePackageBookingComponent implements OnInit, OnDestroy {
   totalSteps = 3;
   showSuccessMessage = false;
   errorMessage = '';
+  userErrorMessage = '';
   isLoggedIn: boolean = false;
   userRole: string = '';
 
@@ -180,7 +188,7 @@ export class DeviajePackageBookingComponent implements OnInit, OnDestroy {
       this.saveBookingState();
       if (this.flightOffer) {
         this.verifyFlightOffer(this.flightOffer);
-      }// Guardar el estado en sessionStorage
+      } // Guardar el estado en sessionStorage
       this.initializeTravelersForm();
     } else {
       this.router.navigate(['/home/packages/search']);
@@ -206,10 +214,10 @@ export class DeviajePackageBookingComponent implements OnInit, OnDestroy {
       this.loadPersistedState();
     }
 
-    if (!this.isReloadedSession){
+    if (!this.isReloadedSession) {
       this.loadPackageData();
     }
-    
+
     this.loadCurrentUser();
     this.setupFormPersistence();
     this.verifyHotelRateAvailability();
@@ -244,21 +252,17 @@ export class DeviajePackageBookingComponent implements OnInit, OnDestroy {
         next: (user) => {
           this.currentUser = user;
           this.isLoggedIn = !!user;
-          console.log('Flight booking - Usuario:', user);
           this.setupBookingBasedOnRole();
         },
         error: (error) => {
-          console.log('Flight booking - No user logged in');
           this.isLoggedIn = false;
           this.setupBookingBasedOnRole();
         },
       })
     );
 
-    // Suscribirse a cambios de rol activo
     this.subscription.add(
       this.authService.activeRole$.subscribe((role) => {
-        console.log('Flight booking - Active role changed to:', role);
         this.userRole = role || '';
         this.setupBookingBasedOnRole();
       })
@@ -266,13 +270,12 @@ export class DeviajePackageBookingComponent implements OnInit, OnDestroy {
   }
 
   setupBookingBasedOnRole(): void {
-    console.log('Flight booking - Setting up based on role:', this.userRole);
-
-    // BLOQUEAR ADMINISTRADOR
     if (this.userRole === 'ADMINISTRADOR') {
-      this.router.navigate(['/admin']);
+      this.router.navigate(['/home']);
       return;
     }
+
+    this.clearTravelersForm();
 
     if (!this.isLoggedIn) {
       // Usuario no logueado - reserva como invitado
@@ -283,12 +286,78 @@ export class DeviajePackageBookingComponent implements OnInit, OnDestroy {
       this.isGuestBooking = false;
       this.selectedClientId = this.currentUser?.id;
       this.showUserSelection = false; // CLIENTE no ve selector
-      this.prefillUserData();
+      this.loadUserDataAndPrefill(this.currentUser.username);
     } else if (this.userRole === 'AGENTE') {
       // Solo AGENTE ve el selector
       this.showUserSelection = true;
       this.isGuestBooking = true; // Por defecto invitado
     }
+  }
+
+  private loadUserDataAndPrefill(username: string): void {
+    this.userService.getUserByUsername(username).subscribe({
+      next: (userData) => {
+        this.prefillUserData(userData);
+      },
+      error: (error) => {
+        console.error('Error cargando datos del usuario:', error);
+      },
+    });
+  }
+
+  prefillUserData(userData: UserData): void {
+    if (!userData) return;
+
+    const firstTraveler = this.travelers.at(0) as FormGroup;
+    if (firstTraveler) {
+      firstTraveler.patchValue({
+        firstName: userData.firstName || '',
+        lastName: userData.lastName || '',
+        gender: userData.gender || 'MALE',
+        travelerType: 'ADULT',
+      });
+
+      const contactGroup = firstTraveler.get('contact') as FormGroup;
+      if (contactGroup) {
+        contactGroup.patchValue({
+          emailAddress: userData.email || '',
+        });
+
+        const phonesArray = contactGroup.get('phones') as FormArray;
+        if (phonesArray && phonesArray.length > 0) {
+          phonesArray.at(0)?.patchValue({
+            deviceType: 'MOBILE',
+            countryCallingCode: userData.countryCallingCode || '',
+            number: userData.phone || '',
+          });
+        }
+      }
+
+      if (userData.passport) {
+        const documentsArray = firstTraveler.get('documents') as FormArray;
+        if (documentsArray && documentsArray.length > 0) {
+          documentsArray.at(0)?.patchValue({
+            documentType: 'PASSPORT',
+            number: userData.passport.passportNumber || '',
+            expiryDate: userData.passport.expiryDate,
+            issuanceCountry: userData.passport.issuanceCountry || 'AR',
+            nationality: userData.passport.nationality || 'AR',
+          });
+        }
+      }
+
+      if (userData.birthDate) {
+        firstTraveler.patchValue({
+          dateOfBirth: userData.birthDate,
+        });
+      }
+    }
+  }
+
+  private clearTravelersForm(): void {
+    this.travelers.clear();
+    this.initializeTravelersForm();
+    this.errorMessage = '';
   }
 
   // Agent functions - User selection (AGREGAR MÉTODOS)
@@ -297,39 +366,31 @@ export class DeviajePackageBookingComponent implements OnInit, OnDestroy {
     this.selectedClientId = null;
   }
 
-  onUserSelected(clientId: string): void {
-    this.selectedClientId = clientId;
-    this.isGuestBooking = false;
-    console.log('Flight booking - Selected client ID:', clientId);
-  }
+  searchUserByUsername(username: string): void {
+    if (!username.trim()) return;
 
-  // Prefill user data for logged clients (AGREGAR MÉTODO)
-  prefillUserData(): void {
-    if (this.currentUser && this.userRole === 'CLIENTE') {
-      // Auto-llenar datos del primer pasajero con datos del usuario
-      const firstTraveler = this.travelers.at(0) as FormGroup;
-      if (firstTraveler) {
-        firstTraveler.patchValue({
-          firstName: this.currentUser.firstName || '',
-          lastName: this.currentUser.lastName || '',
-        });
-
-        // Auto-llenar contacto
-        const contactGroup = firstTraveler.get('contact') as FormGroup;
-        if (contactGroup) {
-          contactGroup.patchValue({
-            emailAddress: this.currentUser.email || '',
-          });
-
-          const phonesArray = contactGroup.get('phones') as FormArray;
-          if (phonesArray && phonesArray.length > 0) {
-            phonesArray.at(0)?.patchValue({
-              number: this.currentUser.phone || '',
-            });
-          }
-        }
-      }
+    if (username === this.currentUser?.username) {
+      this.userErrorMessage = 'No puedes reservar para ti mismo siendo agente';
+      return;
     }
+    this.userErrorMessage = '';
+
+    this.userService.getUserByUsername(username).subscribe({
+      next: (userData) => {
+        this.selectedClientId = userData.id.toString();
+        this.isGuestBooking = false;
+        this.clearTravelersForm();
+        this.prefillUserData(userData);
+
+        this.userErrorMessage = '';
+      },
+      error: () => {
+        this.userErrorMessage =
+          'Usuario no encontrado. Verifica el nombre de usuario.';
+        this.selectedClientId = null;
+        this.clearTravelersForm();
+      },
+    });
   }
 
   verifyFlightOffer(offer: FlightOfferDto): void {
@@ -583,6 +644,7 @@ export class DeviajePackageBookingComponent implements OnInit, OnDestroy {
     const clientId = this.getClientId();
     const agentId = this.getAgentId();
 
+    this.fullFlightData();
     const flightBookingData: FlightBookingDto = {
       clientId: clientId,
       agentId: agentId,
@@ -597,8 +659,9 @@ export class DeviajePackageBookingComponent implements OnInit, OnDestroy {
     hotelBookingData.clientId = clientId;
     hotelBookingData.agentId = agentId;
 
+    const amount = this.mainForm.get('payment')?.get('amount')?.value;
     const paymentData: PaymentDto = {
-      amount: this.mainForm.get('payment')?.get('amount')?.value,
+      amount: Math.round(amount * 100) / 100,
       currency: this.mainForm.get('payment')?.get('currency')?.value,
       paymentMethod: detectedPaymentMethod,
       type: 'PACKAGE',
@@ -647,6 +710,21 @@ export class DeviajePackageBookingComponent implements OnInit, OnDestroy {
           console.error('Error en booking:', error);
         },
       });
+  }
+
+  getAirportInfo(iataCode: string): string {
+    return this.countryService.getAirportInfo(iataCode);
+  }
+
+  fullFlightData() {
+    if (this.flightOffer) {
+      const segments = this.flightOffer.itineraries[0].segments;
+      const origin = segments[0].departure.iataCode;
+      const destination = segments[segments.length - 1].arrival.iataCode;
+
+      this.origin = this.getAirportInfo(origin);
+      this.destination = this.getAirportInfo(destination);
+    }
   }
 
   onOriginReceived(origin: string) {
@@ -761,15 +839,6 @@ export class DeviajePackageBookingComponent implements OnInit, OnDestroy {
 
       travelersData.push(travelerData);
     });
-
-    console.log('Datos de pasajeros preparados:', travelersData);
-    console.log('Distribución de asociaciones:', {
-      adults: adults.map((i) => `Adulto ${i + 1}`),
-      infants: infants.map((infantIndex, arrayIndex) => {
-        const adultIndex = adults[arrayIndex % adults.length];
-        return `Infante ${infantIndex + 1} → Adulto ${adultIndex + 1}`;
-      }),
-    });
     return travelersData;
   }
 
@@ -834,33 +903,6 @@ export class DeviajePackageBookingComponent implements OnInit, OnDestroy {
     }
   }
 
-  private loadFromRouterState(): void {
-    let state: any;
-
-    if (typeof window !== 'undefined') {
-      state = window.history.state;
-    }
-
-    if (state && state.flightOffer) {
-      this.flightOffer = state.flightOffer;
-      this.searchParams = state.searchParams;
-
-      // Guardar el estado inicial
-      this.saveBookingState();
-
-      // Verificar disponibilidad y precio solo en la primera carga
-      if (this.flightOffer) {
-        this.verifyFlightOffer(this.flightOffer);
-      }
-
-      // Inicializar el formulario con los viajeros
-      this.initializeTravelersForm();
-    } else {
-      // Si no hay datos en ningún lado, redirigir a la página de búsqueda
-      this.router.navigate(['/home/flight/search']);
-    }
-  }
-
   private setupFormPersistence(): void {
     // Suscribirse a cambios en el formulario para guardar automáticamente
     this.mainForm.valueChanges.subscribe(() => {
@@ -893,12 +935,13 @@ export class DeviajePackageBookingComponent implements OnInit, OnDestroy {
 
   private saveFormData(): void {
     try {
-      const formData = { ...this.mainForm.value };
+      const formData = JSON.parse(JSON.stringify(this.mainForm.value));
+
       if (formData.payment) {
-        delete formData.payment.cardNumber;
-        delete formData.payment.expiryDate;
-        delete formData.payment.cvv;
-        delete formData.payment.paymentToken;
+        delete formData.payment.cardNumber; // Ahora solo borra de la copia
+        delete formData.payment.expiryDate; // Ahora solo borra de la copia
+        delete formData.payment.cvv; // Ahora solo borra de la copia
+        delete formData.payment.paymentToken; // Ahora solo borra de la copia
       }
 
       sessionStorage.setItem(this.FORM_DATA_KEY, JSON.stringify(formData));
@@ -1040,6 +1083,7 @@ export class DeviajePackageBookingComponent implements OnInit, OnDestroy {
     const contactInfo = travelerData.contact || {};
     const emailAddress = contactInfo.emailAddress || '';
     const phoneNumber = contactInfo.phones?.[0]?.number || '';
+    const countryName = this.hotelDetails?.country?.name;
 
     const paxes = this.travelers.controls.map((travelerControl, index) => {
       const traveler = travelerControl.value;
@@ -1069,6 +1113,7 @@ export class DeviajePackageBookingComponent implements OnInit, OnDestroy {
         email: emailAddress,
         phone: phoneNumber,
       },
+      countryName: countryName || '',
       rooms: [
         {
           rateKey: this.rateKey, // Viene del state

@@ -1,13 +1,13 @@
 <!-- deviaje-main-layout.component.html -->
 <!-- Envolver todo en un contenedor flex que ocupe toda la altura -->
 <div class="d-flex flex-column min-vh-100">
-  
+
   <!-- Navbar (no crece) -->
-   <div>
+  <div>
     <app-deviaje-navbar (toggleSidebar)="toggleSidebar()"></app-deviaje-navbar>
-   </div>
-  
-  
+  </div>
+
+
   <!-- Sidebar -->
   <app-deviaje-sidebar [isOpen]="isSidebarOpen"></app-deviaje-sidebar>
 
@@ -18,6 +18,6 @@
 
   <!-- Footer (se mantiene al final) -->
   <!-- Agregar margen superior al footer -->
-<app-deviaje-footer class="mt-auto pt-5"></app-deviaje-footer>
-  
+  <app-deviaje-footer class="mt-auto pt-5"></app-deviaje-footer>
+
 </div>

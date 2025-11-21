@@ -23,6 +23,7 @@ export class DeviajeHotelBookingSummaryComponent {
   @Input() nameRoom: string = '';
   @Input() rate: HotelSearchResponse.Rate | null = null;
   @Input() searchParams: HotelSearchRequest | null = null;
+  @Input() isPackage: boolean = false;
 
   // Obtener ubicación completa
   getHotelLocation(): string {

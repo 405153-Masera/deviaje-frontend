@@ -59,7 +59,6 @@ export class HotelService {
     const total = parseFloat(price.grandTotal);
     const base = parseFloat(price.base);
     const commision = base * 0.15;
-    console.log('Total con comision vuelo:', total + commision);
 
     return Math.round((total + commision) * 100) / 100; 
   }

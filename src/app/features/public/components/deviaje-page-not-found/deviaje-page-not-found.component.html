@@ -1,0 +1,54 @@
+<div class="container page-not-found-container">
+    <div class="row justify-content-center">
+        <div class="col">
+            <div class="card border-0 shadow-lg">
+                <div class="card-body text-center py-5">
+                    <!-- Icono 404 -->
+                    <div class="error-icon mb-4">
+                        <i class="bi bi-exclamation-triangle-fill display-1 text-warning"></i>
+                    </div>
+
+                    <!-- Título -->
+                    <h1 class="display-4 fw-bold text-primary mb-3">404</h1>
+                    <h2 class="h3 fw-semibold mb-4">Página no encontrada</h2>
+
+                    <!-- Mensaje -->
+                    <p class="text-muted fs-5 mb-4">
+                        Lo sentimos, la página que estás buscando no existe o ha sido movida.
+                    </p>
+
+                    <!-- Sugerencias -->
+                    <div class="suggestions-box mb-4 p-4 rounded bg-light">
+                        <h6 class="fw-semibold mb-3">Puedes intentar:</h6>
+                        <ul class="list-unstyled text-start">
+                            <li class="mb-2">
+                                <i class="bi bi-check-circle-fill text-success me-2"></i>
+                                Verificar que la URL esté escrita correctamente
+                            </li>
+                            <li class="mb-2">
+                                <i class="bi bi-check-circle-fill text-success me-2"></i>
+                                Volver a la página anterior
+                            </li>
+                            <li>
+                                <i class="bi bi-check-circle-fill text-success me-2"></i>
+                                Ir a la página de inicio
+                            </li>
+                        </ul>
+                    </div>
+
+                    <!-- Botones de acción -->
+                    <div class="d-flex justify-content-center gap-3 flex-wrap">
+                        <button class="btn btn-outline-secondary px-4" (click)="goBack()">
+                            <i class="bi bi-arrow-left me-2"></i>
+                            Volver
+                        </button>
+                        <button class="btn btn-primary px-4" (click)="goHome()">
+                            <i class="bi bi-house-fill me-2"></i>
+                            Ir al inicio
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

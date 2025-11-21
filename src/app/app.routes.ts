@@ -1,50 +1,74 @@
 import { Routes } from '@angular/router';
 import { DeviajeMainLayoutComponent } from './shared/components/deviaje-main-layout/deviaje-main-layout.component';
-import { authGuard, roleGuard } from './core/auth/guards/auth.guard';
+import {
+  authGuard,
+  roleGuard,
+  roleGuardWithInheritance,
+} from './core/auth/guards/auth.guard';
 
 export const routes: Routes = [
   // Ruta principal
   { path: '', redirectTo: '/home', pathMatch: 'full' },
-  
+
   // === AUTENTICACIÓN ===
   {
     path: 'user/login',
-    loadComponent: () => import('./features/public/components/deviaje-login/deviaje-login.component')
-      .then(m => m.DeviajeLoginComponent)
+    loadComponent: () =>
+      import(
+        './features/public/components/deviaje-login/deviaje-login.component'
+      ).then((m) => m.DeviajeLoginComponent),
   },
   {
     path: 'user/signup',
-    loadComponent: () => import('./features/public/components/deviaje-signup/deviaje-signup.component')
-      .then(m => m.DeviajeSignupComponent)
+    loadComponent: () =>
+      import(
+        './features/public/components/deviaje-signup/deviaje-signup.component'
+      ).then((m) => m.DeviajeSignupComponent),
   },
   {
     path: 'user/forgot-password',
-    loadComponent: () => import('./shared/components/deviaje-forgot-password/deviaje-forgot-password.component')
-      .then(m => m.DeviajeForgotPasswordComponent)
+    loadComponent: () =>
+      import(
+        './shared/components/deviaje-forgot-password/deviaje-forgot-password.component'
+      ).then((m) => m.DeviajeForgotPasswordComponent),
   },
   {
     path: 'user/reset-password',
-    loadComponent: () => import('./shared/components/deviaje-reset-password/deviaje-reset-password.component')
-      .then(m => m.DeviajeResetPasswordComponent)
+    loadComponent: () =>
+      import(
+        './shared/components/deviaje-reset-password/deviaje-reset-password.component'
+      ).then((m) => m.DeviajeResetPasswordComponent),
   },
 
   // === LEGAL ===
   {
     path: 'legal/terminos-condiciones',
-    loadComponent: () => import('./pages/legal/terminos-condiciones/terminos-condiciones.component')
-      .then(m => m.TerminosCondicionesComponent)
+    loadComponent: () =>
+      import(
+        './pages/legal/terminos-condiciones/terminos-condiciones.component'
+      ).then((m) => m.TerminosCondicionesComponent),
   },
   {
     path: 'legal/politica-privacidad',
-    loadComponent: () => import('./pages/legal/politica-privacidad/politica-privacidad.component')
-      .then(m => m.PoliticaPrivacidadComponent)
+    loadComponent: () =>
+      import(
+        './pages/legal/politica-privacidad/politica-privacidad.component'
+      ).then((m) => m.PoliticaPrivacidadComponent),
   },
   {
     path: 'legal/preguntas-frecuentes',
-    loadComponent: () => import('./pages/legal/preguntas-frecuentes/preguntas-frecuentes.component')
-      .then(m => m.PreguntasFrecuentesComponent)
+    loadComponent: () =>
+      import(
+        './pages/legal/preguntas-frecuentes/preguntas-frecuentes.component'
+      ).then((m) => m.PreguntasFrecuentesComponent),
   },
-
+  {
+    path: 'access-denied',
+    loadComponent: () =>
+      import(
+        './features/public/components/deviaje-accessdenied/deviaje-accessdenied.component'
+      ).then((m) => m.DeviajeAccessDeniedComponent),
+  },
   // === HOME (con layout) ===
   {
     path: 'home',
@@ -52,63 +76,85 @@ export const routes: Routes = [
     children: [
       {
         path: '',
-        loadComponent: () => import('./shared/components/deviaje-home/deviaje-home.component')
-          .then(m => m.HomeComponentComponent)
+        loadComponent: () =>
+          import(
+            './shared/components/deviaje-home/deviaje-home.component'
+          ).then((m) => m.HomeComponentComponent),
       },
       // VUELOS
       {
         path: 'flight/search',
-        loadComponent: () => import('./features/public/components/deviaje-flights-search/deviaje-flights-search.component')
-          .then(m => m.DeviajeFlightsSearchComponent)
+        loadComponent: () =>
+          import(
+            './features/public/components/deviaje-flights-search/deviaje-flights-search.component'
+          ).then((m) => m.DeviajeFlightsSearchComponent),
       },
       {
         path: 'flight/results',
-        loadComponent: () => import('./features/public/components/deviaje-flight-results/deviaje-flight-results.component')
-          .then(m => m.DeviajeFlightResultsComponent)
+        loadComponent: () =>
+          import(
+            './features/public/components/deviaje-flight-results/deviaje-flight-results.component'
+          ).then((m) => m.DeviajeFlightResultsComponent),
       },
       {
         path: 'flight/booking',
-        loadComponent: () => import('./features/client/components/deviaje-flight-booking/deviaje-flight-booking.component')
-          .then(m => m.DeviajeFlightBookingComponent)
+        loadComponent: () =>
+          import(
+            './features/client/components/deviaje-flight-booking/deviaje-flight-booking.component'
+          ).then((m) => m.DeviajeFlightBookingComponent),
       },
       // HOTELES
       {
         path: 'hotels/search',
-        loadComponent: () => import('./features/public/components/hotels/deviaje-hotels-search/deviaje-hotels-search.component')
-          .then(m => m.DeviajeHotelsSearchComponent)
+        loadComponent: () =>
+          import(
+            './features/public/components/hotels/deviaje-hotels-search/deviaje-hotels-search.component'
+          ).then((m) => m.DeviajeHotelsSearchComponent),
       },
       {
         path: 'hotels/results',
-        loadComponent: () => import('./features/public/components/hotels/deviaje-hotels-results/deviaje-hotels-results.component')
-          .then(m => m.DeviajeHotelsResultsComponent)
+        loadComponent: () =>
+          import(
+            './features/public/components/hotels/deviaje-hotels-results/deviaje-hotels-results.component'
+          ).then((m) => m.DeviajeHotelsResultsComponent),
       },
       {
         path: 'hotels/detail/:code',
-        loadComponent: () => import('./features/public/components/hotels/deviaje-hotel-detail/deviaje-hotel-detail.component')
-          .then(m => m.DeviajeHotelDetailComponent)
+        loadComponent: () =>
+          import(
+            './features/public/components/hotels/deviaje-hotel-detail/deviaje-hotel-detail.component'
+          ).then((m) => m.DeviajeHotelDetailComponent),
       },
       {
         path: 'hotels/booking',
-        loadComponent: () => import('./features/client/components/deviaje-hotel-booking/deviaje-hotel-booking.component')
-          .then(m => m.DeviajeHotelBookingComponent)
+        loadComponent: () =>
+          import(
+            './features/client/components/deviaje-hotel-booking/deviaje-hotel-booking.component'
+          ).then((m) => m.DeviajeHotelBookingComponent),
       },
       // PAQUETES
       {
         path: 'packages/search',
-        loadComponent: () => import('./features/public/components/deviaje-packages-search/deviaje-packages-search.component')
-          .then(m => m.DeviajePackagesSearchComponent)
+        loadComponent: () =>
+          import(
+            './features/public/components/deviaje-packages-search/deviaje-packages-search.component'
+          ).then((m) => m.DeviajePackagesSearchComponent),
       },
       {
         path: 'packages/results',
-        loadComponent: () => import('./features/public/components/deviaje-packages-results/deviaje-packages-results.component')
-          .then(m => m.DeviajePackagesResultsComponent)
+        loadComponent: () =>
+          import(
+            './features/public/components/deviaje-packages-results/deviaje-packages-results.component'
+          ).then((m) => m.DeviajePackagesResultsComponent),
       },
       {
         path: 'packages/booking',
-        loadComponent: () => import('./features/client/components/deviaje-package-booking/deviaje-package-booking.component')
-          .then(m => m.DeviajePackageBookingComponent)
-      }
-    ]
+        loadComponent: () =>
+          import(
+            './features/client/components/deviaje-package-booking/deviaje-package-booking.component'
+          ).then((m) => m.DeviajePackageBookingComponent),
+      },
+    ],
   },
 
   // === PERFIL (requiere auth) ===
@@ -119,15 +165,17 @@ export const routes: Routes = [
     children: [
       {
         path: '',
-        loadComponent: () => import('./features/client/components/deviaje-user-profile/deviaje-user-profile.component')
-          .then(m => m.DeviajeUserProfileComponent)
+        loadComponent: () =>
+          import(
+            './features/client/components/deviaje-user-profile/deviaje-user-profile.component'
+          ).then((m) => m.DeviajeUserProfileComponent),
       },
       // {
       //   path: 'edit',
       //   loadComponent: () => import('./features/client/components/deviaje-user-profile-edit/deviaje-user-profile-edit.component')
       //     .then(m => m.DeviajeUserProfileEditComponent)
       // }
-    ]
+    ],
   },
 
   // === RESERVAS (requiere auth) ===
@@ -139,28 +187,32 @@ export const routes: Routes = [
     children: [
       {
         path: '',
-        loadComponent: () => import('./features/client/components/deviaje-bookings/deviaje-bookings.component')
-          .then(m => m.DeviajeBookingsComponent)
+        loadComponent: () =>
+          import(
+            './features/client/components/deviaje-bookings/deviaje-bookings.component'
+          ).then((m) => m.DeviajeBookingsComponent),
       },
-      // {
-      //   path: ':id',
-      //   loadComponent: () => import('./features/client/components/detalle-reserva/detalle-reserva.component')
-      //     .then(m => m.DetalleReservaComponent)
-      // }
-    ]
+      {
+        path: ':id', // AGREGAR ESTA RUTA
+        loadComponent: () =>
+          import(
+            './features/client/components/deviaje-booking-detail/deviaje-booking-detail.component'
+          ).then((m) => m.DeviajeBookingDetailComponent),
+      },
+    ],
   },
 
   // === ADMIN (requiere auth + rol) ===
   {
     path: 'admin',
     component: DeviajeMainLayoutComponent,
-    canActivate: [authGuard, roleGuard],
+    canActivate: [authGuard, roleGuard, roleGuardWithInheritance],
     data: { roles: ['ADMINISTRADOR'] },
     children: [
       {
         path: '',
         redirectTo: 'dashboard',
-        pathMatch: 'full'
+        pathMatch: 'full',
       },
       // {
       //   path: 'dashboard',
@@ -169,20 +221,24 @@ export const routes: Routes = [
       // },
       {
         path: 'users/list',
-        loadComponent: () => import('./features/admin/components/deviaje-users-list/deviaje-users-list.component')
-          .then(m => m.DeviajeUsersListComponent)
+        loadComponent: () =>
+          import(
+            './features/admin/components/deviaje-users-list/deviaje-users-list.component'
+          ).then((m) => m.DeviajeUsersListComponent),
       },
       {
         path: 'users/register',
-        loadComponent: () => import('./features/admin/components/deviaje-admin-user-register/deviaje-admin-user-register.component')
-          .then(m => m.DeviajeAdminUserRegisterComponent)
+        loadComponent: () =>
+          import(
+            './features/admin/components/deviaje-admin-user-register/deviaje-admin-user-register.component'
+          ).then((m) => m.DeviajeAdminUserRegisterComponent),
       },
       // {
       //   path: 'reservations',
       //   loadComponent: () => import('./features/admin/components/deviaje-admin-reservations/deviaje-admin-reservations.component')
       //     .then(m => m.DeviajeAdminReservationsComponent)
       // }
-    ]
+    ],
   },
 
   // === AGENTES (requiere auth + rol) ===
@@ -195,7 +251,7 @@ export const routes: Routes = [
       {
         path: '',
         redirectTo: 'dashboard',
-        pathMatch: 'full'
+        pathMatch: 'full',
       },
       // {
       //   path: 'dashboard',
@@ -207,20 +263,12 @@ export const routes: Routes = [
       //   loadComponent: () => import('./features/agent/components/deviaje-agent-clients/deviaje-agent-clients.component')
       //     .then(m => m.DeviajeAgentClientsComponent)
       // }
-    ]
+    ],
   },
 
-  // === ACCESO DENEGADO ===
   {
-    path: 'access-denied',
-    loadComponent: () => import('./features/public/components/deviaje-accessdenied/deviaje-accessdenied.component')
-      .then(m => m.DeviajeAccessDeniedComponent)
-  },
-
-  // === 404 ===
-  // {
-  //   path: '**',
-  //   loadComponent: () => import('./shared/components/page-not-found/page-not-found.component')
-  //     .then(m => m.PageNotFoundComponent)
-  // }
+     path: '**',
+     loadComponent: () => import('./features/public/components/deviaje-page-not-found/deviaje-page-not-found.component')
+       .then(m => m.DeviajePageNotFoundComponent)
+   }
 ];

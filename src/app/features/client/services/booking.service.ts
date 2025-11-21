@@ -9,8 +9,9 @@ import {
   HotelBookingDto,
   PaymentDto,
 } from '../models/bookings';
-import { catchError, Observable, of} from 'rxjs';
-import {  FlightVerifyResponse } from '../../../shared/models/flights';
+import { catchError, Observable, of } from 'rxjs';
+import { FlightVerifyResponse } from '../../../shared/models/flights';
+import { BookingDetails } from '../../../shared/models/bookingsDetails';
 
 @Injectable({
   providedIn: 'root',
@@ -31,7 +32,6 @@ export class BookingService {
     paymentData: PaymentDto,
     pricesDto?: any
   ): Observable<BookingReferenceResponse> {
-    
     const bookAndPayRequest = {
       packageBookingRequest: {
         clientId: flightBookingData.clientId,
@@ -48,8 +48,10 @@ export class BookingService {
       prices: pricesDto,
     };
 
-    return this.http
-      .post<BookingReferenceResponse>(this.packageBookingUrl, bookAndPayRequest);
+    return this.http.post<BookingReferenceResponse>(
+      this.packageBookingUrl,
+      bookAndPayRequest
+    );
   }
 
   // Verificar disponibilidad y precio de vuelo
@@ -61,8 +63,9 @@ export class BookingService {
 
   checkRates(rateKey: string): Observable<any> {
     const encodedRateKey = encodeURIComponent(rateKey);
-    return this.http
-      .get<any>(`${this.hotelRateCheckUrl}?rateKey=${encodedRateKey}`);
+    return this.http.get<any>(
+      `${this.hotelRateCheckUrl}?rateKey=${encodedRateKey}`
+    );
   }
 
   createFlightBooking(
@@ -76,8 +79,10 @@ export class BookingService {
       prices: pricesDto, // AGREGADO
     };
 
-    return this.http
-      .post<BookingReferenceResponse>(this.flightBookingUrl, bookAndPayRequest);
+    return this.http.post<BookingReferenceResponse>(
+      this.flightBookingUrl,
+      bookAndPayRequest
+    );
   }
 
   createHotelBooking(
@@ -91,8 +96,10 @@ export class BookingService {
       prices: pricesDto,
     };
 
-    return this.http
-      .post<BookingReferenceResponse>(this.hotelBookingUrl, bookAndPayRequest);
+    return this.http.post<BookingReferenceResponse>(
+      this.hotelBookingUrl,
+      bookAndPayRequest
+    );
   }
 
   // Obtener las reservas del usuario
@@ -107,17 +114,30 @@ export class BookingService {
       );
   }
 
-  // Obtener detalles de una reserva específica
-  getBookingDetails(bookingId: number): Observable<any> {
+  getBookingDetails(bookingId: number): Observable<BookingDetails> {
     return this.http
-      .get<any>(`${environment.apiDeviajeBookings}/api/bookings/${bookingId}`)
+      .get<BookingDetails>(
+        `${environment.apiDeviajeBookings}/api/bookings/${bookingId}/details`
+      )
       .pipe(
         catchError((error) => {
-          console.error(
-            `Error al obtener detalles de la reserva ${bookingId}:`,
-            error
-          );
-          return of(null);
+          console.error('Error al obtener detalles de la reserva:', error);
+          throw error;
+        })
+      );
+  }
+
+  // Enviar voucher por email
+  resendVoucher(bookingId: number): Observable<any> {
+    return this.http
+      .post(
+        `${environment.apiDeviajeBookings}/api/bookings/${bookingId}/voucher/resend`,
+        {}
+      )
+      .pipe(
+        catchError((error) => {
+          console.error('Error al reenviar voucher:', error);
+          throw error;
         })
       );
   }
@@ -155,48 +175,9 @@ export class BookingService {
       case 'ADMINISTRADOR':
         endpoint = `${environment.apiDeviajeBookings}/api/bookings/admin/all`;
         break;
-      default:
-        console.error('Rol de usuario no válido:', userRole);
-        return of([]);
     }
 
-    return this.http.get<any[]>(endpoint).pipe(
-      catchError((error) => {
-        console.error('Error al obtener reservas:', error);
-        return of([]);
-      })
-    );
-  }
-
-  // Obtener reservas de cliente por tipo
-  getClientBookingsByType(clientId: number, type: string): Observable<any[]> {
-    return this.http
-      .get<any[]>(
-        `${environment.apiDeviajeBookings}/api/bookings/client/${clientId}/type/${type}`
-      )
-      .pipe(
-        catchError((error) => {
-          console.error(`Error al obtener reservas de tipo ${type}:`, error);
-          return of([]);
-        })
-      );
-  }
-
-  // Obtener reservas por estado (para administradores)
-  getBookingsByStatus(status: string): Observable<any[]> {
-    return this.http
-      .get<any[]>(
-        `${environment.apiDeviajeBookings}/api/bookings/admin/status/${status}`
-      )
-      .pipe(
-        catchError((error) => {
-          console.error(
-            `Error al obtener reservas con estado ${status}:`,
-            error
-          );
-          return of([]);
-        })
-      );
+    return this.http.get<any[]>(endpoint);
   }
 
   // Actualizar estado de una reserva
@@ -222,13 +203,27 @@ export class BookingService {
       );
   }
 
+  downloadVoucher(bookingReference: string): Observable<Blob> {
+    // Cambiamos de usar ID a usar bookingReference
+    return this.http
+      .get(
+        `${environment.apiDeviajeBookings}/api/bookings/${bookingReference}/voucher/download`,
+        { responseType: 'blob' }
+      )
+      .pipe(
+        catchError((error) => {
+          console.error('Error al descargar voucher:', error);
+          throw error;
+        })
+      );
+  }
+
   // Método helper para obtener el nombre del tipo de reserva
   getBookingTypeName(type: string): string {
     const typeNames: { [key: string]: string } = {
       FLIGHT: 'Vuelo',
       HOTEL: 'Hotel',
       PACKAGE: 'Paquete',
-      TOUR: 'Tour',
     };
     return typeNames[type] || type;
   }
@@ -236,7 +231,6 @@ export class BookingService {
   // Método helper para obtener el estado de la reserva en español
   getBookingStatusName(status: string): string {
     const statusNames: { [key: string]: string } = {
-      PENDING: 'Pendiente',
       CONFIRMED: 'Confirmada',
       CANCELLED: 'Cancelada',
       COMPLETED: 'Completada',
@@ -247,7 +241,6 @@ export class BookingService {
   // Método helper para obtener la clase CSS según el estado
   getStatusBadgeClass(status: string): string {
     const statusClasses: { [key: string]: string } = {
-      PENDING: 'bg-warning text-dark',
       CONFIRMED: 'bg-success',
       CANCELLED: 'bg-danger',
       COMPLETED: 'bg-primary',

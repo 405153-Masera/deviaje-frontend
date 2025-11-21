@@ -1,7 +1,6 @@
 @import "../styles/variables";
 @import '@ng-select/ng-select/themes/default.theme.css';
 
-
 // Estilos base para inputs
 input:not([type="checkbox"]),
 select,
@@ -31,6 +30,16 @@ textarea, .form-select {
     color: $gray-600;
     cursor: not-allowed;
   }
+}
+
+input[type="radio"] {
+  width: 1rem; // 18px
+  height: 1rem; // 18px
+  min-width: 1rem;
+  min-height: 1rem;
+  margin-right: 0.5rem;
+  cursor: pointer;
+  flex-shrink: 0; 
 }
 
 // Select personalizado

@@ -1,9 +1,9 @@
 import { Component, Input, OnInit, OnDestroy, inject } from '@angular/core';
 import { MenuItem } from '../../models/menu-item';
 import { CommonModule } from '@angular/common';
-import { RouterModule } from '@angular/router';
+import { NavigationEnd, Router, RouterModule } from '@angular/router';
 import { AuthService } from '../../../core/auth/services/auth.service';
-import { Subscription } from 'rxjs';
+import { filter, Subscription } from 'rxjs';
 
 @Component({
   selector: 'app-deviaje-sidebar',
@@ -14,6 +14,7 @@ import { Subscription } from 'rxjs';
 })
 export class DeviajeSidebarComponent implements OnInit, OnDestroy {
   private readonly authService = inject(AuthService);
+  private readonly router = inject(Router);
   private subscription = new Subscription();
   
   @Input() isOpen = false;
@@ -135,7 +136,7 @@ export class DeviajeSidebarComponent implements OnInit, OnDestroy {
       isSelected: false,
       subItems: [
         { icon: 'avion', label: 'Vuelos', route: '/home/flight/search' },
-        { icon: 'hotel', label: 'Hoteles', route: '/admin/hotels/search' },
+        { icon: 'hotel', label: 'Hoteles', route: '/home/hotels/search' },
         {
           icon: 'vacaciones',
           label: 'Paquetes',
@@ -144,7 +145,7 @@ export class DeviajeSidebarComponent implements OnInit, OnDestroy {
         {
           icon: 'lista',
           label: 'Todas las Reservas',
-          route: '/admin/bookings/all',
+          route: '/bookings/all',
         },
       ],
     },
@@ -171,6 +172,15 @@ export class DeviajeSidebarComponent implements OnInit, OnDestroy {
         this.updateCurrentRole();
       })
     );
+
+    this.subscription.add(
+      this.router.events
+        .pipe(filter(event => event instanceof NavigationEnd))
+        .subscribe(() => {
+          this.updateMenuSelection();
+        })
+    );
+    this.updateMenuSelection();
   }
 
   ngOnDestroy(): void {
@@ -221,9 +231,48 @@ export class DeviajeSidebarComponent implements OnInit, OnDestroy {
     return user.roles[0] || 'GUEST';
   }
 
-  selectMenuItem(item: MenuItem): void {
+  private updateMenuSelection(): void {
+    const currentUrl = this.router.url;
     const currentItems = this.getCurrentMenuItems();
-    currentItems.forEach((menuItem) => (menuItem.isSelected = false));
+
+    // Deseleccionar todos primero
+    currentItems.forEach(item => {
+      item.isSelected = false;
+      
+      // Si tiene subitems, verificar si alguno coincide
+      if (this.hasSubItems(item) && item.subItems) {
+        const hasActiveSubitem = item.subItems.some(subItem => 
+          subItem.route && currentUrl.startsWith(subItem.route)
+        );
+        
+        // Expandir automáticamente si hay un subitem activo
+        if (hasActiveSubitem) {
+          item.isExpanded = true;
+          item.isSelected = true;
+        }
+      } else if (item.route) {
+        // Para items sin subitems, verificar si la ruta coincide
+        if (currentUrl === item.route || (currentUrl.startsWith(item.route + '/') && item.route !== '/home')) {
+          item.isSelected = true;
+        }
+      }
+    });
+  }
+
+   selectMenuItem(item: MenuItem): void {
+    // No hacer nada si el item tiene subitems (se maneja en toggleSubMenu)
+    if (this.hasSubItems(item)) {
+      return;
+    }
+
+    const currentItems = this.getCurrentMenuItems();
+    
+    // Deseleccionar todos
+    currentItems.forEach((menuItem) => {
+      menuItem.isSelected = false;
+    });
+    
+    // Seleccionar el item clickeado
     item.isSelected = true;
   }
 
@@ -232,9 +281,30 @@ export class DeviajeSidebarComponent implements OnInit, OnDestroy {
     return !!item.subItems && item.subItems.length > 0;
   }
 
-  // Método para manejar el estado de despliegue del submenú
   toggleSubMenu(item: MenuItem): void {
-    // Usar el operador de nullish coalescing para manejar el caso undefined
-    item.isExpanded = !(item.isExpanded ?? false);
+    // Alternar el estado de expansión
+    item.isExpanded = !item.isExpanded;
+    
+    // Si se está expandiendo, marcar como seleccionado
+    if (item.isExpanded) {
+      const currentItems = this.getCurrentMenuItems();
+      currentItems.forEach((menuItem) => {
+        if (menuItem !== item) {
+          menuItem.isSelected = false;
+        }
+      });
+      item.isSelected = true;
+    }
+    // Si se está colapsando, mantener seleccionado solo si hay una ruta activa dentro
+    else {
+      const currentUrl = this.router.url;
+      const hasActiveSubitem = item.subItems?.some(subItem => 
+        subItem.route && currentUrl.startsWith(subItem.route)
+      );
+      
+      if (!hasActiveSubitem) {
+        item.isSelected = false;
+      }
+    }
   }
 }

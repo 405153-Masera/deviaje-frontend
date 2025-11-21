@@ -25,7 +25,7 @@
     </app-deviaje-flight-booking-summary>
 
     <app-deviaje-hotel-booking-summary [hotelDetails]="hotelDetails" [hotel]="hotel" [nameRoom]="nameRoom" [rate]="rate"
-      [searchParams]="hotelSearchParams">
+      [searchParams]="hotelSearchParams" [isPackage]="true">
     </app-deviaje-hotel-booking-summary>
 
     <app-deviaje-price-details #priceDetailsComponent [mode]="'PACKAGE'" [flightPrice]="flightOffer.price"
@@ -90,17 +90,24 @@
                 <!-- Búsqueda de usuario (cuando no es guest booking) -->
                 <div *ngIf="!isGuestBooking" class="mt-3">
                   <label class="form-label">Buscar cliente por nombre de usuario</label>
-                  <div class="input-group">
-                    <input type="text" class="form-control" placeholder="Nombre de usuario del cliente"
-                      #userSearchInput>
-                    <button class="btn btn-outline-secondary" type="button"
-                      (click)="onUserSelected(userSearchInput.value)">
-                      <i class="bi bi-search"></i> Buscar
-                    </button>
+                  <div class="input-group row">
+                    <div class="col-lg-6">
+                      <input type="text" class="form-control" placeholder="Nombre de usuario del cliente"
+                        #userSearchInput>
+                    </div>
+                    <div class="col-lg-5 mt-3 mt-lg-0">
+                      <button class="btn btn-outline-secondary" type="button"
+                        (click)="searchUserByUsername(userSearchInput.value)"> Buscar
+                      </button>
+                    </div>
                   </div>
                   <div *ngIf="selectedClientId" class="alert alert-success mt-2">
                     <i class="bi bi-check-circle me-2"></i>
-                    Cliente seleccionado (ID: {{ selectedClientId }})
+                    Cliente seleccionado {{ userSearchInput.value }}
+                  </div>
+                  <div *ngIf="userErrorMessage" class="alert alert-danger mt-2">
+                    <i class="bi bi-exclamation-triangle me-2"></i>
+                    {{ userErrorMessage }}
                   </div>
                 </div>
               </div>

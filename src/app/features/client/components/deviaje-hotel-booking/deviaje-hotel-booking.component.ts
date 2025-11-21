@@ -185,7 +185,6 @@ export class DeviajeHotelBookingComponent implements OnInit, OnDestroy {
         } else {
           this.currentStep = stepNumber;
         }
-        this.isReloadedSession = true;
       }
 
       // Cargar los datos del estado de la reserva
@@ -250,12 +249,13 @@ export class DeviajeHotelBookingComponent implements OnInit, OnDestroy {
 
   private saveFormData(): void {
     try {
-      const formData = { ...this.mainForm.value };
+      const formData = JSON.parse(JSON.stringify(this.mainForm.value));
+
       if (formData.payment) {
-        delete formData.payment.cardNumber;
-        delete formData.payment.expiryDate;
-        delete formData.payment.cvv;
-        delete formData.payment.paymentToken;
+        delete formData.payment.cardNumber; // Ahora solo borra de la copia
+        delete formData.payment.expiryDate; // Ahora solo borra de la copia
+        delete formData.payment.cvv; // Ahora solo borra de la copia
+        delete formData.payment.paymentToken; // Ahora solo borra de la copia
       }
 
       sessionStorage.setItem(this.FORM_DATA_KEY, JSON.stringify(formData));
@@ -582,6 +582,33 @@ export class DeviajeHotelBookingComponent implements OnInit, OnDestroy {
         }
       }
     }
+  }
+
+  searchUserByUsername(username: string): void {
+    if (!username.trim()) return;
+
+    if (username === this.currentUser?.username) {
+      this.userErrorMessage = 'No puedes reservar para ti mismo siendo agente';
+      return;
+    }
+    this.userErrorMessage = '';
+
+    this.userService.getUserByUsername(username).subscribe({
+      next: (userData) => {
+        this.selectedClientId = userData.id.toString();
+        this.isGuestBooking = false;
+        this.clearTravelersForm();
+        this.prefillUserData(userData);
+
+        this.userErrorMessage = '';
+      },
+      error: () => {
+        this.userErrorMessage =
+          'Usuario no encontrado. Verifica el nombre de usuario.';
+        this.selectedClientId = null;
+        this.clearTravelersForm();
+      },
+    });
   }
 
   get paymentFormGroup(): FormGroup {

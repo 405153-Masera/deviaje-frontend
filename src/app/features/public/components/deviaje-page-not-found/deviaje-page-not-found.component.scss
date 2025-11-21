@@ -1,0 +1,43 @@
+.page-not-found-container {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+  padding: 2rem;
+}
+
+.card {
+  border-radius: 1.5rem;
+  overflow: hidden;
+}
+
+.error-icon {
+  height: 120px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.suggestions-box {
+  text-align: left;
+  max-width: 400px;
+  margin: 0 auto;
+}
+
+@media (max-width: 576px) {
+  .page-not-found-container {
+    padding: 1rem;
+  }
+
+  .display-4 {
+    font-size: 3rem;
+  }
+
+  .h3 {
+    font-size: 1.5rem;
+  }
+
+  .btn {
+    width: 100%;
+  }
+}

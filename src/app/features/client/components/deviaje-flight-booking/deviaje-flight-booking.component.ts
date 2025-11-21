@@ -31,6 +31,7 @@ import {
   UserService,
 } from '../../../../shared/services/user.service';
 import { ValidatorsService } from '../../../../shared/services/validators.service';
+import { CountryService } from '../../../../shared/services/country.service';
 
 @Component({
   selector: 'app-deviaje-flight-booking',
@@ -66,6 +67,7 @@ export class DeviajeFlightBookingComponent implements OnInit, OnDestroy {
   private userService = inject(UserService);
   readonly flightUtils = inject(FlightUtilsService);
   private readonly validatorService = inject(ValidatorsService);
+  private readonly countryService = inject(CountryService);
   subscription = new Subscription();
 
   @ViewChild(DeviajePriceDetailsComponent)
@@ -197,10 +199,8 @@ export class DeviajeFlightBookingComponent implements OnInit, OnDestroy {
       })
     );
 
-    // Suscribirse a cambios de rol activo
     this.subscription.add(
       this.authService.activeRole$.subscribe((role) => {
-        console.log('Flight booking - Active role changed to:', role);
         this.userRole = role || '';
         this.setupBookingBasedOnRole();
       })
@@ -578,7 +578,7 @@ export class DeviajeFlightBookingComponent implements OnInit, OnDestroy {
 
     const pricesDto = this.priceDetailsComponent?.getPricesDto() || null;
 
-    // Preparar los datos de la reserva
+    this.fullFlightData();
     const bookingData: FlightBookingDto = {
       clientId: this.getClientId(),
       agentId: this.getAgentId(),
@@ -588,9 +588,10 @@ export class DeviajeFlightBookingComponent implements OnInit, OnDestroy {
       travelers: this.prepareTravelersData(),
     };
 
-    // Preparar los datos del pago
+    const amount = this.mainForm.get('payment')?.get('amount')?.value;
+
     const paymentData: PaymentDto = {
-      amount: this.mainForm.get('payment')?.get('amount')?.value,
+      amount: Math.round(amount * 100) / 100,
       currency: this.mainForm.get('payment')?.get('currency')?.value,
       paymentMethod: detectedPaymentMethod,
       type: 'FLIGHT',
@@ -629,6 +630,21 @@ export class DeviajeFlightBookingComponent implements OnInit, OnDestroy {
           console.error('Error en booking:', error);
         },
       });
+  }
+
+  getAirportInfo(iataCode: string): string {
+    return this.countryService.getAirportInfo(iataCode);
+  }
+
+  fullFlightData() {
+    if (this.flightOffer) {
+      const segments = this.flightOffer.itineraries[0].segments;
+      const origin = segments[0].departure.iataCode;
+      const destination = segments[segments.length - 1].arrival.iataCode;
+
+      this.origin = this.getAirportInfo(origin);
+      this.destination = this.getAirportInfo(destination);
+    }
   }
 
   private getClientId(): number | undefined {
@@ -832,12 +848,13 @@ export class DeviajeFlightBookingComponent implements OnInit, OnDestroy {
 
   private saveFormData(): void {
     try {
-      const formData = { ...this.mainForm.value };
+      const formData = JSON.parse(JSON.stringify(this.mainForm.value));
+
       if (formData.payment) {
-        delete formData.payment.cardNumber;
-        delete formData.payment.expiryDate;
-        delete formData.payment.cvv;
-        delete formData.payment.paymentToken;
+        delete formData.payment.cardNumber; // Ahora solo borra de la copia
+        delete formData.payment.expiryDate; // Ahora solo borra de la copia
+        delete formData.payment.cvv; // Ahora solo borra de la copia
+        delete formData.payment.paymentToken; // Ahora solo borra de la copia
       }
 
       sessionStorage.setItem(this.FORM_DATA_KEY, JSON.stringify(formData));

@@ -415,6 +415,8 @@ export class FlightUtilsService {
       'AV': 'Avianca',
       'LA': 'LATAM Airlines',
       'AR': 'Aerolíneas Argentinas',
+      'GP': 'APG Airlines',
+      'HR': 'Hahn Air Lines',
       // Añadir más aerolíneas según sea necesario
     };
     

@@ -17,28 +17,20 @@
   </div>
 
   <!-- Filtros -->
+  <!-- REEMPLAZAR la sección de filtros existente con esto: -->
   <div class="row mb-4">
     <div class="col-12">
       <div class="card shadow-sm">
         <div class="card-body">
+          <h6 class="card-title mb-3">
+            <i class="bi bi-funnel me-2"></i>Filtros
+          </h6>
           <div class="row g-3">
 
-            <!-- Búsqueda -->
-            <div class="col-md-4">
-              <label class="form-label text-muted">Buscar reserva</label>
-              <div class="input-group">
-                <span class="input-group-text bg-light">
-                  <i class="bi bi-search text-muted"></i>
-                </span>
-                <input type="text" class="form-control" placeholder="ID, titular, email..." [value]="searchTerm"
-                  (input)="onSearchChange($event)">
-              </div>
-            </div>
-
-            <!-- Tipo -->
+            <!-- Tipo de reserva -->
             <div class="col-md-3">
-              <label class="form-label text-muted">Tipo de reserva</label>
-              <select class="form-select" [(ngModel)]="selectedType" (change)="onFilterChange()">
+              <label class="form-label">Tipo de reserva</label>
+              <select class="form-select" [(ngModel)]="selectedType" (change)="applyFilters()">
                 <option *ngFor="let type of bookingTypes" [value]="type.value">
                   {{ type.label }}
                 </option>
@@ -47,21 +39,40 @@
 
             <!-- Estado -->
             <div class="col-md-3">
-              <label class="form-label text-muted">Estado</label>
-              <select class="form-select" [(ngModel)]="selectedStatus" (change)="onFilterChange()">
+              <label class="form-label">Estado</label>
+              <select class="form-select" [(ngModel)]="selectedStatus" (change)="applyFilters()">
                 <option *ngFor="let status of bookingStatuses" [value]="status.value">
                   {{ status.label }}
                 </option>
               </select>
             </div>
 
-            <!-- Botón recargar -->
-            <div class="col-md-2 d-flex align-items-end">
-              <button type="button" class="btn btn-outline-primary w-100" (click)="reloadBookings()"
-                [disabled]="loading">
-                <i class="bi bi-arrow-clockwise me-1"></i>
-                Actualizar
-              </button>
+            <!-- Filtro por Agente (solo ADMIN) -->
+            <div class="col-md-3" *ngIf="userRole === 'ADMINISTRADOR'">
+              <label class="form-label">Agente ID</label>
+              <input type="text" class="form-control" placeholder="ID del agente" [(ngModel)]="filterAgentId"
+                (ngModelChange)="applyFilters()">
+            </div>
+
+            <!-- Filtro por Cliente (ADMIN y AGENTE) -->
+            <div class="col-md-3" *ngIf="userRole === 'ADMINISTRADOR' || userRole === 'AGENTE'">
+              <label class="form-label">Cliente ID</label>
+              <input type="text" class="form-control" placeholder="ID del cliente" [(ngModel)]="filterClientId"
+                (ngModelChange)="applyFilters()">
+            </div>
+
+            <!-- Filtro por Email (todos) -->
+            <div class="col-md-3">
+              <label class="form-label">Email</label>
+              <input type="email" class="form-control" placeholder="email@ejemplo.com" [(ngModel)]="filterEmail"
+                (ngModelChange)="applyFilters()">
+            </div>
+
+            <!-- Búsqueda general -->
+            <div class="col-md-3">
+              <label class="form-label">Búsqueda general</label>
+              <input type="text" class="form-control" placeholder="Referencia, titular..." [(ngModel)]="searchTerm"
+                (ngModelChange)="applyFilters()">
             </div>
 
           </div>
@@ -102,7 +113,7 @@
           <div class="d-flex justify-content-between align-items-start mb-2">
             <h6 class="mb-0">
               <i class="bi bi-bookmark-fill text-primary me-1"></i>
-              Reserva #{{ booking.id }}
+              Reserva {{ booking.bookingReference }}
             </h6>
             <span class="badge" [ngClass]="getStatusBadgeClass(booking.status)">
               {{ getBookingStatusName(booking.status) }}
@@ -134,9 +145,14 @@
             <div>{{ formatDate(booking.createdDatetime) }}</div>
           </div>
 
-          <button class="btn btn-primary btn-sm w-100" (click)="viewBookingDetails(booking)">
-            <i class="bi bi-eye me-1"></i> Ver detalles
-          </button>
+          <div class="d-flex gap-2">
+            <button class="btn btn-primary btn-sm flex-fill" (click)="viewBookingDetails(booking)">
+              <i class="bi bi-eye me-1"></i> Ver detalles
+            </button>
+            <button class="btn btn-success btn-sm flex-fill" (click)="downloadVoucher(booking)">
+              <i class="bi bi-download me-1"></i> Voucher
+            </button>
+          </div>
 
         </div>
       </div>
@@ -148,9 +164,10 @@
         <div class="table-responsive">
           <table class="table table-hover align-middle mb-0">
 
+            <!-- REEMPLAZAR el <thead> y la primera columna del <tbody> -->
             <thead class="bg-light">
               <tr>
-                <th>ID</th>
+                <th>Referencia</th> <!-- CAMBIO: Era "ID" -->
                 <th>Tipo</th>
                 <th>Estado</th>
                 <th>Titular</th>
@@ -164,7 +181,9 @@
 
             <tbody>
               <tr *ngFor="let booking of paginatedBookings">
-                <td class="fw-semibold">#{{ booking.id }}</td>
+                <!-- CAMBIO: Mostrar bookingReference en lugar de id -->
+                <td class="fw-semibold">{{ booking.bookingReference }}</td>
+
                 <td>
                   <span class="badge bg-secondary-subtle text-dark border">
                     {{ getBookingTypeName(booking.type) }}
@@ -200,10 +219,16 @@
                   {{ formatDate(booking.createdDatetime) }}
                 </td>
 
+                <!-- CAMBIO: Agregar botón de descargar voucher -->
                 <td>
-                  <button class="btn btn-primary btn-sm" (click)="viewBookingDetails(booking)">
-                    <i class="bi bi-eye"></i>
-                  </button>
+                  <div class="btn-group btn-group-sm">
+                    <button class="btn btn-primary" (click)="viewBookingDetails(booking)" title="Ver detalles">
+                      <i class="bi bi-eye"></i>
+                    </button>
+                    <button class="btn btn-success" (click)="downloadVoucher(booking)" title="Descargar voucher">
+                      <i class="bi bi-download"></i>
+                    </button>
+                  </div>
                 </td>
 
               </tr>

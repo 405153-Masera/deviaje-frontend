@@ -8,6 +8,7 @@ import { Router } from '@angular/router';
 
 export interface Booking {
   id: number;
+  bookingReference: string;
   clientId: number;
   agentId: number;
   status: string;
@@ -29,7 +30,7 @@ export interface Booking {
   standalone: true,
   imports: [CommonModule, FormsModule],
   templateUrl: './deviaje-bookings.component.html',
-  styleUrls: ['./deviaje-bookings.component.scss']
+  styleUrls: ['./deviaje-bookings.component.scss'],
 })
 export class DeviajeBookingsComponent implements OnInit, OnDestroy {
   // Estados de carga y datos
@@ -47,10 +48,13 @@ export class DeviajeBookingsComponent implements OnInit, OnDestroy {
   selectedType = '';
   selectedStatus = '';
   searchTerm = '';
+  filterAgentId: string = '';
+  filterClientId: string = '';
+  filterEmail: string = '';
 
   // Paginación
   currentPage = 1;
-  itemsPerPage = 10;
+  itemsPerPage = 8;
   totalPages = 0;
 
   // Opciones de filtros
@@ -59,15 +63,13 @@ export class DeviajeBookingsComponent implements OnInit, OnDestroy {
     { value: 'FLIGHT', label: 'Vuelos' },
     { value: 'HOTEL', label: 'Hoteles' },
     { value: 'PACKAGE', label: 'Paquetes' },
-    { value: 'TOUR', label: 'Tours' }
   ];
 
   bookingStatuses = [
     { value: '', label: 'Todos los estados' },
-    { value: 'PENDING', label: 'Pendiente' },
     { value: 'CONFIRMED', label: 'Confirmada' },
     { value: 'CANCELLED', label: 'Cancelada' },
-    { value: 'COMPLETED', label: 'Completada' }
+    { value: 'COMPLETED', label: 'Completada' },
   ];
 
   private subscription = new Subscription();
@@ -75,8 +77,7 @@ export class DeviajeBookingsComponent implements OnInit, OnDestroy {
 
   constructor(
     private bookingService: BookingService,
-    private authService: AuthService,
-    
+    private authService: AuthService
   ) {}
 
   ngOnInit(): void {
@@ -94,18 +95,18 @@ export class DeviajeBookingsComponent implements OnInit, OnDestroy {
         next: (user) => {
           this.currentUser = user;
           this.isLoggedIn = !!user;
-          
+
           if (!this.isLoggedIn) {
             this.router.navigate(['/auth/login']);
             return;
           }
-          
+
           this.loadUserRole();
         },
         error: (error) => {
           console.error('Error al obtener usuario:', error);
           this.router.navigate(['/auth/login']);
-        }
+        },
       })
     );
   }
@@ -122,7 +123,7 @@ export class DeviajeBookingsComponent implements OnInit, OnDestroy {
           console.error('Error al obtener rol:', error);
           this.error = 'Error al obtener información del usuario';
           this.loading = false;
-        }
+        },
       })
     );
   }
@@ -138,18 +139,20 @@ export class DeviajeBookingsComponent implements OnInit, OnDestroy {
     this.error = '';
 
     this.subscription.add(
-      this.bookingService.getBookingsByRole(this.currentUser.id, this.userRole).subscribe({
-        next: (bookings) => {
-          this.bookings = bookings;
-          this.applyFilters();
-          this.loading = false;
-        },
-        error: (error) => {
-          console.error('Error al cargar reservas:', error);
-          this.error = 'Error al cargar las reservas';
-          this.loading = false;
-        }
-      })
+      this.bookingService
+        .getBookingsByRole(this.currentUser.id, this.userRole)
+        .subscribe({
+          next: (bookings) => {
+            this.bookings = bookings;
+            this.applyFilters();
+            this.loading = false;
+          },
+          error: (error) => {
+            console.error('Error al cargar reservas:', error);
+            this.error = 'Error al cargar las reservas';
+            this.loading = false;
+          },
+        })
     );
   }
 
@@ -165,36 +168,66 @@ export class DeviajeBookingsComponent implements OnInit, OnDestroy {
     this.applyFilters();
   }
 
-  private applyFilters(): void {
-    let filtered = [...this.bookings];
+  applyFilters(): void {
+    this.filteredBookings = this.bookings.filter((booking) => {
+      const matchesType =
+        !this.selectedType || booking.type === this.selectedType;
+      const matchesStatus =
+        !this.selectedStatus || booking.status === this.selectedStatus;
 
-    // Filtrar por tipo
-    if (this.selectedType) {
-      filtered = filtered.filter(booking => booking.type === this.selectedType);
-    }
+      // Búsqueda por booking reference, titular o email
+      const matchesSearch =
+        !this.searchTerm ||
+        booking.bookingReference
+          ?.toLowerCase()
+          .includes(this.searchTerm.toLowerCase()) ||
+        booking.holderName
+          ?.toLowerCase()
+          .includes(this.searchTerm.toLowerCase()) ||
+        booking.email?.toLowerCase().includes(this.searchTerm.toLowerCase());
 
-    // Filtrar por estado
-    if (this.selectedStatus) {
-      filtered = filtered.filter(booking => booking.status === this.selectedStatus);
-    }
+      // Filtros específicos por rol
+      const matchesAgent =
+        !this.filterAgentId ||
+        booking.agentId?.toString() === this.filterAgentId;
+      const matchesClient =
+        !this.filterClientId ||
+        booking.clientId?.toString() === this.filterClientId;
+      const matchesEmail =
+        !this.filterEmail ||
+        booking.email?.toLowerCase().includes(this.filterEmail.toLowerCase());
 
-    // Filtrar por término de búsqueda
-    if (this.searchTerm) {
-      const term = this.searchTerm.toLowerCase();
-      filtered = filtered.filter(booking => 
-        booking.holderName?.toLowerCase().includes(term) ||
-        booking.email?.toLowerCase().includes(term) ||
-        booking.id.toString().includes(term)
+      return (
+        matchesType &&
+        matchesStatus &&
+        matchesSearch &&
+        matchesAgent &&
+        matchesClient &&
+        matchesEmail
       );
-    }
+    });
 
-    this.filteredBookings = filtered;
-    this.calculatePagination();
+    this.totalPages = Math.ceil(
+      this.filteredBookings.length / this.itemsPerPage
+    );
+    this.currentPage = 1; // Reset a la primera página
   }
 
-  // Paginación
-  private calculatePagination(): void {
-    this.totalPages = Math.ceil(this.filteredBookings.length / this.itemsPerPage);
+  downloadVoucher(booking: Booking): void {
+    this.bookingService.downloadVoucher(booking.bookingReference).subscribe({
+      next: (blob) => {
+        const url = window.URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = `voucher-${booking.bookingReference}.pdf`;
+        link.click();
+        window.URL.revokeObjectURL(url);
+      },
+      error: (error) => {
+        console.error('Error al descargar voucher:', error);
+        alert('Error al descargar el voucher. Por favor, intenta nuevamente.');
+      },
+    });
   }
 
   get paginatedBookings(): Booking[] {
@@ -233,14 +266,14 @@ export class DeviajeBookingsComponent implements OnInit, OnDestroy {
       month: '2-digit',
       day: '2-digit',
       hour: '2-digit',
-      minute: '2-digit'
+      minute: '2-digit',
     });
   }
 
   formatCurrency(amount: number, currency: string): string {
     return new Intl.NumberFormat('es-AR', {
       style: 'currency',
-      currency: currency === 'ARS' ? 'ARS' : 'USD'
+      currency: currency === 'ARS' ? 'ARS' : 'USD',
     }).format(amount);
   }
 

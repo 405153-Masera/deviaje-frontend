@@ -95,8 +95,15 @@
                         </span>
                         } @else {
                         <span class="text-danger">
-                          Cargo: {{ hotelService.getRateTotalWithCommission(policy.amount) |
+                          Cargo:
+
+                          @if(isPackage){
+                          {{ hotelService.convertToArs(policy.amount) |
+                          currency:'ARS':'symbol':'1.0-0'}}
+                          } @else {
+                          {{ hotelService.getRateTotalWithCommission(policy.amount) |
                           currency:'ARS':'symbol':'1.0-0' }}
+                          }
                         </span>
                         }
                       </div>
