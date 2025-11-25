@@ -650,9 +650,11 @@ export class DeviajePackageBookingComponent implements OnInit, OnDestroy {
       agentId: agentId,
       origin: this.origin,
       destination: this.destination,
+      carrier: this.flightUtils.getAirlineName(this.flightOffer.validatingAirlineCodes[0]),
       flightOffer: this.flightOffer,
       travelers: this.prepareTravelersData(),
     };
+    console.log(this.flightUtils.getAirlineName(this.flightOffer.validatingAirlineCodes[0]));
 
     const hotelBookingData: HotelBookingDto = this.prepareHotelBookingData();
 

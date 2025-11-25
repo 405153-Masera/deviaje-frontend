@@ -6,6 +6,8 @@ import { BookingService } from '../../services/booking.service';
 import { AuthService } from '../../../../core/auth/services/auth.service';
 import { BookingDetails } from '../../../../shared/models/bookingsDetails';
 import { HotelService } from '../../../../shared/services/hotel.service';
+import { CountryService } from '../../../../shared/services/country.service';
+import { FlightUtilsService } from '../../../../shared/services/flight-utils.service';
 
 @Component({
   selector: 'app-deviaje-booking-detail',
@@ -28,6 +30,8 @@ export class DeviajeBookingDetailComponent implements OnInit, OnDestroy {
   private bookingService = inject(BookingService);
   hotelService = inject(HotelService);
   private authService = inject(AuthService);
+  readonly countryService = inject(CountryService);
+  readonly flightUtils = inject(FlightUtilsService);
 
   ngOnInit(): void {
     this.loadCurrentUser();
@@ -319,5 +323,15 @@ export class DeviajeBookingDetailComponent implements OnInit, OnDestroy {
       message: 'Tarifa no reembolsable',
       charge: totalPrice,
     };
+  }
+
+  // Obtiene el nombre completo del aeropuerto a partir del código IATA
+  getAirportName(iataCode: string): string {
+    return this.countryService.getAirportInfo(iataCode);
+  }
+
+  // Obtiene el nombre completo de la aerolínea a partir del código carrier
+  getAirlineName(carrierCode: string): string {
+    return this.flightUtils.getAirlineName(carrierCode);
   }
 }

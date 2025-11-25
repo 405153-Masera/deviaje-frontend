@@ -10,6 +10,7 @@ export interface FlightBookingDto {
   agentId?: number;
   origin: string;
   destination: string;
+  carrier?: string;
   branchId?: number;
   flightOffer: FlightOfferDto;
   travelers: TravelerDto[];

@@ -583,6 +583,7 @@ export class DeviajeFlightBookingComponent implements OnInit, OnDestroy {
       clientId: this.getClientId(),
       agentId: this.getAgentId(),
       origin: this.origin,
+      carrier: this.flightUtils.getAirlineName(this.selectedOffer.validatingAirlineCodes[0]),
       destination: this.destination,
       flightOffer: this.selectedOffer,
       travelers: this.prepareTravelersData(),

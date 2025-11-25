@@ -57,7 +57,7 @@ export interface HotelBookingDetails {
   totalPrice: number;
   taxes: number;
   currency: string;
- hotelBooking?: HotelBookingApi;
+  hotelBooking?: HotelBookingApi;
 }
 
 // Interface para la respuesta completa de HotelBeds API

@@ -141,19 +141,19 @@
                     <div class="card-body">
                         <div class="row g-3">
 
-                            <div class="col-md-3">
+                            <div class="col-md-4">
                                 <small class="text-muted d-block">Origen</small>
                                 <strong class="fs-5">{{ bookingDetails.flightDetails.origin }}</strong>
                             </div>
 
-                            <div class="col-md-3">
+                            <div class="col-md-4">
                                 <small class="text-muted d-block">Destino</small>
                                 <strong class="fs-5">{{ bookingDetails.flightDetails.destination }}</strong>
                             </div>
 
-                            <div class="col-md-3">
+                            <div class="col-md-4">
                                 <small class="text-muted d-block">Aerolínea</small>
-                                <strong>{{ bookingDetails.flightDetails.carrier }}</strong>
+                                <strong>{{ getAirlineName(bookingDetails.flightDetails.carrier) }}</strong>
                             </div>
 
                             <div class="col-md-4">
@@ -195,8 +195,8 @@
                         </div>
 
                         <!-- Itinerarios -->
-                        <div *ngIf="bookingDetails.flightDetails.itineraries" class="mb-4">
-                            <h6 class="text-primary mb-3">Itinerarios</h6>
+                        <div *ngIf="bookingDetails.flightDetails.itineraries" class="mb-4 mt-5">
+                            <h5 class="text-primary mb-3">Itinerarios</h5>
 
                             <div *ngFor="let itinerary of bookingDetails.flightDetails.itineraries; let i = index"
                                 class="mb-4">
@@ -205,9 +205,6 @@
                                     <span class="badge bg-primary me-2">
                                         {{ i === 0 ? 'Ida' : 'Vuelta' }}
                                     </span>
-                                    <small class="text-muted">
-                                        Duración: {{ formatDuration(itinerary.duration) }}
-                                    </small>
                                 </div>
 
                                 <!-- Segmentos del itinerario -->
@@ -216,11 +213,11 @@
 
                                     <div class="row align-items-center">
                                         <!-- Salida -->
-                                        <div class="col-md-4">
+                                        <div class="col-md-3">
                                             <div class="d-flex align-items-center">
                                                 <i class="bi bi-airplane-fill text-primary me-2"></i>
                                                 <div>
-                                                    <strong class="d-block">{{ segment.departure.iataCode }}</strong>
+                                                    <strong class="d-block">{{ getAirportName(segment.departure.iataCode) }}</strong>
                                                     <small class="text-muted d-block">
                                                         {{ formatFlightDate(segment.departure.at) }}
                                                     </small>
@@ -232,20 +229,20 @@
                                         </div>
 
                                         <!-- Duración y aerolínea -->
-                                        <div class="col-md-4 text-center">
+                                        <div class="col-md-3 text-center">
                                             <small class="text-muted d-block">{{ formatDuration(segment.duration)
                                                 }}</small>
                                             <div class="border-top border-2 border-primary my-1"></div>
                                             <small class="text-muted">
-                                                {{ segment.carrierCode }} {{ segment.number }}
+                                                {{ getAirlineName(segment.carrierCode) }}
                                             </small>
                                         </div>
 
                                         <!-- Llegada -->
-                                        <div class="col-md-4 text-end">
+                                        <div class="col-md-3 text-end">
                                             <div class="d-flex align-items-center justify-content-end">
                                                 <div class="text-end me-2">
-                                                    <strong class="d-block">{{ segment.arrival.iataCode }}</strong>
+                                                    <strong class="d-block">{{ getAirportName(segment.arrival.iataCode) }}</strong>
                                                     <small class="text-muted d-block">
                                                         {{ formatFlightDate(segment.arrival.at) }}
                                                     </small>
@@ -263,11 +260,11 @@
 
                         <!-- Pasajeros -->
                         <div *ngIf="bookingDetails.flightDetails.travelers" class="mt-4">
-                            <h6 class="text-primary mb-3">Pasajeros</h6>
+                            <h5 class="text-primary mb-3">Pasajeros</h5>
 
                             <div class="row g-3">
                                 <div *ngFor="let traveler of bookingDetails.flightDetails.travelers; let i = index"
-                                    class="col-md-6">
+                                    class="col-md-4">
                                     <div class="card border">
                                         <div class="card-body">
                                             <div class="d-flex align-items-start">
@@ -286,10 +283,6 @@
                                                         </span>
                                                     </small>
                                                 </div>
-                                                <span class="badge bg-secondary-subtle text-dark border"
-                                                    *ngIf="i === 0">
-                                                    Titular
-                                                </span>
                                             </div>
                                         </div>
                                     </div>
@@ -300,7 +293,6 @@
                         <!-- Políticas de cancelación de vuelo -->
                         <div class="mt-4" *ngIf="getFlightCancellationPolicy()">
                             <h6 class="text-primary mb-3">
-                                <i class="bi bi-shield-exclamation me-2"></i>
                                 Políticas de Cancelación
                             </h6>
 
