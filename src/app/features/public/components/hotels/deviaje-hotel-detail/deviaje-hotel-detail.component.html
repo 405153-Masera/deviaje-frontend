@@ -431,7 +431,7 @@
                                 @if (offer.amount) {
                                 <strong class="text-success ms-2">
                                   {{ hotelService.convertToArs(offer.amount) |
-                                  currency:'ARS':'symbol':'1.0-0' }}
+                                  currency:'ARS' }}
                                 </strong>
                                 }
                               </div>
@@ -464,7 +464,7 @@
                                     }
                                   </div>
                                   <span class="tax-value">
-                                    {{ hotelService.convertToArs(tax.amount) | currency:'ARS':'symbol':'1.0-0' }}
+                                    {{ hotelService.convertToArs(tax.amount) | currency:'ARS' }}
                                   </span>
                                 </div>
                                 }
@@ -506,14 +506,8 @@
                                       </span>
                                       } @else {
                                       <span class="text-danger">
-                                        Cargo:
-                                        @if(inPackageMode){
-                                        {{ hotelService.convertToArs(policy.amount) |
-                                        currency:'ARS':'symbol':'1.0-0'}} 
-                                        } @else {
-                                        {{ hotelService.getRateTotalWithCommission(policy.amount) |
-                                        currency:'ARS':'symbol':'1.0-0' }}
-                                        }
+                                        Cargo: {{ hotelService.convertToArs(policy.amount) | currency:'ARS' }}
+                                        <small class="text-muted d-block">(La comisión no es reembolsable)</small>
                                       </span>
                                       }
                                     </div>
@@ -545,9 +539,9 @@
                                 </div>
                                 <div class="price-amount">
                                   @if (inPackageMode) {
-                                  {{ hotelService.convertToArs(rate.net) | currency:'ARS':'symbol':'1.0-0' }}
+                                  {{ hotelService.convertToArs(rate.net) | currency:'ARS' }}
                                   } @else {
-                                  {{ hotelService.getRateTotalWithCommission(rate.net) | currency:'ARS':'symbol':'1.0-0'
+                                  {{ hotelService.getRateTotalWithCommission(rate.net) | currency:'ARS'
                                   }}
                                   }
                                 </div>
@@ -564,11 +558,11 @@
                                   <span>
                                     @if(inPackageMode) {
                                     {{ hotelService.convertToArs(rate.net) / getNightsCount() |
-                                    currency:'ARS':'symbol':'1.0-0' }} por noche
+                                    currency:'ARS' }} por noche
                                     } @else {
 
                                     {{ hotelService.getRateTotalWithCommission(rate.net) / getNightsCount() |
-                                    currency:'ARS':'symbol':'1.0-0' }} por noche
+                                    currency:'ARS' }} por noche
                                     }
                                   </span>
                                 </div>
@@ -728,9 +722,9 @@
                 <span class="price-label">Total</span>
                 <span class="price-value">
                   @if (inPackageMode) {
-                  {{ hotelService.convertToArs(selectedRate.net) | currency:'ARS':'symbol':'1.0-0' }}
+                  {{ hotelService.convertToArs(selectedRate.net) | currency:'ARS' }}
                   } @else {
-                  {{ hotelService.getRateTotalWithCommission(selectedRate.net) | currency:'ARS':'symbol':'1.0-0' }}
+                  {{ hotelService.getRateTotalWithCommission(selectedRate.net) | currency:'ARS' }}
                   }
                 </span>
               </div>

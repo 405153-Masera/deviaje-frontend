@@ -114,16 +114,10 @@ export class BookingService {
       );
   }
 
-  getBookingDetails(bookingId: number): Observable<BookingDetails> {
+  getBookingDetails(bookingReference: string): Observable<BookingDetails> {
     return this.http
       .get<BookingDetails>(
-        `${environment.apiDeviajeBookings}/api/bookings/${bookingId}/details`
-      )
-      .pipe(
-        catchError((error) => {
-          console.error('Error al obtener detalles de la reserva:', error);
-          throw error;
-        })
+        `${environment.apiDeviajeBookings}/api/bookings/${bookingReference}/details`
       );
   }
 

@@ -5,6 +5,7 @@ import { Subscription } from 'rxjs';
 import { BookingService } from '../../services/booking.service';
 import { AuthService } from '../../../../core/auth/services/auth.service';
 import { BookingDetails } from '../../../../shared/models/bookingsDetails';
+import { HotelService } from '../../../../shared/services/hotel.service';
 
 @Component({
   selector: 'app-deviaje-booking-detail',
@@ -25,6 +26,7 @@ export class DeviajeBookingDetailComponent implements OnInit, OnDestroy {
   private route = inject(ActivatedRoute);
   private router = inject(Router);
   private bookingService = inject(BookingService);
+  hotelService = inject(HotelService);
   private authService = inject(AuthService);
 
   ngOnInit(): void {
@@ -67,16 +69,16 @@ export class DeviajeBookingDetailComponent implements OnInit, OnDestroy {
   }
 
   private loadBookingDetails(): void {
-    const bookingId = Number(this.route.snapshot.paramMap.get('id'));
+    const bookingReference = this.route.snapshot.paramMap.get('reference');
 
-    if (!bookingId || isNaN(bookingId)) {
-      this.error = 'ID de reserva inválido';
+    if (!bookingReference) {
+      this.error = 'Referencia de reserva inválida';
       this.loading = false;
       return;
     }
 
     this.subscription.add(
-      this.bookingService.getBookingDetails(bookingId).subscribe({
+      this.bookingService.getBookingDetails(bookingReference).subscribe({
         next: (details) => {
           this.bookingDetails = details;
           this.loading = false;
@@ -97,26 +99,20 @@ export class DeviajeBookingDetailComponent implements OnInit, OnDestroy {
   downloadVoucher(): void {
     if (!this.bookingDetails) return;
 
-    this.bookingService
-      .downloadVoucher(this.bookingDetails.id)
-      .subscribe({
-        next: (blob) => {
-          const url = window.URL.createObjectURL(blob);
-          const link = document.createElement('a');
-          link.href = url;
-          link.download = `voucher-${
-            this.bookingDetails!.bookingReference
-          }.pdf`;
-          link.click();
-          window.URL.revokeObjectURL(url);
-        },
-        error: (error) => {
-          console.error('Error al descargar voucher:', error);
-          alert(
-            'Error al descargar el voucher. Por favor, intenta nuevamente.'
-          );
-        },
-      });
+    this.bookingService.downloadVoucher(this.bookingDetails.id).subscribe({
+      next: (blob) => {
+        const url = window.URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = `voucher-${this.bookingDetails!.bookingReference}.pdf`;
+        link.click();
+        window.URL.revokeObjectURL(url);
+      },
+      error: (error) => {
+        console.error('Error al descargar voucher:', error);
+        alert('Error al descargar el voucher. Por favor, intenta nuevamente.');
+      },
+    });
   }
 
   resendVoucher(): void {
@@ -173,13 +169,6 @@ export class DeviajeBookingDetailComponent implements OnInit, OnDestroy {
       month: 'long',
       day: 'numeric',
     });
-  }
-
-  formatCurrency(amount: number, currency: string): string {
-    return new Intl.NumberFormat('es-AR', {
-      style: 'currency',
-      currency: currency === 'ARS' ? 'ARS' : 'USD',
-    }).format(amount);
   }
 
   getPaymentMethodName(method: string): string {
@@ -243,5 +232,92 @@ export class DeviajeBookingDetailComponent implements OnInit, OnDestroy {
     const hotel = this.bookingDetails?.hotelDetails;
     if (!hotel) return 0;
     return (hotel.adults || 0) + (hotel.children || 0);
+  }
+
+  calculateAge(dateOfBirth: string): number {
+    if (!dateOfBirth) return 0;
+    const today = new Date();
+    const birthDate = new Date(dateOfBirth);
+    let age = today.getFullYear() - birthDate.getFullYear();
+    const monthDiff = today.getMonth() - birthDate.getMonth();
+    if (
+      monthDiff < 0 ||
+      (monthDiff === 0 && today.getDate() < birthDate.getDate())
+    ) {
+      age--;
+    }
+    return age;
+  }
+
+  // Formatear duración del vuelo
+  formatDuration(duration: string): string {
+    if (!duration) return '';
+    // Duration viene como "PT2H30M"
+    const hours = duration.match(/(\d+)H/);
+    const minutes = duration.match(/(\d+)M/);
+    let result = '';
+    if (hours) result += `${hours[1]}h `;
+    if (minutes) result += `${minutes[1]}m`;
+    return result.trim();
+  }
+
+  // Formatear hora de vuelo
+  formatFlightTime(dateTime: string): string {
+    if (!dateTime) return '';
+    const date = new Date(dateTime);
+    return date.toLocaleTimeString('es-AR', {
+      hour: '2-digit',
+      minute: '2-digit',
+    });
+  }
+
+  // Formatear fecha completa del vuelo
+  formatFlightDate(dateTime: string): string {
+    if (!dateTime) return '';
+    const date = new Date(dateTime);
+    return date.toLocaleDateString('es-AR', {
+      weekday: 'short',
+      day: 'numeric',
+      month: 'short',
+    });
+  }
+
+  // Obtener política de cancelación de vuelos
+  getFlightCancellationPolicy(): {
+    canCancel: boolean;
+    message: string;
+    charge: number;
+  } | null {
+    if (!this.bookingDetails?.flightDetails) {
+      return null;
+    }
+    const bookingDate = new Date(this.bookingDetails.createdDatetime);
+    const departureDate = new Date(
+      this.bookingDetails.flightDetails.departureDate
+    );
+    const now = new Date();
+
+    const hoursSinceBooking =
+      (now.getTime() - bookingDate.getTime()) / (1000 * 60 * 60);
+    const hoursUntilDeparture =
+      (departureDate.getTime() - now.getTime()) / (1000 * 60 * 60);
+
+    const totalPrice = this.bookingDetails.flightDetails.totalPrice;
+
+    // ✔ Si cancelás dentro de 24 hs Y faltan más de 24 hs para el vuelo → reembolso total
+    if (hoursSinceBooking <= 24 && hoursUntilDeparture > 24) {
+      return {
+        canCancel: true,
+        message:
+          'Cancelación gratuita disponible (dentro de las 24hs de la reserva y faltando más de 24hs para el vuelo)',
+        charge: 0,
+      };
+    }
+
+    return {
+      canCancel: false,
+      message: 'Tarifa no reembolsable',
+      charge: totalPrice,
+    };
   }
 }

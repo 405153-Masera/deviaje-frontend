@@ -16,18 +16,21 @@
             </div>
             <div class="flight-main-details">
               <div class="flight-departure">
-                <div class="flight-time">{{ flightUtils.formatTime(flightOffer.itineraries[0].segments[0].departure.at) }}</div>
-                <div class="flight-airport">{{ getAirportInfo(flightOffer.itineraries[0].segments[0].departure.iataCode) }}</div>
-                <div class="flight-date">{{ flightUtils.formatDate(flightOffer.itineraries[0].segments[0].departure.at) }}</div>
+                <div class="flight-time">{{ flightUtils.formatTime(flightOffer.itineraries[0].segments[0].departure.at)
+                  }}</div>
+                <div class="flight-airport">{{ getAirportInfo(flightOffer.itineraries[0].segments[0].departure.iataCode)
+                  }}</div>
+                <div class="flight-date">{{ flightUtils.formatDate(flightOffer.itineraries[0].segments[0].departure.at)
+                  }}</div>
               </div>
               <div class="flight-duration">
                 <div class="flight-duration-line">
                   <div class="flight-stops-indicator">
                     @for (segment of flightOffer.itineraries[0].segments; track segment.id) {
-                      @if (!$first) {
-                        <div class="stop-point"></div>
-                      }
-                      <div class="flight-line" [class.last-segment]="$last"></div>
+                    @if (!$first) {
+                    <div class="stop-point"></div>
+                    }
+                    <div class="flight-line" [class.last-segment]="$last"></div>
                     }
                   </div>
                 </div>
@@ -36,10 +39,10 @@
               </div>
               <div class="flight-arrival">
                 @if (flightOffer.itineraries[0].segments.length > 0) {
-                  @let lastSegment = flightOffer.itineraries[0].segments[flightOffer.itineraries[0].segments.length - 1];
-                  <div class="flight-time">{{ flightUtils.formatTime(lastSegment.arrival.at) }}</div>
-                  <div class="flight-airport">{{ getAirportInfo(lastSegment.arrival.iataCode) }}</div>
-                  <div class="flight-date">{{ flightUtils.formatDate(lastSegment.arrival.at) }}</div>
+                @let lastSegment = flightOffer.itineraries[0].segments[flightOffer.itineraries[0].segments.length - 1];
+                <div class="flight-time">{{ flightUtils.formatTime(lastSegment.arrival.at) }}</div>
+                <div class="flight-airport">{{ getAirportInfo(lastSegment.arrival.iataCode) }}</div>
+                <div class="flight-date">{{ flightUtils.formatDate(lastSegment.arrival.at) }}</div>
                 }
               </div>
             </div>
@@ -48,46 +51,63 @@
 
         <!-- Vuelo de regreso (si corresponde) -->
         @if (flightOffer.itineraries.length > 1) {
-          <div class="flight-info return-flight col-md-6">
-            <div class="flight-route">
-              <div class="flight-airline">
-                <img
-                  [src]="'https://www.gstatic.com/flights/airline_logos/70px/' + flightOffer.validatingAirlineCodes[0] + '.png'"
-                  alt="Airline" class="me-3" style="height: 40px; width: auto;">
-                <span>{{ flightUtils.getAirlineName(flightOffer.validatingAirlineCodes[0]) }}</span>
+        <div class="flight-info return-flight col-md-6">
+          <div class="flight-route">
+            <div class="flight-airline">
+              <img
+                [src]="'https://www.gstatic.com/flights/airline_logos/70px/' + flightOffer.validatingAirlineCodes[0] + '.png'"
+                alt="Airline" class="me-3" style="height: 40px; width: auto;">
+              <span>{{ flightUtils.getAirlineName(flightOffer.validatingAirlineCodes[0]) }}</span>
+            </div>
+            <div class="flight-main-details">
+              <div class="flight-departure">
+                <div class="flight-time">{{ flightUtils.formatTime(flightOffer.itineraries[1].segments[0].departure.at)
+                  }}</div>
+                <div class="flight-airport">{{ getAirportInfo(flightOffer.itineraries[1].segments[0].departure.iataCode)
+                  }}</div>
+                <div class="flight-date">{{ flightUtils.formatDate(flightOffer.itineraries[1].segments[0].departure.at)
+                  }}</div>
               </div>
-              <div class="flight-main-details">
-                <div class="flight-departure">
-                  <div class="flight-time">{{ flightUtils.formatTime(flightOffer.itineraries[1].segments[0].departure.at) }}</div>
-                  <div class="flight-airport">{{ getAirportInfo(flightOffer.itineraries[1].segments[0].departure.iataCode) }}</div>
-                  <div class="flight-date">{{ flightUtils.formatDate(flightOffer.itineraries[1].segments[0].departure.at) }}</div>
-                </div>
-                <div class="flight-duration">
-                  <div class="flight-duration-line">
-                    <div class="flight-stops-indicator">
-                      @for (segment of flightOffer.itineraries[1].segments; track segment.id) {
-                        @if (!$first) {
-                          <div class="stop-point"></div>
-                        }
-                        <div class="flight-line" [class.last-segment]="$last"></div>
-                      }
-                    </div>
+              <div class="flight-duration">
+                <div class="flight-duration-line">
+                  <div class="flight-stops-indicator">
+                    @for (segment of flightOffer.itineraries[1].segments; track segment.id) {
+                    @if (!$first) {
+                    <div class="stop-point"></div>
+                    }
+                    <div class="flight-line" [class.last-segment]="$last"></div>
+                    }
                   </div>
-                  <!-- <div class="flight-duration-time">{{ flightUtils.minutesToString(flightUtils.durationToMinutes(flightOffer.itineraries[1].duration)) }}</div> -->
-                  <div class="flight-stops">{{ flightUtils.getStopsLabel(flightOffer.itineraries[1].segments) }}</div>
                 </div>
-                <div class="flight-arrival">
-                  @if (flightOffer.itineraries[1].segments.length > 0) {
-                    @let lastSegment = flightOffer.itineraries[1].segments[flightOffer.itineraries[1].segments.length - 1];
-                    <div class="flight-time">{{ flightUtils.formatTime(lastSegment.arrival.at) }}</div>
-                    <div class="flight-airport">{{ getAirportInfo(lastSegment.arrival.iataCode) }}</div>
-                    <div class="flight-date">{{ flightUtils.formatDate(lastSegment.arrival.at) }}</div>
-                  }
-                </div>
+                <!-- <div class="flight-duration-time">{{ flightUtils.minutesToString(flightUtils.durationToMinutes(flightOffer.itineraries[1].duration)) }}</div> -->
+                <div class="flight-stops">{{ flightUtils.getStopsLabel(flightOffer.itineraries[1].segments) }}</div>
+              </div>
+              <div class="flight-arrival">
+                @if (flightOffer.itineraries[1].segments.length > 0) {
+                @let lastSegment = flightOffer.itineraries[1].segments[flightOffer.itineraries[1].segments.length - 1];
+                <div class="flight-time">{{ flightUtils.formatTime(lastSegment.arrival.at) }}</div>
+                <div class="flight-airport">{{ getAirportInfo(lastSegment.arrival.iataCode) }}</div>
+                <div class="flight-date">{{ flightUtils.formatDate(lastSegment.arrival.at) }}</div>
+                }
               </div>
             </div>
           </div>
+        </div>
         }
+      </div>
+
+      <!-- Política de cancelación -->
+      <div class="row mt-3">
+        <div class="col-12">
+          <div [class]="getFlightCancellationPolicy().isFree ? 'alert alert-success' : 'alert alert-warning'">
+            <small>
+              <i
+                [class]="getFlightCancellationPolicy().isFree ? 'bi bi-check-circle-fill me-2' : 'bi bi-exclamation-triangle-fill me-2'"></i>
+              <strong>Política de cancelación:</strong>
+              {{ getFlightCancellationPolicy().message }}. (La comisión no es reembolsable)
+            </small>
+          </div>
+        </div>
       </div>
     </div>
   </div>

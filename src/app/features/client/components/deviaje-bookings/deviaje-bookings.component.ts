@@ -297,8 +297,7 @@ export class DeviajeBookingsComponent implements OnInit, OnDestroy {
 
   // Acciones
   viewBookingDetails(booking: Booking): void {
-    // Navegar a detalles de la reserva
-    this.router.navigate(['/bookings', booking.id]);
+    this.router.navigate(['/bookings', booking.bookingReference, 'details']);
   }
 
   reloadBookings(): void {

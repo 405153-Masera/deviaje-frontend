@@ -46,4 +46,42 @@ export class DeviajeFlightBookingSummaryComponent implements OnInit {
       this.destinationChange.emit(this.getAirportInfo(destination));
     }
   }
+
+  // Obtener política de cancelación de vuelos
+  getFlightCancellationPolicy(): { message: string; isFree: boolean } {
+    if (
+      !this.flightOffer ||
+      !this.flightOffer.itineraries ||
+      this.flightOffer.itineraries.length === 0
+    ) {
+      return { message: 'No disponible', isFree: false };
+    }
+
+    try {
+      // Obtener fecha de salida del primer segmento
+      const departureDate = new Date(
+        this.flightOffer.itineraries[0].segments[0].departure.at
+      );
+      const now = new Date();
+
+      const hoursUntilDeparture =
+        (departureDate.getTime() - now.getTime()) / (1000 * 60 * 60);
+
+      // Si faltan más de 24 horas para el vuelo
+      if (hoursUntilDeparture > 24) {
+        return {
+          message:
+            'Reembolso total si cancelás dentro de las 24 horas de hacer la reserva',
+          isFree: true,
+        };
+      } else {
+        return {
+          message: 'No reembolsable (el vuelo sale en menos de 24 horas)',
+          isFree: false,
+        };
+      }
+    } catch (error) {
+      return { message: 'No disponible', isFree: false };
+    }
+  }
 }

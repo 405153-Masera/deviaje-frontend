@@ -1,3 +1,6 @@
+import { TravelerDto } from "../../features/client/models/bookings";
+import { Itinerary } from "./flights";
+
 // Modelo para los detalles completos de una reserva
 export interface BookingDetails {
   id: number;
@@ -34,7 +37,8 @@ export interface FlightBookingDetails {
   infants: number;
   totalPrice: number;
   currency: string;
-  itinerariesJson?: any; // JSON del itinerario completo
+  itineraries?: Itinerary[];  
+  travelers?: TravelerDto[];
 }
 
 export interface HotelBookingDetails {
@@ -53,7 +57,96 @@ export interface HotelBookingDetails {
   totalPrice: number;
   taxes: number;
   currency: string;
-  hotelBookingJson?: any; // JSON con detalles adicionales (rateComment, etc.)
+ hotelBooking?: HotelBookingApi;
+}
+
+// Interface para la respuesta completa de HotelBeds API
+export interface HotelBookingApi {
+  reference: string;
+  clientReference: string;
+  creationDate: string;
+  status: string;
+  modificationPolicies?: {
+    cancellation: boolean;
+    modification: boolean;
+  };
+  creationUser?: string;
+  holder: {
+    name: string;
+    surname: string;
+  };
+  hotel: {
+    checkOut: string;
+    checkIn: string;
+    code: number;
+    name: string;
+    categoryCode: string;
+    categoryName: string;
+    destinationCode: string;
+    destinationName: string;
+    zoneCode: number;
+    zoneName: string;
+    latitude: string;
+    longitude: string;
+    rooms: HotelBookingRoom[];
+    totalNet: number;
+    currency: string;
+    supplier?: {
+      name: string;
+      vatNumber: string;
+    };
+  };
+  remark?: string;
+  invoiceCompany?: {
+    code: string;
+    company: string;
+    registrationNumber: string;
+  };
+  totalNet: number;
+  pendingAmount: number;
+  currency: string;
+}
+
+export interface HotelBookingRoom {
+  status: string;
+  id: number;
+  code: string;
+  name: string;
+  paxes: HotelBookingPax[];
+  rates: HotelBookingRate[];
+}
+
+export interface HotelBookingPax {
+  roomId: number;
+  type: string; // "AD", "CH", "IN"
+  name: string;
+  surname: string;
+}
+
+export interface HotelBookingRate {
+  rateClass: string;
+  net: number;
+  rateComments?: string;
+  paymentType: string;
+  packaging: boolean;
+  boardCode: string;
+  boardName: string;
+  cancellationPolicies?: HotelCancellationPolicy[];
+  rateBreakDown?: {
+    rateDiscounts: Array<{
+      code: string;
+      name: string;
+      amount: number;
+    }>;
+  };
+  rooms: number;
+  adults: number;
+  children: number;
+}
+
+export interface HotelCancellationPolicy {
+  amount: number;
+  from: string; // ISO date string
 }
 
 export interface PaymentInfo {

@@ -192,7 +192,7 @@ export const routes: Routes = [
           ).then((m) => m.DeviajeBookingsComponent),
       },
       {
-        path: ':id', // AGREGAR ESTA RUTA
+        path: ':reference/details', // AGREGAR ESTA RUTA
         loadComponent: () =>
           import(
             './features/client/components/deviaje-booking-detail/deviaje-booking-detail.component'
