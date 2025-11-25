@@ -11,7 +11,7 @@
               </div>
               <i class="bi bi-chevron-down"></i>
             </div>
-            <ul class="submenu" [class.expanded]="item.isExpanded">
+            <ul class="submenu mt-2" [class.expanded]="item.isExpanded">
               @for (subItem of item.subItems; track $index) {
                 <li>
                   <a [routerLink]="subItem.route" routerLinkActive="router-link-active" (click)="selectMenuItem(item)">

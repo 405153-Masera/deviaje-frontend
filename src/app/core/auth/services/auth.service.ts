@@ -57,7 +57,6 @@ export class AuthService {
       const token = localStorage.getItem('token');
       const userString = localStorage.getItem('user');
       const activeRole = localStorage.getItem('activeRole');
-      const expiration = localStorage.getItem('expiration');
 
       // 2. ¿Se puede parsear el usuario?
       let user = null;
@@ -69,9 +68,6 @@ export class AuthService {
 
       // 3. ¿El token es válido?
       if (token && user) {
-        // Verificar expiración paso a paso
-        const expirationDate = expiration ? new Date(expiration) : null;
-        const now = new Date();
 
         const isValid = this.isTokenValid();
 

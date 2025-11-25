@@ -203,11 +203,11 @@ export class BookingService {
       );
   }
 
-  downloadVoucher(bookingReference: string): Observable<Blob> {
+  downloadVoucher(bookingId: number): Observable<Blob> {
     // Cambiamos de usar ID a usar bookingReference
     return this.http
       .get(
-        `${environment.apiDeviajeBookings}/api/bookings/${bookingReference}/voucher/download`,
+        `${environment.apiDeviajeBookings}/api/bookings/${bookingId}/voucher/download`,
         { responseType: 'blob' }
       )
       .pipe(
@@ -228,6 +228,19 @@ export class BookingService {
     return typeNames[type] || type;
   }
 
+  getTypeBadgeClass(tipo: string | number): string {
+    switch (tipo) {
+      case 'RESERVA':
+        return 'bg-primary';
+      case 'CANCELADA':
+        return 'bg-danger';
+      case 'PENDIENTE':
+        return 'bg-warning';
+      default:
+        return 'bg-secondary-subtle text-dark';
+    }
+  }
+
   // Método helper para obtener el estado de la reserva en español
   getBookingStatusName(status: string): string {
     const statusNames: { [key: string]: string } = {
@@ -243,7 +256,7 @@ export class BookingService {
     const statusClasses: { [key: string]: string } = {
       CONFIRMED: 'bg-success',
       CANCELLED: 'bg-danger',
-      COMPLETED: 'bg-primary',
+      COMPLETED: 'bg-info',
     };
     return statusClasses[status] || 'bg-secondary';
   }

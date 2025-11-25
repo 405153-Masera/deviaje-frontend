@@ -26,14 +26,7 @@ import { AuthService } from '../../../../core/auth/services/auth.service';
               <i class="bi bi-arrow-left me-2"></i> Volver
             </button>
             <button class="btn btn-primary" (click)="goHome()">
-              <i class="bi bi-house me-2"></i> Ir al inicio
-            </button>
-            <button
-              *ngIf="hasMultipleRoles"
-              class="btn btn-secondary"
-              (click)="switchRole()"
-            >
-              <i class="bi bi-arrow-repeat me-2"></i> Cambiar de rol
+              Ir al inicio
             </button>
           </div>
         </div>
@@ -98,12 +91,6 @@ export class DeviajeAccessDeniedComponent {
 
   goHome(): void {
     // El home es el mismo para todos los roles
-    this.router.navigate(['/home']);
-  }
-
-  switchRole(): void {
-    // Implementar lógica para mostrar un diálogo de selección de rol
-    // Por ahora, solo redirigimos al home donde el usuario puede cambiar de rol en el navbar
     this.router.navigate(['/home']);
   }
 }

@@ -13,6 +13,7 @@ import {
 import { Router, RouterModule } from '@angular/router';
 import { Subscription } from 'rxjs';
 import { AuthService, User } from '../../../core/auth/services/auth.service';
+import { RoutePermissionService } from '../../../core/auth/services/routePermission.service';
 
 @Component({
   selector: 'app-deviaje-navbar',
@@ -23,6 +24,7 @@ import { AuthService, User } from '../../../core/auth/services/auth.service';
 })
 export class DeviajeNavbarComponent implements OnInit, OnDestroy {
   private readonly authService: AuthService = inject(AuthService);
+  private readonly routePermissionService = inject(RoutePermissionService);
   private subscription = new Subscription();
   private readonly router: Router = inject(Router);
 
@@ -102,9 +104,39 @@ export class DeviajeNavbarComponent implements OnInit, OnDestroy {
 
   switchRole(role: string): void {
     this.isRoleMenuOpen = false;
-    this.authService.changeActiveRoleWithoutRedirect(role);
     this.isRolesSubmenuOpen = false;
     this.isUserMenuOpen = false;
+
+    const currentUrl = this.router.url;
+    this.authService.changeActiveRoleWithoutRedirect(role);
+
+    setTimeout(() => {
+      // Verificar si el nuevo rol puede acceder a la ruta actual
+      const canAccess = this.routePermissionService.canAccessCurrentRoute(role);
+
+      if (!canAccess) {
+        console.log('❌ El nuevo rol no tiene acceso a esta ruta');
+        console.log('🏠 Redirigiendo al home...');
+        this.navigateToRoleHome(role);
+      } else {
+        console.log('✅ El nuevo rol puede acceder a esta ruta');
+        console.log('📌 Permaneciendo en la ruta actual');
+      }
+    }, 100);
+  }
+
+  private navigateToRoleHome(role: string): void {
+    switch (role) {
+      case 'CLIENTE':
+        this.router.navigate(['/home']);
+        break;
+      case 'AGENTE':
+        this.router.navigate(['/agent']); // TODO: cambiar a /agent/clients
+        break;
+      case 'ADMINISTRADOR':
+        this.router.navigate(['/admin']); // TODO: cambiar a /admin/dashboard
+        break;
+    }
   }
 
   logout(): void {
@@ -120,8 +152,6 @@ export class DeviajeNavbarComponent implements OnInit, OnDestroy {
     if (typeof localStorage !== 'undefined') {
       localStorage.setItem('loginReturnUrl', currentUrl);
     }
-
-    console.log('💾 Guardado en localStorage - returnUrl:', currentUrl);
     this.router.navigate(['/user/login']);
   }
 

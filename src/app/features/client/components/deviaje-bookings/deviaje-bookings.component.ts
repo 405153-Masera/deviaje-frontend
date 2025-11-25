@@ -5,12 +5,17 @@ import { Subscription } from 'rxjs';
 import { BookingService } from '../../services/booking.service';
 import { AuthService } from '../../../../core/auth/services/auth.service';
 import { Router } from '@angular/router';
+import { MatTooltipModule } from '@angular/material/tooltip';
+import { TruncatePipe } from '../../../../shared/pipes/truncate.pipe';
+import { ExportService } from '../../../../shared/services/export.service';
 
 export interface Booking {
   id: number;
   bookingReference: string;
   clientId: number;
   agentId: number;
+  clientUserName?: string;
+  agentUserName?: string;
   status: string;
   type: string;
   totalAmount: number;
@@ -28,11 +33,13 @@ export interface Booking {
 @Component({
   selector: 'app-mis-reservas',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, MatTooltipModule, TruncatePipe],
   templateUrl: './deviaje-bookings.component.html',
   styleUrls: ['./deviaje-bookings.component.scss'],
 })
 export class DeviajeBookingsComponent implements OnInit, OnDestroy {
+  private readonly exportService: ExportService = inject(ExportService);
+
   // Estados de carga y datos
   bookings: Booking[] = [];
   filteredBookings: Booking[] = [];
@@ -44,13 +51,15 @@ export class DeviajeBookingsComponent implements OnInit, OnDestroy {
   userRole = '';
   isLoggedIn = false;
 
+  // Ordenamiento
+  sortColumn: 'date' | 'holderName' | '' = '';
+  sortDirection: 'asc' | 'desc' = 'desc';
+
   // Filtros
   selectedType = '';
   selectedStatus = '';
   searchTerm = '';
-  filterAgentId: string = '';
-  filterClientId: string = '';
-  filterEmail: string = '';
+  filterUserName: string = '';
 
   // Paginación
   currentPage = 1;
@@ -72,13 +81,10 @@ export class DeviajeBookingsComponent implements OnInit, OnDestroy {
     { value: 'COMPLETED', label: 'Completada' },
   ];
 
+  private readonly bookingService: BookingService = inject(BookingService);
+  private readonly authService: AuthService = inject(AuthService);
   private subscription = new Subscription();
   router: Router = inject(Router);
-
-  constructor(
-    private bookingService: BookingService,
-    private authService: AuthService
-  ) {}
 
   ngOnInit(): void {
     this.loadCurrentUser();
@@ -128,7 +134,7 @@ export class DeviajeBookingsComponent implements OnInit, OnDestroy {
     );
   }
 
-  private loadBookings(): void {
+  loadBookings(): void {
     if (!this.currentUser || !this.userRole) {
       this.error = 'Información de usuario no disponible';
       this.loading = false;
@@ -187,25 +193,27 @@ export class DeviajeBookingsComponent implements OnInit, OnDestroy {
         booking.email?.toLowerCase().includes(this.searchTerm.toLowerCase());
 
       // Filtros específicos por rol
-      const matchesAgent =
-        !this.filterAgentId ||
-        booking.agentId?.toString() === this.filterAgentId;
-      const matchesClient =
-        !this.filterClientId ||
-        booking.clientId?.toString() === this.filterClientId;
-      const matchesEmail =
-        !this.filterEmail ||
-        booking.email?.toLowerCase().includes(this.filterEmail.toLowerCase());
+      let matchesUser = true;
+      if (this.filterUserName) {
+        const searchLower = this.filterUserName.toLowerCase().trim();
 
-      return (
-        matchesType &&
-        matchesStatus &&
-        matchesSearch &&
-        matchesAgent &&
-        matchesClient &&
-        matchesEmail
-      );
+        // Obtener el texto mostrado para cliente y agente
+        const clientDisplay =
+          booking.clientUserName ||
+          (booking.clientId ? `cliente #${booking.clientId}` : 'invitado');
+        const agentDisplay =
+          booking.agentUserName ||
+          (booking.agentId ? `agente #${booking.agentId}` : 'sin agente');
+
+        matchesUser =
+          clientDisplay.toLowerCase().includes(searchLower) ||
+          agentDisplay.toLowerCase().includes(searchLower);
+      }
+
+      return matchesType && matchesStatus && matchesSearch && matchesUser;
     });
+
+    this.applySorting();
 
     this.totalPages = Math.ceil(
       this.filteredBookings.length / this.itemsPerPage
@@ -213,8 +221,18 @@ export class DeviajeBookingsComponent implements OnInit, OnDestroy {
     this.currentPage = 1; // Reset a la primera página
   }
 
+  resetFilters() {
+    this.selectedType = '';
+    this.selectedStatus = '';
+    this.searchTerm = '';
+    this.filterUserName = '';
+    this.sortColumn = '';
+    this.sortDirection = 'desc';
+    this.applyFilters();
+  }
+
   downloadVoucher(booking: Booking): void {
-    this.bookingService.downloadVoucher(booking.bookingReference).subscribe({
+    this.bookingService.downloadVoucher(booking.id).subscribe({
       next: (blob) => {
         const url = window.URL.createObjectURL(blob);
         const link = document.createElement('a');
@@ -307,5 +325,101 @@ export class DeviajeBookingsComponent implements OnInit, OnDestroy {
       default:
         return 'Reservas';
     }
+  }
+
+  // Métodos de ordenamiento
+  applySorting(): void {
+    if (!this.sortColumn) {
+      return;
+    }
+
+    this.filteredBookings.sort((a, b) => {
+      let comparison = 0;
+
+      if (this.sortColumn === 'date') {
+        const dateA = new Date(a.createdDatetime).getTime();
+        const dateB = new Date(b.createdDatetime).getTime();
+        comparison = dateA - dateB;
+      } else if (this.sortColumn === 'holderName') {
+        comparison = (a.holderName || '').localeCompare(b.holderName || '');
+      }
+
+      return this.sortDirection === 'asc' ? comparison : -comparison;
+    });
+  }
+
+  toggleSort(column: 'date' | 'holderName'): void {
+    if (this.sortColumn === column) {
+      // Si ya estamos ordenando por esta columna, cambiar dirección
+      this.sortDirection = this.sortDirection === 'asc' ? 'desc' : 'asc';
+    } else {
+      // Nueva columna, empezar con descendente
+      this.sortColumn = column;
+      this.sortDirection = 'desc';
+    }
+    this.applyFilters();
+  }
+
+  getSortIcon(column: 'date' | 'holderName'): string {
+    if (this.sortColumn !== column) {
+      return 'bi-arrow-down-up'; // Sin ordenar
+    }
+    return this.sortDirection === 'asc' ? 'bi-sort-up' : 'bi-sort-down';
+  }
+
+  // Métodos de exportación
+  exportToPDF(): void {
+    const bookingsToExport = this.filteredBookings.map((booking) => ({
+      bookingReference: booking.bookingReference,
+      type: booking.type,
+      status: booking.status,
+      holderName: booking.holderName,
+      email: booking.email,
+      clientName:
+        booking.clientUserName ||
+        (booking.clientId ? `Cliente #${booking.clientId}` : 'Invitado'),
+      agentName:
+        booking.agentUserName ||
+        (booking.agentId ? `Agente #${booking.agentId}` : 'Sin agente'),
+      totalAmount: booking.totalAmount,
+      currency: booking.currency,
+      createdDatetime: booking.createdDatetime,
+    }));
+
+    this.exportService.exportToPDF(
+      bookingsToExport,
+      this.userRole,
+      'reservas_deviaje'
+    );
+  }
+
+  exportToExcel(): void {
+    const bookingsToExport = this.filteredBookings.map((booking) => ({
+      bookingReference: booking.bookingReference,
+      type: booking.type,
+      status: booking.status,
+      holderName: booking.holderName,
+      email: booking.email,
+      clientName:
+        booking.clientUserName ||
+        (booking.clientId ? `Cliente #${booking.clientId}` : 'Invitado'),
+      agentName:
+        booking.agentUserName ||
+        (booking.agentId ? `Agente #${booking.agentId}` : 'Sin agente'),
+      totalAmount: booking.totalAmount,
+      currency: booking.currency,
+      createdDatetime: booking.createdDatetime,
+    }));
+
+    this.exportService.exportToExcel(
+      bookingsToExport,
+      this.userRole,
+      'reservas_deviaje'
+    );
+  }
+
+  // Getter para mostrar botones de exportación
+  get canExport(): boolean {
+    return this.userRole === 'ADMINISTRADOR' || this.userRole === 'AGENTE';
   }
 }

@@ -17,7 +17,6 @@
   </div>
 
   <!-- Filtros -->
-  <!-- REEMPLAZAR la sección de filtros existente con esto: -->
   <div class="row mb-4">
     <div class="col-12">
       <div class="card shadow-sm">
@@ -28,7 +27,7 @@
           <div class="row g-3">
 
             <!-- Tipo de reserva -->
-            <div class="col-md-3">
+            <div class="col-lg-3">
               <label class="form-label">Tipo de reserva</label>
               <select class="form-select" [(ngModel)]="selectedType" (change)="applyFilters()">
                 <option *ngFor="let type of bookingTypes" [value]="type.value">
@@ -38,7 +37,7 @@
             </div>
 
             <!-- Estado -->
-            <div class="col-md-3">
+            <div class="col-lg-3">
               <label class="form-label">Estado</label>
               <select class="form-select" [(ngModel)]="selectedStatus" (change)="applyFilters()">
                 <option *ngFor="let status of bookingStatuses" [value]="status.value">
@@ -47,36 +46,40 @@
               </select>
             </div>
 
-            <!-- Filtro por Agente (solo ADMIN) -->
-            <div class="col-md-3" *ngIf="userRole === 'ADMINISTRADOR'">
-              <label class="form-label">Agente ID</label>
-              <input type="text" class="form-control" placeholder="ID del agente" [(ngModel)]="filterAgentId"
-                (ngModelChange)="applyFilters()">
-            </div>
-
-            <!-- Filtro por Cliente (ADMIN y AGENTE) -->
-            <div class="col-md-3" *ngIf="userRole === 'ADMINISTRADOR' || userRole === 'AGENTE'">
-              <label class="form-label">Cliente ID</label>
-              <input type="text" class="form-control" placeholder="ID del cliente" [(ngModel)]="filterClientId"
-                (ngModelChange)="applyFilters()">
-            </div>
-
-            <!-- Filtro por Email (todos) -->
-            <div class="col-md-3">
-              <label class="form-label">Email</label>
-              <input type="email" class="form-control" placeholder="email@ejemplo.com" [(ngModel)]="filterEmail"
-                (ngModelChange)="applyFilters()">
-            </div>
-
             <!-- Búsqueda general -->
-            <div class="col-md-3">
+            <div class="col-lg-3">
               <label class="form-label">Búsqueda general</label>
-              <input type="text" class="form-control" placeholder="Referencia, titular..." [(ngModel)]="searchTerm"
-                (ngModelChange)="applyFilters()">
+              <input type="text" class="form-control" placeholder="Referencia, titular, email..."
+                [(ngModel)]="searchTerm" (ngModelChange)="applyFilters()">
             </div>
 
+            <!-- Filtro por Usuario -->
+            <div class="col-lg-3" *ngIf="showClientInfo || showAgentInfo">
+              <label class="form-label">
+                {{ userRole === 'ADMINISTRADOR' ? 'Usuario (Cliente/Agente)' : 'Usuario (Cliente)' }}
+              </label>
+              <input type="text" class="form-control"
+                [placeholder]="userRole === 'ADMINISTRADOR' ? 'Nombre de usuario...' : 'Nombre de usuario del cliente...'"
+                [(ngModel)]="filterUserName" (ngModelChange)="applyFilters()">
+            </div>
           </div>
         </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Botones de exportación (solo para ADMIN y AGENTE) -->
+  <div class="row mb-3" *ngIf="canExport && !loading && filteredBookings.length > 0">
+    <div class="col-12">
+      <div class="d-flex justify-content-end gap-2">
+        <button class="btn btn-danger btn-sm" (click)="exportToPDF()" [disabled]="filteredBookings.length === 0">
+          <i class="bi bi-file-pdf me-1"></i>
+          Exportar PDF
+        </button>
+        <button class="btn btn-success btn-sm" (click)="exportToExcel()" [disabled]="filteredBookings.length === 0">
+          <i class="bi bi-file-excel me-1"></i>
+          Exportar Excel
+        </button>
       </div>
     </div>
   </div>
@@ -93,18 +96,59 @@
     </div>
   </div>
 
-  <!-- Error -->
-  <div *ngIf="error && !loading" class="row">
-    <div class="col-12">
-      <div class="alert alert-danger shadow-sm">
-        <i class="bi bi-exclamation-triangle-fill me-2"></i>
-        {{ error }}
-      </div>
-    </div>
+  @if (error && !loading) {
+  <div class="error-container">
+    <i class="bi bi-exclamation-triangle"></i>
+    <p>{{ error }}</p>
+    <button class="btn btn-primary" (click)="loadBookings()">
+      Intentar de nuevo
+    </button>
   </div>
+  }
+
+  @if (!loading && !error && paginatedBookings.length === 0) {
+
+  <div class="no-results">
+    <i class="bi bi-x-circle"></i>
+
+    @if(filteredBookings.length === 0) {
+    <p>No se encontraron reservas que coincidan con los filtros seleccionados.</p>
+    <button class="btn btn-primary" (click)="resetFilters()">
+      Restablecer filtros
+    </button>
+    }
+  </div>
+  }
 
   <!-- Lista móvil -->
   <div *ngIf="!loading && !error && paginatedBookings.length > 0" class="row">
+
+
+    <!-- Controles de ordenamiento para móvil -->
+    <div class="col-12 d-md-none mb-3">
+      <div class="card shadow-sm">
+        <div class="card-body p-3">
+          <div>Ordenar</div>
+          <div class="row g-2">
+            <div class="col-6">
+              <button class="btn btn-sm w-100"
+                [ngClass]="sortColumn === 'holderName' ? 'btn-primary' : 'btn-outline-primary'"
+                (click)="toggleSort('holderName')">
+                <i class="bi me-1" [ngClass]="getSortIcon('holderName')"></i>
+                Por Titular
+              </button>
+            </div>
+            <div class="col-6">
+              <button class="btn btn-sm w-100" [ngClass]="sortColumn === 'date' ? 'btn-primary' : 'btn-outline-primary'"
+                (click)="toggleSort('date')">
+                <i class="bi me-1" [ngClass]="getSortIcon('date')"></i>
+                Por Fecha
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
 
     <div class="col-12 d-md-none">
       <div *ngFor="let booking of paginatedBookings" class="card shadow-sm mb-3">
@@ -163,30 +207,39 @@
       <div class="card shadow-sm">
         <div class="table-responsive">
           <table class="table table-hover align-middle mb-0">
-
-            <!-- REEMPLAZAR el <thead> y la primera columna del <tbody> -->
             <thead class="bg-light">
               <tr>
-                <th>Referencia</th> <!-- CAMBIO: Era "ID" -->
+                <th>Referencia</th>
                 <th>Tipo</th>
                 <th>Estado</th>
-                <th>Titular</th>
+                <th class="sortable" (click)="toggleSort('holderName')" style="cursor: pointer;">
+                  Titular
+                  <i class="bi ms-1" [ngClass]="getSortIcon('holderName')"></i>
+                </th>
                 <th *ngIf="showClientInfo">Cliente</th>
                 <th *ngIf="showAgentInfo">Agente</th>
                 <th>Monto</th>
-                <th>Fecha</th>
+                <th class="sortable" (click)="toggleSort('date')" style="cursor: pointer;">
+                  Fecha
+                  <i class="bi ms-1" [ngClass]="getSortIcon('date')"></i>
+                </th>
                 <th>Acciones</th>
               </tr>
             </thead>
 
             <tbody>
               <tr *ngFor="let booking of paginatedBookings">
-                <!-- CAMBIO: Mostrar bookingReference en lugar de id -->
-                <td class="fw-semibold">{{ booking.bookingReference }}</td>
-
+                <td class="booking-reference">
+                  <strong>{{ booking.bookingReference }}</strong>
+                </td>
                 <td>
-                  <span class="badge bg-secondary-subtle text-dark border">
-                    {{ getBookingTypeName(booking.type) }}
+                  <span class="badge" [ngClass]="{
+                'bg-primary': booking.type === 'FLIGHT',
+                'bg-light': booking.type === 'HOTEL',
+                'bg-purple': booking.type === 'PACKAGE'
+              }">
+                    {{ booking.type === 'FLIGHT' ? 'Vuelo' :
+                    booking.type === 'HOTEL' ? 'Hotel' : 'Paquete' }}
                   </span>
                 </td>
                 <td>
@@ -196,36 +249,44 @@
                 </td>
                 <td>
                   <div class="d-flex flex-column">
-                    <span class="fw-semibold">{{ booking.holderName || 'No especificado' }}</span>
-                    <small class="text-muted">{{ booking.email || '' }}</small>
+                    <span class="fw-semibold" [matTooltip]="booking.holderName">{{ booking.holderName |
+                      truncate:30}}</span>
+                    <small class="text-muted" [matTooltip]="booking.email">{{ booking.email | truncate:30 }}</small>
                   </div>
                 </td>
 
-                <td *ngIf="showClientInfo">
-                  <small class="text-muted">Cliente #{{ booking.clientId }}</small>
-                </td>
-
-                <td *ngIf="showAgentInfo">
+                <td *ngIf="showClientInfo"
+                  [matTooltip]="booking.clientUserName || (booking.clientId ? 'Cliente #' + booking.clientId : 'Invitado')">
                   <small class="text-muted">
-                    {{ booking.agentId ? 'Agente #' + booking.agentId : 'Sin agente' }}
+                    {{ (booking.clientUserName || (booking.clientId ? 'Cliente #' + booking.clientId : 'Invitado')) |
+                    truncate:25 }}
                   </small>
                 </td>
 
-                <td class="fw-semibold text-success">
+                <!-- AGENTE - Con pipe truncate: mínimo 15, máximo 25 -->
+                <td *ngIf="showAgentInfo"
+                  [matTooltip]="booking.agentUserName || (booking.agentId ? 'Agente #' + booking.agentId : 'Sin agente')">
+                  <small class="text-muted">
+                    {{ (booking.agentUserName || (booking.agentId ? 'Agente #' + booking.agentId : 'Sin agente')) |
+                    truncate:25 }}
+                  </small>
+                </td>
+
+                <td class="fw-semibold text-success" style="white-space: nowrap;">
                   {{ formatCurrency(booking.totalAmount, booking.currency) }}
                 </td>
 
-                <td class="text-muted">
+                <td class="text-muted" style="white-space: nowrap;">
                   {{ formatDate(booking.createdDatetime) }}
                 </td>
 
                 <!-- CAMBIO: Agregar botón de descargar voucher -->
                 <td>
                   <div class="btn-group btn-group-sm">
-                    <button class="btn btn-primary" (click)="viewBookingDetails(booking)" title="Ver detalles">
+                    <button class="btn btn-primary" (click)="viewBookingDetails(booking)" matTooltip="Ver detalles">
                       <i class="bi bi-eye"></i>
                     </button>
-                    <button class="btn btn-success" (click)="downloadVoucher(booking)" title="Descargar voucher">
+                    <button class="btn btn-success" (click)="downloadVoucher(booking)" matTooltip="Descargar voucher">
                       <i class="bi bi-download"></i>
                     </button>
                   </div>
@@ -233,29 +294,11 @@
 
               </tr>
             </tbody>
-
           </table>
         </div>
       </div>
     </div>
 
-  </div>
-
-  <!-- Sin resultados -->
-  <div *ngIf="!loading && !error && paginatedBookings.length === 0" class="row">
-    <div class="col-12">
-      <div class="card shadow-sm text-center py-5">
-        <i class="bi bi-inbox display-1 text-muted"></i>
-        <h5 class="mt-3">No se encontraron reservas</h5>
-        <p class="text-muted mb-4">
-          {{ bookings.length === 0 ? 'Aún no tienes reservas realizadas.' : 'Prueba ajustando los filtros.' }}
-        </p>
-        <button class="btn btn-primary" (click)="router.navigate(['/home'])">
-          <i class="bi bi-plus-lg me-1"></i>
-          Hacer una reserva
-        </button>
-      </div>
-    </div>
   </div>
 
   <!-- Paginación -->

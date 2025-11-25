@@ -51,18 +51,27 @@
             <i class="bi bi-person"></i> Mi Perfil
           </a>
           <a class="dropdown-item" routerLink="/bookings">
-            <i class="bi bi-calendar-check"></i> Mis Reservas
+            <i class="bi bi-calendar-check"></i>
+            @if(currentRole == 'CLIENTE'){
+
+            Mis Reservas
+            } @else if (currentRole=='AGENTE') {
+            Mis clientes
+            }@else {
+            Reservas
+            }
           </a>
           <!-- Solo mostrar opción de membresía para clientes -->
-          <a *ngIf="userRoles.includes('CLIENTE')" class="dropdown-item" routerLink="/membership">
+          <!-- <a *ngIf="userRoles.includes('CLIENTE')" class="dropdown-item" routerLink="/membership">
             <i class="bi bi-award"></i> Membresía
-          </a>
+          </a> -->
 
           <!-- Submenú de roles solo visible en móviles -->
           <ng-container *ngIf="isAuthenticated && hasMultipleRoles()">
             <div class="dropdown-divider d-md-none"></div>
             <div class="dropdown-submenu d-md-none">
-              <a class="dropdown-item dropdown-toggle"  [class.rotate]="isRolesSubmenuOpen" (click)="toggleRolesSubmenu($event)">
+              <a class="dropdown-item dropdown-toggle" [class.rotate]="isRolesSubmenuOpen"
+                (click)="toggleRolesSubmenu($event)">
                 Cambiar rol
               </a>
               <div class="dropdown-menu d-md-none" [class.show]="isRolesSubmenuOpen">

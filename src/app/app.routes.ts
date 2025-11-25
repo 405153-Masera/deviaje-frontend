@@ -3,7 +3,6 @@ import { DeviajeMainLayoutComponent } from './shared/components/deviaje-main-lay
 import {
   authGuard,
   roleGuard,
-  roleGuardWithInheritance,
 } from './core/auth/guards/auth.guard';
 
 export const routes: Routes = [
@@ -42,21 +41,21 @@ export const routes: Routes = [
 
   // === LEGAL ===
   {
-    path: 'legal/terminos-condiciones',
+    path: 'legal/terms-and-conditions',
     loadComponent: () =>
       import(
         './pages/legal/terminos-condiciones/terminos-condiciones.component'
       ).then((m) => m.TerminosCondicionesComponent),
   },
   {
-    path: 'legal/politica-privacidad',
+    path: 'legal/privacy-policy',
     loadComponent: () =>
       import(
         './pages/legal/politica-privacidad/politica-privacidad.component'
       ).then((m) => m.PoliticaPrivacidadComponent),
   },
   {
-    path: 'legal/preguntas-frecuentes',
+    path: 'legal/faq',
     loadComponent: () =>
       import(
         './pages/legal/preguntas-frecuentes/preguntas-frecuentes.component'
@@ -182,8 +181,8 @@ export const routes: Routes = [
   {
     path: 'bookings',
     component: DeviajeMainLayoutComponent,
-    canActivate: [authGuard, roleGuard],
-    data: { roles: ['CLIENTE'] },
+    canActivate: [authGuard], //roleGuard
+    //data: { roles: ['CLIENTE'] },
     children: [
       {
         path: '',
@@ -206,7 +205,7 @@ export const routes: Routes = [
   {
     path: 'admin',
     component: DeviajeMainLayoutComponent,
-    canActivate: [authGuard, roleGuard, roleGuardWithInheritance],
+    canActivate: [authGuard, roleGuard],
     data: { roles: ['ADMINISTRADOR'] },
     children: [
       {

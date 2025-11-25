@@ -98,7 +98,7 @@ export class DeviajeBookingDetailComponent implements OnInit, OnDestroy {
     if (!this.bookingDetails) return;
 
     this.bookingService
-      .downloadVoucher(this.bookingDetails.bookingReference)
+      .downloadVoucher(this.bookingDetails.id)
       .subscribe({
         next: (blob) => {
           const url = window.URL.createObjectURL(blob);

@@ -99,7 +99,7 @@ export class DeviajeSidebarComponent implements OnInit, OnDestroy {
     {
       icon: 'usuarios',
       label: 'Mis Clientes',
-      route: '/agent/clients',
+      route: '/bookings',
       isSelected: false,
     },
   ];
@@ -130,22 +130,22 @@ export class DeviajeSidebarComponent implements OnInit, OnDestroy {
       ],
     },
     {
-      icon: 'reservas',
-      label: 'Reservas',
+      icon: 'agencia-de-viajes',
+      label: 'Consultas de Viaje',
       route: '/admin/bookings',
       isSelected: false,
       subItems: [
-        { icon: 'avion', label: 'Vuelos', route: '/home/flight/search' },
-        { icon: 'hotel', label: 'Hoteles', route: '/home/hotels/search' },
+        { icon: 'avion', label: 'Buscar vuelos', route: '/home/flight/search' },
+        { icon: 'hotel', label: 'Buscar hoteles', route: '/home/hotels/search' },
         {
           icon: 'vacaciones',
-          label: 'Paquetes',
+          label: 'Buscar paquetes',
           route: '/home/packages/search',
         },
         {
-          icon: 'lista',
+          icon: 'reserva',
           label: 'Todas las Reservas',
-          route: '/bookings/all',
+          route: '/bookings',
         },
       ],
     },

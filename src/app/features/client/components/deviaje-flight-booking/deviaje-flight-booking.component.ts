@@ -357,11 +357,11 @@ export class DeviajeFlightBookingComponent implements OnInit, OnDestroy {
         this.errorMessage =
           'Hubo un error al verificar la oferta. Regresando a los resultados...';
 
-        // setTimeout(() => {
-        //   this.router.navigate(['/home/flight/results'], {
-        //     queryParamsHandling: 'preserve', // Mantener los parámetros de búsqueda
-        //   });
-        // }, 2000);
+        setTimeout(() => {
+           this.router.navigate(['/home/flight/results'], {
+             queryParamsHandling: 'preserve', // Mantener los parámetros de búsqueda
+           });
+         }, 2000);
       },
     });
   }
