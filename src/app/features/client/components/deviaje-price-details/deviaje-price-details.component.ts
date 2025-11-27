@@ -127,7 +127,7 @@ export class DeviajePriceDetailsComponent implements OnInit, OnChanges {
     this.priceBreakdown.taxesFlight = 0;
 
     // Comisión 20% sobre precio base sin impuestos
-    this.priceBreakdown.commission = Math.round(this.priceBreakdown.basePrice * 0.20* 100) / 100;
+    this.priceBreakdown.commission = Math.round(this.priceBreakdown.basePrice * 0.20 * 100) / 100;
     // Total = precio de API + comisión + impuestos - descuento
     this.priceBreakdown.totalAmount = this.priceBreakdown.net + this.priceBreakdown.commission + this.priceBreakdown.taxesHotel - this.priceBreakdown.discount;
   }

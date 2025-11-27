@@ -405,43 +405,145 @@ export class FlightUtilsService {
    */
   getAirlineName(code: string): string {
     const airlines: Record<string, string> = {
+    // 🇺🇸 Norteamérica
     'AA': 'American Airlines',
     'DL': 'Delta Air Lines',
     'UA': 'United Airlines',
-    'LH': 'Lufthansa',
-    'BA': 'British Airways',
-    'AF': 'Air France',
-    'IB': 'Iberia',
-    'AV': 'Avianca',
-    'LA': 'LATAM Airlines',
-    'AR': 'Aerolíneas Argentinas',
-    'GP': 'APG Airlines',
-    'HR': 'Hahn Air Lines',
-    'JJ': 'LATAM Airlines Brasil',
-    'AD': 'Azul Brazilian Airlines',
-    'G3': 'Gol Linhas Aéreas',
-    'AM': 'Aeroméxico',
-    'CM': 'Copa Airlines',
-    'FL': 'AirTran Airways',
-    'NK': 'Spirit Airlines',
-    'F9': 'Frontier Airlines',
     'B6': 'JetBlue Airways',
     'AS': 'Alaska Airlines',
     'WN': 'Southwest Airlines',
-    'QR': 'Qatar Airways',
-    'EK': 'Emirates',
-    'TK': 'Turkish Airlines',
-    'SQ': 'Singapore Airlines',
-    'EY': 'Etihad Airways',
+    'F9': 'Frontier Airlines',
+    'NK': 'Spirit Airlines',
+    'G4': 'Allegiant Air',
+    'SY': 'Sun Country Airlines',
+    'AC': 'Air Canada',
+    'WS': 'WestJet',
+
+    // 🇲🇽 México
+    'AM': 'Aeroméxico',
+    'VB': 'VivaAerobus',
+    'Y4': 'Volaris',
+
+    // 🇧🇷 Brasil
+    'G3': 'Gol Linhas Aéreas',
+    'AD': 'Azul Brazilian Airlines',
+    'JJ': 'LATAM Airlines Brasil',
+
+    // 🇦🇷 Argentina
+    'AR': 'Aerolíneas Argentinas',
+    'FO': 'Flybondi',
+    'JY': 'JetSmart Argentina',
+
+    // 🇨🇱 Chile / Perú / Colombia
+    'LA': 'LATAM Airlines',
+    'LP': 'LATAM Perú',
+    '4C': 'Avianca Colombia',
+    'AV': 'Avianca',
+    'H2': 'Sky Airline',
+    'JA': 'JetSmart Chile',
+    'P5': 'Wingo',
+    'VE': 'EasyFly',
+
+    // 🇪🇺 Europa (grandes)
+    'LH': 'Lufthansa',
+    'BA': 'British Airways',
+    'AF': 'Air France',
     'KL': 'KLM',
-    'AZ': 'ITA Airways',
-    'TP': 'TAP Air Portugal',
+    'IB': 'Iberia',
     'UX': 'Air Europa',
-    'VY': 'Vueling',
+    'AZ': 'ITA Airways',
+    'SK': 'Scandinavian Airlines (SAS)',
+    'LX': 'Swiss International Air Lines',
+    'OS': 'Austrian Airlines',
+    'SN': 'Brussels Airlines',
+    'TP': 'TAP Air Portugal',
+
+    // 🇵🇱 Polonia (TU PEDIDO)
+    'LO': 'LOT Polish Airlines',
+
+    // Low-cost Europa
     'FR': 'Ryanair',
     'U2': 'easyJet',
+    'VY': 'Vueling',
     'W6': 'Wizz Air',
-    };
+    'DY': 'Norwegian Air Shuttle',
+    'EI': 'Aer Lingus',
+    'HV': 'Transavia',
+    'X3': 'TUI fly',
+    'U6': 'Ural Airlines',
+
+    // 🇬🇧 Reino Unido & Irlanda
+    'VS': 'Virgin Atlantic',
+    'BY': 'TUI Airways',
+
+    // Medio Oriente
+    'QR': 'Qatar Airways',
+    'EK': 'Emirates',
+    'EY': 'Etihad Airways',
+    'WY': 'Oman Air',
+    'GF': 'Gulf Air',
+    'SV': 'Saudia',
+    'RJ': 'Royal Jordanian',
+    'KU': 'Kuwait Airways',
+    'ME': 'Middle East Airlines',
+    'FZ': 'Flydubai',
+
+    // Asia
+    'SQ': 'Singapore Airlines',
+    'CX': 'Cathay Pacific',
+    'JL': 'Japan Airlines',
+    'NH': 'All Nippon Airways (ANA)',
+    'KE': 'Korean Air',
+    'OZ': 'Asiana Airlines',
+    'BR': 'EVA Air',
+    'CI': 'China Airlines',
+    'CA': 'Air China',
+    'MU': 'China Eastern',
+    'CZ': 'China Southern',
+    'AI': 'Air India',
+    'TG': 'Thai Airways',
+    'MH': 'Malaysia Airlines',
+    'VN': 'Vietnam Airlines',
+
+    // Low-cost Asia
+    'AK': 'AirAsia',
+    'FD': 'Thai AirAsia',
+    'TR': 'Scoot',
+    '5J': 'Cebu Pacific',
+    '7C': 'Jeju Air',
+    'MM': 'Peach Aviation',
+
+    //  África
+    'ET': 'Ethiopian Airlines',
+    'KQ': 'Kenya Airways',
+    'MS': 'EgyptAir',
+    'PW': 'Precision Air',
+    'SA': 'South African Airways',
+    'AT': 'Royal Air Maroc',
+
+    //  Oceanía
+    'QF': 'Qantas',
+    'NZ': 'Air New Zealand',
+    'VA': 'Virgin Australia',
+    'JQ': 'Jetstar Airways',
+
+    // Aerolíneas especiales (Comunes en Amadeus)
+    'GP': 'APG Airlines',
+    'HR': 'Hahn Air Lines',  
+    'X5': 'Afrique Airlines',
+    '3O': 'Air Arabia Maroc',
+    '2Z': 'Passaredo Airlines',
+
+    // Charter / Regional / Misc
+    'PS': 'Ukraine International Airlines',
+    'BT': 'Air Baltic',
+    'RO': 'TAROM',
+    'HY': 'Uzbekistan Airways',
+    'KC': 'Air Astana',
+    'PK': 'Pakistan International Airlines',
+    'IR': 'Iran Air'
+};
+
     
     let name = this.carriers[code];
 

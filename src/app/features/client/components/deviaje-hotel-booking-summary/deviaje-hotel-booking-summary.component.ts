@@ -69,12 +69,14 @@ export class DeviajeHotelBookingSummaryComponent {
   }
 
   // Formatear fechas
-  formatDate(dateString: string): string {
+   formatDate(dateString: string): string {
     const date = new Date(dateString);
-    return date.toLocaleDateString('es-ES', {
-      day: 'numeric',
-      month: 'short',
+    return date.toLocaleDateString('es-AR', {
+      day: '2-digit',
+      month: 'long',
       year: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit',
     });
   }
 

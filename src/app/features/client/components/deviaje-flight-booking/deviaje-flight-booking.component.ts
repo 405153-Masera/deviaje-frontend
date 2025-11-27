@@ -358,10 +358,10 @@ export class DeviajeFlightBookingComponent implements OnInit, OnDestroy {
           'Hubo un error al verificar la oferta. Regresando a los resultados...';
 
         setTimeout(() => {
-           this.router.navigate(['/home/flight/results'], {
-             queryParamsHandling: 'preserve', // Mantener los parámetros de búsqueda
-           });
-         }, 2000);
+          this.router.navigate(['/home/flight/results'], {
+            queryParamsHandling: 'preserve', // Mantener los parámetros de búsqueda
+          });
+        }, 2000);
       },
     });
   }
@@ -583,7 +583,9 @@ export class DeviajeFlightBookingComponent implements OnInit, OnDestroy {
       clientId: this.getClientId(),
       agentId: this.getAgentId(),
       origin: this.origin,
-      carrier: this.flightUtils.getAirlineName(this.selectedOffer.validatingAirlineCodes[0]),
+      carrier: this.flightUtils.getAirlineName(
+        this.selectedOffer.validatingAirlineCodes[0]
+      ),
       destination: this.destination,
       flightOffer: this.selectedOffer,
       travelers: this.prepareTravelersData(),
@@ -618,9 +620,8 @@ export class DeviajeFlightBookingComponent implements OnInit, OnDestroy {
           this.clearPersistedState();
 
           setTimeout(() => {
-            this.router.navigate(['/bookings'], {
-              queryParams: { reference: this.bookingReference },
-            });
+            const reference = bookingReference.bookingReference;
+            this.router.navigate([`/bookings/${reference}/details`]);
           }, 3000);
         },
         error: (error) => {

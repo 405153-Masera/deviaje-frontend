@@ -12,6 +12,7 @@ import {
 import { catchError, Observable, of } from 'rxjs';
 import { FlightVerifyResponse } from '../../../shared/models/flights';
 import { BookingDetails } from '../../../shared/models/bookingsDetails';
+import { CancelBookingRequest, CancelBookingResponse } from '../models/cancellations';
 
 @Injectable({
   providedIn: 'root',
@@ -39,6 +40,9 @@ export class BookingService {
         flightBooking: {
           clientId: flightBookingData.clientId,
           agentId: flightBookingData.agentId,
+          origin: flightBookingData.origin,
+          destination: flightBookingData.destination,
+          carrier: flightBookingData.carrier,
           flightOffer: flightBookingData.flightOffer,
           travelers: flightBookingData.travelers,
         },
@@ -102,57 +106,10 @@ export class BookingService {
     );
   }
 
-  // Obtener las reservas del usuario
-  getUserBookings(): Observable<any[]> {
-    return this.http
-      .get<any[]>(`${environment.apiDeviajeBookings}/api/bookings/user`)
-      .pipe(
-        catchError((error) => {
-          console.error('Error al obtener reservas del usuario:', error);
-          return of([]);
-        })
-      );
-  }
-
   getBookingDetails(bookingReference: string): Observable<BookingDetails> {
-    return this.http
-      .get<BookingDetails>(
-        `${environment.apiDeviajeBookings}/api/bookings/${bookingReference}/details`
-      );
-  }
-
-  // Enviar voucher por email
-  resendVoucher(bookingId: number): Observable<any> {
-    return this.http
-      .post(
-        `${environment.apiDeviajeBookings}/api/bookings/${bookingId}/voucher/resend`,
-        {}
-      )
-      .pipe(
-        catchError((error) => {
-          console.error('Error al reenviar voucher:', error);
-          throw error;
-        })
-      );
-  }
-
-  // Cancelar una reserva
-  cancelBooking(bookingId: number): Observable<BookingResponseDto> {
-    return this.http
-      .put<BookingResponseDto>(
-        `${environment.apiDeviajeBookings}/api/bookings/${bookingId}/cancel`,
-        {}
-      )
-      .pipe(
-        catchError((error) => {
-          console.error(`Error al cancelar la reserva ${bookingId}:`, error);
-          return of({
-            success: false,
-            message: 'Error al cancelar la reserva',
-            detailedError: error.message || 'Error de conexión',
-          });
-        })
-      );
+    return this.http.get<BookingDetails>(
+      `${environment.apiDeviajeBookings}/api/bookings/${bookingReference}/details`
+    );
   }
 
   // Obtener reservas según el rol del usuario
@@ -174,27 +131,33 @@ export class BookingService {
     return this.http.get<any[]>(endpoint);
   }
 
-  // Actualizar estado de una reserva
-  updateBookingStatus(bookingId: number, newStatus: string): Observable<any> {
-    return this.http
-      .put<any>(
-        `${environment.apiDeviajeBookings}/api/bookings/${bookingId}/status`,
-        {
-          status: newStatus,
-        }
-      )
-      .pipe(
-        catchError((error) => {
-          console.error(
-            `Error al actualizar estado de reserva ${bookingId}:`,
-            error
-          );
-          return of({
-            success: false,
-            message: 'Error al actualizar estado de la reserva',
-          });
-        })
-      );
+  /**
+   * Cancela una reserva.
+   * @param bookingId ID de la reserva
+   * @param request datos de cancelación (incluye refundAmount)
+   */
+  cancelBooking(
+    bookingId: number,
+    request: CancelBookingRequest
+  ): Observable<CancelBookingResponse> {
+    return this.http.post<CancelBookingResponse>(
+      `${environment.apiDeviajeBookings}/api/bookings/${bookingId}/cancel`,
+      request
+    );
+  }
+
+  /**
+   * Reenvía el voucher por email.
+   * Genera el voucher si no existe.
+   * @param bookingId ID de la reserva
+   * @returns mensaje de confirmación
+   */
+  resendVoucher(bookingId: number): Observable<string> {
+    return this.http.post(
+      `${environment.apiDeviajeBookings}/api/bookings/${bookingId}/resend-voucher`,
+      {},
+      { responseType: 'text' } // ← IMPORTANTE: El backend devuelve String
+    );
   }
 
   downloadVoucher(bookingId: number): Observable<Blob> {
@@ -203,12 +166,6 @@ export class BookingService {
       .get(
         `${environment.apiDeviajeBookings}/api/bookings/${bookingId}/voucher/download`,
         { responseType: 'blob' }
-      )
-      .pipe(
-        catchError((error) => {
-          console.error('Error al descargar voucher:', error);
-          throw error;
-        })
       );
   }
 

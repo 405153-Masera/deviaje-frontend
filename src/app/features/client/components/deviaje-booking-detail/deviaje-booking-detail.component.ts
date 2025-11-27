@@ -8,11 +8,18 @@ import { BookingDetails } from '../../../../shared/models/bookingsDetails';
 import { HotelService } from '../../../../shared/services/hotel.service';
 import { CountryService } from '../../../../shared/services/country.service';
 import { FlightUtilsService } from '../../../../shared/services/flight-utils.service';
+import {
+  ReactiveFormsModule,
+  FormBuilder,
+  FormGroup,
+  Validators,
+} from '@angular/forms';
+import { CancelBookingRequest } from '../../models/cancellations';
 
 @Component({
   selector: 'app-deviaje-booking-detail',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, ReactiveFormsModule],
   templateUrl: './deviaje-booking-detail.component.html',
   styleUrls: ['./deviaje-booking-detail.component.scss'],
 })
@@ -20,9 +27,36 @@ export class DeviajeBookingDetailComponent implements OnInit, OnDestroy {
   bookingDetails: BookingDetails | null = null;
   loading = true;
   error = '';
+  errorAlert = '';
 
   currentUser: any = null;
   userRole = '';
+
+  // Para cancelación
+  cancelForm!: FormGroup;
+  showCancelModal = false;
+  isProcessingCancel = false;
+  calculatedRefund = 0;
+  cancelErrorMessage = '';
+
+  // Para mensajes de éxito
+  showSuccessMessage = false;
+  successMessage = '';
+
+  // Para el envío del email
+  isSending = false;
+  isSent = false;
+
+  cancellationReasons = [
+    { value: 'cambio_planes', label: 'Cambio de planes' },
+    { value: 'salud', label: 'Problemas de salud' },
+    { value: 'emergencia', label: 'Emergencia familiar' },
+    { value: 'economico', label: 'Problemas económicos' },
+    { value: 'mejor_precio', label: 'Encontré mejor precio' },
+    { value: 'cambio_fechas', label: 'Cambio de fechas' },
+    { value: 'destino_no_interesa', label: 'Destino ya no es de interés' },
+    { value: 'otro', label: 'Otro motivo' },
+  ];
 
   private subscription = new Subscription();
   private route = inject(ActivatedRoute);
@@ -32,10 +66,12 @@ export class DeviajeBookingDetailComponent implements OnInit, OnDestroy {
   private authService = inject(AuthService);
   readonly countryService = inject(CountryService);
   readonly flightUtils = inject(FlightUtilsService);
+  private fb = inject(FormBuilder);
 
   ngOnInit(): void {
     this.loadCurrentUser();
     this.loadBookingDetails();
+    this.initCancelForm();
   }
 
   ngOnDestroy(): void {
@@ -96,6 +132,30 @@ export class DeviajeBookingDetailComponent implements OnInit, OnDestroy {
     );
   }
 
+  private initCancelForm(): void {
+    this.cancelForm = this.fb.group({
+      cancellationReason: ['', Validators.required],
+      additionalDetails: [''],
+    });
+
+    // Validación condicional: si es "otro", additionalDetails es requerido
+    this.cancelForm
+      .get('cancellationReason')
+      ?.valueChanges.subscribe((value) => {
+        const additionalDetailsControl =
+          this.cancelForm.get('additionalDetails');
+        if (value === 'otro') {
+          additionalDetailsControl?.setValidators([
+            Validators.required,
+            Validators.minLength(10),
+          ]);
+        } else {
+          additionalDetailsControl?.clearValidators();
+        }
+        additionalDetailsControl?.updateValueAndValidity();
+      });
+  }
+
   goBack(): void {
     this.router.navigate(['/bookings']);
   }
@@ -114,7 +174,8 @@ export class DeviajeBookingDetailComponent implements OnInit, OnDestroy {
       },
       error: (error) => {
         console.error('Error al descargar voucher:', error);
-        alert('Error al descargar el voucher. Por favor, intenta nuevamente.');
+        this.errorAlert =
+          'Error al descargar el voucher. Por favor, intenta nuevamente.';
       },
     });
   }
@@ -122,24 +183,227 @@ export class DeviajeBookingDetailComponent implements OnInit, OnDestroy {
   resendVoucher(): void {
     if (!this.bookingDetails) return;
 
-    if (confirm('¿Enviar voucher a ' + this.bookingDetails.email + '?')) {
-      this.bookingService.resendVoucher(this.bookingDetails.id).subscribe({
-        next: () => {
-          alert('Voucher enviado exitosamente');
+    this.isSending = true;
+    this.bookingService.resendVoucher(this.bookingDetails.id).subscribe({
+      next: () => {
+        this.isSending = false;
+        this.isSent = true;
+
+        setTimeout(() => {
+          this.isSent = false;
+        }, 2000);
+      },
+      error: (error) => {
+        console.error('Error al enviar voucher:', error);
+        this.isSending = false;
+        this.errorAlert =
+          'Error al enviar el voucher. Por favor, intenta nuevamente.';
+      },
+    });
+  }
+
+  openCancelModal(): void {
+    if (!this.bookingDetails) return;
+
+    // Calcular monto de reembolso
+    this.calculatedRefund = this.calculateRefundAmount();
+
+    // Resetear formulario
+    this.cancelForm.reset();
+    this.cancelErrorMessage = '';
+    this.showSuccessMessage = false;
+
+    // Abrir modal
+    this.showCancelModal = true;
+  }
+
+  closeCancelModal(): void {
+    this.showCancelModal = false;
+    this.cancelForm.reset();
+    this.cancelErrorMessage = '';
+    this.showSuccessMessage = false;
+  }
+
+  confirmCancelBooking(): void {
+    if (!this.bookingDetails) return;
+
+    // Marcar todos los campos como touched para mostrar errores
+    this.cancelForm.markAllAsTouched();
+
+    // Validar formulario
+    if (this.cancelForm.invalid) {
+      this.cancelErrorMessage =
+        'Por favor completa todos los campos requeridos';
+      return;
+    }
+
+    this.isProcessingCancel = true;
+    this.cancelErrorMessage = '';
+
+    const formValue = this.cancelForm.value;
+    const request: CancelBookingRequest = {
+      cancellationReason: formValue.cancellationReason,
+      additionalDetails: formValue.additionalDetails || undefined,
+      refundAmount: this.calculatedRefund,
+    };
+
+    this.bookingService
+      .cancelBooking(this.bookingDetails.id, request)
+      .subscribe({
+        next: (response) => {
+          this.isProcessingCancel = false;
+
+          // Construir mensaje de éxito
+          this.successMessage =
+            response.totalRefundAmount > 0
+              ? `Reserva cancelada exitosamente. Monto a reembolsar: ${this.formatCurrency(
+                  response.totalRefundAmount
+                )}`
+              : 'Reserva cancelada exitosamente. Esta reserva no es reembolsable.';
+
+          this.showSuccessMessage = true;
+
+          // Cerrar modal después de 3 segundos y recargar
+          setTimeout(() => {
+            this.closeCancelModal();
+            this.loadBookingDetails();
+          }, 3000);
         },
         error: (error) => {
-          console.error('Error al enviar voucher:', error);
-          alert('Error al enviar el voucher. Por favor, intenta nuevamente.');
+          this.isProcessingCancel = false;
+          console.error('Error al cancelar:', error);
+          this.cancelErrorMessage =
+            error.message ||
+            'Error al cancelar la reserva. Por favor, intenta nuevamente.';
         },
       });
+  }
+
+  /**
+   * Calcula el monto de reembolso según el tipo de reserva.
+   */
+  calculateRefundAmount(): number {
+    if (!this.bookingDetails) return 0;
+
+    switch (this.bookingDetails.type) {
+      case 'FLIGHT':
+        return this.calculateFlightRefund();
+      case 'HOTEL':
+        return this.calculateHotelRefund();
+      case 'PACKAGE':
+        return this.calculateFlightRefund() + this.calculateHotelRefund();
+      default:
+        return 0;
     }
   }
 
-  cancelBooking(): void {
-    if (!this.bookingDetails) return;
+  /**
+   * Calcula reembolso de vuelo según política de 24 horas.
+   */
+  private calculateFlightRefund(): number {
+    if (!this.bookingDetails?.flightDetails) return 0;
 
-    // TODO: Implementar lógica de cancelación
-    alert('Funcionalidad de cancelación en desarrollo');
+    const bookingDate = new Date(this.bookingDetails.createdDatetime);
+    const departureDate = new Date(
+      this.bookingDetails.flightDetails.departureDate
+    );
+    const now = new Date();
+
+    const hoursSinceBooking =
+      (now.getTime() - bookingDate.getTime()) / (1000 * 60 * 60);
+    const hoursUntilDeparture =
+      (departureDate.getTime() - now.getTime()) / (1000 * 60 * 60);
+
+    // Política: Reembolso gratis si está dentro de 24hs de reserva Y faltan >24hs para vuelo
+    if (hoursSinceBooking <= 24 && hoursUntilDeparture > 24) {
+      return this.bookingDetails.flightDetails.totalPrice;
+    }
+
+    return 0; // No reembolsable
+  }
+
+  /**
+   * Calcula reembolso de hotel según políticas de cancelación.
+   */
+  private calculateHotelRefund(): number {
+    if (
+      !this.bookingDetails?.hotelDetails?.hotelBooking?.hotel.rooms[0].rates[0]
+        .cancellationPolicies
+    ) {
+      return 0;
+    }
+
+    const now = new Date();
+    const policies =
+      this.bookingDetails.hotelDetails.hotelBooking.hotel.rooms[0].rates[0]
+        .cancellationPolicies;
+    const netPrice =
+      this.bookingDetails.hotelDetails.hotelBooking.hotel.rooms[0].rates[0].net;
+
+    console.log('PRECIO DESDE EL RATE', netPrice);
+    console.log(
+      'PRECIO DESDE LA BASE DE DATOS',
+      this.bookingDetails.hotelDetails.totalPrice
+    );
+    // Ordenar políticas por fecha 'from' de más reciente a más antigua
+    const sortedPolicies = [...policies].sort(
+      (a, b) => new Date(b.from).getTime() - new Date(a.from).getTime()
+    );
+
+    // Buscar la política aplicable según la fecha actual
+    for (const policy of sortedPolicies) {
+      const fromDate = new Date(policy.from);
+
+      // Si la fecha actual es mayor o igual a 'from', esta política aplica
+      if (now >= fromDate) {
+        const penaltyAmount = policy.amount || 0;
+
+        // Si la penalidad es mayor o igual al precio neto, no hay reembolso
+        if (penaltyAmount >= netPrice) {
+          return 0;
+        }
+
+        // Reembolso = netPrice - penalidad
+        return netPrice - penaltyAmount;
+      }
+    }
+
+    // Si ninguna política aplica aún (estamos antes de todas las fechas 'from'),
+    // significa que hay cancelación gratuita
+    return netPrice;
+  }
+
+  formatCurrency(amount: number): string {
+    return new Intl.NumberFormat('es-AR', {
+      style: 'currency',
+      currency: this.bookingDetails?.currency || 'ARS',
+    }).format(amount);
+  }
+
+  canCancelBooking(): boolean {
+    return this.bookingDetails?.status === 'CONFIRMED';
+  }
+
+  isFieldInvalid(fieldName: string): boolean {
+    const field = this.cancelForm.get(fieldName);
+    return !!(field && field.invalid && field.touched);
+  }
+
+  getFieldError(fieldName: string): string {
+    const field = this.cancelForm.get(fieldName);
+    if (!field || !field.errors || !field.touched) return '';
+
+    if (field.errors['required']) {
+      return fieldName === 'cancellationReason'
+        ? 'Debes seleccionar un motivo'
+        : 'Este campo es requerido';
+    }
+
+    if (field.errors['minlength']) {
+      return 'Mínimo 10 caracteres';
+    }
+
+    return '';
   }
 
   // Métodos auxiliares

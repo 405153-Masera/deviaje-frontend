@@ -802,9 +802,8 @@ export class DeviajeHotelBookingComponent implements OnInit, OnDestroy {
           this.clearPersistedState();
 
           setTimeout(() => {
-            this.router.navigate(['/bookings'], {
-              queryParams: { reference: this.bookingReference },
-            });
+            const reference = bookingReference.bookingReference;
+            this.router.navigate([`/bookings/${reference}/details`]);
           }, 3000);
         },
         error: (error) => {

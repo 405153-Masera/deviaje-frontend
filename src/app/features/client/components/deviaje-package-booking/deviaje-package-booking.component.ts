@@ -654,7 +654,6 @@ export class DeviajePackageBookingComponent implements OnInit, OnDestroy {
       flightOffer: this.flightOffer,
       travelers: this.prepareTravelersData(),
     };
-    console.log(this.flightUtils.getAirlineName(this.flightOffer.validatingAirlineCodes[0]));
 
     const hotelBookingData: HotelBookingDto = this.prepareHotelBookingData();
 
@@ -694,9 +693,8 @@ export class DeviajePackageBookingComponent implements OnInit, OnDestroy {
           this.clearPersistedState();
 
           setTimeout(() => {
-            this.router.navigate(['/bookings'], {
-              queryParams: { reference: this.bookingReference },
-            });
+            const reference = bookingReference.bookingReference;
+            this.router.navigate([`/bookings/${reference}/details`]);
           }, 3000);
         },
         error: (error) => {
@@ -728,6 +726,7 @@ export class DeviajePackageBookingComponent implements OnInit, OnDestroy {
       this.destination = this.getAirportInfo(destination);
     }
   }
+
 
   onOriginReceived(origin: string) {
     this.origin = origin;

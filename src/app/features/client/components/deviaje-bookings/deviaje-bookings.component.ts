@@ -45,6 +45,7 @@ export class DeviajeBookingsComponent implements OnInit, OnDestroy {
   filteredBookings: Booking[] = [];
   loading = true;
   error = '';
+  errorMessage = '';
 
   // Información del usuario
   currentUser: any = null;
