@@ -53,6 +53,13 @@ export class DashboardService {
     if (bookingType) params = params.set('bookingType', bookingType);
     if (bookingStatus) params = params.set('bookingStatus', bookingStatus);
 
+    if (agentId !== undefined && agentId !== null) {
+        params = params.set('agentId', agentId.toString());
+    }
+    if (clientId !== undefined && clientId !== null) {
+        params = params.set('clientId', clientId.toString());
+    }
+
     return this.http.get<BookingsByTypeResponse>(`${this.apiUrl}/bookings-by-type`, { params });
   }
 

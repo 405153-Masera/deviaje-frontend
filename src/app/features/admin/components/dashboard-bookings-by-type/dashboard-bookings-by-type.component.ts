@@ -47,8 +47,8 @@ export class DashboardBookingsByTypeComponent implements OnInit, OnDestroy {
     endDate: new FormControl(''),
     bookingType: new FormControl(''),
     bookingStatus: new FormControl(''),
-    agentId: new FormControl(),
-    clientId: new FormControl(),
+    agentId: new FormControl<number | null>(null), // ← CAMBIAR ESTO
+    clientId: new FormControl<number | null>(null),
   });
 
   // Estados de carga
@@ -206,10 +206,11 @@ export class DashboardBookingsByTypeComponent implements OnInit, OnDestroy {
     const endDate = formValue.endDate || undefined;
     const bookingType = formValue.bookingType || undefined;
     const bookingStatus = formValue.bookingStatus || undefined;
-    const agentId = formValue.agentId || undefined; // ← AGREGAR
-    const clientId = formValue.clientId || undefined;
+    const agentId = formValue.agentId ? Number(formValue.agentId) : undefined;
+    const clientId = formValue.clientId ? Number(formValue.clientId) : undefined;
 
-    console.log('agaente', agentId)
+
+    console.log('agaente', agentId);
 
     this.subscriptions.add(
       this.dashboardService
@@ -262,7 +263,14 @@ export class DashboardBookingsByTypeComponent implements OnInit, OnDestroy {
   }
 
   clearFilters(): void {
-    this.filterForm.reset();
+    this.filterForm.reset({
+        startDate: '',
+        endDate: '',
+        bookingType: '',
+        bookingStatus: '',
+        agentId: null,    // ← Asegurar que sea null
+        clientId: null    // ← Asegurar que sea null
+    });
     this.errorRange = null;
     this.loadData();
   }

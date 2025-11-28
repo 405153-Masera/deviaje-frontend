@@ -65,11 +65,12 @@
                             </select>
                         </div>
 
+                        <!-- Agente -->
                         <div class="col-md-3">
                             <label for="agentId" class="form-label">Agente</label>
                             <select class="form-select" id="agentId" formControlName="agentId">
-                                <option [ngValue]="null">Todos</option>
-                                <option *ngFor="let agent of agents" [ngValue]="agent.id">
+                                <option [value]="''">Todos los agentes</option> <!-- ← CAMBIAR a [value] -->
+                                <option *ngFor="let agent of agents" [value]="agent.id">
                                     {{ agent.username }}
                                 </option>
                             </select>
@@ -79,8 +80,8 @@
                         <div class="col-md-3">
                             <label for="clientId" class="form-label">Cliente</label>
                             <select class="form-select" id="clientId" formControlName="clientId">
-                                <option [ngValue]="null">Todos</option>
-                                <option *ngFor="let client of clients" [ngValue]="client.id">
+                                <option [value]="''">Todos los clientes</option> <!-- ← CAMBIAR a [value] -->
+                                <option *ngFor="let client of clients" [value]="client.id">
                                     {{ client.username }}
                                 </option>
                             </select>
@@ -162,9 +163,9 @@
                     </div>
 
                     <!-- Error State -->
-                    <div *ngIf="!loading && error" class="error-container text-center py-5">
-                        <i class="bi bi-exclamation-triangle-fill error-icon text-danger fs-1"></i>
-                        <p class="mt-3 text-danger">{{ error }}</p>
+                    <div *ngIf="!loading && error" class="error-container border-0">
+                        <i class="bi bi-exclamation-triangle"></i>
+                        <p>{{ error }}</p>
                     </div>
 
                     <!-- Chart -->
