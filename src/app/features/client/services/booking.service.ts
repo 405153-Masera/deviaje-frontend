@@ -3,13 +3,12 @@ import { environment } from '../../../shared/enviroments/enviroment';
 import { HttpClient } from '@angular/common/http';
 import {
   BookingReferenceResponse,
-  BookingResponseDto,
   FlightBookingDto,
   FlightOfferDto,
   HotelBookingDto,
   PaymentDto,
 } from '../models/bookings';
-import { catchError, Observable, of } from 'rxjs';
+import { Observable} from 'rxjs';
 import { FlightVerifyResponse } from '../../../shared/models/flights';
 import { BookingDetails } from '../../../shared/models/bookingsDetails';
 import { CancelBookingRequest, CancelBookingResponse } from '../models/cancellations';

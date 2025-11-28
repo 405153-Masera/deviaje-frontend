@@ -25,6 +25,7 @@
     "@angular/ssr": "^18.2.0",
     "@ng-select/ng-select": "^13.9.1",
     "@popperjs/core": "^2.11.8",
+    "angular-google-charts": "^16.1.0",
     "boostrap": "^2.0.0",
     "bootstrap": "^5.3.5",
     "bootstrap-icons": "^1.13.1",

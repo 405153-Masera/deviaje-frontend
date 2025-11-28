@@ -553,7 +553,7 @@
                     <div class="alert" [class.alert-success]="calculatedRefund > 0"
                         [class.alert-warning]="calculatedRefund === 0">
                         <strong>Monto a reembolsar:</strong>
-                        {{ calculatedRefund > 0 ? formatCurrency(calculatedRefund) : 'No reembolsable' }}
+                        {{ calculatedRefund > 0 ? (calculatedRefund | currency:'ARS') : 'No reembolsable' }} 
                         <br />
                         <small class="text-muted">
                             La comisión de agencia no es reembolsable.
@@ -586,7 +586,7 @@
                             formControlName="additionalDetails" [class.is-invalid]="isFieldInvalid('additionalDetails')"
                             [disabled]="isProcessingCancel"
                             placeholder="Explica brevemente el motivo de cancelación (mínimo 10 caracteres)...">
-            </textarea>
+                         </textarea>
                         <div class="invalid-feedback" *ngIf="isFieldInvalid('additionalDetails')">
                             {{ getFieldError('additionalDetails') }}
                         </div>

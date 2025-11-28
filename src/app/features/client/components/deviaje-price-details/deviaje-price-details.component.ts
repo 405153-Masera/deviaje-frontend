@@ -120,14 +120,14 @@ export class DeviajePriceDetailsComponent implements OnInit, OnChanges {
     // Para hoteles usamos el campo 'net'
     this.priceBreakdown.net = priceInArs;
     this.priceBreakdown.grandTotal = 0;
-    this.priceBreakdown.basePrice = this.priceBreakdown.net;
+    this.priceBreakdown.basePrice = 0;
     
     // Impuestos del hotel (si hay)
     this.priceBreakdown.taxesHotel = 0;
     this.priceBreakdown.taxesFlight = 0;
 
     // Comisión 20% sobre precio base sin impuestos
-    this.priceBreakdown.commission = Math.round(this.priceBreakdown.basePrice * 0.20 * 100) / 100;
+    this.priceBreakdown.commission = Math.round(this.priceBreakdown.net * 0.20 * 100) / 100;
     // Total = precio de API + comisión + impuestos - descuento
     this.priceBreakdown.totalAmount = this.priceBreakdown.net + this.priceBreakdown.commission + this.priceBreakdown.taxesHotel - this.priceBreakdown.discount;
   }
@@ -137,7 +137,7 @@ export class DeviajePriceDetailsComponent implements OnInit, OnChanges {
     let flightSubtotal = 0;
     let flightTaxes = 0;
     if (this.flightPrice) {
-      flightSubtotal = parseFloat(this.flightPrice.total) || 0;
+      flightSubtotal = parseFloat(this.flightPrice.grandTotal) || 0;
       const flightBase = parseFloat(this.flightPrice.base) || 0;
       flightTaxes = flightSubtotal - flightBase;
     }

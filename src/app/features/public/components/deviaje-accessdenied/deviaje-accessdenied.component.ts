@@ -22,9 +22,6 @@ import { AuthService } from '../../../../core/auth/services/auth.service';
             {{ userMessage }}
           </p>
           <div class="d-flex justify-content-center gap-3">
-            <button class="btn btn-outline-secondary" (click)="goBack()">
-              <i class="bi bi-arrow-left me-2"></i> Volver
-            </button>
             <button class="btn btn-primary" (click)="goHome()">
               Ir al inicio
             </button>
@@ -87,7 +84,7 @@ export class DeviajeAccessDeniedComponent {
 
   goBack(): void {
     window.history.back();
-  }
+  } 
 
   goHome(): void {
     // El home es el mismo para todos los roles

@@ -98,10 +98,10 @@ export class DeviajeUsersListComponent implements OnInit, OnDestroy {
     // Llamar al getAllUsers del backend (sin paginación backend)
     this.subscription.add(
       this.userService
-        .getAllUsers(0, 1000) // Traer todos los usuarios
+        .getAllUsers() // Traer todos los usuarios
         .subscribe({
-          next: (response: PaginatedUsersResponse) => {
-            this.users = response.users || [];
+          next: (response: UserResponse[]) => {
+            this.users = response || [];
             this.applyFilters();
             this.loading = false;
           },

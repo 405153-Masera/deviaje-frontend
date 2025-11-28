@@ -131,7 +131,7 @@ export class DeviajeNavbarComponent implements OnInit, OnDestroy {
         this.router.navigate(['/home']);
         break;
       case 'AGENTE':
-        this.router.navigate(['/agent']); // TODO: cambiar a /agent/clients
+        this.router.navigate(['/home']); // TODO: cambiar a /agent/clients
         break;
       case 'ADMINISTRADOR':
         this.router.navigate(['/admin']); // TODO: cambiar a /admin/dashboard

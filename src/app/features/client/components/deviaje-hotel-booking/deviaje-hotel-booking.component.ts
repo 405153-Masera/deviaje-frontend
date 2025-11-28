@@ -877,6 +877,7 @@ export class DeviajeHotelBookingComponent implements OnInit, OnDestroy {
           roomName: this.nameRoom,
           boardName: (this.rate as any)?.boardName,
           paxes: paxes,
+          cancellationPolicies: JSON.stringify(this.rate.cancellationPolicies)
         },
       ],
     };

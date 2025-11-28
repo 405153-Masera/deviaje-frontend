@@ -108,6 +108,7 @@ export interface RoomBookingDto {
   roomName: string;
   boardName: string;
   paxes: PaxDto[];
+  cancellationPolicies: string;
 }
 
 export interface PaxDto {

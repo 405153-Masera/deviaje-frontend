@@ -97,7 +97,7 @@ export class DeviajeSidebarComponent implements OnInit, OnDestroy {
     },
     //{ icon: 'tours', label: 'Tours', route: '/tours', isSelected: false },
     {
-      icon: 'usuarios',
+      icon: 'reserva',
       label: 'Mis Clientes',
       route: '/bookings',
       isSelected: false,
@@ -131,7 +131,7 @@ export class DeviajeSidebarComponent implements OnInit, OnDestroy {
     },
     {
       icon: 'agencia-de-viajes',
-      label: 'Consultas de Viaje',
+      label: 'Consultas',
       route: '/admin/bookings',
       isSelected: false,
       subItems: [
@@ -150,9 +150,9 @@ export class DeviajeSidebarComponent implements OnInit, OnDestroy {
       ],
     },
     {
-      icon: 'dashboard',
+      icon: 'informes',
       label: 'Dashboards',
-      route: '/admin/analytics',
+      route: '/admin/dashboard',
       isSelected: false,
     },
   ];

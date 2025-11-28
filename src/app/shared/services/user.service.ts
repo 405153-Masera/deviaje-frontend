@@ -107,24 +107,15 @@ export class UserService {
   /**
    * Obtener todos los usuarios con paginación
    */
-  getAllUsers(
-    page: number = 0,
-    size: number = 10,
-    search?: string,
-    role?: string
-  ): Observable<PaginatedUsersResponse> {
-    let params = new HttpParams()
-      .set('page', page.toString())
-      .set('size', size.toString());
+  getAllUsers(): Observable<UserResponse[]> {
+    return this.http.get<UserResponse[]>(`${this.baseUrl}`);
+  }
 
-    if (search) {
-      params = params.set('search', search);
-    }
-    if (role) {
-      params = params.set('role', role);
-    }
-
-    return this.http.get<PaginatedUsersResponse>(`${this.baseUrl}`, { params });
+  /**
+   * Obtener todos los usuarios con paginación
+   */
+  getAllUsersByRole(role: string): Observable<UserResponse[]> {
+    return this.http.get<UserResponse[]>(`${this.baseUrl}/role/${role}`);
   }
 
   /**
@@ -256,51 +247,6 @@ export class UserService {
   checkEmailAvailability(email: string): Observable<{ available: boolean }> {
     return this.http.get<{ available: boolean }>(
       `${environment.apiDeviajeValidation}/email/${email}`
-    );
-  }
-
-  // ================== MÉTODOS PARA AGENTES ==================
-
-  /**
-   * Obtener clientes de un agente
-   */
-  getAgentClients(
-    agentId: number,
-    page: number = 0,
-    size: number = 10
-  ): Observable<PaginatedUsersResponse> {
-    let params = new HttpParams()
-      .set('page', page.toString())
-      .set('size', size.toString());
-
-    return this.http.get<PaginatedUsersResponse>(
-      `${this.baseUrl}/agent/${agentId}/clients`,
-      { params }
-    );
-  }
-
-  /**
-   * Asignar un cliente a un agente
-   */
-  assignClientToAgent(
-    agentId: number,
-    clientId: number
-  ): Observable<ApiResponse<void>> {
-    return this.http.post<ApiResponse<void>>(
-      `${this.baseUrl}/agent/${agentId}/clients/${clientId}`,
-      {}
-    );
-  }
-
-  /**
-   * Remover un cliente de un agente
-   */
-  removeClientFromAgent(
-    agentId: number,
-    clientId: number
-  ): Observable<ApiResponse<void>> {
-    return this.http.delete<ApiResponse<void>>(
-      `${this.baseUrl}/agent/${agentId}/clients/${clientId}`
     );
   }
 }

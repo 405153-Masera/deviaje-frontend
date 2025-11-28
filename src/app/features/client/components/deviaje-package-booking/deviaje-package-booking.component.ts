@@ -1121,6 +1121,7 @@ export class DeviajePackageBookingComponent implements OnInit, OnDestroy {
           roomName: this.nameRoom, // Viene del state
           boardName: (this.rate as any)?.boardName,
           paxes: paxes,
+          cancellationPolicies: JSON.stringify(this.rate.cancellationPolicies)
         },
       ],
     };

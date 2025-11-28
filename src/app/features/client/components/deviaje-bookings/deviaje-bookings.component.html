@@ -273,7 +273,7 @@
                 </td>
 
                 <td class="fw-semibold text-success" style="white-space: nowrap;">
-                  {{ formatCurrency(booking.totalAmount, booking.currency) }}
+                  {{ booking.totalAmount | currency:'ARS' }}
                 </td>
 
                 <td class="text-muted" style="white-space: nowrap;">

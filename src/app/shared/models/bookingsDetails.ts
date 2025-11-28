@@ -58,6 +58,7 @@ export interface HotelBookingDetails {
   taxes: number;
   currency: string;
   hotelBooking?: HotelBookingApi;
+  cancellationPolicies? : HotelCancellationPolicy[]
 }
 
 // Interface para la respuesta completa de HotelBeds API

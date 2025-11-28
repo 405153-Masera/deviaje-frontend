@@ -1,9 +1,6 @@
 import { Routes } from '@angular/router';
 import { DeviajeMainLayoutComponent } from './shared/components/deviaje-main-layout/deviaje-main-layout.component';
-import {
-  authGuard,
-  roleGuard,
-} from './core/auth/guards/auth.guard';
+import { authGuard, roleGuard } from './core/auth/guards/auth.guard';
 
 export const routes: Routes = [
   // Ruta principal
@@ -215,9 +212,18 @@ export const routes: Routes = [
       },
       // {
       //   path: 'dashboard',
-      //   loadComponent: () => import('./features/admin/components/deviaje-admin-dashboard/deviaje-admin-dashboard.component')
-      //     .then(m => m.DeviajeAdminDashboardComponent)
+      //   loadComponent: () =>
+      //     import(
+      //       './features/admin/components/deviaje-dashboard-main/deviaje-dashboard-main.component'
+      //     ).then((m) => m.DeviajeDashboardMainComponent),
       // },
+      {
+        path: 'dashboard',
+        loadComponent: () =>
+          import(
+            './features/admin/components/dashboard-bookings-by-type/dashboard-bookings-by-type.component'
+          ).then((m) => m.DashboardBookingsByTypeComponent),
+      },
       {
         path: 'users/list',
         loadComponent: () =>
@@ -266,8 +272,10 @@ export const routes: Routes = [
   },
 
   {
-     path: '**',
-     loadComponent: () => import('./features/public/components/deviaje-page-not-found/deviaje-page-not-found.component')
-       .then(m => m.DeviajePageNotFoundComponent)
-   }
+    path: '**',
+    loadComponent: () =>
+      import(
+        './features/public/components/deviaje-page-not-found/deviaje-page-not-found.component'
+      ).then((m) => m.DeviajePageNotFoundComponent),
+  },
 ];

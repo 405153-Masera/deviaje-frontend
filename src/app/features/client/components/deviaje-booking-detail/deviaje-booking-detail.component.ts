@@ -327,18 +327,16 @@ export class DeviajeBookingDetailComponent implements OnInit, OnDestroy {
    */
   private calculateHotelRefund(): number {
     if (
-      !this.bookingDetails?.hotelDetails?.hotelBooking?.hotel.rooms[0].rates[0]
-        .cancellationPolicies
+      !this.bookingDetails?.hotelDetails?.cancellationPolicies
     ) {
       return 0;
     }
 
     const now = new Date();
     const policies =
-      this.bookingDetails.hotelDetails.hotelBooking.hotel.rooms[0].rates[0]
-        .cancellationPolicies;
+      this.bookingDetails.hotelDetails.cancellationPolicies;
     const netPrice =
-      this.bookingDetails.hotelDetails.hotelBooking.hotel.rooms[0].rates[0].net;
+      this.bookingDetails.hotelDetails.totalPrice;
 
     console.log('PRECIO DESDE EL RATE', netPrice);
     console.log(
