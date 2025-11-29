@@ -1,0 +1,273 @@
+<div class="container py-4">
+    <!-- Header -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <h2 class="mb-0 mt-2 ml-2">
+                <i class="bi bi-speedometer2 text-primary me-2"></i>
+                Dashboard Administrador
+            </h2>
+            <p class="text-muted mt-2">Vista general de todas las estadísticas del sistema</p>
+        </div>
+    </div>
+
+    <!-- Filtros Globales -->
+    <div class="card border-secondary mb-4">
+        <div class="card-header bg-white border-0 d-flex justify-content-between align-items-center">
+            <h5 class="mb-0">
+                <i class="bi bi-funnel me-2"></i>
+                Filtros Globales
+            </h5>
+            <button type="button" class="btn btn-sm btn-outline-secondary" (click)="clearFilters()">
+                <i class="bi bi-x-circle me-1"></i>
+                Limpiar
+            </button>
+        </div>
+        <div class="card-body">
+            <form [formGroup]="filterForm">
+                <div class="row g-3">
+                    <!-- Fecha Inicio -->
+                    <div class="col-lg-6 col-md-6 col-12">
+                        <label for="startDate" class="form-label">Fecha Inicio</label>
+                        <input type="date" class="form-control" id="startDate" formControlName="startDate">
+                    </div>
+
+                    <!-- Fecha Fin -->
+                    <div class="col-lg-6 col-md-6 col-12">
+                        <label for="endDate" class="form-label">Fecha Fin</label>
+                        <input type="date" class="form-control" id="endDate" formControlName="endDate">
+                    </div>
+                </div>
+
+                <!-- Error de rango -->
+                <div *ngIf="errorRange" class="alert alert-warning mt-3 mb-0" role="alert">
+                    <i class="bi bi-exclamation-triangle-fill me-2"></i>
+                    {{ errorRange }}
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- KPIs Globales -->
+    <div class="row mb-4">
+        <div class="col-xl-3 col-lg-6 col-md-6 col-12 mb-3">
+            <div class="kpi-card kpi-card-primary">
+                <div class="kpi-icon">
+                    <i class="bi bi-calendar-check"></i>
+                </div>
+                <div class="kpi-content">
+                    <div class="kpi-label">Total Reservas</div>
+                    <div class="kpi-value">{{ globalKpis.totalBookings }}</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-xl-3 col-lg-6 col-md-6 col-12 mb-3">
+            <div class="kpi-card kpi-card-success">
+                <div class="kpi-icon">
+                    <i class="bi bi-currency-dollar"></i>
+                </div>
+                <div class="kpi-content">
+                    <div class="kpi-label">Ventas Totales</div>
+                    <div class="kpi-value">{{ globalKpis.totalRevenue | currency: 'ARS' }}</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-xl-3 col-lg-6 col-md-6 col-12 mb-3">
+            <div class="kpi-card kpi-card-success">
+                <div class="kpi-icon">
+                    <i class="bi bi-currency-dollar"></i>
+                </div> 
+                <div class="kpi-content">
+                    <div class="kpi-label">Comisiones</div>
+                    <div class="kpi-value">{{ globalKpis.totalCommissions | currency: 'ARS' }}
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-xl-3 col-lg-6 col-md-6 col-12 mb-3">
+            <div class="kpi-card kpi-card-info">
+                <div class="kpi-icon">
+                    <i class="bi bi-graph-up-arrow"></i>
+                </div>
+                <div class="kpi-content">
+                    <div class="kpi-label">Promedio Reserva</div>
+                    <div class="kpi-value">{{ globalKpis.averageBookingValue | currency: 'ARS' }}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Loading State -->
+    <div *ngIf="loading" class="text-center py-5">
+        <div class="spinner-border text-primary" role="status">
+            <span class="visually-hidden">Cargando...</span>
+        </div>
+        <p class="mt-3 text-muted">Cargando datos del dashboard...</p>
+    </div>
+
+    <!-- Error State -->
+    <div *ngIf="!loading && error" class="error-container border-0">
+        <i class="bi bi-exclamation-triangle"></i>
+        <p>{{ error }}</p>
+    </div>
+
+    <!-- Mini Charts Grid -->
+    <div *ngIf="!loading && !error">
+
+        <!-- FILA 1: Bookings by Type + Revenue Over Time -->
+        <div class="row mb-4">
+            <!-- Bookings by Type (1) -->
+            <div class="col-xl-6 col-lg-6 col-md-12 col-12 mb-3">
+                <div class="mini-chart-card" (click)="navigateToBookingsByType()">
+                    <div class="mini-chart-header">
+                        <h6 class="mini-chart-title">
+                            Reservas por Tipo
+                        </h6>
+                        <button class="btn btn-sm btn-link text-muted p-0">
+                            <i class="bi bi-arrows-angle-expand fs-5"></i>
+                        </button>
+                    </div>
+                    <div class="mini-chart-body">
+                        <div *ngIf="bookingsByTypeData.length > 0" style="width: 100%; height: 100%;">
+                            <google-chart [type]="pieChart" [data]="bookingsByTypeData" [options]="pieChartOptions"
+                                [height]="350">
+                            </google-chart>
+                        </div>
+                        <div *ngIf="bookingsByTypeData.length === 0" class="placeholder-chart">
+                            <i class="bi bi-pie-chart-fill text-muted"></i>
+                            <p>Sin datos</p>
+                        </div>
+                    </div>
+                    <div class="mini-chart-footer">
+                        <small class="text-muted">Click para ver detalles →</small>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Revenue Over Time (2) -->
+            <div class="col-xl-6 col-lg-6 col-md-12 col-12 mb-3">
+                <div class="mini-chart-card" (click)="navigateToRevenueOverTime()">
+                    <div class="mini-chart-header">
+                        <h6 class="mini-chart-title">
+                            Ventas Últimos 7 Días
+                        </h6>
+                        <button class="btn btn-sm btn-link text-muted p-0">
+                            <i class="bi bi-arrows-angle-expand fs-5"></i>
+                        </button>
+                    </div>
+                    <div class="mini-chart-body">
+                        <div *ngIf="revenueOverTimeData.length > 0" style="width: 100%; height: 100%;">
+                            <google-chart [type]="lineChart" [data]="revenueOverTimeData" [options]="lineChartOptions"
+                                [height]="350">
+                            </google-chart>
+                        </div>
+                        <div *ngIf="revenueOverTimeData.length === 0" class="placeholder-chart">
+                            <i class="bi bi-graph-up text-muted"></i>
+                            <p>Sin datos</p>
+                        </div>
+                    </div>
+                    <div class="mini-chart-footer">
+                        <small class="text-muted">Click para ver detalles →</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- FILA 2: Payments by Status (grande) -->
+        <!-- <div class="row mb-4">
+      <div class="col-12 mb-3">
+        <div class="mini-chart-card" (click)="navigateToPaymentsByStatus()">
+          <div class="mini-chart-header">
+            <h6 class="mini-chart-title">
+              <i class="bi bi-credit-card text-success me-2"></i>
+              Pagos por Estado
+            </h6>
+            <button class="btn btn-sm btn-link text-muted p-0">
+              <i class="bi bi-arrows-angle-expand fs-5"></i>
+            </button>
+          </div>
+          <div class="mini-chart-body">
+            <div *ngIf="paymentsByStatusData.length > 0" style="width: 100%; height: 100%;">
+              <google-chart
+                [type]="columnChart"
+                [data]="paymentsByStatusData"
+                [options]="columnChartOptions"
+                [height]="200">
+              </google-chart>
+            </div>
+            <div *ngIf="paymentsByStatusData.length === 0" class="placeholder-chart">
+              <i class="bi bi-credit-card text-muted"></i>
+              <p>Sin datos</p>
+            </div>
+          </div>
+          <div class="mini-chart-footer">
+            <small class="text-muted">Click para ver detalles →</small>
+          </div>
+        </div>
+      </div>
+    </div> -->
+
+        <!-- FILA 3: Top Destinations + Top Carriers -->
+        <div class="row mb-4">
+            <!-- Top Destinations (3) -->
+            <div class="col-xl-6 col-lg-6 col-md-12 col-12 mb-3">
+                <div class="mini-chart-card" (click)="navigateToTopDestinations()">
+                    <div class="mini-chart-header">
+                        <h6 class="mini-chart-title">
+                            Top 5 Destinos - Hoteles
+                        </h6>
+                        <button class="btn btn-sm btn-link text-muted p-0">
+                            <i class="bi bi-arrows-angle-expand fs-5"></i>
+                        </button>
+                    </div>
+                    <div class="mini-chart-body">
+                        <div *ngIf="topDestinationsData.length > 0" style="width: 100%; height: 100%;">
+                            <google-chart [type]="barChart" [data]="topDestinationsData" [options]="barChartOptions"
+                                [height]="350">
+                            </google-chart>
+                        </div>
+                        <div *ngIf="topDestinationsData.length === 0" class="placeholder-chart">
+                            <i class="bi bi-geo-alt-fill text-muted"></i>
+                            <p>Sin datos</p>
+                        </div>
+                    </div>
+                    <div class="mini-chart-footer">
+                        <small class="text-muted">Click para ver detalles →</small>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Top Carriers (4) -->
+            <div class="col-xl-6 col-lg-6 col-md-12 col-12 mb-3">
+                <div class="mini-chart-card" (click)="navigateToTopCarriers()">
+                    <div class="mini-chart-header">
+                        <h6 class="mini-chart-title">
+                            Top 5 Aerolíneas
+                        </h6>
+                        <button class="btn btn-sm btn-link text-muted p-0">
+                            <i class="bi bi-arrows-angle-expand fs-5"></i>
+                        </button>
+                    </div>
+                    <div class="mini-chart-body">
+                        <div *ngIf="topCarriersData.length > 0" style="width: 100%; height: 100%;">
+                            <google-chart [type]="pieChart" [data]="topCarriersData" [options]="pieChartAirlines"
+                                [height]="350">
+                            </google-chart>
+                        </div>
+                        <div *ngIf="topCarriersData.length === 0" class="placeholder-chart">
+                            <i class="bi bi-airplane-fill text-muted"></i>
+                            <p>Sin datos</p>
+                        </div>
+                    </div>
+                    <div class="mini-chart-footer">
+                        <small class="text-muted">Click para ver detalles →</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+</div>

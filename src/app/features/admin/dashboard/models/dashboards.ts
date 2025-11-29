@@ -1,4 +1,4 @@
-// ==================== BOOKINGS BY TYPE ====================
+//#region BOOKINGS BY TYPE 
 export interface BookingsByTypeResponse {
   data: TypeCount[];
   kpis: BookingsByTypeKpis;
@@ -18,8 +18,9 @@ export interface BookingsByTypeKpis {
   totalCommissions: number;
   averageBookingValue: number;
 }
+//#endregion
 
-// ==================== REVENUE OVER TIME ====================
+//#region REVENUE OVER TIME
 export interface RevenueOverTimeResponse {
   data: TimeSeriesPoint[];
   kpis: RevenueOverTimeKpis;
@@ -35,10 +36,12 @@ export interface TimeSeriesPoint {
 
 export interface RevenueOverTimeKpis {
   totalRevenue: number;
+  totalCommission: number;
   averageRevenuePerPeriod: number;
   highestRevenue: number;
   highestRevenuePeriod: string;
 }
+//#endregion
 
 // ==================== TOP DESTINATIONS ====================
 export interface TopDestinationsResponse {
@@ -56,10 +59,10 @@ export interface DestinationData {
 }
 
 export interface TopDestinationsKpis {
-  totalHotelBookings: number;
+  totalBookings: number;
   uniqueDestinations: number;
   topDestination: string;
-  totalHotelRevenue: number;
+  totalRevenue: number;
 }
 
 // ==================== TOP CARRIERS ====================
@@ -73,8 +76,9 @@ export interface CarrierData {
   carrierCode: string;
   carrierName: string;
   bookingsCount: number;
-  revenue: number;
+  totalRevenue: number;
   averagePassengers: number;
+  averagePrice: number;
 }
 
 export interface TopCarriersKpis {
@@ -102,7 +106,7 @@ export interface PaymentsByStatusKpis {
   totalAmount: number;
   approvedPayments: number;
   approvedAmount: number;
-  rejectedPayments: number;
+  refundedPayments: number;
   approvalRate: number;
 }
 

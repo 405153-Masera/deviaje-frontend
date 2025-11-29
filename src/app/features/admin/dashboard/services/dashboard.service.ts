@@ -70,13 +70,15 @@ export class DashboardService {
     startDate?: string,
     endDate?: string,
     granularity?: string,
-    bookingType?: string
+    bookingType?: string,
+    agentId?: number
   ): Observable<RevenueOverTimeResponse> {
     let params = new HttpParams();
     if (startDate) params = params.set('startDate', startDate);
     if (endDate) params = params.set('endDate', endDate);
     if (granularity) params = params.set('granularity', granularity);
     if (bookingType) params = params.set('bookingType', bookingType);
+    if (agentId) params = params.set('agentId', agentId.toString());
 
     return this.http.get<RevenueOverTimeResponse>(`${this.apiUrl}/revenue-over-time`, { params });
   }
@@ -88,14 +90,15 @@ export class DashboardService {
     startDate?: string,
     endDate?: string,
     limit?: number,
-    bookingStatus?: string
+    bookingStatus?: string,
+    type?: string
   ): Observable<TopDestinationsResponse> {
     let params = new HttpParams();
     if (startDate) params = params.set('startDate', startDate);
     if (endDate) params = params.set('endDate', endDate);
     if (limit) params = params.set('limit', limit.toString());
     if (bookingStatus) params = params.set('bookingStatus', bookingStatus);
-
+    if (type) params = params.set('type', type);
     return this.http.get<TopDestinationsResponse>(`${this.apiUrl}/top-destinations`, { params });
   }
 

@@ -210,20 +210,6 @@ export const routes: Routes = [
         redirectTo: 'dashboard',
         pathMatch: 'full',
       },
-      // {
-      //   path: 'dashboard',
-      //   loadComponent: () =>
-      //     import(
-      //       './features/admin/components/deviaje-dashboard-main/deviaje-dashboard-main.component'
-      //     ).then((m) => m.DeviajeDashboardMainComponent),
-      // },
-      {
-        path: 'dashboard',
-        loadComponent: () =>
-          import(
-            './features/admin/components/dashboard-bookings-by-type/dashboard-bookings-by-type.component'
-          ).then((m) => m.DashboardBookingsByTypeComponent),
-      },
       {
         path: 'users/list',
         loadComponent: () =>
@@ -238,11 +224,41 @@ export const routes: Routes = [
             './features/admin/components/deviaje-admin-user-register/deviaje-admin-user-register.component'
           ).then((m) => m.DeviajeAdminUserRegisterComponent),
       },
-      // {
-      //   path: 'reservations',
-      //   loadComponent: () => import('./features/admin/components/deviaje-admin-reservations/deviaje-admin-reservations.component')
-      //     .then(m => m.DeviajeAdminReservationsComponent)
-      // }
+      {
+        path: 'dashboard',
+        loadComponent: () =>
+          import(
+            './features/admin/components/deviaje-dashboard-main/deviaje-dashboard-main.component'
+          ).then((m) => m.DeviajeDashboardMainComponent),
+      },
+      {
+        path: 'dashboard/bookings-by-type',
+        loadComponent: () =>
+          import(
+            './features/admin/components/dashboard-bookings-by-type/dashboard-bookings-by-type.component'
+          ).then((m) => m.DashboardBookingsByTypeComponent),
+      },
+      {
+        path: 'dashboard/revenue-over-time',
+        loadComponent: () =>
+          import(
+            './features/admin/components/deviaje-revenue-over-time/deviaje-revenue-over-time.component'
+          ).then((m) => m.DeviajeRevenueOverTimeComponent),
+      },
+      {
+        path: 'dashboard/top-destinations',
+        loadComponent: () =>
+          import(
+            './features/admin/components/deviaje-top-destinations/deviaje-top-destinations.component'
+          ).then((m) => m.DeviajeTopDestinationsComponent),
+      },
+      {
+        path: 'dashboard/top-carriers',
+        loadComponent: () =>
+          import(
+            './features/admin/components/deviaje-top-carriers/deviaje-top-carriers.component'
+          ).then((m) => m.DeviajeTopCarriersComponent),
+      }
     ],
   },
 

@@ -13,11 +13,7 @@ import {
   FormsModule,
 } from '@angular/forms';
 import { Router } from '@angular/router';
-import {
-  ChartType,
-  GoogleChartComponent,
-  GoogleChartsModule,
-} from 'angular-google-charts';
+import { ChartType, GoogleChartsModule } from 'angular-google-charts';
 import { Subscription } from 'rxjs';
 import { DashboardService } from '../../dashboard/services/dashboard.service';
 import {
@@ -26,11 +22,18 @@ import {
   TypeCount,
 } from '../../dashboard/models/dashboards';
 import { UserService } from '../../../../shared/services/user.service';
+import { MatTooltipModule } from '@angular/material/tooltip';
 
 @Component({
   selector: 'app-dashboard-bookings-by-type',
   standalone: true,
-  imports: [GoogleChartsModule, CommonModule, ReactiveFormsModule, FormsModule],
+  imports: [
+    GoogleChartsModule,
+    CommonModule,
+    ReactiveFormsModule,
+    FormsModule,
+    MatTooltipModule,
+  ],
   templateUrl: './dashboard-bookings-by-type.component.html',
   styleUrls: ['./dashboard-bookings-by-type.component.scss'],
 })
@@ -197,7 +200,7 @@ export class DashboardBookingsByTypeComponent implements OnInit, OnDestroy {
     this.loadData();
   }
 
-  private loadData(): void {
+  loadData(): void {
     this.loading = true;
     this.error = null;
 
@@ -207,10 +210,9 @@ export class DashboardBookingsByTypeComponent implements OnInit, OnDestroy {
     const bookingType = formValue.bookingType || undefined;
     const bookingStatus = formValue.bookingStatus || undefined;
     const agentId = formValue.agentId ? Number(formValue.agentId) : undefined;
-    const clientId = formValue.clientId ? Number(formValue.clientId) : undefined;
-
-
-    console.log('agaente', agentId);
+    const clientId = formValue.clientId
+      ? Number(formValue.clientId)
+      : undefined;
 
     this.subscriptions.add(
       this.dashboardService
@@ -264,19 +266,19 @@ export class DashboardBookingsByTypeComponent implements OnInit, OnDestroy {
 
   clearFilters(): void {
     this.filterForm.reset({
-        startDate: '',
-        endDate: '',
-        bookingType: '',
-        bookingStatus: '',
-        agentId: null,    // ← Asegurar que sea null
-        clientId: null    // ← Asegurar que sea null
+      startDate: '',
+      endDate: '',
+      bookingType: '',
+      bookingStatus: '',
+      agentId: null, // ← Asegurar que sea null
+      clientId: null, // ← Asegurar que sea null
     });
     this.errorRange = null;
     this.loadData();
   }
 
   goBack(): void {
-    this.router.navigate(['/dashboard']);
+    this.router.navigate(['admin/dashboard']);
   }
 
   formatNumber(value: number): string {
