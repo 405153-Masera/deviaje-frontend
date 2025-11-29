@@ -141,6 +141,8 @@ export interface GlobalKpis {
   totalRevenue: number;
   totalCommissions: number;
   averageBookingValue: number;
+  uniqueDestinations?: number;
+  uniqueCarriers?: number;
 }
 
 export interface MiniChartData {

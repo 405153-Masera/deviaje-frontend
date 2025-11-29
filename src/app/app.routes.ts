@@ -65,7 +65,6 @@ export const routes: Routes = [
         './features/public/components/deviaje-accessdenied/deviaje-accessdenied.component'
       ).then((m) => m.DeviajeAccessDeniedComponent),
   },
-  // === HOME (con layout) ===
   {
     path: 'home',
     component: DeviajeMainLayoutComponent,
@@ -77,7 +76,6 @@ export const routes: Routes = [
             './shared/components/deviaje-home/deviaje-home.component'
           ).then((m) => m.HomeComponentComponent),
       },
-      // VUELOS
       {
         path: 'flight/search',
         loadComponent: () =>
@@ -99,7 +97,6 @@ export const routes: Routes = [
             './features/client/components/deviaje-flight-booking/deviaje-flight-booking.component'
           ).then((m) => m.DeviajeFlightBookingComponent),
       },
-      // HOTELES
       {
         path: 'hotels/search',
         loadComponent: () =>
@@ -128,7 +125,6 @@ export const routes: Routes = [
             './features/client/components/deviaje-hotel-booking/deviaje-hotel-booking.component'
           ).then((m) => m.DeviajeHotelBookingComponent),
       },
-      // PAQUETES
       {
         path: 'packages/search',
         loadComponent: () =>
@@ -152,8 +148,6 @@ export const routes: Routes = [
       },
     ],
   },
-
-  // === PERFIL (requiere auth) ===
   {
     path: 'profile',
     component: DeviajeMainLayoutComponent,
@@ -173,13 +167,10 @@ export const routes: Routes = [
       // }
     ],
   },
-
-  // === RESERVAS (requiere auth) ===
   {
     path: 'bookings',
     component: DeviajeMainLayoutComponent,
-    canActivate: [authGuard], //roleGuard
-    //data: { roles: ['CLIENTE'] },
+    canActivate: [authGuard],
     children: [
       {
         path: '',
@@ -197,8 +188,6 @@ export const routes: Routes = [
       },
     ],
   },
-
-  // === ADMIN (requiere auth + rol) ===
   {
     path: 'admin',
     component: DeviajeMainLayoutComponent,
@@ -258,35 +247,43 @@ export const routes: Routes = [
           import(
             './features/admin/components/deviaje-top-carriers/deviaje-top-carriers.component'
           ).then((m) => m.DeviajeTopCarriersComponent),
-      }
+      },
     ],
   },
-
-  // === AGENTES (requiere auth + rol) ===
   {
     path: 'agent',
     component: DeviajeMainLayoutComponent,
     canActivate: [authGuard, roleGuard],
-    data: { roles: ['AGENTE', 'ADMINISTRADOR'] },
+    data: { roles: ['AGENTE'] },
     children: [
       {
         path: '',
         redirectTo: 'dashboard',
         pathMatch: 'full',
       },
-      // {
-      //   path: 'dashboard',
-      //   loadComponent: () => import('./features/agent/components/deviaje-agent-dashboard/deviaje-agent-dashboard.component')
-      //     .then(m => m.DeviajeAgentDashboardComponent)
-      // },
-      // {
-      //   path: 'clients',
-      //   loadComponent: () => import('./features/agent/components/deviaje-agent-clients/deviaje-agent-clients.component')
-      //     .then(m => m.DeviajeAgentClientsComponent)
-      // }
+      {
+        path: 'dashboard',
+        loadComponent: () =>
+          import(
+            './features/agent/components/deviaje-dashboard-agent/deviaje-dashboard-agent.component'
+          ).then((m) => m.DeviajeDashboardAgentComponent),
+      },
+      {
+        path: 'dashboard/top-destinations',
+        loadComponent: () =>
+          import(
+            './features/admin/components/deviaje-top-destinations/deviaje-top-destinations.component'
+          ).then((m) => m.DeviajeTopDestinationsComponent),
+      },
+      {
+        path: 'dashboard/top-carriers',
+        loadComponent: () =>
+          import(
+            './features/admin/components/deviaje-top-carriers/deviaje-top-carriers.component'
+          ).then((m) => m.DeviajeTopCarriersComponent),
+      },
     ],
   },
-
   {
     path: '**',
     loadComponent: () =>

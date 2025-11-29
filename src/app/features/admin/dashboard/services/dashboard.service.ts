@@ -10,42 +10,48 @@ import {
   PaymentsByStatusResponse,
   RevenueOverTimeResponse,
   TopCarriersResponse,
-  TopDestinationsResponse
+  TopDestinationsResponse,
 } from '../models/dashboards';
 import { environment } from '../../../../shared/enviroments/enviroment';
 
 @Injectable({
-  providedIn: 'root'
+  providedIn: 'root',
 })
 export class DashboardService {
   private apiUrl = `${environment.apiDeviajeBookings}/api/dashboard`;
 
-  constructor(private http: HttpClient) { }
+  constructor(private http: HttpClient) {}
 
   /**
    * Obtiene el resumen general del dashboard (para vista principal).
    */
   getDashboardSummary(
     startDate?: string,
-    endDate?: string
+    endDate?: string,
+    bookingStatus?: string,
+    bookingType?: string
   ): Observable<DashboardSummaryResponse> {
     let params = new HttpParams();
     if (startDate) params = params.set('startDate', startDate);
     if (endDate) params = params.set('endDate', endDate);
+    if (bookingStatus) params = params.set('bookingStatus', bookingStatus);
+    if (bookingType) params = params.set('bookingType', bookingType);
 
-    return this.http.get<DashboardSummaryResponse>(`${this.apiUrl}/summary`, { params });
+    return this.http.get<DashboardSummaryResponse>(`${this.apiUrl}/summary`, {
+      params,
+    });
   }
 
   /**
    * Obtiene reservas por tipo (Flight, Hotel, Package).
    */
   getBookingsByType(
-    startDate?: string, 
-    endDate?: string, 
-    bookingType?: string, 
+    startDate?: string,
+    endDate?: string,
+    bookingType?: string,
     bookingStatus?: string,
-    agentId?: number,      
-    clientId?: number 
+    agentId?: number,
+    clientId?: number
   ): Observable<BookingsByTypeResponse> {
     let params = new HttpParams();
     if (startDate) params = params.set('startDate', startDate);
@@ -54,13 +60,16 @@ export class DashboardService {
     if (bookingStatus) params = params.set('bookingStatus', bookingStatus);
 
     if (agentId !== undefined && agentId !== null) {
-        params = params.set('agentId', agentId.toString());
+      params = params.set('agentId', agentId.toString());
     }
     if (clientId !== undefined && clientId !== null) {
-        params = params.set('clientId', clientId.toString());
+      params = params.set('clientId', clientId.toString());
     }
 
-    return this.http.get<BookingsByTypeResponse>(`${this.apiUrl}/bookings-by-type`, { params });
+    return this.http.get<BookingsByTypeResponse>(
+      `${this.apiUrl}/bookings-by-type`,
+      { params }
+    );
   }
 
   /**
@@ -80,7 +89,10 @@ export class DashboardService {
     if (bookingType) params = params.set('bookingType', bookingType);
     if (agentId) params = params.set('agentId', agentId.toString());
 
-    return this.http.get<RevenueOverTimeResponse>(`${this.apiUrl}/revenue-over-time`, { params });
+    return this.http.get<RevenueOverTimeResponse>(
+      `${this.apiUrl}/revenue-over-time`,
+      { params }
+    );
   }
 
   /**
@@ -99,7 +111,10 @@ export class DashboardService {
     if (limit) params = params.set('limit', limit.toString());
     if (bookingStatus) params = params.set('bookingStatus', bookingStatus);
     if (type) params = params.set('type', type);
-    return this.http.get<TopDestinationsResponse>(`${this.apiUrl}/top-destinations`, { params });
+    return this.http.get<TopDestinationsResponse>(
+      `${this.apiUrl}/top-destinations`,
+      { params }
+    );
   }
 
   /**
@@ -117,7 +132,9 @@ export class DashboardService {
     if (limit) params = params.set('limit', limit.toString());
     if (bookingStatus) params = params.set('bookingStatus', bookingStatus);
 
-    return this.http.get<TopCarriersResponse>(`${this.apiUrl}/top-carriers`, { params });
+    return this.http.get<TopCarriersResponse>(`${this.apiUrl}/top-carriers`, {
+      params,
+    });
   }
 
   /**
@@ -133,7 +150,10 @@ export class DashboardService {
     if (endDate) params = params.set('endDate', endDate);
     if (paymentMethod) params = params.set('paymentMethod', paymentMethod);
 
-    return this.http.get<PaymentsByStatusResponse>(`${this.apiUrl}/payments-by-status`, { params });
+    return this.http.get<PaymentsByStatusResponse>(
+      `${this.apiUrl}/payments-by-status`,
+      { params }
+    );
   }
 
   /**
@@ -149,6 +169,9 @@ export class DashboardService {
     if (endDate) params = params.set('endDate', endDate);
     if (bookingType) params = params.set('bookingType', bookingType);
 
-    return this.http.get<BookingsByStatusResponse>(`${this.apiUrl}/bookings-by-status`, { params });
+    return this.http.get<BookingsByStatusResponse>(
+      `${this.apiUrl}/bookings-by-status`,
+      { params }
+    );
   }
 }

@@ -102,6 +102,12 @@ export class DeviajeSidebarComponent implements OnInit, OnDestroy {
       route: '/bookings',
       isSelected: false,
     },
+       {
+      icon: 'informes',
+      label: 'Dashboards',
+      route: '/agent/dashboard',
+      isSelected: false,
+    },
   ];
 
   adminMenuItems: MenuItem[] = [

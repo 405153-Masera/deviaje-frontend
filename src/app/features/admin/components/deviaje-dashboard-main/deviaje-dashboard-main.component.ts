@@ -39,6 +39,8 @@ export class DeviajeDashboardMainComponent implements OnInit, OnDestroy {
   filterForm = new FormGroup({
     startDate: new FormControl(''),
     endDate: new FormControl(''),
+    bookingStatus: new FormControl(''),
+    bookingType: new FormControl('')
   });
 
   // Estados
@@ -273,9 +275,11 @@ export class DeviajeDashboardMainComponent implements OnInit, OnDestroy {
     const formValue = this.filterForm.value;
     const startDate = formValue.startDate || undefined;
     const endDate = formValue.endDate || undefined;
+    const bookingStatus = formValue.bookingStatus || undefined;
+    const bookingType = formValue.bookingType || undefined;
 
     this.subscriptions.add(
-      this.dashboardService.getDashboardSummary(startDate, endDate).subscribe({
+      this.dashboardService.getDashboardSummary(startDate, endDate, bookingStatus, bookingType).subscribe({
         next: (response: DashboardSummaryResponse) => {
           this.loading = false;
           this.globalKpis = response.globalKpis;

@@ -22,17 +22,28 @@ import {
   TopCarriersKpis,
 } from '../../dashboard/models/dashboards';
 import { MatTooltipModule } from '@angular/material/tooltip';
+import { AuthService } from '../../../../core/auth/services/auth.service';
 
 @Component({
   selector: 'app-dashboard-top-carriers',
   standalone: true,
-  imports: [GoogleChartsModule, CommonModule, ReactiveFormsModule, FormsModule, MatTooltipModule],
+  imports: [
+    GoogleChartsModule,
+    CommonModule,
+    ReactiveFormsModule,
+    FormsModule,
+    MatTooltipModule,
+  ],
   templateUrl: './deviaje-top-carriers.component.html',
   styleUrls: ['./deviaje-top-carriers.component.scss'],
 })
 export class DeviajeTopCarriersComponent implements OnInit, OnDestroy {
   private readonly dashboardService = inject(DashboardService);
+  private authService = inject(AuthService);
   private readonly router = inject(Router);
+  
+  currentUser: any = null;
+  userRole: string = '';
 
   private subscriptions = new Subscription();
 
@@ -77,8 +88,16 @@ export class DeviajeTopCarriersComponent implements OnInit, OnDestroy {
     pieSliceText: 'percentage',
     pieSliceTextStyle: { fontSize: 12 },
     colors: [
-      '#3B82F6', '#10B981', '#F59E0B', '#EF4444', '#8B5CF6',
-      '#06B6D4', '#EC4899', '#14B8A6', '#F97316', '#6366F1'
+      '#3B82F6',
+      '#10B981',
+      '#F59E0B',
+      '#EF4444',
+      '#8B5CF6',
+      '#06B6D4',
+      '#EC4899',
+      '#14B8A6',
+      '#F97316',
+      '#6366F1',
     ],
     animation: {
       startup: true,
@@ -105,6 +124,7 @@ export class DeviajeTopCarriersComponent implements OnInit, OnDestroy {
   }
 
   ngOnInit(): void {
+    this.loadCurrentUser();
     this.loadData();
     this.setupFilters();
   }
@@ -155,12 +175,14 @@ export class DeviajeTopCarriersComponent implements OnInit, OnDestroy {
             this.processChartData(response.data);
 
             if (response.data.length === 0) {
-              this.error = 'No se encontraron datos para los filtros seleccionados';
+              this.error =
+                'No se encontraron datos para los filtros seleccionados';
             }
           },
           error: (err) => {
             this.loading = false;
-            this.error = 'Error al cargar los datos. Por favor, intente nuevamente.';
+            this.error =
+              'Error al cargar los datos. Por favor, intente nuevamente.';
             console.error('Error loading top carriers:', err);
           },
         })
@@ -169,10 +191,7 @@ export class DeviajeTopCarriersComponent implements OnInit, OnDestroy {
 
   private processChartData(data: CarrierData[]): void {
     // Formato para Google Charts PieChart: [['Aerolínea', 'Cantidad'], [...], ...]
-    this.chartData = data.map((item) => [
-      item.carrierName,
-      item.bookingsCount,
-    ]);
+    this.chartData = data.map((item) => [item.carrierName, item.bookingsCount]);
   }
 
   clearFilters(): void {
@@ -184,6 +203,31 @@ export class DeviajeTopCarriersComponent implements OnInit, OnDestroy {
   }
 
   goBack(): void {
-    this.router.navigate(['admin/dashboard']);
+    if (this.userRole === 'ADMINISTRADOR') {
+      this.router.navigate(['admin/dashboard']);
+      return;
+    }
+    
+    if (this.userRole === 'AGENTE') {
+      this.router.navigate(['agent/dashboard']);
+      return;
+    }
+  }
+
+  loadCurrentUser(): void {
+    // Suscribirse al usuario actual
+    this.subscriptions.add(
+      this.authService.currentUser$.subscribe({
+        next: (user) => {
+          this.currentUser = user;
+        },
+      })
+    );
+
+    this.subscriptions.add(
+      this.authService.activeRole$.subscribe((role) => {
+        this.userRole = role || '';
+      })
+    );
   }
 }

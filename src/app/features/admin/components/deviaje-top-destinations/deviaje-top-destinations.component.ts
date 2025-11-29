@@ -22,17 +22,28 @@ import {
   TopDestinationsKpis,
 } from '../../dashboard/models/dashboards';
 import { MatTooltipModule } from '@angular/material/tooltip';
+import { AuthService } from '../../../../core/auth/services/auth.service';
 
 @Component({
   selector: 'app-dashboard-top-destinations',
   standalone: true,
-  imports: [GoogleChartsModule, CommonModule, ReactiveFormsModule, FormsModule, MatTooltipModule],
+  imports: [
+    GoogleChartsModule,
+    CommonModule,
+    ReactiveFormsModule,
+    FormsModule,
+    MatTooltipModule,
+  ],
   templateUrl: './deviaje-top-destinations.component.html',
   styleUrls: ['./deviaje-top-destinations.component.scss'],
 })
 export class DeviajeTopDestinationsComponent implements OnInit, OnDestroy {
   private readonly dashboardService = inject(DashboardService);
+  private authService = inject(AuthService);
   private readonly router = inject(Router);
+
+  currentUser: any = null;
+  userRole: string = '';
 
   private subscriptions = new Subscription();
 
@@ -104,6 +115,7 @@ export class DeviajeTopDestinationsComponent implements OnInit, OnDestroy {
   }
 
   ngOnInit(): void {
+    this.loadCurrentUser();
     this.loadData();
     this.setupFilters();
   }
@@ -155,12 +167,14 @@ export class DeviajeTopDestinationsComponent implements OnInit, OnDestroy {
             this.processChartData(response.data);
 
             if (response.data.length === 0) {
-              this.error = 'No se encontraron datos para los filtros seleccionados';
+              this.error =
+                'No se encontraron datos para los filtros seleccionados';
             }
           },
           error: (err) => {
             this.loading = false;
-            this.error = 'Error al cargar los datos. Por favor, intente nuevamente.';
+            this.error =
+              'Error al cargar los datos. Por favor, intente nuevamente.';
             console.error('Error loading top destinations:', err);
           },
         })
@@ -169,10 +183,7 @@ export class DeviajeTopDestinationsComponent implements OnInit, OnDestroy {
 
   private processChartData(data: DestinationData[]): void {
     // Formato para Google Charts BarChart: [['Destino', 'Cantidad'], [...], ...]
-    this.chartData = data.map((item) => [
-      item.destination,
-      item.bookingsCount,
-    ]);
+    this.chartData = data.map((item) => [item.destination, item.bookingsCount]);
   }
 
   clearFilters(): void {
@@ -185,7 +196,15 @@ export class DeviajeTopDestinationsComponent implements OnInit, OnDestroy {
   }
 
   goBack(): void {
-    this.router.navigate(['admin/dashboard']);
+    if (this.userRole === 'ADMINISTRADOR') {
+      this.router.navigate(['admin/dashboard']);
+      return;
+    }
+
+    if (this.userRole === 'AGENTE') {
+      this.router.navigate(['/agent/dashboard']);
+      return;
+    }
   }
 
   getTypeLabel(): string {
@@ -201,5 +220,22 @@ export class DeviajeTopDestinationsComponent implements OnInit, OnDestroy {
   // Método para mostrar "Noches" solo si es HOTEL
   isHotelType(): boolean {
     return this.filterForm.get('type')?.value === 'HOTEL';
+  }
+
+  loadCurrentUser(): void {
+    // Suscribirse al usuario actual
+    this.subscriptions.add(
+      this.authService.currentUser$.subscribe({
+        next: (user) => {
+          this.currentUser = user;
+        },
+      })
+    );
+
+    this.subscriptions.add(
+      this.authService.activeRole$.subscribe((role) => {
+        this.userRole = role || '';
+      })
+    );
   }
 }

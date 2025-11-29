@@ -58,7 +58,7 @@ export class RoutePermissionService {
     // Mapa de rutas y sus roles requeridos
     const routeRoleMap: { [key: string]: string[] } = {
       '/admin': ['ADMINISTRADOR'],
-      '/agent': ['AGENTE', 'ADMINISTRADOR'],
+      '/agent': ['AGENTE'],
       '/bookings': [],
       '/profile': [] // Solo requiere autenticación, no roles específicos
     };
