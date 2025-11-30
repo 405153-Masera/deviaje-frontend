@@ -89,6 +89,7 @@ export class DeviajeFlightBookingComponent implements OnInit, OnDestroy {
   totalSteps = 3;
   showSuccessMessage = false;
   errorMessage = '';
+  errorVerifyMessage = '';
   userErrorMessage = '';
   isLoggedIn: boolean = false;
   userRole: string = '';
@@ -147,6 +148,7 @@ export class DeviajeFlightBookingComponent implements OnInit, OnDestroy {
   }
 
   ngOnInit(): void {
+    this.errorVerifyMessage = '';
     // Verificar y cargar si hay datos persistidos en sessionStorage
     if (typeof window !== 'undefined') {
       this.loadPersistedState();
@@ -300,7 +302,10 @@ export class DeviajeFlightBookingComponent implements OnInit, OnDestroy {
   searchUserByUsername(username: string): void {
     if (!username.trim()) return;
 
-    if (username === this.currentUser?.username) {
+    if (
+      username.toLowerCase() ===
+      (this.currentUser?.username ?? '').trim().toLowerCase()
+    ) {
       this.userErrorMessage = 'No puedes reservar para ti mismo siendo agente';
       return;
     }
@@ -332,7 +337,7 @@ export class DeviajeFlightBookingComponent implements OnInit, OnDestroy {
 
   verifyFlightOffer(offer: FlightOfferDto): void {
     this.isVerifying = true;
-    this.errorMessage = '';
+    this.errorVerifyMessage = '';
 
     this.bookingService.verifyFlightOfferPrice(offer).subscribe({
       next: (verifiedOffer) => {
@@ -341,7 +346,7 @@ export class DeviajeFlightBookingComponent implements OnInit, OnDestroy {
           this.selectedOffer = verifiedOffer.data.flightOffers[0];
           this.saveBookingState();
         } else {
-          this.errorMessage =
+          this.errorVerifyMessage =
             'La oferta de vuelo ya no está disponible. Regresando a los resultados...';
           setTimeout(() => {
             this.router.navigate(['/home/flight/results'], {
@@ -352,10 +357,11 @@ export class DeviajeFlightBookingComponent implements OnInit, OnDestroy {
       },
       error: (error) => {
         this.isVerifying = false;
-        this.errorMessage = error.message;
         console.error('Error verificando oferta:', error);
-        this.errorMessage =
-          'Hubo un error al verificar la oferta. Regresando a los resultados...';
+        this.errorVerifyMessage = error.message;
+        console.error('Error verificando oferta:', error);
+        this.errorVerifyMessage +=
+          ' Regresando a los resultados...';
 
         setTimeout(() => {
           this.router.navigate(['/home/flight/results'], {
@@ -460,8 +466,20 @@ export class DeviajeFlightBookingComponent implements OnInit, OnDestroy {
       this.validatorService.autoUppercaseControl(
         travelerForm.get('documents.0.number')
       );
+      if (i === 0) {
+        this.validatorService.autoUppercaseControl(
+          travelerForm.get('contact.emailAddress')
+        );
+      }
+      this.validatorService.autoUppercaseControl(
+        travelerForm.get('documents.0.number')
+      );
       this.travelers.push(travelerForm);
     }
+  }
+
+  onUserInput(event: any) {
+    event.target.value = event.target.value.toUpperCase();
   }
 
   async nextStep(): Promise<void> {

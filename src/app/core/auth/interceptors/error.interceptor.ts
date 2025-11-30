@@ -352,6 +352,9 @@ function getMercadoPagoSpecificMessage(
     '3035': 'La cantidad de cuotas no es válida.',
     '3003':
       'Por seguridad, el token de la tarjeta expiró. Volvé a ingresar los datos.',
+    '2084':
+      'Está transacción no se puede reembolsar.',
+
 
     // Errores generales
     bad_request:

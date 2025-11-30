@@ -31,7 +31,7 @@ export interface FlightBookingDetails {
   destination: string;
   carrier: string;
   departureDate: string;
-  arrivalDate: string;
+  returnDate: string;
   adults: number;
   children: number;
   infants: number;

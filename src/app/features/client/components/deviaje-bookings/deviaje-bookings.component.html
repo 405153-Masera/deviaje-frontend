@@ -69,17 +69,38 @@
   </div>
 
   <!-- Botones de exportación (solo para ADMIN y AGENTE) -->
-  <div class="row mb-3" *ngIf="canExport && !loading && filteredBookings.length > 0">
+  <!-- deviaje-bookings.component.html -->
+
+  <!-- Botones de exportación Y búsqueda rápida (solo para ADMIN y AGENTE) -->
+  <div class="row mb-3" *ngIf="(canExport || canQuickSearch) && !loading">
     <div class="col-12">
-      <div class="d-flex justify-content-end gap-2">
-        <button class="btn btn-danger btn-sm" (click)="exportToPDF()" [disabled]="filteredBookings.length === 0">
-          <i class="bi bi-file-pdf me-1"></i>
-          Exportar PDF
-        </button>
-        <button class="btn btn-success btn-sm" (click)="exportToExcel()" [disabled]="filteredBookings.length === 0">
-          <i class="bi bi-file-excel me-1"></i>
-          Exportar Excel
-        </button>
+      <div class="d-flex justify-content-end align-items-center gap-2 flex-wrap">
+
+        <!-- Búsqueda rápida por referencia (solo AGENTES) -->
+        <div *ngIf="canQuickSearch" class="d-flex gap-2 align-items-center">
+          <div class="input-group" style="max-width: 350px;">
+            <input type="text" class="form-control form-control-sm"
+              placeholder="Código de reserva (ej: FL-20251130-00001)" [(ngModel)]="quickSearchReference"
+              (keyup.enter)="searchByReference()" maxlength="30">
+            <button class="btn btn-primary btn-sm" (click)="searchByReference()"
+              [disabled]="!quickSearchReference.trim()">
+              Buscar
+            </button>
+          </div>
+          <small class="text-muted d-none d-lg-inline">Buscar reserva de invitado</small>
+        </div>
+
+        <!-- Botones de exportación -->
+        <div *ngIf="canExport && filteredBookings.length > 0" class="d-flex gap-2 ms-auto">
+          <button class="btn btn-danger btn-sm" (click)="exportToPDF()" [disabled]="filteredBookings.length === 0">
+            <i class="bi bi-file-pdf me-1"></i>
+            Exportar PDF
+          </button>
+          <button class="btn btn-success btn-sm" (click)="exportToExcel()" [disabled]="filteredBookings.length === 0">
+            <i class="bi bi-file-excel me-1"></i>
+            Exportar Excel
+          </button>
+        </div>
       </div>
     </div>
   </div>

@@ -107,6 +107,7 @@ export class DeviajePackageBookingComponent implements OnInit, OnDestroy {
   showSuccessMessage = false;
   errorMessage = '';
   userErrorMessage = '';
+  errorVerifyMessage = '';
   isLoggedIn: boolean = false;
   userRole: string = '';
 
@@ -164,8 +165,6 @@ export class DeviajePackageBookingComponent implements OnInit, OnDestroy {
           infants: this.flightSearchParams.infants || 0,
         };
       } else {
-        // Fallback si no hay flightSearchParams
-        console.log('⚠️ No flightSearchParams, usando valores por defecto');
         this.searchParams = {
           adults: 1,
           children: 0,
@@ -210,6 +209,7 @@ export class DeviajePackageBookingComponent implements OnInit, OnDestroy {
   }
 
   ngOnInit(): void {
+    this.errorVerifyMessage = '';
     if (typeof window !== 'undefined') {
       this.loadPersistedState();
     }
@@ -369,7 +369,10 @@ export class DeviajePackageBookingComponent implements OnInit, OnDestroy {
   searchUserByUsername(username: string): void {
     if (!username.trim()) return;
 
-    if (username === this.currentUser?.username) {
+    if (
+      username.toLowerCase() ===
+      (this.currentUser?.username ?? '').trim().toLowerCase()
+    ) {
       this.userErrorMessage = 'No puedes reservar para ti mismo siendo agente';
       return;
     }
@@ -395,7 +398,7 @@ export class DeviajePackageBookingComponent implements OnInit, OnDestroy {
 
   verifyFlightOffer(offer: FlightOfferDto): void {
     this.isVerifying = true;
-    this.errorMessage = '';
+    this.errorVerifyMessage = '';
 
     this.bookingService.verifyFlightOfferPrice(offer).subscribe({
       next: (verifiedOffer) => {
@@ -405,7 +408,7 @@ export class DeviajePackageBookingComponent implements OnInit, OnDestroy {
 
           this.saveBookingState();
         } else {
-          this.errorMessage =
+          this.errorVerifyMessage =
             'La oferta de vuelo ya no está disponible. Regresando a los resultados...';
           setTimeout(() => {
             this.router.navigate(['/home/packages/results'], {
@@ -416,13 +419,13 @@ export class DeviajePackageBookingComponent implements OnInit, OnDestroy {
       },
       error: (error) => {
         this.isVerifying = false;
-        this.errorMessage = error.message;
+        this.errorVerifyMessage = error.message;
         console.error('Error verificando oferta:', error);
-        this.errorMessage =
-          'Hubo un error al verificar la oferta. Regresando a los resultados...';
+        this.errorVerifyMessage +=
+          ' Regresando a los resultados...';
 
         setTimeout(() => {
-          this.router.navigate(['/home/package/results'], {
+          this.router.navigate(['/home/packages/results'], {
             queryParamsHandling: 'preserve', // Mantener los parámetros de búsqueda
           });
         }, 2000);
@@ -525,6 +528,11 @@ export class DeviajePackageBookingComponent implements OnInit, OnDestroy {
         travelerForm.get('documents.0.number')
       );
 
+      if (i === 0) {
+        this.validatorService.autoUppercaseControl(
+          travelerForm.get('contact.emailAddress')
+        );
+      }
       this.travelers.push(travelerForm);
     }
   }
@@ -650,7 +658,9 @@ export class DeviajePackageBookingComponent implements OnInit, OnDestroy {
       agentId: agentId,
       origin: this.origin,
       destination: this.destination,
-      carrier: this.flightUtils.getAirlineName(this.flightOffer.validatingAirlineCodes[0]),
+      carrier: this.flightUtils.getAirlineName(
+        this.flightOffer.validatingAirlineCodes[0]
+      ),
       flightOffer: this.flightOffer,
       travelers: this.prepareTravelersData(),
     };
@@ -726,7 +736,6 @@ export class DeviajePackageBookingComponent implements OnInit, OnDestroy {
       this.destination = this.getAirportInfo(destination);
     }
   }
-
 
   onOriginReceived(origin: string) {
     this.origin = origin;
@@ -1121,7 +1130,7 @@ export class DeviajePackageBookingComponent implements OnInit, OnDestroy {
           roomName: this.nameRoom, // Viene del state
           boardName: (this.rate as any)?.boardName,
           paxes: paxes,
-          cancellationPolicies: JSON.stringify(this.rate.cancellationPolicies)
+          cancellationPolicies: JSON.stringify(this.rate.cancellationPolicies),
         },
       ],
     };
@@ -1130,7 +1139,7 @@ export class DeviajePackageBookingComponent implements OnInit, OnDestroy {
   // Agregar este método a tu package booking component
   verifyHotelRateAvailability(): void {
     this.isVerifying = true;
-    this.errorMessage = '';
+    this.errorVerifyMessage = '';
 
     this.subscription.add(
       this.bookingService.checkRates(this.rateKey).subscribe({
@@ -1175,11 +1184,21 @@ export class DeviajePackageBookingComponent implements OnInit, OnDestroy {
         error: (error) => {
           console.error('Hotel rate verification failed:', error);
           this.isVerifying = false;
-          this.errorMessage =
-            'La tarifa del hotel ya no está disponible. Por favor, realice una nueva búsqueda.';
+          this.errorVerifyMessage =
+            error.error?.message || 'Hubo un error al verificar la oferta.';
+          this.errorVerifyMessage += ' Regresando a los resultados...';
+          setTimeout(() => {
+            this.router.navigate(['/home/packages/results'], {
+              queryParamsHandling: 'preserve', // Mantener los parámetros de búsqueda
+            });
+          }, 2000);
         },
       })
     );
+  }
+
+  onUserInput(event: any) {
+    event.target.value = event.target.value.toUpperCase();
   }
 
   goBackToResults(): void {

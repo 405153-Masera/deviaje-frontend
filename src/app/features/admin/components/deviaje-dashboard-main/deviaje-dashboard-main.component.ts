@@ -285,6 +285,7 @@ export class DeviajeDashboardMainComponent implements OnInit, OnDestroy {
           this.globalKpis = response.globalKpis;
           this.miniCharts = response.miniCharts;
           this.processChartData(response.miniCharts);
+          console.log(this.globalKpis);
 
           if (response.miniCharts.length === 0) {
             this.error =

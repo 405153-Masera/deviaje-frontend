@@ -18,6 +18,12 @@
     <small class="text-muted">Será redirigido automáticamente en unos segundos...</small>
   </div>
 
+   <!-- Alerta de error -->
+  <div *ngIf="errorVerifyMessage" class="alert alert-danger alert-dismissible fade show" role="alert">
+    <i class="bi bi-exclamation-triangle-fill me-2"></i>
+    {{ errorVerifyMessage }}
+  </div>
+
   <!-- Panel de información del vuelo -->
   <ng-container *ngIf="!isVerifying">
     <app-deviaje-flight-booking-summary [flightOffer]="flightOffer" (originChange)="onOriginReceived($event)"
@@ -89,11 +95,11 @@
 
                 <!-- Búsqueda de usuario (cuando no es guest booking) -->
                 <div *ngIf="!isGuestBooking" class="mt-3">
-                  <label class="form-label">Buscar cliente por nombre de usuario</label>
+                  <label class="form-label" id="client">Buscar cliente por nombre de usuario</label>
                   <div class="input-group row">
                     <div class="col-lg-6">
                       <input type="text" class="form-control" placeholder="Nombre de usuario del cliente"
-                        #userSearchInput>
+                        #userSearchInput id="client" (input)="onUserInput($event)">
                     </div>
                     <div class="col-lg-5 mt-3 mt-lg-0">
                       <button class="btn btn-outline-secondary" type="button"

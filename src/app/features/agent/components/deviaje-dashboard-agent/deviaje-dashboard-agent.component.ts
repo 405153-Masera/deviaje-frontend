@@ -203,6 +203,7 @@ export class DeviajeDashboardAgentComponent implements OnInit, OnDestroy {
             this.agentKpis.totalCarriers = response.globalKpis.uniqueCarriers ?? 0;
             this.agentKpis.totalDestinations = response.globalKpis.uniqueDestinations ?? 0;
             console.log(this.agentKpis);
+            console.log(response.globalKpis);
             this.processChartData(response.miniCharts);
 
             if (response.miniCharts.length === 0) {

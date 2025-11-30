@@ -38,10 +38,12 @@
                             <i class="bi bi-arrow-left me-1"></i> Volver
                         </button>
                         <div class="d-flex gap-2 flex-wrap">
-                            <button class="btn btn-success" (click)="downloadVoucher()">
+                            <button class="btn btn-success" (click)="downloadVoucher()"
+                                [disabled]="!canCancelBooking()">
                                 <i class="bi bi-download me-1"></i> Descargar Voucher
                             </button>
-                            <button class="btn btn-primary" (click)="resendVoucher()" [disabled]="isSending || isSent">
+                            <button class="btn btn-primary" (click)="resendVoucher()"
+                                [disabled]="isSending || isSent || !canCancelBooking()">
                                 <ng-container *ngIf="!isSending && !isSent">
                                     <i class="bi bi-envelope me-1"></i>Enviar por Email
                                 </ng-container>
@@ -161,6 +163,28 @@
                     <div class="card-body">
                         <div class="row g-3">
 
+                            @if(bookingDetails.type === 'PACKAGE') {
+                            <div class="col-md-3">
+                                <small class="text-muted d-block">Origen</small>
+                                <strong class="fs-5">{{ bookingDetails.flightDetails.origin }}</strong>
+                            </div>
+
+                            <div class="col-md-3">
+                                <small class="text-muted d-block">Destino</small>
+                                <strong class="fs-5">{{ bookingDetails.flightDetails.destination }}</strong>
+                            </div>
+
+                            <div class="col-md-3">
+                                <small class="text-muted d-block">Aerolínea</small>
+                                <strong>{{ getAirlineName(bookingDetails.flightDetails.carrier) }}</strong>
+                            </div>
+
+                            <div class="col-md-3">
+                                <small class="text-muted d-block">Precio Vuelo</small>
+                                <strong>{{ bookingDetails.flightDetails.totalPrice | currency: 'ARS'}}</strong>
+                            </div>
+
+                            } @else {
                             <div class="col-md-4">
                                 <small class="text-muted d-block">Origen</small>
                                 <strong class="fs-5">{{ bookingDetails.flightDetails.origin }}</strong>
@@ -175,6 +199,7 @@
                                 <small class="text-muted d-block">Aerolínea</small>
                                 <strong>{{ getAirlineName(bookingDetails.flightDetails.carrier) }}</strong>
                             </div>
+                            }
 
                             <div class="col-md-4">
                                 <small class="text-muted d-block">Salida</small>
@@ -182,34 +207,28 @@
                             </div>
 
                             <div class="col-md-4">
-                                <small class="text-muted d-block">Llegada</small>
-                                <strong>{{ formatSimpleDate(bookingDetails.flightDetails.arrivalDate) }}</strong>
+                                <small class="text-muted d-block">Regreso</small>
+                                <strong>{{ formatSimpleDate(bookingDetails.flightDetails.returnDate) }}</strong>
                             </div>
 
                             <div class="col-md-4">
-                                <small class="text-muted d-block">Duración</small>
-                                <strong>{{ getFlightDuration(bookingDetails.flightDetails.departureDate,
-                                    bookingDetails.flightDetails.arrivalDate) }}</strong>
+                                <small class="text-muted d-block">Total Pasajeros</small>
+                                <strong>{{ getTotalPassengers() }}</strong>
                             </div>
 
-                            <div class="col-md-3">
+                            <div class="col-md-4">
                                 <small class="text-muted d-block">Adultos</small>
                                 <strong>{{ bookingDetails.flightDetails.adults }}</strong>
                             </div>
 
-                            <div class="col-md-3" *ngIf="bookingDetails.flightDetails.children > 0">
+                            <div class="col-md-4" *ngIf="bookingDetails.flightDetails.children > 0">
                                 <small class="text-muted d-block">Niños</small>
                                 <strong>{{ bookingDetails.flightDetails.children }}</strong>
                             </div>
 
-                            <div class="col-md-3" *ngIf="bookingDetails.flightDetails.infants > 0">
+                            <div class="col-md-4" *ngIf="bookingDetails.flightDetails.infants > 0">
                                 <small class="text-muted d-block">Infantes</small>
                                 <strong>{{ bookingDetails.flightDetails.infants }}</strong>
-                            </div>
-
-                            <div class="col-md-3">
-                                <small class="text-muted d-block">Total Pasajeros</small>
-                                <strong>{{ getTotalPassengers() }}</strong>
                             </div>
 
                         </div>
@@ -392,7 +411,22 @@
                     </div>
                     <div class="card-body">
                         <div class="row g-3">
+                            @if(bookingDetails.type === 'PACKAGE') {
+                            <div class="col-md-4">
+                                <small class="text-muted d-block">Hotel</small>
+                                <strong class="fs-5">{{ bookingDetails.hotelDetails.hotelName }}</strong>
+                            </div>
 
+                            <div class="col-md-4">
+                                <small class="text-muted d-block">Ubicación</small>
+                                <strong>{{ bookingDetails.hotelDetails.destinationName }}, {{
+                                    bookingDetails.hotelDetails.countryName }}</strong>
+                            </div>
+                            <div class="col-md-4">
+                                <small class="text-muted d-block">Precio Hotel</small>
+                                <strong>{{ bookingDetails.hotelDetails.totalPrice | currency: 'ARS'}} </strong>
+                            </div>
+                            } @else {
                             <div class="col-md-6">
                                 <small class="text-muted d-block">Hotel</small>
                                 <strong class="fs-5">{{ bookingDetails.hotelDetails.hotelName }}</strong>
@@ -403,48 +437,49 @@
                                 <strong>{{ bookingDetails.hotelDetails.destinationName }}, {{
                                     bookingDetails.hotelDetails.countryName }}</strong>
                             </div>
+                            }
 
-                            <div class="col-md-3">
+                            <div class="col-md-4">
                                 <small class="text-muted d-block">Check-in</small>
                                 <strong>{{ formatDate(bookingDetails.hotelDetails.checkInDate) }}</strong>
                             </div>
 
-                            <div class="col-md-3">
+                            <div class="col-md-4">
                                 <small class="text-muted d-block">Check-out</small>
                                 <strong>{{ formatSimpleDate(bookingDetails.hotelDetails.checkOutDate) }}</strong>
                             </div>
 
-                            <div class="col-md-3">
+                            <div class="col-md-4">
                                 <small class="text-muted d-block">Noches</small>
                                 <strong>{{ bookingDetails.hotelDetails.numberOfNights }}</strong>
                             </div>
 
-                            <div class="col-md-6">
+                            <div class="col-md-4">
                                 <small class="text-muted d-block">Habitación</small>
                                 <strong>{{ bookingDetails.hotelDetails.roomName }}</strong>
                             </div>
 
-                            <div class="col-md-6">
+                            <div class="col-md-4">
                                 <small class="text-muted d-block">Régimen de Comidas</small>
                                 <strong>{{ bookingDetails.hotelDetails.boardName }}</strong>
                             </div>
 
-                            <div class="col-md-3">
+                            <div class="col-md-4">
                                 <small class="text-muted d-block">Habitaciones</small>
                                 <strong>{{ bookingDetails.hotelDetails.numberOfRooms }}</strong>
                             </div>
 
-                            <div class="col-md-3">
+                            <div class="col-md-4">
                                 <small class="text-muted d-block">Adultos</small>
                                 <strong>{{ bookingDetails.hotelDetails.adults }}</strong>
                             </div>
 
-                            <div class="col-md-3" *ngIf="bookingDetails.hotelDetails.children > 0">
+                            <div class="col-md-4" *ngIf="bookingDetails.hotelDetails.children > 0">
                                 <small class="text-muted d-block">Niños</small>
                                 <strong>{{ bookingDetails.hotelDetails.children }}</strong>
                             </div>
 
-                            <div class="col-md-3">
+                            <div class="col-md-4">
                                 <small class="text-muted d-block">Total Huéspedes</small>
                                 <strong>{{ getTotalGuests() }}</strong>
                             </div>
@@ -553,7 +588,7 @@
                     <div class="alert" [class.alert-success]="calculatedRefund > 0"
                         [class.alert-warning]="calculatedRefund === 0">
                         <strong>Monto a reembolsar:</strong>
-                        {{ calculatedRefund > 0 ? (calculatedRefund | currency:'ARS') : 'No reembolsable' }} 
+                        {{ calculatedRefund > 0 ? (calculatedRefund | currency:'ARS') : 'No reembolsable' }}
                         <br />
                         <small class="text-muted">
                             La comisión de agencia no es reembolsable.
@@ -613,7 +648,7 @@
 
             <!-- Footer -->
             <div class="modal-footer" *ngIf="!showSuccessMessage">
-                <button type="button" class="btn btn-secondary" (click)="closeCancelModal()"
+                <button type="button" class="btn btn-outline-secondary" (click)="closeCancelModal()"
                     [disabled]="isProcessingCancel">
                     Cerrar
                 </button>

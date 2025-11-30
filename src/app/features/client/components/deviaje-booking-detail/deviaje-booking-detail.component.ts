@@ -134,7 +134,7 @@ export class DeviajeBookingDetailComponent implements OnInit, OnDestroy {
 
   private initCancelForm(): void {
     this.cancelForm = this.fb.group({
-      cancellationReason: ['', Validators.required],
+      cancellationReason: ['',Validators.required],
       additionalDetails: [''],
     });
 
@@ -148,6 +148,7 @@ export class DeviajeBookingDetailComponent implements OnInit, OnDestroy {
           additionalDetailsControl?.setValidators([
             Validators.required,
             Validators.minLength(10),
+            Validators.maxLength(50)
           ]);
         } else {
           additionalDetailsControl?.clearValidators();
@@ -244,7 +245,7 @@ export class DeviajeBookingDetailComponent implements OnInit, OnDestroy {
     const request: CancelBookingRequest = {
       cancellationReason: formValue.cancellationReason,
       additionalDetails: formValue.additionalDetails || undefined,
-      refundAmount: this.calculatedRefund,
+      refundAmount:  Math.round(this.calculatedRefund * 100) / 100,
     };
 
     this.bookingService
@@ -326,17 +327,13 @@ export class DeviajeBookingDetailComponent implements OnInit, OnDestroy {
    * Calcula reembolso de hotel según políticas de cancelación.
    */
   private calculateHotelRefund(): number {
-    if (
-      !this.bookingDetails?.hotelDetails?.cancellationPolicies
-    ) {
+    if (!this.bookingDetails?.hotelDetails?.cancellationPolicies) {
       return 0;
     }
 
     const now = new Date();
-    const policies =
-      this.bookingDetails.hotelDetails.cancellationPolicies;
-    const netPrice =
-      this.bookingDetails.hotelDetails.totalPrice;
+    const policies = this.bookingDetails.hotelDetails.cancellationPolicies;
+    const netPrice = this.bookingDetails.hotelDetails.totalPrice;
 
     console.log('PRECIO DESDE EL RATE', netPrice);
     console.log(
@@ -351,11 +348,11 @@ export class DeviajeBookingDetailComponent implements OnInit, OnDestroy {
     // Buscar la política aplicable según la fecha actual
     for (const policy of sortedPolicies) {
       const fromDate = new Date(policy.from);
-
+      
+        console.log('NO SE SI APLICA LA PPOLITICA', now, fromDate);
       // Si la fecha actual es mayor o igual a 'from', esta política aplica
       if (now >= fromDate) {
-        const penaltyAmount = policy.amount || 0;
-
+        const penaltyAmount = this.hotelService.convertToArs(policy.amount) || 0;
         // Si la penalidad es mayor o igual al precio neto, no hay reembolso
         if (penaltyAmount >= netPrice) {
           return 0;
@@ -399,6 +396,10 @@ export class DeviajeBookingDetailComponent implements OnInit, OnDestroy {
 
     if (field.errors['minlength']) {
       return 'Mínimo 10 caracteres';
+    }
+
+    if (field.errors['maxlength']) {
+      return 'Máximo 50 caracteres';
     }
 
     return '';
@@ -477,6 +478,34 @@ export class DeviajeBookingDetailComponent implements OnInit, OnDestroy {
     const hours = Math.floor(diffMs / (1000 * 60 * 60));
     const minutes = Math.floor((diffMs % (1000 * 60 * 60)) / (1000 * 60));
     return `${hours}h ${minutes}m`;
+  }
+
+  // Calcula la duración del vuelo de IDA desde los itinerarios
+  getOutboundFlightDuration(): string {
+    const flight = this.bookingDetails?.flightDetails;
+    if (!flight || !flight.itineraries || flight.itineraries.length === 0) {
+      return 'N/A';
+    }
+
+    const outboundItinerary = flight.itineraries[0];
+    return this.formatDuration(outboundItinerary.duration);
+  }
+
+  // Calcula la duración del vuelo de REGRESO desde los itinerarios (si existe)
+  getInboundFlightDuration(): string | null{
+    const flight = this.bookingDetails?.flightDetails;
+    if (!flight || !flight.itineraries || flight.itineraries.length < 2) {
+      return null; // No hay vuelo de regreso
+    }
+
+    const inboundItinerary = flight.itineraries[1];
+    return this.formatDuration(inboundItinerary.duration);
+  }
+
+  // Verifica si es un vuelo de ida y vuelta
+  isRoundTripFlight(): boolean {
+    const flight = this.bookingDetails?.flightDetails;
+    return flight?.returnDate != null;
   }
 
   getTotalPassengers(): number {

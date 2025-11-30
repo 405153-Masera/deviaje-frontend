@@ -53,8 +53,11 @@ export class DeviajeBookingsComponent implements OnInit, OnDestroy {
   isLoggedIn = false;
 
   // Ordenamiento
-  sortColumn: 'date' | 'holderName' | '' = '';
+  sortColumn: 'date' | 'holderName' | '' = 'date';
   sortDirection: 'asc' | 'desc' = 'desc';
+
+  // detalles para invitados
+  quickSearchReference = '';
 
   // Filtros
   selectedType = '';
@@ -161,6 +164,21 @@ export class DeviajeBookingsComponent implements OnInit, OnDestroy {
           },
         })
     );
+  }
+
+  searchByReference(): void {
+    const reference = this.quickSearchReference.trim().toUpperCase();
+
+    if (!reference) {
+      alert('Por favor ingresa un código de reserva');
+      return;
+    }
+
+    this.router.navigate(['/bookings', reference, 'details']);
+  }
+
+  get canQuickSearch(): boolean {
+    return this.userRole === 'AGENTE';
   }
 
   // Filtros y búsqueda

@@ -105,6 +105,7 @@ export class DeviajeHotelBookingComponent implements OnInit, OnDestroy {
   showSuccessMessage = false;
   bookingReference: BookingReferenceResponse | null = null;
   errorMessage = '';
+  errorVerifyMessage = '';
 
   // User selection for agents
   showUserSelection = false;
@@ -151,6 +152,7 @@ export class DeviajeHotelBookingComponent implements OnInit, OnDestroy {
   });
 
   ngOnInit(): void {
+    this.errorVerifyMessage = '';
     if (typeof window !== 'undefined') {
       this.loadPersistedState();
     }
@@ -373,17 +375,18 @@ export class DeviajeHotelBookingComponent implements OnInit, OnDestroy {
 
   // Initialize booking flow
   initializeBookingFlow(): void {
-    if (this.recheck) {
-      this.verifyRateAvailability();
-    } else {
-      this.setupPaymentAmount();
-    }
+    // if (this.recheck) {
+    //   this.verifyRateAvailability();
+    // } else {
+    //   this.setupPaymentAmount();
+    // }
+    this.verifyRateAvailability();
   }
 
   // Verify rate availability for RECHECK rates
   verifyRateAvailability(): void {
     this.isVerifying = true;
-    this.errorMessage = '';
+    this.errorVerifyMessage = '';
 
     this.subscription.add(
       this.bookingService.checkRates(this.rateKey).subscribe({
@@ -407,17 +410,22 @@ export class DeviajeHotelBookingComponent implements OnInit, OnDestroy {
               }
               this.hotel = response.hotel;
               this.rate = response.hotel.rooms[0].rates[0];
-              this.setupPaymentAmount();
+    
             }
           }
           this.setupPaymentAmount();
         },
         error: (error) => {
           this.isVerifying = false;
-          this.errorMessage =
+          this.errorVerifyMessage =
             error.error?.message ||
-            'Error al verificar la tarifa. Intente nuevamente.';
-          console.error('Verificacion fallida:', error);
+            'Hubo un error al verificar la oferta.';
+          this.errorVerifyMessage +=  'Regresando a los resultados...';
+          setTimeout(() => {
+          this.router.navigate(['/home/hotels/results'], {
+            queryParamsHandling: 'preserve', // Mantener los parámetros de búsqueda
+          });
+        }, 2000);
         },
       })
     );
@@ -488,6 +496,11 @@ export class DeviajeHotelBookingComponent implements OnInit, OnDestroy {
         this.validatorService.autoUppercaseControl(
           travelerForm.get('lastName')
         );
+        if (travelerIndex === 0) {
+          this.validatorService.autoUppercaseControl(
+            travelerForm.get('contact.emailAddress')
+          );
+        }
 
         travelers.push(travelerForm);
         travelerIndex++;
@@ -525,11 +538,15 @@ export class DeviajeHotelBookingComponent implements OnInit, OnDestroy {
         this.validatorService.autoUppercaseControl(
           travelerForm.get('lastName')
         );
-
+        
         travelers.push(travelerForm);
         travelerIndex++;
       }
     }
+  }
+
+  onUserInput(event: any) {
+    event.target.value = event.target.value.toUpperCase();
   }
 
   private extractOccupancyFromRateKey(rateKey: string): {
@@ -587,7 +604,10 @@ export class DeviajeHotelBookingComponent implements OnInit, OnDestroy {
   searchUserByUsername(username: string): void {
     if (!username.trim()) return;
 
-    if (username === this.currentUser?.username) {
+    if (
+      username.toLowerCase() ===
+      (this.currentUser?.username ?? '').trim().toLowerCase()
+    ) {
       this.userErrorMessage = 'No puedes reservar para ti mismo siendo agente';
       return;
     }
@@ -877,7 +897,7 @@ export class DeviajeHotelBookingComponent implements OnInit, OnDestroy {
           roomName: this.nameRoom,
           boardName: (this.rate as any)?.boardName,
           paxes: paxes,
-          cancellationPolicies: JSON.stringify(this.rate.cancellationPolicies)
+          cancellationPolicies: JSON.stringify(this.rate.cancellationPolicies),
         },
       ],
     };

@@ -120,7 +120,7 @@ export class DeviajePriceDetailsComponent implements OnInit, OnChanges {
     // Para hoteles usamos el campo 'net'
     this.priceBreakdown.net = priceInArs;
     this.priceBreakdown.grandTotal = 0;
-    this.priceBreakdown.basePrice = 0;
+    this.priceBreakdown.basePrice = priceInArs;
     
     // Impuestos del hotel (si hay)
     this.priceBreakdown.taxesHotel = 0;
