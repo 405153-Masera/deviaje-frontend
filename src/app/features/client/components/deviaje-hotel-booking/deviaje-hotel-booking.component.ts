@@ -490,14 +490,9 @@ export class DeviajeHotelBookingComponent implements OnInit, OnDestroy {
             : {}),
         });
 
-        this.validatorService.autoUppercaseControl(
-          travelerForm.get('firstName')
-        );
-        this.validatorService.autoUppercaseControl(
-          travelerForm.get('lastName')
-        );
+   
         if (travelerIndex === 0) {
-          this.validatorService.autoUppercaseControl(
+          this.validatorService.autoLowercaseControl(
             travelerForm.get('contact.emailAddress')
           );
         }

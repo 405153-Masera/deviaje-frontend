@@ -149,6 +149,40 @@ export const routes: Routes = [
     ],
   },
   {
+    path: 'reviews',
+    canActivate: [authGuard],
+    children: [
+      {
+        path: '',
+        loadComponent: () =>
+          import(
+            './shared/components/deviaje-reviews-categories/deviaje-reviews-categories.component'
+          ).then((m) => m.DeviajeReviewsCategoriesComponent),
+      },
+      {
+        path: 'category/:category',
+        loadComponent: () =>
+          import(
+            './shared/components/deviaje-reviews-by-category/deviaje-reviews-by-category.component'
+          ).then((m) => m.DeviajeReviewsByCategoryComponent),
+      },
+      {
+        path: 'detail/:id',
+        loadComponent: () =>
+          import(
+            './shared/components/deviaje-review-detail/deviaje-review-detail.component'
+          ).then((m) => m.DeviajeReviewDetailComponent),
+      },
+      {
+        path: 'create',
+        loadComponent: () =>
+          import(
+            './shared/components/deviaje-create-review/deviaje-create-review.component'
+          ).then((m) => m.DeviajeCreateReviewComponent),
+      },
+    ],
+  },
+  {
     path: 'profile',
     component: DeviajeMainLayoutComponent,
     canActivate: [authGuard],

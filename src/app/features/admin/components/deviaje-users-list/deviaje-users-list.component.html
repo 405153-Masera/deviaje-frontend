@@ -144,7 +144,7 @@
 
                                     <!-- Teléfono (placeholder) -->
                                     <td>
-                                        <span class="text-muted">N/A</span>
+                                        <span class="text-muted">+{{user.countryCallingCode + user.phone}}</span>
                                     </td>
 
                                     <!-- Rol -->
@@ -156,10 +156,10 @@
 
                                     <!-- Estado -->
                                     <td>
-                                        <span class="badge" [ngClass]="user.isActive ? 'bg-success' : 'bg-secondary'">
+                                        <span class="badge" [ngClass]="user.active ? 'bg-success' : 'bg-secondary'">
                                             <i class="bi"
-                                                [ngClass]="user.isActive ? 'bi-check-circle' : 'bi-x-circle'"></i>
-                                            {{ user.isActive ? 'Activo' : 'Inactivo' }}
+                                                [ngClass]="user.active ? 'bi-check-circle' : 'bi-x-circle'"></i>
+                                            {{ user.active ? 'Activo' : 'Inactivo' }}
                                         </span>
                                     </td>
 
@@ -193,11 +193,11 @@
                                                 </li>
                                                 <li>
                                                     <button class="dropdown-item"
-                                                        [ngClass]="user.isActive ? 'text-warning' : 'text-success'"
+                                                        [ngClass]="user.active ? 'text-warning' : 'text-success'"
                                                         (click)="toggleUserStatus(user)">
                                                         <i class="bi me-2"
-                                                            [ngClass]="user.isActive ? 'bi-pause-circle' : 'bi-play-circle'"></i>
-                                                        {{ user.isActive ? 'Dar de baja' : 'Activar' }}
+                                                            [ngClass]="user.active ? 'bi-pause-circle' : 'bi-play-circle'"></i>
+                                                        {{ user.active ? 'Dar de baja' : 'Activar' }}
                                                     </button>
                                                 </li>
                                             </ul>

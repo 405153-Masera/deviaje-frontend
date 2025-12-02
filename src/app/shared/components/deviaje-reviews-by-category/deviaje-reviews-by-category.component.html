@@ -1,0 +1,162 @@
+<div class="container my-4">
+  <!-- Header con breadcrumb -->
+  <div class="row mb-4">
+    <div class="col-12">
+      <button class="btn btn-link ps-0 mb-2" (click)="backToCategories()">
+        <i class="bi bi-arrow-left me-2"></i>
+        Volver a categorías
+      </button>
+
+      <div class="d-flex justify-content-between align-items-center flex-wrap">
+        <div>
+          <h2 class="text-primary fw-bold mb-1">
+            <i class="{{ categoryIcon }} me-2"></i>
+            {{ categoryName }}
+          </h2>
+          <p class="text-secondary mb-0">
+            {{ reviews.length }}
+            {{ reviews.length === 1 ? "review" : "reviews" }} en esta categoría
+          </p>
+        </div>
+
+        <!-- Botón crear review (solo para usuarios autenticados) -->
+        @if (currentUser) {
+        <button
+          class="btn btn-primary btn-create-review"
+          (click)="openCreateReviewModal()"
+        >
+          <i class="bi bi-plus-lg me-2"></i>
+          Escribir Review
+        </button>
+        }
+      </div>
+    </div>
+  </div>
+
+  <!-- Mensajes de éxito/error -->
+  @if (success) {
+  <div class="alert alert-success alert-dismissible fade show" role="alert">
+    <i class="bi bi-check-circle-fill me-2"></i>
+    {{ success }}
+  </div>
+  }
+
+  @if (error && !loading) {
+  <div class="alert alert-danger alert-dismissible fade show" role="alert">
+    <i class="bi bi-exclamation-triangle-fill me-2"></i>
+    {{ error }}
+  </div>
+  }
+
+  <!-- Loading State -->
+  @if (loading) {
+  <div class="loading-container">
+    <div class="spinner"></div>
+    <p>Cargando reviews...</p>
+  </div>
+  }
+
+  <!-- No hay reviews -->
+  @if (!loading && reviews.length === 0 && !error) {
+  <div class="no-reviews">
+    <i class="bi bi-chat-text"></i>
+    <h5>No hay reviews en esta categoría</h5>
+    <p>Sé el primero en compartir tu experiencia</p>
+    @if (currentUser) {
+    <button class="btn btn-primary mt-3" (click)="openCreateReviewModal()">
+      <i class="bi bi-plus-lg me-2"></i>
+      Escribir la primera review
+    </button>
+    }
+  </div>
+  }
+
+  <!-- Lista de reviews -->
+  @if (!loading && reviews.length > 0) {
+  <div class="reviews-list">
+    @for (review of paginatedReviews; track review.id) {
+    <div
+      class="review-card"
+      (click)="viewReviewDetail(review.id)"
+      role="button"
+      tabindex="0"
+    >
+      <!-- Header de la review -->
+      <div class="review-header">
+        <div class="review-user-info">
+          <h5 class="username">{{ getUserDisplayName(review) }}</h5>
+          <span class="review-date">{{ formatDate(review.createdDatetime) }}</span>
+        </div>
+
+        <!-- Rating -->
+        <div class="review-rating">
+          @for (star of getStars(review.rating); track $index) {
+          <i
+            class="bi"
+            [ngClass]="{
+              'bi-star-fill': star.filled,
+              'bi-star': !star.filled
+            }"
+          ></i>
+          }
+        </div>
+      </div>
+
+      <!-- Comentario -->
+      <div class="review-comment">
+        <p>{{ review.comment }}</p>
+      </div>
+
+      <!-- Footer con respuestas y acciones -->
+      <div class="review-footer">
+        <span class="responses-count">
+          <i class="bi bi-chat-left-text me-1"></i>
+          {{ review.responsesCount }}
+          {{ review.responsesCount === 1 ? "respuesta" : "respuestas" }}
+        </span>
+
+        <!-- Botón eliminar (solo Admin/Agente) -->
+        @if (canModerate) {
+        <button
+          class="btn btn-danger btn-sm"
+          (click)="deleteReview(review, $event)"
+          title="Eliminar review"
+        >
+          <i class="bi bi-trash"></i>
+        </button>
+        }
+      </div>
+    </div>
+    }
+  </div>
+
+  <!-- Paginación (igual que hoteles) -->
+  @if (totalPages > 1) {
+  <nav class="pagination-container">
+    <ul class="pagination">
+      <li class="page-item" [class.disabled]="currentPage === 1">
+        <a class="page-link" (click)="changePage(currentPage - 1)">
+          <i class="bi bi-chevron-left"></i>
+        </a>
+      </li>
+
+      @for (page of getVisiblePages(); track $index) { @if (isPageNumber(page))
+      {
+      <li class="page-item" [class.active]="currentPage === page">
+        <a class="page-link" (click)="changePage(page)">{{ page }}</a>
+      </li>
+      } @else {
+      <li class="page-item disabled">
+        <span class="page-link">{{ page }}</span>
+      </li>
+      } }
+
+      <li class="page-item" [class.disabled]="currentPage === totalPages">
+        <a class="page-link" (click)="changePage(currentPage + 1)">
+          <i class="bi bi-chevron-right"></i>
+        </a>
+      </li>
+    </ul>
+  </nav>
+  } }
+</div>

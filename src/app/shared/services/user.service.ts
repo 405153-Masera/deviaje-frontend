@@ -37,10 +37,12 @@ export interface UserResponse {
   firstName?: string;
   lastName?: string;
   roles: string[];
-  isActive: boolean;
+  active: boolean;
   createdAt: string;
   updatedAt: string;
   lastLogin?: string;
+  countryCallingCode?: string;
+  phone: string;
 }
 
 export interface UserData {

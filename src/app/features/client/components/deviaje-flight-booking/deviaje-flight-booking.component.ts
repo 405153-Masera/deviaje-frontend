@@ -461,13 +461,9 @@ export class DeviajeFlightBookingComponent implements OnInit, OnDestroy {
         ]),
       });
 
-      this.validatorService.autoUppercaseControl(travelerForm.get('firstName'));
-      this.validatorService.autoUppercaseControl(travelerForm.get('lastName'));
-      this.validatorService.autoUppercaseControl(
-        travelerForm.get('documents.0.number')
-      );
+  
       if (i === 0) {
-        this.validatorService.autoUppercaseControl(
+        this.validatorService.autoLowercaseControl(
           travelerForm.get('contact.emailAddress')
         );
       }

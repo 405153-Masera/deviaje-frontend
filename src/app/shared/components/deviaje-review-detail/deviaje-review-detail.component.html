@@ -1,0 +1,234 @@
+<div class="container my-4">
+  <!-- Header con breadcrumb -->
+  <div class="row mb-4">
+    <div class="col-12">
+      <button class="btn btn-link ps-0 mb-2" (click)="backToList()">
+        <i class="bi bi-arrow-left me-2"></i>
+        Volver a {{ categoryName }}
+      </button>
+    </div>
+  </div>
+
+  <!-- Mensajes de éxito/error -->
+  @if (success) {
+  <div class="alert alert-success alert-dismissible fade show" role="alert">
+    <i class="bi bi-check-circle-fill me-2"></i>
+    {{ success }}
+  </div>
+  }
+
+  @if (error && !loading) {
+  <div class="alert alert-danger alert-dismissible fade show" role="alert">
+    <i class="bi bi-exclamation-triangle-fill me-2"></i>
+    {{ error }}
+  </div>
+  }
+
+  <!-- Loading State -->
+  @if (loading) {
+  <div class="loading-container">
+    <div class="spinner"></div>
+    <p>Cargando review...</p>
+  </div>
+  }
+
+  <!-- Review Principal -->
+  @if (!loading && review) {
+  <div class="review-main-card">
+    <!-- Header -->
+    <div class="review-main-header">
+      <div class="review-user-info">
+        <h4 class="username">{{ getUserDisplayName(review) }}</h4>
+        <span class="review-date">{{ formatDate(review.createdDatetime) }}</span>
+      </div>
+
+      <div class="d-flex align-items-center gap-3">
+        <!-- Rating -->
+        <div class="review-rating">
+          @for (star of getStars(review.rating); track $index) {
+          <i
+            class="bi"
+            [ngClass]="{
+              'bi-star-fill': star.filled,
+              'bi-star': !star.filled
+            }"
+          ></i>
+          }
+        </div>
+
+        <!-- Botón eliminar review (solo Admin/Agente) -->
+        @if (canModerate) {
+        <button
+          class="btn btn-danger btn-sm"
+          (click)="deleteReview()"
+          title="Eliminar review"
+        >
+          <i class="bi bi-trash me-1"></i>
+          Eliminar
+        </button>
+        }
+      </div>
+    </div>
+
+    <!-- Categoría -->
+    <div class="review-category mb-3">
+      <span class="badge bg-primary">
+        <i class="{{ categoryIcon }} me-1"></i>
+        {{ categoryName }}
+      </span>
+    </div>
+
+    <!-- Comentario -->
+    <div class="review-main-comment">
+      <p>{{ review.comment }}</p>
+    </div>
+
+    <!-- Stats -->
+    <div class="review-stats">
+      <i class="bi bi-chat-left-text me-1"></i>
+      {{ responses.length }}
+      {{ responses.length === 1 ? "respuesta" : "respuestas" }}
+    </div>
+  </div>
+
+  <!-- Botón Responder (solo usuarios autenticados) -->
+  @if (currentUser) {
+  <div class="response-action-container">
+    <button
+      class="btn btn-primary"
+      (click)="toggleResponseForm()"
+      [disabled]="submittingResponse"
+    >
+      <i class="bi bi-reply me-2"></i>
+      {{ showResponseForm ? "Cancelar" : "Responder" }}
+    </button>
+  </div>
+  }
+
+  <!-- Formulario de respuesta -->
+  @if (showResponseForm && currentUser) {
+  <div class="response-form-card">
+    <h5 class="mb-3">Tu respuesta</h5>
+    <form [formGroup]="responseForm" (ngSubmit)="submitResponse()">
+      <div class="mb-3">
+        <textarea
+          class="form-control"
+          formControlName="comment"
+          rows="4"
+          placeholder="Escribe tu respuesta..."
+          [class.is-invalid]="
+            responseForm.get('comment')?.invalid &&
+            responseForm.get('comment')?.touched
+          "
+        ></textarea>
+        @if (responseForm.get('comment')?.invalid &&
+        responseForm.get('comment')?.touched) {
+        <div class="invalid-feedback">
+          El comentario debe tener al menos 10 caracteres
+        </div>
+        }
+      </div>
+
+      <div class="d-flex gap-2">
+        <button
+          type="submit"
+          class="btn btn-primary"
+          [disabled]="responseForm.invalid || submittingResponse"
+        >
+          @if (submittingResponse) {
+          <span
+            class="spinner-border spinner-border-sm me-2"
+            role="status"
+          ></span>
+          } @else {
+          <i class="bi bi-send me-2"></i>
+          }
+          Publicar respuesta
+        </button>
+        <button
+          type="button"
+          class="btn btn-secondary"
+          (click)="toggleResponseForm()"
+          [disabled]="submittingResponse"
+        >
+          Cancelar
+        </button>
+      </div>
+    </form>
+  </div>
+  }
+
+  <!-- Lista de respuestas -->
+  @if (responses.length > 0) {
+  <div class="responses-section">
+    <h5 class="responses-title">
+      Respuestas ({{ responses.length }})
+    </h5>
+
+    @for (response of paginatedResponses; track response.id) {
+    <div class="response-card">
+      <div class="response-header">
+        <div>
+          <h6 class="response-username">
+            {{ getUserDisplayName(response) }}
+          </h6>
+          <span class="response-date">{{
+            formatDate(response.createdDatetime)
+          }}</span>
+        </div>
+
+        <!-- Botón eliminar respuesta (solo Admin/Agente) -->
+        @if (canModerate) {
+        <button
+          class="btn btn-danger btn-sm"
+          (click)="deleteResponse(response)"
+          title="Eliminar respuesta"
+        >
+          <i class="bi bi-trash"></i>
+        </button>
+        }
+      </div>
+
+      <div class="response-comment">
+        <p>{{ response.comment }}</p>
+      </div>
+    </div>
+    }
+
+    <!-- Paginación de respuestas -->
+    @if (totalPages > 1) {
+    <nav class="pagination-container">
+      <ul class="pagination">
+        <li class="page-item" [class.disabled]="currentPage === 1">
+          <a class="page-link" (click)="changePage(currentPage - 1)">
+            <i class="bi bi-chevron-left"></i>
+          </a>
+        </li>
+
+        @for (page of getVisiblePages(); track $index) { @if
+        (isPageNumber(page)) {
+        <li class="page-item" [class.active]="currentPage === page">
+          <a class="page-link" (click)="changePage(page)">{{ page }}</a>
+        </li>
+        } @else {
+        <li class="page-item disabled">
+          <span class="page-link">{{ page }}</span>
+        </li>
+        } }
+
+        <li class="page-item" [class.disabled]="currentPage === totalPages">
+          <a class="page-link" (click)="changePage(currentPage + 1)">
+            <i class="bi bi-chevron-right"></i>
+          </a>
+        </li>
+      </ul>
+    </nav>
+    }
+  </div>
+  } @else if (!loading) {
+  <div class="no-responses">
+    <i class="bi bi-chat"></i>
+    <p>Aún no hay respuestas. ¡Sé el primero en responder!</p>
+  </div>
+  } }
+</div>

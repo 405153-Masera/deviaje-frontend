@@ -178,7 +178,7 @@ export class DeviajeUsersListComponent implements OnInit, OnDestroy {
   toggleUserStatus(user: UserResponse): void {
     this.closeDropdown();
 
-    const action = user.isActive ? 'desactivar' : 'activar';
+    const action = user.active ? 'desactivar' : 'activar';
     const confirmMessage = `¿Está seguro que desea ${action} al usuario ${user.username}?`;
 
     if (confirm(confirmMessage)) {

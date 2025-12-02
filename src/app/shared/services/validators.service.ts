@@ -321,4 +321,17 @@ export class ValidatorsService {
       }
     });
   }
+
+  autoLowercaseControl(control: AbstractControl | null): void {
+    if (!control) return;
+
+    control.valueChanges.subscribe((value) => {
+      if (value && typeof value === 'string') {
+        const lowercaseValue = value.toLowerCase();
+        if (value !== lowercaseValue) {
+          control.setValue(lowercaseValue, { emitEvent: false });
+        }
+      }
+    });
+  }
 }

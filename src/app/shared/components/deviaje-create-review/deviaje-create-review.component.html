@@ -1,0 +1,168 @@
+<div class="container my-4">
+  <div class="row justify-content-center">
+    <div class="col-12 col-lg-8">
+      <!-- Header -->
+      <div class="mb-4">
+        <h2 class="text-primary fw-bold">
+          <i class="bi bi-pencil-square me-2"></i>
+          Escribir una Review
+        </h2>
+        <p class="text-secondary">
+          Comparte tu experiencia con DeViaje y ayuda a mejorar la plataforma
+        </p>
+      </div>
+
+      <!-- Mensaje de error -->
+      @if (error) {
+      <div class="alert alert-danger alert-dismissible fade show" role="alert">
+        <i class="bi bi-exclamation-triangle-fill me-2"></i>
+        {{ error }}
+        <button
+          type="button"
+          class="btn-close"
+          (click)="error = ''"
+        ></button>
+      </div>
+      }
+
+      <!-- Formulario -->
+      <div class="review-form-card">
+        <form [formGroup]="reviewForm" (ngSubmit)="submitReview()">
+          <!-- Rating -->
+          <div class="mb-4">
+            <label class="form-label fw-bold">
+              Calificación <span class="text-danger">*</span>
+            </label>
+            <div class="rating-input">
+              @for (star of [1, 2, 3, 4, 5]; track $index) {
+              <i
+                class="bi"
+                [ngClass]="{
+                  'bi-star-fill': isStarFilled($index),
+                  'bi-star': !isStarFilled($index)
+                }"
+                (click)="setRating(star)"
+                (mouseenter)="setHoverRating(star)"
+                (mouseleave)="resetHoverRating()"
+                role="button"
+                tabindex="0"
+              ></i>
+              }
+              @if (reviewForm.get('rating')?.value > 0) {
+              <span class="rating-text ms-2">
+                {{ reviewForm.get('rating')?.value }} de 5 estrellas
+              </span>
+              }
+            </div>
+            @if (reviewForm.get('rating')?.invalid &&
+            reviewForm.get('rating')?.touched) {
+            <div class="text-danger small mt-1">
+              {{ getFieldError('rating') }}
+            </div>
+            }
+          </div>
+
+          <!-- Categoría -->
+          <div class="mb-4">
+            <label for="category" class="form-label fw-bold">
+              Categoría <span class="text-danger">*</span>
+            </label>
+            <select
+              id="category"
+              class="form-select"
+              formControlName="category"
+              [class.is-invalid]="
+                reviewForm.get('category')?.invalid &&
+                reviewForm.get('category')?.touched
+              "
+            >
+              <option value="">Selecciona una categoría</option>
+              @for (cat of categories; track cat.code) {
+              <option [value]="cat.code">
+                {{ cat.name }}
+              </option>
+              }
+            </select>
+            @if (reviewForm.get('category')?.invalid &&
+            reviewForm.get('category')?.touched) {
+            <div class="invalid-feedback">
+              {{ getFieldError('category') }}
+            </div>
+            }
+          </div>
+
+          <!-- Comentario -->
+          <div class="mb-4">
+            <label for="comment" class="form-label fw-bold">
+              Tu experiencia <span class="text-danger">*</span>
+            </label>
+            <textarea
+              id="comment"
+              class="form-control"
+              formControlName="comment"
+              rows="6"
+              placeholder="Cuéntanos qué te pareció usar DeViaje. ¿Qué funcionó bien? ¿Qué podríamos mejorar?"
+              [class.is-invalid]="
+                reviewForm.get('comment')?.invalid &&
+                reviewForm.get('comment')?.touched
+              "
+            ></textarea>
+            <div class="form-text">
+              Mínimo 20 caracteres, máximo 1000 caracteres ({{
+                reviewForm.get('comment')?.value?.length || 0
+              }}/1000)
+            </div>
+            @if (reviewForm.get('comment')?.invalid &&
+            reviewForm.get('comment')?.touched) {
+            <div class="invalid-feedback">
+              {{ getFieldError('comment') }}
+            </div>
+            }
+          </div>
+
+          <!-- Botones -->
+          <div class="d-flex gap-2 justify-content-end">
+            <button
+              type="button"
+              class="btn btn-secondary"
+              (click)="cancel()"
+              [disabled]="submitting"
+            >
+              Cancelar
+            </button>
+            <button
+              type="submit"
+              class="btn btn-primary"
+              [disabled]="reviewForm.invalid || submitting"
+            >
+              @if (submitting) {
+              <span
+                class="spinner-border spinner-border-sm me-2"
+                role="status"
+              ></span>
+              Publicando...
+              } @else {
+              <i class="bi bi-send me-2"></i>
+              Publicar Review
+              }
+            </button>
+          </div>
+        </form>
+      </div>
+
+      <!-- Tips para una buena review -->
+      <div class="tips-card mt-4">
+        <h5 class="mb-3">
+          <i class="bi bi-lightbulb me-2"></i>
+          Consejos para una buena review
+        </h5>
+        <ul>
+          <li>Sé específico sobre qué aspecto estás comentando</li>
+          <li>Describe tu experiencia con detalles concretos</li>
+          <li>Mantén un tono constructivo y respetuoso</li>
+          <li>Menciona tanto los aspectos positivos como áreas de mejora</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</div>
