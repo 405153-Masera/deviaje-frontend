@@ -1,4 +1,4 @@
-<div class="container-fluid py-4">
+<div class="container py-4">
     <!-- Loading State -->
     <div *ngIf="isLoading" class="text-center py-5 vh-100">
         <div class="spinner-border text-primary" role="status">
@@ -71,6 +71,9 @@
                                         placeholder="Ingresá tu nombre">
 
                                     <div *ngIf="shouldShowError('firstName')" class="invalid-feedback">
+                                        <div *ngIf="getFieldErrors('firstName')?.['required']">
+                                            El nombre es obligatorio
+                                        </div>
                                         <div *ngIf="getFieldErrors('firstName')?.['minlength']">
                                             Mínimo 2 caracteres
                                         </div>
@@ -98,6 +101,9 @@
                                         placeholder="Ingresá tu apellido">
 
                                     <div *ngIf="shouldShowError('lastName')" class="invalid-feedback">
+                                        <div *ngIf="getFieldErrors('lastName')?.['required']">
+                                            El apellido de usuario es obligatorio
+                                        </div>
                                         <div *ngIf="getFieldErrors('lastName')?.['minlength']">
                                             Mínimo 2 caracteres
                                         </div>
@@ -187,48 +193,61 @@
 
                             <!-- Teléfono -->
                             <div class="col-md-12">
-                                <label class="form-label">Número de teléfono</label>
+                                <label class="form-label fw-semibold">Número de teléfono</label>
 
-                                <div *ngIf="!isEditMode" class="profile-field-display">
-                                    <span class="text-body">
-                                        <span *ngIf="currentUser.countryCallingCode">+{{ currentUser.countryCallingCode
-                                            }}</span>
-                                        {{ currentUser.phone || '—' }}
+                                <!-- Modo Vista -->
+                                <div *ngIf="!isEditMode" class="profile-field-value">
+                                    <span *ngIf="currentUser.countryCallingCode">
+                                        +{{ currentUser.countryCallingCode }}
                                     </span>
+                                    {{ currentUser.phone || 'No especificado' }}
                                 </div>
 
+                                <!-- Modo Edición -->
                                 <div *ngIf="isEditMode">
                                     <div class="row g-2">
-                                        <div class="col-md-5 col-12">
-                                            <select class="form-select" id="phoneCode"
-                                                formControlName="countryCallingCode"
+                                        <div class="col-4">
+                                            <select class="form-select" formControlName="countryCallingCode"
                                                 [ngClass]="onValidate('countryCallingCode')">
-                                                <option value="" disabled selected>Código</option>
+                                                <option value="" disabled>Código</option>
                                                 <option *ngFor="let country of countries" [value]="country.phoneCode">
-                                                    {{ country.name }} ({{ country.displayCode }}) </option>
+                                                    {{ country.name }} ({{ country.displayCode }})
+                                                </option>
                                             </select>
+                                            <div *ngIf="shouldShowError('countryCallingCode')"
+                                                class="invalid-feedback d-block">
+                                                <div *ngIf="getFieldErrors('countryCallingCode')?.['required']">
+                                                    El código de país es obligatorio
+                                                </div>
+                                            </div>
                                         </div>
-                                        <div class="col-md-7 col-12">
-                                            <input type="tel" class="form-control" formControlName="phone"
-                                                [ngClass]="onValidate('phone')" placeholder="Número">
+
+                                        <div class="col-8">
+                                            <input type="tel" class="form-control" formControlName="phone" (blur)="trimField('phone')"
+                                                [ngClass]="onValidate('phone')" placeholder="Número de teléfono" >
+
+                                            <div *ngIf="shouldShowError('phone')" class="invalid-feedback d-block">
+                                                <div *ngIf="getFieldErrors('phone')?.['required']">
+                                                    El número de teléfono es obligatorio
+                                                </div>
+                                                <div *ngIf="getFieldErrors('phone')?.['invalidPhoneNumber']">
+                                                    El número de teléfono no es válido para el país seleccionado
+                                                </div>
+                                                <div *ngIf="getFieldErrors('phone')?.['missingCountryCode']">
+                                                    Seleccioná primero el código de país
+                                                </div>
+                                                <div
+                                                    *ngIf="getFieldErrors('contact.phones.0.number')?.['phoneValidationError']">
+                                                    Error al validar el número de teléfono
+                                                </div>
+                                            </div>
                                         </div>
                                     </div>
 
-                                    <div *ngIf="shouldShowError('phone')" class="invalid-feedback d-block">
-                                        <div *ngIf="getFieldErrors('phone')?.['required']">
-                                            El número de teléfono es obligatorio
-                                        </div>
-                                        <div *ngIf="getFieldErrors('phone')?.['invalidPhoneNumber']">
-                                            Número inválido para el país
-                                        </div>
-                                        <div *ngIf="getFieldErrors('phone')?.['missingCountryCode']">
-                                            Seleccioná un código de país
-                                        </div>
-                                        <div
-                                            *ngIf="getFieldErrors('contact.phones.0.number')?.['phoneValidationError']">
-                                            Error al validar el número de teléfono
-                                        </div>
-                                    </div>
+                                    <small class="text-muted d-block mt-1">
+                                        Los alojamientos o las atracciones que reserves van a usar este número en caso
+                                        de que necesiten contactarte.
+                                    </small>
                                 </div>
                             </div>
 
@@ -292,19 +311,20 @@
 
                             <!-- Número de Pasaporte -->
                             <div class="col-md-6">
-                                <label class="form-label">Número de Pasaporte</label>
+                                <label class="form-label fw-semibold">Número de Pasaporte <span
+                                        class="text-danger">*</span></label>
 
-                                <div *ngIf="!isEditMode" class="profile-field-display">
-                                    <span class="text-body">{{ currentUser.passport?.passportNumber || '—' }}</span>
+                                <!-- Modo Vista -->
+                                <div *ngIf="!isEditMode" class="profile-field-value">
+                                    {{ currentUser.passport?.passportNumber || 'No especificado' }}
                                 </div>
 
+                                <!-- Modo Edición -->
                                 <div *ngIf="isEditMode">
                                     <div class="position-relative">
                                         <input type="text" class="form-control text-uppercase"
                                             formControlName="passportNumber" [ngClass]="onValidate('passportNumber')"
-                                            (blur)="trimField('passportNumber')"
-                                            (input)="profileForm.get('passportNumber')?.markAsTouched()"
-                                            placeholder="ABC123456">
+                                            (blur)="trimField('passportNumber')" placeholder="ABC123456">
 
                                         <div *ngIf="f['passportNumber'].pending"
                                             class="spinner-border spinner-border-sm text-primary position-absolute"
@@ -312,18 +332,21 @@
                                         </div>
                                     </div>
 
-                                    <div *ngIf="shouldShowError('passportNumber')" class="invalid-feedback">
+                                    <div *ngIf="shouldShowError('passportNumber')" class="invalid-feedback d-block">
+                                        <div *ngIf="getFieldErrors('passportNumber')?.['required']">
+                                            El número de documento es obligatorio
+                                        </div>
                                         <div *ngIf="getFieldErrors('passportNumber')?.['minlength']">
-                                            Mínimo 6 caracteres
+                                            El número debe tener al menos 6 caracteres
                                         </div>
                                         <div *ngIf="getFieldErrors('passportNumber')?.['maxlength']">
-                                            Máximo 9 caracteres
+                                            El número no debe exceder los 9 caracteres
                                         </div>
                                         <div *ngIf="getFieldErrors('passportNumber')?.['pattern']">
-                                            Solo letras y números
+                                            El pasaporte solo puede contener letras y números
                                         </div>
                                         <div *ngIf="getFieldErrors('passportNumber')?.['passportTaken']">
-                                            Este pasaporte ya está registrado
+                                            Este número de pasaporte ya está registrado
                                         </div>
                                     </div>
                                 </div>
@@ -331,21 +354,25 @@
 
                             <!-- Fecha de Expiración -->
                             <div class="col-md-6">
-                                <label class="form-label">Fecha de Expiración</label>
+                                <label class="form-label fw-semibold">Fecha de caducidad <span
+                                        class="text-danger">*</span></label>
 
-                                <div *ngIf="!isEditMode" class="profile-field-display">
-                                    <span class="text-body">
-                                        {{ (currentUser.passport?.expiryDate | date: 'dd/MM/yyyy') || '—' }}
-                                    </span>
+                                <!-- Modo Vista -->
+                                <div *ngIf="!isEditMode" class="profile-field-value">
+                                    {{ (currentUser.passport?.expiryDate | date: 'dd/MM/yyyy') || 'No especificado' }}
                                 </div>
 
+                                <!-- Modo Edición -->
                                 <div *ngIf="isEditMode">
                                     <input type="date" class="form-control" formControlName="passportExpiryDate"
-                                        [ngClass]="onValidate('passportExpiryDate')">
+                                        [ngClass]="onValidate('passportExpiryDate')" [min]="formatDateForInput(today)">
 
-                                    <div *ngIf="shouldShowError('passportExpiryDate')" class="invalid-feedback">
+                                    <div *ngIf="shouldShowError('passportExpiryDate')" class="invalid-feedback d-block">
+                                        <div *ngIf="getFieldErrors('passportExpiryDate')?.['required']">
+                                            La fecha de caducidad es obligatoria
+                                        </div>
                                         <div *ngIf="getFieldErrors('passportExpiryDate')?.['pastDate']">
-                                            Debe ser una fecha futura
+                                            La fecha debe ser posterior a hoy
                                         </div>
                                     </div>
                                 </div>
@@ -353,36 +380,61 @@
 
                             <!-- País de Emisión -->
                             <div class="col-md-6">
-                                <label class="form-label">País de Emisión</label>
+                                <label class="form-label fw-semibold">País de Emisión <span
+                                        class="text-danger">*</span></label>
 
-                                <div *ngIf="!isEditMode" class="profile-field-display">
-                                    <span class="text-body">{{ currentUser.passport?.issuanceCountry || '—' }}</span>
+                                <!-- Modo Vista -->
+                                <div *ngIf="!isEditMode" class="profile-field-value">
+                                    {{ currentUser.passport?.issuanceCountry || 'No especificado' }}
                                 </div>
 
+                                <!-- Modo Edición -->
                                 <div *ngIf="isEditMode">
-                                    <ng-select formControlName="passportIssuanceCountry" [items]="countries"
-                                        bindLabel="name" bindValue="code" placeholder="Seleccioná el país"
-                                        [searchable]="true">
-                                    </ng-select>
+                                    <select class="form-select" formControlName="passportIssuanceCountry"
+                                        [ngClass]="onValidate('passportIssuanceCountry')">
+                                        <option value="" disabled>Seleccioná el país</option>
+                                        <option *ngFor="let country of countries" [value]="country.cca2">
+                                            {{ country.name }}
+                                        </option>
+                                    </select>
+
+                                    <div *ngIf="shouldShowError('passportIssuanceCountry')"
+                                        class="invalid-feedback d-block">
+                                        <div *ngIf="getFieldErrors('passportIssuanceCountry')?.['required']">
+                                            El país de emisión es obligatorio
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
 
                             <!-- Nacionalidad -->
                             <div class="col-md-6">
-                                <label class="form-label">Nacionalidad</label>
+                                <label class="form-label fw-semibold">Nacionalidad <span
+                                        class="text-danger">*</span></label>
 
-                                <div *ngIf="!isEditMode" class="profile-field-display">
-                                    <span class="text-body">{{ currentUser.passport?.nationality || '—' }}</span>
+                                <!-- Modo Vista -->
+                                <div *ngIf="!isEditMode" class="profile-field-value">
+                                    {{ currentUser.passport?.nationality || 'No especificado' }}
                                 </div>
 
+                                <!-- Modo Edición -->
                                 <div *ngIf="isEditMode">
-                                    <ng-select formControlName="passportNationality" [items]="countries"
-                                        bindLabel="name" bindValue="code" placeholder="Seleccioná tu nacionalidad"
-                                        [searchable]="true">
-                                    </ng-select>
+                                    <select class="form-select" formControlName="passportNationality"
+                                        [ngClass]="onValidate('passportNationality')">
+                                        <option value="" disabled>Seleccioná tu nacionalidad</option>
+                                        <option *ngFor="let country of countries" [value]="country.cca2">
+                                            {{ country.name }}
+                                        </option>
+                                    </select>
+
+                                    <div *ngIf="shouldShowError('passportNationality')"
+                                        class="invalid-feedback d-block">
+                                        <div *ngIf="getFieldErrors('passportNationality')?.['required']">
+                                            La nacionalidad es obligatoria
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
-
                         </div>
                     </div>
                 </div>

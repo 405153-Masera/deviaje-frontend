@@ -139,6 +139,7 @@ export class DeviajeUserProfileComponent implements OnInit, OnDestroy {
       firstName: [
         this.currentUser.firstName || '',
         [
+          Validators.required,
           Validators.minLength(2),
           Validators.maxLength(30),
           this.validatorsService.onlyLetters(),
@@ -147,6 +148,7 @@ export class DeviajeUserProfileComponent implements OnInit, OnDestroy {
       lastName: [
         this.currentUser.lastName || '',
         [
+          Validators.required,
           Validators.minLength(2),
           Validators.maxLength(30),
           this.validatorsService.onlyLetters(),
@@ -172,23 +174,26 @@ export class DeviajeUserProfileComponent implements OnInit, OnDestroy {
       // Datos del pasaporte
       passportNumber: [
         this.currentUser.passport?.passportNumber || '',
-        {
-          validators: [
-            Validators.minLength(6),
-            Validators.maxLength(9),
-            Validators.pattern(/^[A-Z0-9]+$/i),
-          ],
-          asyncValidators: [this.conditionalPassportValidator()],
-        },
+        [
+          Validators.required,
+          Validators.minLength(6),
+          Validators.maxLength(9),
+          Validators.pattern(/^[A-Z0-9]+$/i),
+        ],
+        [this.conditionalPassportValidator()], // asyncValidators separados
       ],
       passportExpiryDate: [
         this.currentUser.passport?.expiryDate || '',
-        [this.futureDateValidator()],
+        [Validators.required, this.futureDateValidator()],
       ],
       passportIssuanceCountry: [
         this.currentUser.passport?.issuanceCountry || '',
+        [Validators.required],
       ],
-      passportNationality: [this.currentUser.passport?.nationality || ''],
+      passportNationality: [
+        this.currentUser.passport?.nationality || '',
+        [Validators.required],
+      ],
     });
 
     // Configurar validación de teléfono
@@ -200,21 +205,36 @@ export class DeviajeUserProfileComponent implements OnInit, OnDestroy {
     );
   }
 
+  formatDateForInput(date: Date): string {
+    if (!date) return '';
+
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+
+    return `${year}-${month}-${day}`;
+  }
+
   setupPhoneValidation(): void {
     const phoneControl = this.profileForm.get('phone');
     const countryCodeControl = this.profileForm.get('countryCallingCode');
 
     if (phoneControl && countryCodeControl) {
       phoneControl.setValidators([
+        Validators.required,
         this.validatorsService.validatePhoneNumber(),
       ]);
 
+      countryCodeControl.setValidators([Validators.required]);
       // Revalidar cuando cambie el código de país
       this.subscription.add(
         countryCodeControl.valueChanges.subscribe(() => {
           phoneControl.updateValueAndValidity();
+          phoneControl.markAsTouched();
         })
       );
+      phoneControl.updateValueAndValidity();
+      countryCodeControl.updateValueAndValidity();
     }
   }
 
@@ -232,7 +252,7 @@ export class DeviajeUserProfileComponent implements OnInit, OnDestroy {
       if (currentValue === originalValue) {
         return of(null);
       }
-      
+
       const validator = this.validatorsService.validateUniqueUsername();
       const result = validator(control);
 
@@ -284,17 +304,19 @@ export class DeviajeUserProfileComponent implements OnInit, OnDestroy {
   }
 
   // Validador de fecha futura
-  futureDateValidator(): (control: AbstractControl) => ValidationErrors | null {
+  futureDateValidator() {
     return (control: AbstractControl): ValidationErrors | null => {
-      const expiryDate = control.value;
-      if (!expiryDate) return null;
-
+      if (!control.value) {
+        return null;
+      }
       const today = new Date();
       today.setHours(0, 0, 0, 0);
-      const expiry = new Date(expiryDate);
-      expiry.setHours(0, 0, 0, 0);
+      const selectedDate = new Date(control.value);
 
-      return expiry > today ? null : { pastDate: true };
+      if (selectedDate <= today) {
+        return { pastDate: true };
+      }
+      return null;
     };
   }
 
@@ -342,7 +364,9 @@ export class DeviajeUserProfileComponent implements OnInit, OnDestroy {
           this.successMessage = 'Perfil actualizado correctamente';
           this.isEditMode = false;
           this.isSaving = false;
-          this.loadUserProfile(); // Recargar datos actualizados
+
+          this.authService.refreshCurrentUser();
+          window.scrollTo({ top: 0, behavior: 'smooth' }); 
         },
         error: (error) => {
           this.errorMessage =
@@ -389,7 +413,7 @@ export class DeviajeUserProfileComponent implements OnInit, OnDestroy {
     const control = this.profileForm.get(fieldName);
     return {
       'is-invalid': control?.invalid && (control?.dirty || control?.touched),
-      'is-valid': control?.valid && (control?.dirty || control?.touched),
+      'is-valid': control?.valid,
     };
   }
 

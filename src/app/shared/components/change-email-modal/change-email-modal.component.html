@@ -3,7 +3,6 @@
         <div class="modal-content">
             <div class="modal-header">
                 <h5 class="modal-title">
-                    <i class="bi bi-envelope me-2"></i>
                     Cambiar Email
                 </h5>
                 <button type="button" class="btn-close" (click)="close()" [disabled]="isSubmitting"></button>
@@ -15,8 +14,7 @@
                     <!-- Mensaje de alerta -->
                     <div class="alert alert-warning">
                         <i class="bi bi-exclamation-triangle me-2"></i>
-                        <strong>IMPORTANTE:</strong> Cambiar tu email afectará tu forma de iniciar sesión.
-                        Usá este email para futuros accesos a tu cuenta.
+                        <strong>IMPORTANTE:</strong> El email se utiliza para mandar los voucher de reservas
                     </div>
 
                     <!-- Mensaje de error -->
@@ -35,7 +33,8 @@
                     <div class="mb-3">
                         <label for="newEmail" class="form-label fw-semibold">Nuevo email *</label>
                         <div class="position-relative">
-                            <input type="email" class="form-control" id="newEmail" formControlName="newEmail"
+                            <input type="text" class="form-control" id="newEmail" formControlName="newEmail"
+                                (blur)="trimField('contact.emailAddress')" inputmode="email" autocomplete="email"
                                 [ngClass]="onValidate('newEmail')" placeholder="nuevo@email.com"
                                 [disabled]="isSubmitting">
 
@@ -49,11 +48,17 @@
                             <div *ngIf="getFieldErrors('newEmail')?.['required']">
                                 El email es obligatorio
                             </div>
+                            <div *ngIf="getFieldErrors('newEmail')?.['invalidEmail']">
+                                El email debe contener un solo símbolo '&#64;'
+                            </div>
                             <div *ngIf="getFieldErrors('newEmail')?.['email']">
                                 Ingresá un email válido
                             </div>
                             <div *ngIf="getFieldErrors('newEmail')?.['missingAt']">
                                 El email debe contener '&#64;'
+                            </div>
+                            <div *ngIf="getFieldErrors('newEmail')?.['missingUsername']">
+                                El email debe tener un nombre de usuario antes del '&#64;'
                             </div>
                             <div *ngIf="getFieldErrors('newEmail')?.['missingDomain']">
                                 El email debe tener un dominio
@@ -70,10 +75,20 @@
                             <div *ngIf="getFieldErrors('newEmail')?.['maxlength']">
                                 El email no debe exceder 80 caracteres
                             </div>
+                            <div
+                                *ngIf="getFieldErrors('newEmail')?.['invalidEmailFormat'] || getFieldErrors('contact.emailAddress')?.['email']">
+                                El formato del email es inválido
+                            </div>
+                            <div *ngIf="getFieldErrors('newEmail')?.['invalidDomainExtension']">
+                                La extensión del dominio debe tener al menos 2 caracteres
+                            </div>
+                            <div *ngIf="getFieldErrors('newEmail')?.['domainExtensionTooLong']">
+                                La extensión del dominio no debe exceder los 6 caracteres
+                            </div>
                         </div>
 
                         <small class="text-muted d-block mt-1">
-                            Este email se usará para iniciar sesión y recibir confirmaciones de reservas
+                            Este email se usará para recibir confirmaciones de reservas
                         </small>
                     </div>
 
@@ -86,14 +101,14 @@
                                     El nuevo email será: <strong>{{ emailForm.value.newEmail }}</strong>
                                 </p>
                                 <p class="mb-3">
-                                    Este email se usará para iniciar sesión. ¿Estás seguro de que deseas continuar?
+                                    ¿Estás seguro de que deseas continuar?
                                 </p>
                                 <div class="d-flex gap-2">
                                     <button type="button" class="btn btn-sm btn-outline-secondary"
                                         (click)="cancelConfirmation()" [disabled]="isSubmitting">
                                         Cancelar
                                     </button>
-                                    <button type="button" class="btn btn-sm btn-violet" (click)="confirmChange()"
+                                    <button type="button" class="btn btn-sm btn-primary" (click)="confirmChange()"
                                         [disabled]="isSubmitting">
                                         <span *ngIf="isSubmitting" class="spinner-border spinner-border-sm me-2"></span>
                                         Sí, cambiar email

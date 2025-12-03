@@ -21,6 +21,6 @@ export class ChangePasswordModalComponent {
 
   goToChangePassword(): void {
     this.close();
-    this.router.navigate(['/user/change-password']);
+    this.router.navigate(['/user/reset-password']);
   }
 }

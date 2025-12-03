@@ -155,4 +155,14 @@ export class ChangeEmailModalComponent implements OnInit {
   get f() {
     return this.emailForm.controls;
   }
+
+  trimField(fieldPath: string): void {
+    const control = this.emailForm.get(fieldPath);
+    if (control && control.value && typeof control.value === 'string') {
+      const trimmedValue = control.value.trim(); // ← SOLO inicio/final
+      if (control.value !== trimmedValue) {
+        control.setValue(trimmedValue);
+      }
+    }
+  }
 }

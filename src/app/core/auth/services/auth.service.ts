@@ -45,6 +45,7 @@ export class AuthService {
 
   constructor() {
     this.initializeAuthState();
+    this.syncAcrossTabs();
   }
 
   // ================== INICIALIZACIÓN ==================
@@ -68,7 +69,6 @@ export class AuthService {
 
       // 3. ¿El token es válido?
       if (token && user) {
-
         const isValid = this.isTokenValid();
 
         if (isValid) {
@@ -143,6 +143,56 @@ export class AuthService {
     );
   }
 
+  /**
+   * Sincronizar entre pestañas SOLO lo que debe sincronizarse
+   * - Login/Logout: SÍ se sincroniza
+   * - Datos de usuario: SÍ se sincroniza
+   * - Rol activo: NO se sincroniza (independiente por pestaña)
+   */
+  private syncAcrossTabs(): void {
+    if (typeof window !== 'undefined') {
+      window.addEventListener('storage', (event) => {
+        if (event.key === 'user') {
+          if (event.newValue) {
+            try {
+              const updatedUser = JSON.parse(event.newValue);
+              const currentUser = this.currentUserSubject.value;
+
+              // Mantener el rol activo de ESTA pestaña
+              const updatedUserWithCurrentRole = {
+                ...updatedUser,
+                activeRole: currentUser?.activeRole || updatedUser.activeRole,
+              };
+
+              this.currentUserSubject.next(updatedUserWithCurrentRole);
+              console.log(
+                '✅ Usuario sincronizado (manteniendo rol activo local):',
+                updatedUserWithCurrentRole
+              );
+            } catch (e) {
+              console.error(
+                '❌ Error parseando usuario desde storage event:',
+                e
+              );
+            }
+          } else {
+            // Usuario eliminado = logout
+            this.currentUserSubject.next(null);
+            this.isAuthenticatedSubject.next(false);
+            this.activeRoleSubject.next(null);
+            console.log('🚪 Sesión cerrada desde otra pestaña');
+          }
+        }
+
+        // 3. ✅ SINCRONIZAR: Logout (cerrar sesión en todas las pestañas)
+        if (event.key === 'token' && !event.newValue) {
+          this.clearSession();
+          console.log('🚪 Logout detectado desde otra pestaña');
+        }
+      });
+    }
+  }
+
   // ================== MÉTODOS DE TOKEN ==================
 
   saveToken(token: string): void {
@@ -198,6 +248,32 @@ export class AuthService {
     return this.currentUserSubject.value;
   }
 
+  refreshCurrentUser(): void {
+    const currentUser = this.currentUserSubject.value;
+
+    if (!currentUser || !currentUser.id) {
+      return;
+    }
+    const apiUrl = environment.apiDeviajeUsers;
+    const url = `${apiUrl}/${currentUser.id}`;
+
+    this.http.get<any>(url).subscribe({
+      next: (userData) => {
+        const updatedUser: User = {
+          id: userData.id,
+          username: userData.username,
+          email: userData.email,
+          roles: currentUser.roles,
+          activeRole: currentUser.activeRole,
+        };
+
+        this.saveUser(updatedUser);
+      },
+      error: (error) => {
+        console.error('❌ Error al recargar usuario:', error);
+      },
+    });
+  }
   private getStoredUser(): User | null {
     if (typeof localStorage !== 'undefined') {
       const user = localStorage.getItem('user');

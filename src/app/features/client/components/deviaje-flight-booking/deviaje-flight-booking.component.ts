@@ -226,7 +226,7 @@ export class DeviajeFlightBookingComponent implements OnInit, OnDestroy {
       this.isGuestBooking = false;
       this.selectedClientId = this.currentUser?.id;
       this.showUserSelection = false; // CLIENTE no ve selector
-      this.loadUserDataAndPrefill(this.currentUser.username);
+      this.loadUserDataAndPrefill(this.currentUser.id);
     } else if (this.userRole === 'AGENTE') {
       this.showUserSelection = true;
       this.isGuestBooking = true;
@@ -288,8 +288,8 @@ export class DeviajeFlightBookingComponent implements OnInit, OnDestroy {
     }
   }
 
-  private loadUserDataAndPrefill(username: string): void {
-    this.userService.getUserByUsername(username).subscribe({
+  private loadUserDataAndPrefill(userId: number): void {
+    this.userService.getUserById(userId).subscribe({
       next: (userData) => {
         this.prefillUserData(userData);
       },

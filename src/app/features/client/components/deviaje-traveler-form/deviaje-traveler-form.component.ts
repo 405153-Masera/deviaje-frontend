@@ -113,6 +113,7 @@ export class DeviajeTravelerFormComponent implements OnInit {
         ?.get('countryCallingCode')
         ?.valueChanges.subscribe(() => {
           phoneControl.updateValueAndValidity();
+          phoneControl.markAsTouched();
         });
     }
   }

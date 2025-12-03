@@ -10,17 +10,25 @@ export interface UserRegistrationRequest {
   password: string;
   firstName?: string;
   lastName?: string;
-   roleIds: number[];     // ✅ Array de números
-  createdUser?: number;  // ✅ Agregado
+  roleIds: number[]; // ✅ Array de números
+  createdUser?: number; // ✅ Agregado
 }
 
 export interface UserUpdateRequest {
   username?: string;
-  email?: string;
   firstName?: string;
   lastName?: string;
-  roles?: string[];
-  isActive?: boolean;
+  email?: string;
+  gender?: string;
+  countryCallingCode?: string;
+  phone?: string;
+  birthDate?: string;
+  passport?: {
+    passportNumber?: string;
+    expiryDate?: string;
+    issuanceCountry?: string;
+    nationality?: string;
+  };
 }
 
 export interface ChangePasswordRequest {
@@ -34,15 +42,22 @@ export interface UserResponse {
   id: number;
   username: string;
   email: string;
-  firstName?: string;
-  lastName?: string;
-  roles: string[];
-  active: boolean;
-  createdAt: string;
-  updatedAt: string;
-  lastLogin?: string;
-  countryCallingCode?: string;
+  firstName: string;
+  lastName: string;
+  gender: string;
+  countryCallingCode: string;
   phone: string;
+  birthDate: string;
+  active: boolean;
+  avatarUrl?: string;
+  roles: string[];
+  passport?: {
+    id: number;
+    passportNumber: string;
+    expiryDate: string;
+    issuanceCountry: string;
+    nationality: string;
+  };
 }
 
 export interface UserData {
@@ -130,14 +145,8 @@ export class UserService {
   /**
    * Actualizar un usuario
    */
-  updateUser(
-    id: number,
-    userData: UserUpdateRequest
-  ): Observable<ApiResponse<UserResponse>> {
-    return this.http.put<ApiResponse<UserResponse>>(
-      `${this.baseUrl}/${id}`,
-      userData
-    );
+  updateUser(id: number, userData: UserUpdateRequest): Observable<UserData> {
+    return this.http.put<UserData>(`${this.baseUrl}/${id}`, userData);
   }
 
   /**
