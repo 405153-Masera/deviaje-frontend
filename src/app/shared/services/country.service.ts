@@ -1,6 +1,6 @@
 import { HttpClient } from '@angular/common/http';
 import { inject, Injectable } from '@angular/core';
-import { forkJoin, map, catchError, of } from 'rxjs';
+import { forkJoin, map, catchError, of, Observable } from 'rxjs';
 import { AirportCacheData } from '../../features/client/models/airports';
 
 @Injectable({
@@ -42,7 +42,6 @@ export class CountryService {
   }
 
   getAirportName(iataCode: string): string {
-
     if (!iataCode || iataCode.length !== 3) {
       return iataCode;
     }
@@ -290,4 +289,68 @@ export class CountryService {
     this.cache.clear();
     this.countryCache.clear();
   }
+
+  /**
+   * Obtiene lista de países con códigos de llamada desde REST Countries API
+   * Formato: { code: 'AR', name: 'Argentina', callingCode: '54' }
+   */
+  getCountries(): Observable<Country[]> {
+    return this.http
+      .get<any[]>(
+        'https://restcountries.com/v3.1/all?fields=name,cca2,idd,translations'
+      )
+      .pipe(
+        map((data: any[]) => {
+          const countries = data
+            .map((country: any) => {
+              let phoneCode = '';
+              if (country.idd?.root && country.idd?.suffixes?.length > 0) {
+                // Tomar solo el primer suffix (para países con múltiples códigos)
+                phoneCode =
+                  country.idd.root.replace('+', '') + country.idd.suffixes[0];
+              }
+
+              return {
+                name: country.translations.spa?.common || country.name.common,
+                cca2: country.cca2,
+                phoneCode: phoneCode, // Ahora será "54" en lugar de "5"
+                displayCode: phoneCode ? `+${phoneCode}` : '', // Para mostrar en UI
+              };
+            })
+            .filter(
+              (country: Country) =>
+                country.cca2 && country.name && country.phoneCode
+            )
+            .sort((a: Country, b: Country) => a.name.localeCompare(b.name));
+
+          return countries;
+        }),
+        catchError(() => {
+          // Países de fallback en caso de error
+          return of([
+            {
+              name: 'Argentina',
+              cca2: 'AR',
+              phoneCode: '54',
+              displayCode: '+54',
+            },
+            { name: 'España', cca2: 'ES', phoneCode: '34', displayCode: '+34' },
+            {
+              name: 'Estados Unidos',
+              cca2: 'US',
+              phoneCode: '1',
+              displayCode: '+1',
+            },
+            { name: 'México', cca2: 'MX', phoneCode: '52', displayCode: '+52' },
+          ]);
+        })
+      );
+  }
+}
+
+interface Country {
+  name: string;
+  cca2: string;
+  phoneCode: string;
+  displayCode: string;
 }

@@ -1,0 +1,123 @@
+<div class="modal fade" [class.show]="show" [style.display]="show ? 'block' : 'none'" tabindex="-1" *ngIf="show">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">
+                    <i class="bi bi-envelope me-2"></i>
+                    Cambiar Email
+                </h5>
+                <button type="button" class="btn-close" (click)="close()" [disabled]="isSubmitting"></button>
+            </div>
+
+            <form [formGroup]="emailForm" (ngSubmit)="onSubmit()">
+                <div class="modal-body">
+
+                    <!-- Mensaje de alerta -->
+                    <div class="alert alert-warning">
+                        <i class="bi bi-exclamation-triangle me-2"></i>
+                        <strong>IMPORTANTE:</strong> Cambiar tu email afectará tu forma de iniciar sesión.
+                        Usá este email para futuros accesos a tu cuenta.
+                    </div>
+
+                    <!-- Mensaje de error -->
+                    <div *ngIf="errorMessage" class="alert alert-danger">
+                        <i class="bi bi-x-circle me-2"></i>
+                        {{ errorMessage }}
+                    </div>
+
+                    <!-- Email actual -->
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold">Email actual</label>
+                        <input type="text" class="form-control" [value]="currentEmail" disabled>
+                    </div>
+
+                    <!-- Nuevo email -->
+                    <div class="mb-3">
+                        <label for="newEmail" class="form-label fw-semibold">Nuevo email *</label>
+                        <div class="position-relative">
+                            <input type="email" class="form-control" id="newEmail" formControlName="newEmail"
+                                [ngClass]="onValidate('newEmail')" placeholder="nuevo@email.com"
+                                [disabled]="isSubmitting">
+
+                            <div *ngIf="f['newEmail'].pending"
+                                class="spinner-border spinner-border-sm text-primary position-absolute"
+                                style="right: 10px; top: 10px;">
+                            </div>
+                        </div>
+
+                        <div *ngIf="shouldShowError('newEmail')" class="invalid-feedback d-block">
+                            <div *ngIf="getFieldErrors('newEmail')?.['required']">
+                                El email es obligatorio
+                            </div>
+                            <div *ngIf="getFieldErrors('newEmail')?.['email']">
+                                Ingresá un email válido
+                            </div>
+                            <div *ngIf="getFieldErrors('newEmail')?.['missingAt']">
+                                El email debe contener '&#64;'
+                            </div>
+                            <div *ngIf="getFieldErrors('newEmail')?.['missingDomain']">
+                                El email debe tener un dominio
+                            </div>
+                            <div *ngIf="getFieldErrors('newEmail')?.['missingDomainExtension']">
+                                El dominio debe tener una extensión (.com, .ar, etc.)
+                            </div>
+                            <div *ngIf="getFieldErrors('newEmail')?.['sameEmail']">
+                                El nuevo email debe ser diferente al actual
+                            </div>
+                            <div *ngIf="getFieldErrors('newEmail')?.['emailTaken']">
+                                Este email ya está registrado
+                            </div>
+                            <div *ngIf="getFieldErrors('newEmail')?.['maxlength']">
+                                El email no debe exceder 80 caracteres
+                            </div>
+                        </div>
+
+                        <small class="text-muted d-block mt-1">
+                            Este email se usará para iniciar sesión y recibir confirmaciones de reservas
+                        </small>
+                    </div>
+
+                    <div *ngIf="showConfirmation" class="alert alert-warning mt-3">
+                        <div class="d-flex align-items-start">
+                            <i class="bi bi-exclamation-triangle-fill me-2 fs-4"></i>
+                            <div>
+                                <h6 class="alert-heading mb-2">Confirmar cambio de email</h6>
+                                <p class="mb-2">
+                                    El nuevo email será: <strong>{{ emailForm.value.newEmail }}</strong>
+                                </p>
+                                <p class="mb-3">
+                                    Este email se usará para iniciar sesión. ¿Estás seguro de que deseas continuar?
+                                </p>
+                                <div class="d-flex gap-2">
+                                    <button type="button" class="btn btn-sm btn-outline-secondary"
+                                        (click)="cancelConfirmation()" [disabled]="isSubmitting">
+                                        Cancelar
+                                    </button>
+                                    <button type="button" class="btn btn-sm btn-violet" (click)="confirmChange()"
+                                        [disabled]="isSubmitting">
+                                        <span *ngIf="isSubmitting" class="spinner-border spinner-border-sm me-2"></span>
+                                        Sí, cambiar email
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-outline-secondary" (click)="close()" [disabled]="isSubmitting">
+                        Cancelar
+                    </button>
+                    <button type="submit" class="btn btn-primary"
+                        [disabled]="isSubmitting || emailForm.invalid || showConfirmation">
+                        <i class="bi bi-check-lg me-2"></i>
+                        Continuar
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Backdrop -->
+<div class="modal-backdrop fade" [class.show]="show" *ngIf="show"></div>

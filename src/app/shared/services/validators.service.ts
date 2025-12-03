@@ -155,6 +155,52 @@ export class ValidatorsService {
     };
   }
 
+  /**
+   * Validador para nombres de usuario con reglas estrictas:
+   * - Mínimo 3 caracteres, máximo 20
+   * - Solo letras, números, guion bajo (_), punto (.) y guion medio (-)
+   * - No permite símbolos al inicio o al final
+   * - No permite símbolos consecutivos (. _ -)
+   */
+  validateUsername(): ValidatorFn {
+    return (control: AbstractControl): ValidationErrors | null => {
+      if (!control.value) {
+        return null;
+      }
+
+      const username = control.value.trim();
+
+      // Verificar longitud
+      if (username.length < 3) {
+        return { usernameTooShort: true };
+      }
+
+      if (username.length > 20) {
+        return { usernameTooLong: true };
+      }
+
+      // Solo letras, números, guion bajo, punto y guion medio
+      const validCharsRegex = /^[a-zA-Z0-9._-]+$/;
+      if (!validCharsRegex.test(username)) {
+        return { usernameInvalidChars: true };
+      }
+
+      // No puede empezar o terminar con símbolos (. _ -)
+      const startsOrEndsWithSymbol = /^[._-]|[._-]$/;
+      if (startsOrEndsWithSymbol.test(username)) {
+        return { usernameSymbolAtEdge: true };
+      }
+
+      // No permite símbolos consecutivos
+      const consecutiveSymbols = /[._-]{2,}/;
+      if (consecutiveSymbols.test(username)) {
+        return { usernameConsecutiveSymbols: true };
+      }
+
+      return null;
+    };
+  }
+
   emailWithDomain(): ValidatorFn {
     return (control: AbstractControl): ValidationErrors | null => {
       if (!control.value) {

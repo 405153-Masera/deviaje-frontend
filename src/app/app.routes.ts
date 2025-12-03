@@ -150,6 +150,7 @@ export const routes: Routes = [
   },
   {
     path: 'reviews',
+    component: DeviajeMainLayoutComponent,
     canActivate: [authGuard],
     children: [
       {
@@ -191,14 +192,9 @@ export const routes: Routes = [
         path: '',
         loadComponent: () =>
           import(
-            './features/client/components/deviaje-user-profile/deviaje-user-profile.component'
+            './shared/components/deviaje-user-profile/deviaje-user-profile.component'
           ).then((m) => m.DeviajeUserProfileComponent),
-      },
-      // {
-      //   path: 'edit',
-      //   loadComponent: () => import('./features/client/components/deviaje-user-profile-edit/deviaje-user-profile-edit.component')
-      //     .then(m => m.DeviajeUserProfileEditComponent)
-      // }
+      }
     ],
   },
   {

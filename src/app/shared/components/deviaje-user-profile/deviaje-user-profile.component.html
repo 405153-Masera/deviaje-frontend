@@ -1,0 +1,420 @@
+<div class="container-fluid py-4">
+    <!-- Loading State -->
+    <div *ngIf="isLoading" class="text-center py-5 vh-100">
+        <div class="spinner-border text-primary" role="status">
+            <span class="visually-hidden">Cargando...</span>
+        </div>
+    </div>
+
+    <!-- Profile Content -->
+    <div *ngIf="!isLoading && currentUser" class="row justify-content-center">
+        <div class="col-12 col-lg-10 col-xl-8">
+
+            <!-- Mensajes de éxito/error -->
+            <div *ngIf="successMessage" class="alert alert-success alert-dismissible fade show" role="alert">
+                <i class="bi bi-check-circle-fill me-2"></i>
+                {{ successMessage }}
+                <button type="button" class="btn-close" (click)="clearMessages()"></button>
+            </div>
+
+            <div *ngIf="errorMessage" class="alert alert-danger alert-dismissible fade show" role="alert">
+                <i class="bi bi-exclamation-triangle-fill me-2"></i>
+                {{ errorMessage }}
+                <button type="button" class="btn-close" (click)="clearMessages()"></button>
+            </div>
+
+            <!-- Formulario de perfil -->
+            <form [formGroup]="profileForm" *ngIf="profileForm">
+
+                <!-- Datos Personales Card -->
+                <div class="card">
+
+                    <div class="card-header bg-info d-flex justify-content-between align-items-start">
+                        <div>
+                            <h1 class="card-title text-white mb-2">Datos personales</h1>
+                            <p class="card-text text-white mb-0">Actualizá tus datos y descubrí de qué forma se usan.
+                            </p>
+                        </div>
+
+                        <div class="d-flex gap-2 flex-wrap">
+                            <button *ngIf="!isEditMode" type="button" class="btn btn-primary"
+                                (click)="enableEditMode()">
+                                Editar
+                            </button>
+
+                            <button *ngIf="isEditMode" type="button" class="btn btn-secondary" (click)="cancelEdit()"
+                                [disabled]="isSaving">
+                                Cancelar
+                            </button>
+
+                            <button *ngIf="isEditMode" type="button" class="btn btn-success" (click)="onSubmit()"
+                                [disabled]="isSaving || profileForm.invalid">
+                                <span *ngIf="isSaving" class="spinner-border spinner-border-sm me-2"></span>
+                                Guardar
+                            </button>
+                        </div>
+                    </div>
+                    <div class="card-body border-secondary shadow-sm">
+                        <div class="row g-3">
+
+                            <!-- Nombre -->
+                            <div class="col-md-6">
+                                <label class="form-label">Nombre</label>
+
+                                <div *ngIf="!isEditMode" class="profile-field-display">
+                                    <span class="text-body">{{ currentUser.firstName || '—' }}</span>
+                                </div>
+
+                                <div *ngIf="isEditMode">
+                                    <input type="text" class="form-control" formControlName="firstName"
+                                        [ngClass]="onValidate('firstName')" (blur)="trimField('firstName')"
+                                        placeholder="Ingresá tu nombre">
+
+                                    <div *ngIf="shouldShowError('firstName')" class="invalid-feedback">
+                                        <div *ngIf="getFieldErrors('firstName')?.['minlength']">
+                                            Mínimo 2 caracteres
+                                        </div>
+                                        <div *ngIf="getFieldErrors('firstName')?.['maxlength']">
+                                            Máximo 30 caracteres
+                                        </div>
+                                        <div *ngIf="getFieldErrors('firstName')?.['onlyLetters']">
+                                            Solo se permiten letras
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Apellido -->
+                            <div class="col-md-6">
+                                <label class="form-label">Apellido</label>
+
+                                <div *ngIf="!isEditMode" class="profile-field-display">
+                                    <span class="text-body">{{ currentUser.lastName || '—' }}</span>
+                                </div>
+
+                                <div *ngIf="isEditMode">
+                                    <input type="text" class="form-control" formControlName="lastName"
+                                        [ngClass]="onValidate('lastName')" (blur)="trimField('lastName')"
+                                        placeholder="Ingresá tu apellido">
+
+                                    <div *ngIf="shouldShowError('lastName')" class="invalid-feedback">
+                                        <div *ngIf="getFieldErrors('lastName')?.['minlength']">
+                                            Mínimo 2 caracteres
+                                        </div>
+                                        <div *ngIf="getFieldErrors('lastName')?.['maxlength']">
+                                            Máximo 30 caracteres
+                                        </div>
+                                        <div *ngIf="getFieldErrors('lastName')?.['onlyLetters']">
+                                            Solo se permiten letras
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Usuario (username) -->
+                            <div class="col-md-6">
+                                <label class="form-label fw-semibold">Usuario</label>
+
+                                <!-- Modo Vista -->
+                                <div *ngIf="!isEditMode">
+                                    {{ currentUser.username }}
+                                </div>
+
+                                <!-- Modo Edición -->
+                                <div *ngIf="isEditMode">
+                                    <div class="position-relative">
+                                        <input type="text" class="form-control" formControlName="username"
+                                            [ngClass]="onValidate('username')" (blur)="trimField('username')"
+                                            placeholder="Elegí un usuario">
+
+                                        <div *ngIf="f['username'].pending"
+                                            class="spinner-border spinner-border-sm text-primary position-absolute"
+                                            style="right: 10px; top: 10px;">
+                                        </div>
+                                    </div>
+
+                                    <div *ngIf="shouldShowError('username')" class="invalid-feedback d-block">
+                                        <div *ngIf="getFieldErrors('username')?.['required']">
+                                            El nombre de usuario es obligatorio
+                                        </div>
+                                        <div *ngIf="getFieldErrors('username')?.['usernameTooShort']">
+                                            El nombre de usuario debe tener al menos 3 caracteres
+                                        </div>
+                                        <div *ngIf="getFieldErrors('username')?.['usernameTooLong']">
+                                            El nombre de usuario no debe exceder 20 caracteres
+                                        </div>
+                                        <div *ngIf="getFieldErrors('username')?.['usernameInvalidChars']">
+                                            Solo se permiten letras, números, punto (.), guion bajo (_) y guion medio
+                                            (-)
+                                        </div>
+                                        <div *ngIf="getFieldErrors('username')?.['usernameSymbolAtEdge']">
+                                            El username no puede empezar ni terminar con símbolos
+                                        </div>
+                                        <div *ngIf="getFieldErrors('username')?.['usernameConsecutiveSymbols']">
+                                            No se permiten símbolos consecutivos (ej: .. o __ o .-)
+                                        </div>
+                                        <div *ngIf="getFieldErrors('username')?.['usernameTaken']">
+                                            Este nombre de usuario ya está en uso
+                                        </div>
+                                    </div>
+
+                                    <!-- Ayuda visual con reglas -->
+                                    <small class="text-muted d-block mt-1">
+                                        <i class="bi bi-info-circle me-1"></i>
+                                        3-20 caracteres. Solo letras, números, punto (.), guion bajo (_) y guion medio
+                                        (-)
+                                    </small>
+                                </div>
+                            </div>
+
+                            <!-- Email -->
+                            <div class="col-md-6">
+                                <label class="form-label">Dirección de e-mail</label>
+
+                                <div class="profile-field-display">
+                                    <div class="d-flex align-items-center justify-content-between flex-wrap gap-2">
+                                        <div>
+                                            <span class="text-body me-2">{{ currentUser.email }}</span>
+                                        </div>
+
+                                        <button *ngIf="isEditMode" type="button" class="btn btn-sm btn-outline-primary"
+                                            (click)="openEmailModal()">
+                                            Editar
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Teléfono -->
+                            <div class="col-md-12">
+                                <label class="form-label">Número de teléfono</label>
+
+                                <div *ngIf="!isEditMode" class="profile-field-display">
+                                    <span class="text-body">
+                                        <span *ngIf="currentUser.countryCallingCode">+{{ currentUser.countryCallingCode
+                                            }}</span>
+                                        {{ currentUser.phone || '—' }}
+                                    </span>
+                                </div>
+
+                                <div *ngIf="isEditMode">
+                                    <div class="row g-2">
+                                        <div class="col-md-5 col-12">
+                                            <select class="form-select" id="phoneCode"
+                                                formControlName="countryCallingCode"
+                                                [ngClass]="onValidate('countryCallingCode')">
+                                                <option value="" disabled selected>Código</option>
+                                                <option *ngFor="let country of countries" [value]="country.phoneCode">
+                                                    {{ country.name }} ({{ country.displayCode }}) </option>
+                                            </select>
+                                        </div>
+                                        <div class="col-md-7 col-12">
+                                            <input type="tel" class="form-control" formControlName="phone"
+                                                [ngClass]="onValidate('phone')" placeholder="Número">
+                                        </div>
+                                    </div>
+
+                                    <div *ngIf="shouldShowError('phone')" class="invalid-feedback d-block">
+                                        <div *ngIf="getFieldErrors('phone')?.['required']">
+                                            El número de teléfono es obligatorio
+                                        </div>
+                                        <div *ngIf="getFieldErrors('phone')?.['invalidPhoneNumber']">
+                                            Número inválido para el país
+                                        </div>
+                                        <div *ngIf="getFieldErrors('phone')?.['missingCountryCode']">
+                                            Seleccioná un código de país
+                                        </div>
+                                        <div
+                                            *ngIf="getFieldErrors('contact.phones.0.number')?.['phoneValidationError']">
+                                            Error al validar el número de teléfono
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Fecha de Nacimiento -->
+                            <div class="col-md-6">
+                                <label class="form-label">Fecha de nacimiento</label>
+
+                                <div *ngIf="!isEditMode" class="profile-field-display">
+                                    <span class="text-body">
+                                        {{ (currentUser.birthDate | date: 'dd/MM/yyyy') || '—' }}
+                                    </span>
+                                </div>
+
+                                <div *ngIf="isEditMode">
+                                    <input type="date" class="form-control" formControlName="birthDate"
+                                        [ngClass]="onValidate('birthDate')" [max]="maxBirthDate | date: 'yyyy-MM-dd'">
+
+                                    <div *ngIf="shouldShowError('birthDate')" class="invalid-feedback">
+                                        <div *ngIf="getFieldErrors('birthDate')?.['underage']">
+                                            Debés ser mayor de 18 años
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Género -->
+                            <div class="col-md-6">
+                                <label class="form-label">Género</label>
+
+                                <div *ngIf="!isEditMode" class="profile-field-display">
+                                    <span class="text-body">
+                                        <span *ngIf="currentUser.gender === 'MALE'">Masculino</span>
+                                        <span *ngIf="currentUser.gender === 'FEMALE'">Femenino</span>
+                                        <span *ngIf="currentUser.gender === 'UNSPECIFIED'">Otro</span>
+                                        <span *ngIf="!currentUser.gender">—</span>
+                                    </span>
+                                </div>
+
+                                <div *ngIf="isEditMode">
+                                    <select class="form-select" formControlName="gender">
+                                        <option *ngFor="let option of genderOptions" [value]="option.value">
+                                            {{ option.label }}
+                                        </option>
+                                    </select>
+                                </div>
+                            </div>
+
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Datos del Pasaporte Card -->
+                <div class="card mb-4 mt-4">
+                    <div class="card-header">
+                        <h5 class="mb-0 p-2">
+                            Datos del Pasaporte
+                        </h5>
+                    </div>
+                    <div class="card-body border-secondary shadow-sm">
+                        <div class="row g-3">
+
+                            <!-- Número de Pasaporte -->
+                            <div class="col-md-6">
+                                <label class="form-label">Número de Pasaporte</label>
+
+                                <div *ngIf="!isEditMode" class="profile-field-display">
+                                    <span class="text-body">{{ currentUser.passport?.passportNumber || '—' }}</span>
+                                </div>
+
+                                <div *ngIf="isEditMode">
+                                    <div class="position-relative">
+                                        <input type="text" class="form-control text-uppercase"
+                                            formControlName="passportNumber" [ngClass]="onValidate('passportNumber')"
+                                            (blur)="trimField('passportNumber')"
+                                            (input)="profileForm.get('passportNumber')?.markAsTouched()"
+                                            placeholder="ABC123456">
+
+                                        <div *ngIf="f['passportNumber'].pending"
+                                            class="spinner-border spinner-border-sm text-primary position-absolute"
+                                            style="right: 10px; top: 10px;">
+                                        </div>
+                                    </div>
+
+                                    <div *ngIf="shouldShowError('passportNumber')" class="invalid-feedback">
+                                        <div *ngIf="getFieldErrors('passportNumber')?.['minlength']">
+                                            Mínimo 6 caracteres
+                                        </div>
+                                        <div *ngIf="getFieldErrors('passportNumber')?.['maxlength']">
+                                            Máximo 9 caracteres
+                                        </div>
+                                        <div *ngIf="getFieldErrors('passportNumber')?.['pattern']">
+                                            Solo letras y números
+                                        </div>
+                                        <div *ngIf="getFieldErrors('passportNumber')?.['passportTaken']">
+                                            Este pasaporte ya está registrado
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Fecha de Expiración -->
+                            <div class="col-md-6">
+                                <label class="form-label">Fecha de Expiración</label>
+
+                                <div *ngIf="!isEditMode" class="profile-field-display">
+                                    <span class="text-body">
+                                        {{ (currentUser.passport?.expiryDate | date: 'dd/MM/yyyy') || '—' }}
+                                    </span>
+                                </div>
+
+                                <div *ngIf="isEditMode">
+                                    <input type="date" class="form-control" formControlName="passportExpiryDate"
+                                        [ngClass]="onValidate('passportExpiryDate')">
+
+                                    <div *ngIf="shouldShowError('passportExpiryDate')" class="invalid-feedback">
+                                        <div *ngIf="getFieldErrors('passportExpiryDate')?.['pastDate']">
+                                            Debe ser una fecha futura
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- País de Emisión -->
+                            <div class="col-md-6">
+                                <label class="form-label">País de Emisión</label>
+
+                                <div *ngIf="!isEditMode" class="profile-field-display">
+                                    <span class="text-body">{{ currentUser.passport?.issuanceCountry || '—' }}</span>
+                                </div>
+
+                                <div *ngIf="isEditMode">
+                                    <ng-select formControlName="passportIssuanceCountry" [items]="countries"
+                                        bindLabel="name" bindValue="code" placeholder="Seleccioná el país"
+                                        [searchable]="true">
+                                    </ng-select>
+                                </div>
+                            </div>
+
+                            <!-- Nacionalidad -->
+                            <div class="col-md-6">
+                                <label class="form-label">Nacionalidad</label>
+
+                                <div *ngIf="!isEditMode" class="profile-field-display">
+                                    <span class="text-body">{{ currentUser.passport?.nationality || '—' }}</span>
+                                </div>
+
+                                <div *ngIf="isEditMode">
+                                    <ng-select formControlName="passportNationality" [items]="countries"
+                                        bindLabel="name" bindValue="code" placeholder="Seleccioná tu nacionalidad"
+                                        [searchable]="true">
+                                    </ng-select>
+                                </div>
+                            </div>
+
+                        </div>
+                    </div>
+                </div>
+
+            </form>
+
+            <!-- Sección Contraseña -->
+            <div class="card">
+                <div class="card-body border-secondary shadow-sm">
+                    <div class="d-flex justify-content-between align-items-center flex-wrap gap-3">
+                        <div>
+                            <h5 class="mb-1">
+                                Contraseña
+                            </h5>
+                            <p class="text-muted mb-0">Cambiá tu contraseña para mantener tu cuenta segura</p>
+                        </div>
+                        <button type="button" class="btn btn-outline-primary" (click)="openPasswordModal()">
+                            Cambiar Contraseña
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+<!-- Modal: Cambiar Email -->
+<app-change-email-modal [show]="showEmailModal" [currentEmail]="currentUser?.email || ''"
+    [userId]="currentUser?.id || 0" (closeModal)="closeEmailModal()" (emailChanged)="onEmailChanged($event)">
+</app-change-email-modal>
+
+<!-- Modal: Cambiar Contraseña -->
+<app-change-password-modal [show]="showPasswordModal" (closeModal)="closePasswordModal()">
+</app-change-password-modal>
