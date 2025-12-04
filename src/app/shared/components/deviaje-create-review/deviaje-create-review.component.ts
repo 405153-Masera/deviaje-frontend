@@ -31,6 +31,9 @@ export class DeviajeCreateReviewComponent implements OnInit, OnDestroy {
   private readonly route = inject(ActivatedRoute);
   private subscriptions = new Subscription();
 
+  currentUser: any;
+  isLoggedIn: boolean = false;
+  userRole: string = '';
   reviewForm!: FormGroup;
   categories: CategoryInfo[] = REVIEW_CATEGORIES;
   submitting = false;
@@ -41,8 +44,9 @@ export class DeviajeCreateReviewComponent implements OnInit, OnDestroy {
 
   ngOnInit(): void {
     // Verificar que el usuario esté autenticado
-    const currentUser = this.authService.getUser();
-    if (!currentUser) {
+    this.loadCurrentUser();
+
+    if (!this.currentUser) {
       this.router.navigate(['/user/login'], {
         queryParams: { returnUrl: '/reviews' },
       });
@@ -65,6 +69,37 @@ export class DeviajeCreateReviewComponent implements OnInit, OnDestroy {
 
   ngOnDestroy(): void {
     this.subscriptions.unsubscribe();
+  }
+
+  loadCurrentUser(): void {
+    // Suscribirse al usuario actual
+    this.subscriptions.add(
+      this.authService.currentUser$.subscribe({
+        next: (user) => {
+          this.currentUser = user;
+          this.isLoggedIn = !!user;
+          this.setupBookingBasedOnRole();
+        },
+        error: () => {
+          this.isLoggedIn = false;
+          this.setupBookingBasedOnRole();
+        },
+      })
+    );
+
+    this.subscriptions.add(
+      this.authService.activeRole$.subscribe((role) => {
+        this.userRole = role || '';
+        this.setupBookingBasedOnRole();
+      })
+    );
+  }
+  
+  setupBookingBasedOnRole(): void {
+    if (this.userRole === 'ADMINISTRADOR') {
+      this.router.navigate(['/home']);
+      return;
+    }
   }
 
   /**
@@ -134,7 +169,7 @@ export class DeviajeCreateReviewComponent implements OnInit, OnDestroy {
     };
 
     this.subscriptions.add(
-      this.reviewService.createReview(request).subscribe({
+      this.reviewService.createReview(request, this.currentUser.id).subscribe({
         next: (review) => {
           // Navegar al detalle de la review creada
           this.router.navigate(['/reviews/detail', review.id]);

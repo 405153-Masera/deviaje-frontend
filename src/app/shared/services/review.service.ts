@@ -2,7 +2,13 @@ import { Injectable, inject } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { environment } from '../enviroments/enviroment';
-import { Review, ReviewCategory, ReviewCreateRequest, ReviewResponse, ReviewResponseCreateRequest } from '../models/reviews';
+import {
+  Review,
+  ReviewCategory,
+  ReviewCreateRequest,
+  ReviewResponse,
+  ReviewResponseCreateRequest,
+} from '../models/reviews';
 
 /**
  * Servicio para gestionar reviews de la plataforma
@@ -12,15 +18,21 @@ import { Review, ReviewCategory, ReviewCreateRequest, ReviewResponse, ReviewResp
 })
 export class ReviewService {
   private readonly http = inject(HttpClient);
-  private readonly baseUrl = environment.apiDeviajeUsers.replace('/users', '/reviews');
+  private readonly baseUrl = environment.apiDeviajeUsers.replace(
+    '/users',
+    '/reviews'
+  );
 
   // =============== REVIEWS ===============
 
   /**
    * Crear una nueva review
    */
-  createReview(request: ReviewCreateRequest): Observable<Review> {
-    return this.http.post<Review>(this.baseUrl, request);
+  createReview(
+    request: ReviewCreateRequest,
+    userId: number
+  ): Observable<Review> {
+    return this.http.post<Review>(`${this.baseUrl}?userId=${userId}`, request);
   }
 
   /**

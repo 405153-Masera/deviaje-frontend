@@ -21,6 +21,7 @@ export interface User {
   lastName?: string;
   avatar?: string;
   activeRole?: string;
+  isTemporaryPassword?: boolean;
 }
 
 @Injectable({
@@ -378,6 +379,7 @@ export class AuthService {
       email: jwtResponse.email,
       roles: jwtResponse.roles,
       activeRole: activeRole,
+      isTemporaryPassword: jwtResponse.isTemporaryPassword,
     };
 
     this.saveUser(user);

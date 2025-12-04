@@ -35,7 +35,7 @@ export class DeviajeReviewsCategoriesComponent implements OnInit, OnDestroy {
   /**
    * Carga las categorías y cuenta las reviews de cada una
    */
-  private loadCategories(): void {
+  loadCategories(): void {
     this.loading = true;
     this.error = '';
 

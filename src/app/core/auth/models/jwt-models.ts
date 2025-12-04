@@ -7,6 +7,7 @@ export interface JwtResponse {
   username: string;
   email: string;
   roles: string[];
+  isTemporaryPassword: boolean;
 }
 
 export interface LoginRequest {
