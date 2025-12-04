@@ -11,8 +11,9 @@ import {
 } from '@angular/forms';
 import { Router, RouterModule, ActivatedRoute } from '@angular/router';
 import { debounceTime, distinctUntilChanged, Subscription } from 'rxjs';
-import { ChangePasswordRequest, UserService } from '../../services/user.service';
+import { ChangePasswordRequest } from '../../services/user.service';
 import { AuthService } from '../../../core/auth/services/auth.service';
+import { PasswordResetService } from '../../services/password-reset.service';
 
 @Component({
   selector: 'app-deviaje-change-password',
@@ -25,8 +26,8 @@ export class DeviajeChangePasswordComponent implements OnInit, OnDestroy {
   private fb = inject(FormBuilder);
   private route = inject(ActivatedRoute);
   private router = inject(Router);
-  private userService = inject(UserService);
   private authService = inject(AuthService);
+  private passwordService = inject(PasswordResetService);
 
   changePasswordForm: FormGroup = this.fb.group(
     {
@@ -52,8 +53,7 @@ export class DeviajeChangePasswordComponent implements OnInit, OnDestroy {
   );
 
   // Variables para manejar el token (cambio forzado por administrador)
-  token: string = '';
-  isTokenReset = false;
+  forced = false;
   isSubmitting = false;
   successMessage = '';
   errorMessage = '';
@@ -65,19 +65,12 @@ export class DeviajeChangePasswordComponent implements OnInit, OnDestroy {
   private subscription = new Subscription();
 
   ngOnInit(): void {
-    // Verificar si viene con token (cambio forzado)
     this.subscription.add(
       this.route.queryParams.subscribe((params) => {
-        this.token = params['token'];
-        if (this.token) {
-          this.isTokenReset = true;
-          // Si es cambio forzado, no necesita contraseña actual
-          this.changePasswordForm.removeControl('currentPassword');
-        }
+        this.forced = params['forced'] === 'true';
       })
     );
 
-    // Configurar seguimiento de fuerza de contraseña
     this.subscription.add(
       this.changePasswordForm
         .get('newPassword')
@@ -105,44 +98,41 @@ export class DeviajeChangePasswordComponent implements OnInit, OnDestroy {
     const passwordData: ChangePasswordRequest = {
       newPassword: this.changePasswordForm.get('newPassword')?.value,
       confirmPassword: this.changePasswordForm.get('confirmPassword')?.value,
+      currentPassword: this.changePasswordForm.get('currentPassword')?.value,
     };
 
-    // Si es cambio normal (usuario logueado), incluir contraseña actual
-    if (!this.isTokenReset) {
-      passwordData.currentPassword = this.changePasswordForm.get('currentPassword')?.value;
-    } else {
-      // Si es cambio forzado, incluir token
-      passwordData.token = this.token;
-    }
-
-    // Usar el método apropiado según el tipo de cambio
-    const changeRequest = this.isTokenReset 
-      ? this.userService.resetPassword(passwordData)
-      : this.userService.changePassword(passwordData);
-
     this.subscription.add(
-      changeRequest.subscribe({
+      this.passwordService.changePassword(passwordData).subscribe({
         next: (response) => {
           this.isSubmitting = false;
           this.changeComplete = true;
-          this.successMessage = response.message || 'Su contraseña ha sido cambiada exitosamente.';
+          this.successMessage = 'Su contraseña ha sido cambiada exitosamente.';
 
-          // Redirigir después de un tiempo
+          const currentUser = this.authService.getUser();
+          if (currentUser && currentUser.isTemporaryPassword) {
+            currentUser.isTemporaryPassword = false;
+            this.authService.saveUser(currentUser);
+          }
+
           setTimeout(() => {
-            if (this.isTokenReset) {
-              // Si era cambio forzado, ir al login
-              this.authService.logout().subscribe(() => {
-                this.router.navigate(['/user/login']);
-              });
+            if (this.forced) {
+              // Si era cambio forzoso, ir al home
+              console.log(
+                '✅ Redirigiendo al home (cambio forzoso completado)'
+              );
+              this.router.navigate(['/home']);
             } else {
-              // Si era cambio normal, ir al perfil
+              // Si era cambio normal, volver al perfil
+              console.log(
+                '✅ Redirigiendo al perfil (cambio normal completado)'
+              );
               this.router.navigate(['/profile']);
             }
-          }, 3000);
+          }, 2000);
         },
         error: (error) => {
           this.isSubmitting = false;
-          this.errorMessage = error?.error?.message || 'Ocurrió un error al cambiar su contraseña.';
+          this.errorMessage = 'Ocurrió un error al cambiar su contraseña.';
         },
       })
     );
@@ -153,7 +143,9 @@ export class DeviajeChangePasswordComponent implements OnInit, OnDestroy {
   }
 
   // Validaciones copiadas exactamente del signup
-  validatePasswordComplexity(control: AbstractControl): ValidationErrors | null {
+  validatePasswordComplexity(
+    control: AbstractControl
+  ): ValidationErrors | null {
     const password = control.value;
 
     if (!password) return null;
@@ -244,7 +236,9 @@ export class DeviajeChangePasswordComponent implements OnInit, OnDestroy {
     return 'bg-success';
   }
 
-  togglePasswordVisibility(field: 'currentPassword' | 'newPassword' | 'confirmPassword') {
+  togglePasswordVisibility(
+    field: 'currentPassword' | 'newPassword' | 'confirmPassword'
+  ) {
     if (field === 'currentPassword') {
       this.showCurrentPassword = !this.showCurrentPassword;
     } else if (field === 'newPassword') {
@@ -275,7 +269,7 @@ export class DeviajeChangePasswordComponent implements OnInit, OnDestroy {
 
   // Método para volver
   goBack(): void {
-    if (this.isTokenReset) {
+    if (this.forced) {
       this.router.navigate(['/user/login']);
     } else {
       this.router.navigate(['/profile']);

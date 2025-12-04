@@ -35,6 +35,13 @@ export const routes: Routes = [
         './shared/components/deviaje-reset-password/deviaje-reset-password.component'
       ).then((m) => m.DeviajeResetPasswordComponent),
   },
+  {
+    path: 'user/change-password',
+    loadComponent: () =>
+      import(
+        './shared/components/deviaje-change-password/deviaje-change-password.component'
+      ).then((m) => m.DeviajeChangePasswordComponent),
+  },
 
   // === LEGAL ===
   {
@@ -243,6 +250,13 @@ export const routes: Routes = [
             './features/admin/components/deviaje-admin-user-register/deviaje-admin-user-register.component'
           ).then((m) => m.DeviajeAdminUserRegisterComponent),
       },
+       {
+      path: 'users/:id/edit',
+      loadComponent: () =>
+        import(
+          './features/admin/components/deviaje-admin-user-edit/deviaje-admin-user-edit.component'
+        ).then((m) => m.DeviajeAdminUserEditComponent),
+    },
       {
         path: 'dashboard',
         loadComponent: () =>

@@ -159,42 +159,61 @@
                                         </span>
                                     </td>
 
-                                    <!-- Acciones -->
                                     <td class="text-center">
-                                        <div class="dropdown">
-                                            <button class="btn btn-outline-secondary btn-sm dropdown-toggle"
-                                                type="button" (click)="toggleDropdown(user.id, $event)"
-                                                [class.show]="openDropdownId === user.id">
+                                        <div class="dropdown" (clickOutside)="closeDropdown()">
+                                            <button class="btn btn-sm btn-link text-dark" type="button"
+                                                [id]="'dropdownUser' + user.id"
+                                                (click)="toggleDropdown(user.id, $event)">
                                                 <i class="bi bi-three-dots-vertical"></i>
                                             </button>
 
-                                            <ul class="dropdown-menu" [class.show]="openDropdownId === user.id">
+                                            <ul class="dropdown-menu" [class.show]="openDropdownId === user.id"
+                                                [attr.aria-labelledby]="'dropdownUser' + user.id">
+
+                                                <!-- Ver más -->
                                                 <li>
-                                                    <button class="dropdown-item" (click)="viewUser(user)">
+                                                    <a class="dropdown-item" href="#"
+                                                        (click)="openViewModal(user); $event.preventDefault()">
                                                         <i class="bi bi-eye me-2"></i>Ver más
-                                                    </button>
+                                                    </a>
                                                 </li>
+
+                                                <!-- Editar -->
                                                 <li>
-                                                    <button class="dropdown-item" (click)="editUser(user)">
+                                                    <a class="dropdown-item"
+                                                        [routerLink]="['/admin/users', user.id, 'edit']"
+                                                        (click)="closeDropdown()">
                                                         <i class="bi bi-pencil me-2"></i>Editar
-                                                    </button>
+                                                    </a>
                                                 </li>
+
+                                                <!-- Resetear contraseña -->
                                                 <li>
-                                                    <button class="dropdown-item" (click)="forcePasswordChange(user)">
-                                                        <i class="bi bi-key me-2"></i>Cambiar contraseña
-                                                    </button>
+                                                    <a class="dropdown-item text-warning" href="#"
+                                                        (click)="openResetPasswordModal(user); $event.preventDefault()">
+                                                        <i class="bi bi-shield-exclamation me-2"></i>Resetear contraseña
+                                                    </a>
                                                 </li>
+
                                                 <li>
-                                                    <hr class="dropdown-divider">
+                                                    <hr class="dropdown-divider" />
                                                 </li>
-                                                <li>
-                                                    <button class="dropdown-item"
-                                                        [ngClass]="user.active ? 'text-warning' : 'text-success'"
-                                                        (click)="toggleUserStatus(user)">
-                                                        <i class="bi me-2"
-                                                            [ngClass]="user.active ? 'bi-pause-circle' : 'bi-play-circle'"></i>
-                                                        {{ user.active ? 'Dar de baja' : 'Activar' }}
-                                                    </button>
+
+                                                <!-- 👇 CONDICIONAL: Activar O Dar de baja según estado -->
+                                                <li *ngIf="!user.active">
+                                                    <!-- Si está inactivo → Mostrar ACTIVAR -->
+                                                    <a class="dropdown-item text-success" href="#"
+                                                        (click)="openActivateModal(user); $event.preventDefault()">
+                                                        <i class="bi bi-check-circle me-2"></i>Activar usuario
+                                                    </a>
+                                                </li>
+
+                                                <li *ngIf="user.active">
+                                                    <!-- Si está activo → Mostrar DAR DE BAJA -->
+                                                    <a class="dropdown-item text-danger" href="#"
+                                                        (click)="openDeactivateModal(user); $event.preventDefault()">
+                                                        <i class="bi bi-trash me-2"></i>Dar de baja
+                                                    </a>
                                                 </li>
                                             </ul>
                                         </div>
@@ -237,6 +256,343 @@
                         </ul>
                     </nav>
                 </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Ver Más -->
+<div class="modal fade" [class.show]="showViewModal" [style.display]="showViewModal ? 'block' : 'none'" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header bg-primary text-white">
+                <h5 class="modal-title">
+                    <i class="bi bi-person-lines-fill me-2"></i>
+                    Información del Usuario
+                </h5>
+                <button type="button" class="btn-close btn-close-white" (click)="closeViewModal()"></button>
+            </div>
+            <div class="modal-body" *ngIf="selectedUser">
+                <!-- Información de Cuenta -->
+                <h6 class="text-primary mb-3">
+                    <i class="bi bi-shield-lock me-2"></i>
+                    Información de Cuenta
+                </h6>
+                <div class="row mb-4">
+                    <div class="col-md-6 mb-3">
+                        <label class="text-muted small">Nombre de Usuario</label>
+                        <div class="fw-semibold">{{ selectedUser.username }}</div>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label class="text-muted small">Correo Electrónico</label>
+                        <div class="fw-semibold font-monospace">{{ selectedUser.email }}</div>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label class="text-muted small">Roles</label>
+                        <div>
+                            <span *ngFor="let role of selectedUser.roles" class="badge bg-primary me-1">
+                                {{ getRoleName(role) }}
+                            </span>
+                        </div>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label class="text-muted small">Estado</label>
+                        <div>
+                            <span class="badge" [ngClass]="selectedUser.active ? 'bg-success' : 'bg-secondary'">
+                                <i class="bi" [ngClass]="selectedUser.active ? 'bi-check-circle' : 'bi-x-circle'"></i>
+                                {{ selectedUser.active ? 'Activo' : 'Inactivo' }}
+                            </span>
+                        </div>
+                    </div>
+                </div>
+
+                <hr>
+
+                <!-- Información Personal -->
+                <h6 class="text-primary mb-3">
+                    <i class="bi bi-person me-2"></i>
+                    Información Personal
+                </h6>
+                <div class="row mb-4">
+                    <div class="col-md-6 mb-3">
+                        <label class="text-muted small">Nombre</label>
+                        <div class="fw-semibold">
+                            {{ selectedUser.firstName || '—' }}
+                        </div>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label class="text-muted small">Apellido</label>
+                        <div class="fw-semibold">
+                            {{ selectedUser.lastName || '—' }}
+                        </div>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label class="text-muted small">Género</label>
+                        <div class="fw-semibold">
+                            {{ getGenderLabel(selectedUser.gender) }}
+                        </div>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label class="text-muted small">Fecha de Nacimiento</label>
+                        <div class="fw-semibold">
+                            {{ selectedUser.birthDate ? (selectedUser.birthDate | date: 'dd/MM/yyyy') : '—' }}
+                        </div>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label class="text-muted small">Teléfono</label>
+                        <div class="fw-semibold">
+                            {{ selectedUser.phone ? '+' + selectedUser.countryCallingCode + selectedUser.phone : '—' }}
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Información de Pasaporte (si existe) -->
+                <div *ngIf="selectedUser.passport">
+                    <hr>
+                    <h6 class="text-primary mb-3">
+                        <i class="bi bi-passport me-2"></i>
+                        Información de Pasaporte
+                    </h6>
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="text-muted small">Número de Pasaporte</label>
+                            <div class="fw-semibold">{{ selectedUser.passport.passportNumber }}</div>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="text-muted small">Fecha de Expiración</label>
+                            <div class="fw-semibold">
+                                {{ selectedUser.passport.expiryDate | date: 'dd/MM/yyyy' }}
+                            </div>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="text-muted small">País de Emisión</label>
+                            <div class="fw-semibold">{{ selectedUser.passport.issuanceCountry }}</div>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="text-muted small">Nacionalidad</label>
+                            <div class="fw-semibold">{{ selectedUser.passport.nationality }}</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-outline-secondary" (click)="closeViewModal()">
+                    Cerrar
+                </button>
+                <button type="button" class="btn btn-primary" (click)="goToEdit()">
+                    <i class="bi bi-pencil me-1"></i>
+                    Editar Usuario
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal-backdrop fade show" 
+     *ngIf="showViewModal || showDeactivateModal || showActivateModal || showResetPasswordModal">
+</div>
+
+<!-- Modal Dar de Baja -->
+<div class="modal fade" [class.show]="showDeactivateModal" [style.display]="showDeactivateModal ? 'block' : 'none'"
+    tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header bg-danger text-white">
+                <h5 class="modal-title">
+                    <i class="bi bi-exclamation-triangle me-2"></i>
+                    Confirmar Baja de Usuario
+                </h5>
+                <button type="button" class="btn-close btn-close-white" (click)="closeDeactivateModal()"></button>
+            </div>
+            <div class="modal-body" *ngIf="selectedUser">
+                <!-- Verificar si es el mismo usuario -->
+                <div *ngIf="isCurrentUser(selectedUser.id)" class="alert alert-warning">
+                    <i class="bi bi-shield-exclamation me-2"></i>
+                    <strong>Acción bloqueada:</strong> No puedes darte de baja a ti mismo.
+                </div>
+
+                <!-- Confirmación normal -->
+                <div *ngIf="!isCurrentUser(selectedUser.id)">
+                    <p class="mb-3">
+                        ¿Estás seguro de que deseas <strong>dar de baja</strong> al siguiente usuario?
+                    </p>
+
+                    <div class="card bg-light mb-3">
+                        <div class="card-body">
+                            <div class="mb-2">
+                                <strong>Usuario:</strong> {{ selectedUser.username }}
+                            </div>
+                            <div class="mb-2">
+                                <strong>Email:</strong> {{ selectedUser.email }}
+                            </div>
+                            <div class="mb-2">
+                                <strong>Nombre:</strong> {{ selectedUser.firstName }} {{ selectedUser.lastName }}
+                            </div>
+                            <div>
+                                <strong>Roles:</strong>
+                                <span *ngFor="let role of selectedUser.roles; let last = last">
+                                    {{ getRoleName(role) }}<span *ngIf="!last">, </span>
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="alert alert-danger mb-0">
+                        <i class="bi bi-info-circle me-2"></i>
+                        El usuario <strong>no podrá acceder</strong> a algunas funcionalidades del sistema hasta que sea reactivado por un
+                        administrador.
+                    </div>
+                </div>
+
+                <!-- Mensaje de error si falla -->
+                <div *ngIf="deactivateError" class="alert alert-danger mt-3">
+                    <i class="bi bi-exclamation-triangle me-2"></i>
+                    {{ deactivateError }}
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-outline-secondary" (click)="closeDeactivateModal()">
+                    Cancelar
+                </button>
+                <button *ngIf="!isCurrentUser(selectedUser?.id)" type="button" class="btn btn-danger"
+                    [disabled]="deactivateLoading" (click)="confirmDeactivate()">
+                    <span *ngIf="deactivateLoading" class="spinner-border spinner-border-sm me-1"></span>
+                    <i *ngIf="!deactivateLoading" class="bi bi-trash me-1"></i>
+                    Dar de Baja
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<!-- Modal Resetear Contraseña -->
+<div class="modal fade" [class.show]="showResetPasswordModal"
+    [style.display]="showResetPasswordModal ? 'block' : 'none'" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header bg-warning text-dark">
+                <h5 class="modal-title">
+                    <i class="bi bi-shield-exclamation me-2"></i>
+                    Resetear Contraseña
+                </h5>
+                <button type="button" class="btn-close" (click)="closeResetPasswordModal()"></button>
+            </div>
+            <div class="modal-body" *ngIf="selectedUser">
+                <p class="mb-3">
+                    ¿Estás seguro de que deseas <strong>resetear la contraseña</strong> del siguiente usuario?
+                </p>
+
+                <div class="card bg-light mb-3">
+                    <div class="card-body">
+                        <div class="mb-2">
+                            <strong>Usuario:</strong> {{ selectedUser.username }}
+                        </div>
+                        <div class="mb-2">
+                            <strong>Email:</strong> {{ selectedUser.email }}
+                        </div>
+                        <div>
+                            <strong>Nombre:</strong> {{ selectedUser.firstName }} {{ selectedUser.lastName }}
+                        </div>
+                    </div>
+                </div>
+
+                <div class="alert alert-info">
+                    <i class="bi bi-info-circle me-2"></i>
+                    <strong>¿Qué sucederá?</strong>
+                    <ul class="mb-0 mt-2">
+                        <li>Se generará una <strong>contraseña temporal</strong> aleatoria y segura</li>
+                        <li>Se enviará un <strong>email</strong> al usuario con la nueva contraseña</li>
+                        <li>El usuario deberá <strong>cambiar la contraseña</strong> en su próximo inicio de sesión</li>
+                        <li>La contraseña anterior <strong>quedará invalidada</strong></li>
+                    </ul>
+                </div>
+
+                <!-- Mensaje de éxito -->
+                <div *ngIf="resetPasswordSuccess" class="alert alert-success">
+                    <i class="bi bi-check-circle me-2"></i>
+                    {{ resetPasswordSuccess }}
+                </div>
+
+                <!-- Mensaje de error -->
+                <div *ngIf="resetPasswordError" class="alert alert-danger">
+                    <i class="bi bi-exclamation-triangle me-2"></i>
+                    {{ resetPasswordError }}
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-outline-secondary" (click)="closeResetPasswordModal()">
+                    Cancelar
+                </button>
+                <button type="button" class="btn btn-warning" [disabled]="resetPasswordLoading || resetPasswordSuccess"
+                    (click)="confirmResetPassword()">
+                    <span *ngIf="resetPasswordLoading" class="spinner-border spinner-border-sm me-1"></span>
+                    <i *ngIf="!resetPasswordLoading" class="bi bi-shield-exclamation me-1"></i>
+                    {{ resetPasswordSuccess ? 'Contraseña Reseteada' : 'Resetear Contraseña' }}
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Activar Usuario -->
+<div class="modal fade" [class.show]="showActivateModal" 
+     [style.display]="showActivateModal ? 'block' : 'none'" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header bg-success text-white">
+                <h5 class="modal-title">
+                    <i class="bi bi-check-circle me-2"></i>
+                    Activar Usuario
+                </h5>
+                <button type="button" class="btn-close btn-close-white" (click)="closeActivateModal()"></button>
+            </div>
+            <div class="modal-body" *ngIf="selectedUser">
+                <p class="mb-3">
+                    ¿Estás seguro de que deseas <strong>reactivar</strong> al siguiente usuario?
+                </p>
+
+                <div class="card bg-light mb-3">
+                    <div class="card-body">
+                        <div class="mb-2">
+                            <strong>Usuario:</strong> {{ selectedUser.username }}
+                        </div>
+                        <div class="mb-2">
+                            <strong>Email:</strong> {{ selectedUser.email }}
+                        </div>
+                        <div class="mb-2">
+                            <strong>Nombre:</strong> {{ selectedUser.firstName }} {{ selectedUser.lastName }}
+                        </div>
+                        <div>
+                            <strong>Roles:</strong>
+                            <span *ngFor="let role of selectedUser.roles; let last = last">
+                                {{ getRoleName(role) }}<span *ngIf="!last">, </span>
+                            </span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="alert alert-success mb-0">
+                    <i class="bi bi-info-circle me-2"></i>
+                    El usuario <strong>podrá acceder</strong> nuevamente al sistema con su cuenta existente.
+                </div>
+
+                <!-- Mensaje de error si falla -->
+                <div *ngIf="activateError" class="alert alert-danger mt-3">
+                    <i class="bi bi-exclamation-triangle me-2"></i>
+                    {{ activateError }}
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-outline-secondary" (click)="closeActivateModal()">
+                    Cancelar
+                </button>
+                <button type="button" class="btn btn-success"
+                    [disabled]="activateLoading" (click)="confirmActivate()">
+                    <span *ngIf="activateLoading" class="spinner-border spinner-border-sm me-1"></span>
+                    <i *ngIf="!activateLoading" class="bi bi-check-circle me-1"></i>
+                    Activar Usuario
+                </button>
             </div>
         </div>
     </div>

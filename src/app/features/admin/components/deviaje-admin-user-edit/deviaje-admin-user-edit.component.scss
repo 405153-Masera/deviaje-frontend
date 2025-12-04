@@ -1,0 +1,22 @@
+@import "../../../../../assets/styles/variables";
+
+// Estilos para el spinner de loading
+.spinner-border-sm.text-primary {
+  color: $primary-color !important;
+}
+
+// Estilos adicionales para la sección de roles
+.form-check-container {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 1rem;
+  
+  .form-check {
+    margin-bottom: 0.5rem;
+  }
+}
+
+.card.bg-light {
+  border: 1px solid $gray-300;
+}

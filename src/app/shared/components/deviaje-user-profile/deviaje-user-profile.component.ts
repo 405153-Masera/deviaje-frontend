@@ -101,8 +101,7 @@ export class DeviajeUserProfileComponent implements OnInit, OnDestroy {
                 this.isLoading = false;
               },
               error: (error) => {
-                this.errorMessage =
-                  error?.error?.message || 'Error al cargar el perfil';
+                this.errorMessage = 'Error al cargar el perfil';
                 this.isLoading = false;
               },
             });
@@ -369,8 +368,7 @@ export class DeviajeUserProfileComponent implements OnInit, OnDestroy {
           window.scrollTo({ top: 0, behavior: 'smooth' }); 
         },
         error: (error) => {
-          this.errorMessage =
-            error?.error?.message || 'Error al actualizar el perfil';
+          this.errorMessage = 'Error al actualizar el perfil';
           this.isSaving = false;
         },
       })

@@ -2,6 +2,7 @@ import { Injectable, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { environment } from '../../shared/enviroments/enviroment';
+import { MessageResponse } from '../../core/auth/models/jwt-models';
 
 // Interfaces para el servicio de usuarios
 export interface UserRegistrationRequest {
@@ -10,8 +11,8 @@ export interface UserRegistrationRequest {
   password: string;
   firstName?: string;
   lastName?: string;
-  roleIds: number[]; // ✅ Array de números
-  createdUser?: number; // ✅ Agregado
+  roleIds: number[];
+  createdUser?: number;
 }
 
 export interface UserUpdateRequest {
@@ -23,6 +24,8 @@ export interface UserUpdateRequest {
   countryCallingCode?: string;
   phone?: string;
   birthDate?: string;
+  roleIds?: number[];
+  lastUpdatedUser?: number;
   passport?: {
     passportNumber?: string;
     expiryDate?: string;
@@ -162,6 +165,33 @@ export class UserService {
   toggleUserStatus(id: number): Observable<ApiResponse<UserResponse>> {
     return this.http.patch<ApiResponse<UserResponse>>(
       `${this.baseUrl}/${id}/toggle-status`,
+      {}
+    );
+  }
+
+  /**
+   * Dar de baja un usuario (desactivar)
+   */
+  deactivateUser(id: number): Observable<MessageResponse> {
+    return this.http.delete<MessageResponse>(`${this.baseUrl}/${id}`);
+  }
+
+  /**
+   * Activar un usuario
+   */
+  activateUser(id: number): Observable<MessageResponse> {
+    return this.http.post<MessageResponse>(
+      `${this.baseUrl}/${id}/activate`,
+      {}
+    );
+  }
+
+  /**
+   * Admin resetea contraseña de un usuario (genera contraseña temporal)
+   */
+  adminResetPassword(id: number): Observable<MessageResponse> {
+    return this.http.post<MessageResponse>(
+      `${this.baseUrl}/${id}/admin-reset-password`,
       {}
     );
   }

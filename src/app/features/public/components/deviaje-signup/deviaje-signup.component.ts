@@ -13,10 +13,7 @@ import { Router, RouterLink } from '@angular/router';
 import { SignupRequest } from '../../../../core/auth/models/jwt-models';
 import { CommonModule } from '@angular/common';
 import { ValidatorsService } from '../../../../shared/services/validators.service';
-import {
-  debounceTime,
-  distinctUntilChanged,
-} from 'rxjs';
+import { debounceTime, distinctUntilChanged } from 'rxjs';
 
 @Component({
   selector: 'app-deviaje-signup',
@@ -71,13 +68,19 @@ export class DeviajeSignupComponent implements OnInit {
           validators: [
             Validators.required,
             Validators.minLength(3),
-            Validators.maxLength(50),
+            Validators.maxLength(20),
+            this.validatorsService.validateUsername(),
           ],
           nonNullable: true,
           asyncValidators: [this.validatorsService.validateUniqueUsername()],
         }),
         email: this.formBuilder.control('', {
-          validators: [Validators.required, Validators.email],
+          validators: [
+            Validators.required,
+            Validators.email,
+            this.validatorsService.emailWithDomain(),
+            Validators.maxLength(80),
+          ],
           nonNullable: true,
           asyncValidators: [this.validatorsService.validateUniqueEmail()],
         }),
@@ -94,12 +97,6 @@ export class DeviajeSignupComponent implements OnInit {
           validators: [Validators.required],
           nonNullable: true,
         }),
-        firstName: this.formBuilder.control<string | null>(null),
-        lastName: this.formBuilder.control<string | null>(null),
-        gender: this.formBuilder.control<string | null>(null),
-        birthDate: this.formBuilder.control<string | null>(null, {
-          validators: [this.validateAge],
-        }),
       },
       {
         validators: this.mustMatch('password', 'confirmPassword'),
@@ -107,8 +104,16 @@ export class DeviajeSignupComponent implements OnInit {
     );
   }
 
+  trimField(fieldName: string): void {
+    const control = this.signupForm.get(fieldName);
+    if (control && typeof control.value === 'string') {
+      control.setValue(control.value.trim());
+    }
+  }
   ngOnInit(): void {
     this.buildForm();
+
+    this.validatorsService.autoLowercaseControl(this.signupForm.get('email'));
 
     this.signupForm
       .get('password')
@@ -129,10 +134,14 @@ export class DeviajeSignupComponent implements OnInit {
     return this.signupForm.controls;
   }
 
-    // Helper methods para mostrar errores
+  // Helper methods para mostrar errores
   shouldShowError(fieldName: string): boolean {
     const field = this.signupForm.get(fieldName);
-    return !!(field && field.invalid && (field.dirty || field.touched || this.submitted));
+    return !!(
+      field &&
+      field.invalid &&
+      (field.dirty || field.touched || this.submitted)
+    );
   }
 
   getFieldErrors(fieldName: string): ValidationErrors | null {
@@ -144,8 +153,8 @@ export class DeviajeSignupComponent implements OnInit {
     const control = this.signupForm.get(fieldName);
     return {
       'is-invalid': control?.invalid && (control?.dirty || control?.touched),
-      'is-valid': control?.valid
-    }
+      'is-valid': control?.valid,
+    };
   }
 
   onSubmit(): void {
@@ -164,12 +173,6 @@ export class DeviajeSignupComponent implements OnInit {
       username: this.f['username'].value,
       email: this.f['email'].value,
       password: this.f['password'].value,
-      firstName: this.f['firstName'].value || undefined,
-      lastName: this.f['lastName'].value || undefined,
-      gender: this.f['gender'].value || undefined,
-      birthDate: this.f['birthDate'].value
-        ? new Date(this.f['birthDate'].value)
-        : undefined,
     };
 
     this.authService.signup(signupRequest).subscribe({
@@ -181,7 +184,7 @@ export class DeviajeSignupComponent implements OnInit {
 
         // Redirigir a la página de login después de 2 segundos
         setTimeout(() => {
-          this.router.navigate(['/auth/login']);
+          this.router.navigate(['/user/login']);
         }, 2000);
       },
       error: (error) => {
@@ -195,7 +198,7 @@ export class DeviajeSignupComponent implements OnInit {
   }
 
   private markFormGroupTouched(formGroup: FormGroup): void {
-    Object.keys(formGroup.controls).forEach(key => {
+    Object.keys(formGroup.controls).forEach((key) => {
       const control = formGroup.get(key);
       control?.markAsTouched();
 
@@ -268,7 +271,10 @@ export class DeviajeSignupComponent implements OnInit {
       }
 
       if (control.value !== matchingControl.value) {
-        matchingControl.setErrors({ ...matchingControl.errors, mustMatch: true });
+        matchingControl.setErrors({
+          ...matchingControl.errors,
+          mustMatch: true,
+        });
         return { mustMatch: true };
       } else {
         // Limpiar solo el error mustMatch, preservar otros errores

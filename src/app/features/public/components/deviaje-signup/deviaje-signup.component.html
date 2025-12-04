@@ -31,34 +31,72 @@
                                 <div class="input-with-icon">
                                     <i class="bi bi-person"></i>
                                     <input type="text" formControlName="username" class="form-control"
-                                        [ngClass]="onValidate('username')"  
-                                        id="username"
+                                        [ngClass]="onValidate('username')" id="username" (blur)="trimField('username')"
                                         placeholder="Nombre de usuario">
-                                         <div *ngIf="f['username'].pending" class="spinner-border spinner-border-sm text-primary position-absolute" style="right: 10px; top: 10px;"></div>
+                                    <div *ngIf="f['username'].pending"
+                                        class="spinner-border spinner-border-sm text-primary position-absolute"
+                                        style="right: 10px; top: 10px;"></div>
                                 </div>
                                 <div *ngIf="shouldShowError('username')" class="invalid-feedback d-block">
-                                    <div *ngIf="getFieldErrors('username')?.['required']">El nombre de usuario es obligatorio</div>
-                                    <div *ngIf="getFieldErrors('username')?.['minlength']">El nombre de usuario debe tener al menos 3 caracteres</div>
-                                    <div *ngIf="getFieldErrors('username')?.['maxlength']">El nombre de usuario no debe exceder 50 caracteres</div>
-                                    <div *ngIf="getFieldErrors('username')?.['usernameTaken']">Este nombre de usuario ya está en uso</div>
-                                    <div *ngIf="getFieldErrors('username')?.['serverError']">Error en el servidor. No se puede validar</div>
+                                    <div *ngIf="getFieldErrors('username')?.['required']">El nombre de usuario es
+                                        obligatorio</div>
+                                    <div *ngIf="getFieldErrors('username')?.['minlength']">Mínimo 3 caracteres</div>
+                                    <div *ngIf="getFieldErrors('username')?.['maxlength']">Máximo 20 caracteres</div>
+                                    <div *ngIf="getFieldErrors('username')?.['usernameInvalidChars']">
+                                        Solo se permiten letras, números, puntos, guiones y guión bajo
+                                    </div>
+                                    <div *ngIf="getFieldErrors('username')?.['usernameSymbolAtEdge']">
+                                        No puede empezar ni terminar con símbolos
+                                    </div>
+                                    <div *ngIf="getFieldErrors('username')?.['usernameConsecutiveSymbols']">
+                                        No se permiten símbolos consecutivos
+                                    </div>
+                                    <div *ngIf="getFieldErrors('username')?.['usernameTaken']">Este nombre de usuario ya
+                                        está en uso</div>
+                                    <div *ngIf="getFieldErrors('username')?.['serverError']">Error en el servidor. No se
+                                        puede validar</div>
                                 </div>
                             </div>
                             <div class="col-md-6">
                                 <label for="email" class="form-label">Correo Electrónico *</label>
                                 <div class="input-with-icon">
                                     <i class="bi bi-envelope"></i>
-                                    <input type="email" formControlName="email" class="form-control"
-                                        [ngClass]="onValidate('email')"
-                                        id="email"
+                                    <input type="text" formControlName="email" class="form-control"
+                                        (blur)="trimField('email')" inputmode="email"
+                                        autocomplete="email" [ngClass]="onValidate('email')" id="email"
                                         placeholder="correo@ejemplo.com">
-                                    <div *ngIf="f['email'].pending" class="spinner-border spinner-border-sm text-primary position-absolute" style="right: 10px; top: 10px;"></div>
+                                    <div *ngIf="f['email'].pending"
+                                        class="spinner-border spinner-border-sm text-primary position-absolute"
+                                        style="right: 10px; top: 10px;"></div>
                                 </div>
-                               <div *ngIf="shouldShowError('email')" class="invalid-feedback d-block">
-                                    <div *ngIf="getFieldErrors('email')?.['required']">El correo electrónico es obligatorio</div>
-                                    <div *ngIf="getFieldErrors('email')?.['email']">Ingresa un correo electrónico válido</div>
-                                    <div *ngIf="getFieldErrors('email')?.['emailTaken']">Este correo electrónico ya está registrado</div>
-                                    <div *ngIf="getFieldErrors('email')?.['serverError']">Error en el servidor. No se puede validar</div>
+                                <div *ngIf="shouldShowError('email')" class="invalid-feedback d-block">
+                                    <div *ngIf="getFieldErrors('email')?.['required']">El email es obligatorio</div>
+                                    <div *ngIf="getFieldErrors('email')?.['email']">
+                                        Ingresá un email válido
+                                    </div>
+                                    <div *ngIf="getFieldErrors('email')?.['missingAt']">El email debe contener '&#64;'
+                                    </div>
+                                    <div *ngIf="getFieldErrors('email')?.['missingUsername']">Ingrese un usuario antes
+                                        del '&#64;'</div>
+                                    <div *ngIf="getFieldErrors('email')?.['missingDomain']">Ingrese un dominio después
+                                        del '&#64;'</div>
+                                    <div *ngIf="getFieldErrors('email')?.['missingDomainExtension']">
+                                        El dominio debe tener una extensión (ej: .com, .ar)
+                                    </div>
+                                    <div *ngIf="getFieldErrors('email')?.['invalidDomainExtension']">
+                                        La extensión del dominio debe tener al menos 2 caracteres
+                                    </div>
+                                    <div *ngIf="getFieldErrors('email')?.['domainExtensionTooLong']">
+                                        La extensión del dominio no puede tener más de 6 caracteres
+                                    </div>
+                                    <div *ngIf="getFieldErrors('email')?.['invalidEmailFormat']">
+                                        El formato del email no es válido
+                                    </div>
+                                    <div *ngIf="getFieldErrors('email')?.['maxlength']">Máximo 80 caracteres</div>
+                                    <div *ngIf="getFieldErrors('email')?.['emailTaken']">Este email ya está registrado
+                                    </div>
+                                    <div *ngIf="getFieldErrors('email')?.['serverError']">Error en el servidor. No se
+                                        puede validar</div>
                                 </div>
                             </div>
                         </div>
@@ -68,8 +106,8 @@
                                 <label for="password" class="form-label">Contraseña *</label>
                                 <div class="input-with-icon input-group">
                                     <i class="bi bi-lock"></i>
-                                    <input [type]="showPassword ? 'text' : 'password'" formControlName="password" class="form-control"
-                                        [ngClass]="onValidate('password')" id="password"
+                                    <input [type]="showPassword ? 'text' : 'password'" formControlName="password"
+                                        class="form-control" [ngClass]="onValidate('password')" id="password"
                                         placeholder="Contraseña">
                                     <span class="input-group-text" [ngClass]="showPassword ? 'bi-eye-slash' : 'bi-eye'"
                                         (click)="togglePasswordVisibility('password')" style="cursor: pointer;">
@@ -78,52 +116,64 @@
                                 <div *ngIf="f['password'].value && f['password'].value.length > 0">
                                     <div class="password-strength-meter mt-2">
                                         <div class="progress" style="height: 5px;">
-                                            <div class="progress-bar" role="progressbar" [style.width.%]="passwordStrength"
-                                                [ngClass]="{
+                                            <div class="progress-bar" role="progressbar"
+                                                [style.width.%]="passwordStrength" [ngClass]="{
                                                     'bg-danger': passwordStrength < 40,
                                                     'bg-warning': passwordStrength >= 40 && passwordStrength < 70,
                                                     'bg-success': passwordStrength >= 70
-                                                }" 
-                                                [attr.aria-valuenow]="passwordStrength" aria-valuemin="0" aria-valuemax="100">
+                                                }" [attr.aria-valuenow]="passwordStrength" aria-valuemin="0"
+                                                aria-valuemax="100">
                                             </div>
                                         </div>
                                         <small class="d-block mt-1 text-muted">
-                                            Seguridad: 
+                                            Seguridad:
                                             <span [ngClass]="{
                                                 'text-danger': passwordStrength < 40,
                                                 'text-warning': passwordStrength >= 40 && passwordStrength < 70,
                                                 'text-success': passwordStrength >= 70
                                             }">
-                                                {{ passwordStrength < 40 ? 'Débil' : (passwordStrength < 70 ? 'Media' : 'Fuerte') }}
-                                            </span>
+                                                {{ passwordStrength < 40 ? 'Débil' : (passwordStrength < 70 ? 'Media'
+                                                    : 'Fuerte' ) }} </span>
                                         </small>
                                     </div>
                                 </div>
-                               <div *ngIf="shouldShowError('password')" class="invalid-feedback d-block">
-                                    <div *ngIf="getFieldErrors('password')?.['required']">La contraseña es obligatoria</div>
-                                    <div *ngIf="getFieldErrors('password')?.['minlength']">La contraseña debe tener al menos 8 caracteres</div>
-                                    <div *ngIf="getFieldErrors('password')?.['maxlength']">La contraseña no debe exceder 30 caracteres</div>
-                                    <div *ngIf="getFieldErrors('password')?.['noUppercase']">Debe contener al menos una letra mayúscula</div>
-                                    <div *ngIf="getFieldErrors('password')?.['noLowercase']">Debe contener al menos una letra minúscula</div>
-                                    <div *ngIf="getFieldErrors('password')?.['noDigit']">Debe contener al menos un número</div>
-                                    <div *ngIf="getFieldErrors('password')?.['noSpecialChar']">Debe contener al menos un carácter especial</div>
-                                    <div *ngIf="getFieldErrors('password')?.['hasWhitespace']">No debe contener espacios en blanco</div>
+                                <div *ngIf="shouldShowError('password')" class="invalid-feedback d-block">
+                                    <div *ngIf="getFieldErrors('password')?.['required']">La contraseña es obligatoria
+                                    </div>
+                                    <div *ngIf="getFieldErrors('password')?.['minlength']">La contraseña debe tener al
+                                        menos 8 caracteres</div>
+                                    <div *ngIf="getFieldErrors('password')?.['maxlength']">La contraseña no debe exceder
+                                        30 caracteres</div>
+                                    <div *ngIf="getFieldErrors('password')?.['noUppercase']">Debe contener al menos una
+                                        letra mayúscula</div>
+                                    <div *ngIf="getFieldErrors('password')?.['noLowercase']">Debe contener al menos una
+                                        letra minúscula</div>
+                                    <div *ngIf="getFieldErrors('password')?.['noDigit']">Debe contener al menos un
+                                        número</div>
+                                    <div *ngIf="getFieldErrors('password')?.['noSpecialChar']">Debe contener al menos un
+                                        carácter especial</div>
+                                    <div *ngIf="getFieldErrors('password')?.['hasWhitespace']">No debe contener espacios
+                                        en blanco</div>
                                 </div>
                             </div>
                             <div class="col-md-6">
                                 <label for="confirmPassword" class="form-label">Confirmar Contraseña *</label>
                                 <div class="input-with-icon input-group">
                                     <i class="bi bi-lock-fill"></i>
-                                    <input [type]="showConfirmPassword ? 'text' : 'password'" formControlName="confirmPassword" class="form-control"
-                                        [ngClass]="onValidate('confirmPassword')"
-                                        id="confirmPassword" placeholder="Confirmar contraseña">
-                                    <span class="input-group-text" [ngClass]="showConfirmPassword ? 'bi-eye-slash' : 'bi-eye'"
+                                    <input [type]="showConfirmPassword ? 'text' : 'password'"
+                                        formControlName="confirmPassword" class="form-control"
+                                        [ngClass]="onValidate('confirmPassword')" id="confirmPassword"
+                                        placeholder="Confirmar contraseña">
+                                    <span class="input-group-text"
+                                        [ngClass]="showConfirmPassword ? 'bi-eye-slash' : 'bi-eye'"
                                         (click)="togglePasswordVisibility('confirmPassword')" style="cursor: pointer;">
                                     </span>
                                 </div>
                                 <div *ngIf="shouldShowError('confirmPassword')" class="invalid-feedback d-block">
-                                    <div *ngIf="getFieldErrors('confirmPassword')?.['required']">La confirmación de contraseña es obligatoria</div>
-                                    <div *ngIf="getFieldErrors('confirmPassword')?.['mustMatch']">Las contraseñas no coinciden</div>
+                                    <div *ngIf="getFieldErrors('confirmPassword')?.['required']">La confirmación de
+                                        contraseña es obligatoria</div>
+                                    <div *ngIf="getFieldErrors('confirmPassword')?.['mustMatch']">Las contraseñas no
+                                        coinciden</div>
                                 </div>
                             </div>
                         </div>
@@ -140,7 +190,7 @@
                             </button>
                         </div>
                     </form>
-                    
+
                     <!-- Enlace para login -->
                     <div class="text-center pb-4">
                         ¿Ya tienes una cuenta? <a routerLink="/user/login" class="text-primary">Iniciar Sesión</a>

@@ -1,0 +1,198 @@
+<!-- ============================================ -->
+<!-- ARCHIVO: deviaje-admin-user-edit.component.html -->
+<!-- UBICACIÓN: src/app/features/admin/components/deviaje-admin-user-edit/ -->
+<!-- PARTE 1/2 -->
+<!-- ============================================ -->
+
+<div class="container mt-4 mb-5">
+    <div class="row justify-content-center">
+        <div class="col-xl-8">
+            <!-- Loading spinner mientras carga el usuario -->
+            <div *ngIf="loadingUser" class="text-center py-5">
+                <div class="spinner-border text-primary" role="status">
+                    <span class="visually-hidden">Cargando...</span>
+                </div>
+                <p class="mt-3">Cargando datos del usuario...</p>
+            </div>
+
+            <!-- Card principal del formulario -->
+            <div *ngIf="!loadingUser" class="card shadow">
+                <div class="card-header bg-primary text-white py-3">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <h2 class="card-title mb-0">Editar Usuario</h2>
+                        <button type="button" class="btn btn-outline-light btn-sm" (click)="goBack()">
+                            <i class="bi bi-arrow-left me-2"></i>Volver
+                        </button>
+                    </div>
+                </div>
+
+                <div class="card-body">
+                    <!-- Alerta de éxito -->
+                    <div *ngIf="success" class="alert alert-success alert-dismissible fade show" role="alert">
+                        <i class="bi bi-check-circle-fill me-2"></i>
+                        {{ success }}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"
+                            (click)="success = ''"></button>
+                    </div>
+
+                    <!-- Alerta de error -->
+                    <div *ngIf="error" class="alert alert-danger alert-dismissible fade show" role="alert">
+                        <i class="bi bi-exclamation-triangle-fill me-2"></i>
+                        {{ error }}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"
+                            (click)="error = ''"></button>
+                    </div>
+
+                    <form class="p-4" [formGroup]="editForm" (ngSubmit)="onSubmit()">
+                        <!-- Información de Cuenta (SOLO LECTURA) -->
+                        <h5 class="mb-3">Información de Cuenta</h5>
+                        <div class="alert alert-info mb-4">
+                            <i class="bi bi-info-circle me-2"></i>
+                            <strong>Nota:</strong> El username, email y fecha de nacimiento no pueden modificarse.
+                        </div>
+
+                        <div class="row mb-3">
+                            <div class="col-md-6 mb-3 mb-md-0">
+                                <label for="username" class="form-label">Nombre de Usuario</label>
+                                <div class="input-with-icon">
+                                    <i class="bi bi-person"></i>
+                                    <input type="text" formControlName="username" class="form-control" id="username"
+                                        readonly>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <label for="email" class="form-label">Correo Electrónico</label>
+                                <div class="input-with-icon">
+                                    <i class="bi bi-envelope"></i>
+                                    <input type="email" formControlName="email" class="form-control" id="email"
+                                        readonly>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row mb-3" *ngIf="f['birthDate'].value">
+                            <div class="col-md-6">
+                                <label for="birthDate" class="form-label">Fecha de Nacimiento</label>
+                                <div class="input-with-icon">
+                                    <i class="bi bi-calendar"></i>
+                                    <input type="date" formControlName="birthDate" class="form-control" id="birthDate"
+                                        readonly>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Información Personal (EDITABLES) -->
+                        <h5 class="mb-3 mt-4">Información Personal</h5>
+                        <div class="row mb-3">
+                            <div class="col-md-6 mb-3 mb-md-0">
+                                <label for="firstName" class="form-label">Nombre</label>
+                                <div class="input-with-icon">
+                                    <i class="bi bi-person-badge"></i>
+                                    <input type="text" formControlName="firstName" class="form-control"
+                                        [ngClass]="onValidate('firstName')" id="firstName" placeholder="Nombre">
+                                </div>
+                                <div *ngIf="shouldShowError('firstName')" class="invalid-feedback d-block">
+                                    <div *ngIf="getFieldErrors('firstName')?.['minlength']">Mínimo 2 caracteres</div>
+                                    <div *ngIf="getFieldErrors('firstName')?.['maxlength']">Máximo 50 caracteres</div>
+                                    <div *ngIf="getFieldErrors('firstName')?.['onlyLetters']">
+                                        Solo se permiten letras, espacios, guiones y apóstrofes
+                                    </div>
+                                    <div *ngIf="getFieldErrors('firstName')?.['whitespaceAround']">
+                                        No se permiten espacios al inicio o al final
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <label for="lastName" class="form-label">Apellido</label>
+                                <div class="input-with-icon">
+                                    <i class="bi bi-person-badge-fill"></i>
+                                    <input type="text" formControlName="lastName" class="form-control"
+                                        [ngClass]="onValidate('lastName')" id="lastName" placeholder="Apellido">
+                                </div>
+                                <div *ngIf="shouldShowError('lastName')" class="invalid-feedback d-block">
+                                    <div *ngIf="getFieldErrors('lastName')?.['minlength']">Mínimo 2 caracteres</div>
+                                    <div *ngIf="getFieldErrors('lastName')?.['maxlength']">Máximo 50 caracteres</div>
+                                    <div *ngIf="getFieldErrors('lastName')?.['onlyLetters']">
+                                        Solo se permiten letras, espacios, guiones y apóstrofes
+                                    </div>
+                                    <div *ngIf="getFieldErrors('lastName')?.['whitespaceAround']">
+                                        No se permiten espacios al inicio o al final
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row mb-3">
+                            <div class="col-md-6 mb-3 mb-md-0">
+                                <label for="gender" class="form-label">Género</label>
+                                <div class="input-with-icon">
+                                    <i class="bi bi-gender-ambiguous"></i>
+                                    <select formControlName="gender" class="form-control" id="gender">
+                                        <option [ngValue]="null" disabled>Seleccione género</option>
+                                        <option *ngFor="let gender of genderOptions" [value]="gender.value">
+                                            {{ gender.label }}
+                                        </option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <label for="phone" class="form-label">Teléfono</label>
+                                <div class="input-with-icon">
+                                    <i class="bi bi-telephone"></i>
+                                    <input type="tel" formControlName="phone" class="form-control" id="phone"
+                                        placeholder="Teléfono">
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Roles (EDITABLES) -->
+                        <h5 class="mb-3 mt-4">Asignación de Roles *</h5>
+                        <div class="row mb-4">
+                            <div class="col-12">
+                                <div class="card bg-light">
+                                    <div class="card-body">
+                                        <div class="form-check-container">
+                                            <div *ngFor="let role of roleOptions"
+                                                class="form-check form-check-inline me-4">
+                                                <input class="form-check-input" type="checkbox"
+                                                    [id]="'role_' + role.value" [checked]="isRoleSelected(role.value)"
+                                                    (change)="onRoleChange(role.value, $event)">
+                                                <label class="form-check-label" [for]="'role_' + role.value">
+                                                    {{ role.label }}
+                                                </label>
+                                            </div>
+                                        </div>
+                                        <div *ngIf="shouldShowError('roles')" class="invalid-feedback d-block">
+                                            <div *ngIf="getFieldErrors('roles')?.['required']">Debe seleccionar al menos
+                                                un rol</div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="mb-4 small text-muted">
+                            Los campos marcados con * son obligatorios
+                        </div>
+
+                        <!-- Botones de acción -->
+                        <div class="d-grid">
+                            <button type="submit" class="btn btn-primary" [disabled]="loading">
+                                <span *ngIf="loading" class="spinner-border spinner-border-sm me-1" role="status"
+                                    aria-hidden="true"></span>
+                                Guardar Cambios
+                            </button>
+                        </div>
+                    </form>
+
+                    <!-- Enlace para volver -->
+                    <div class="text-center pb-4">
+                        <a routerLink="/admin/users/list" class="text-primary">
+                            <i class="bi bi-arrow-left me-1"></i>Volver a la lista de usuarios
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

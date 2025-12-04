@@ -5,7 +5,7 @@
                 <div class="card-header bg-primary text-white py-3">
                     <div class="d-flex justify-content-between align-items-center">
                         <h2 class="card-title mb-0">Registrar Nuevo Usuario</h2>
-                        <button type="button" class="btn btn-outline-light btn-sm" (click)="goBack()">
+                        <button type="button" class="btn btn-secondary btn-sm" (click)="goBack()">
                             <i class="bi bi-arrow-left me-2"></i>Volver
                         </button>
                     </div>
@@ -44,14 +44,28 @@
                                         style="right: 10px; top: 10px;"></div>
                                 </div>
                                 <div *ngIf="shouldShowError('username')" class="invalid-feedback d-block">
-                                    <div *ngIf="getFieldErrors('username')?.['required']">El nombre de usuario es
-                                        obligatorio</div>
-                                    <div *ngIf="getFieldErrors('username')?.['minlength']">El nombre de usuario debe
-                                        tener al menos 3 caracteres</div>
-                                    <div *ngIf="getFieldErrors('username')?.['maxlength']">El nombre de usuario no debe
-                                        exceder 50 caracteres</div>
-                                    <div *ngIf="getFieldErrors('username')?.['usernameTaken']">Este nombre de usuario ya
-                                        está en uso</div>
+                                    <div *ngIf="getFieldErrors('username')?.['required']">
+                                        El nombre de usuario es obligatorio
+                                    </div>
+                                    <div *ngIf="getFieldErrors('username')?.['usernameTooShort']">
+                                        El nombre de usuario debe tener al menos 3 caracteres
+                                    </div>
+                                    <div *ngIf="getFieldErrors('username')?.['usernameTooLong']">
+                                        El nombre de usuario no debe exceder 20 caracteres
+                                    </div>
+                                    <div *ngIf="getFieldErrors('username')?.['usernameInvalidChars']">
+                                        Solo se permiten letras, números, punto (.), guion bajo (_) y guion medio
+                                        (-)
+                                    </div>
+                                    <div *ngIf="getFieldErrors('username')?.['usernameSymbolAtEdge']">
+                                        El username no puede empezar ni terminar con símbolos
+                                    </div>
+                                    <div *ngIf="getFieldErrors('username')?.['usernameConsecutiveSymbols']">
+                                        No se permiten símbolos consecutivos (ej: .. o __ o .-)
+                                    </div>
+                                    <div *ngIf="getFieldErrors('username')?.['usernameTaken']">
+                                        Este nombre de usuario ya está en uso
+                                    </div>
                                     <div *ngIf="getFieldErrors('username')?.['serverError']">Error en el servidor. No se
                                         puede validar</div>
                                 </div>
@@ -61,19 +75,54 @@
                                 <label for="email" class="form-label">Correo Electrónico *</label>
                                 <div class="input-with-icon">
                                     <i class="bi bi-envelope"></i>
-                                    <input type="email" formControlName="email" class="form-control"
+                                    <input type="text" formControlName="email" class="form-control"
+                                        (blur)="trimField('email')" inputmode="email" autocomplete="email"
                                         [ngClass]="onValidate('email')" id="email" placeholder="correo@ejemplo.com">
                                     <div *ngIf="f['email'].pending"
                                         class="spinner-border spinner-border-sm text-primary position-absolute"
                                         style="right: 10px; top: 10px;"></div>
                                 </div>
                                 <div *ngIf="shouldShowError('email')" class="invalid-feedback d-block">
-                                    <div *ngIf="getFieldErrors('email')?.['required']">El correo electrónico es
-                                        obligatorio</div>
-                                    <div *ngIf="getFieldErrors('email')?.['email']">Ingresa un correo electrónico válido
+                                    <div *ngIf="getFieldErrors('email')?.['required']">
+                                        El email es obligatorio
                                     </div>
-                                    <div *ngIf="getFieldErrors('email')?.['emailTaken']">Este correo electrónico ya está
-                                        registrado</div>
+                                    <div *ngIf="getFieldErrors('email')?.['invalidEmail']">
+                                        El email debe contener un solo símbolo '&#64;'
+                                    </div>
+                                    <div *ngIf="getFieldErrors('email')?.['email']">
+                                        Ingresá un email válido
+                                    </div>
+                                    <div *ngIf="getFieldErrors('email')?.['missingAt']">
+                                        El email debe contener '&#64;'
+                                    </div>
+                                    <div *ngIf="getFieldErrors('email')?.['missingUsername']">
+                                        El email debe tener un nombre de usuario antes del '&#64;'
+                                    </div>
+                                    <div *ngIf="getFieldErrors('email')?.['missingDomain']">
+                                        El email debe tener un dominio
+                                    </div>
+                                    <div *ngIf="getFieldErrors('email')?.['missingDomainExtension']">
+                                        El dominio debe tener una extensión (.com, .ar, etc.)
+                                    </div>
+                                    <div *ngIf="getFieldErrors('email')?.['sameEmail']">
+                                        El nuevo email debe ser diferente al actual
+                                    </div>
+                                    <div *ngIf="getFieldErrors('email')?.['emailTaken']">
+                                        Este email ya está registrado
+                                    </div>
+                                    <div *ngIf="getFieldErrors('email')?.['maxlength']">
+                                        El email no debe exceder 80 caracteres
+                                    </div>
+                                    <div
+                                        *ngIf="getFieldErrors('email')?.['invalidEmailFormat'] || getFieldErrors('contact.emailAddress')?.['email']">
+                                        El formato del email es inválido
+                                    </div>
+                                    <div *ngIf="getFieldErrors('email')?.['invalidDomainExtension']">
+                                        La extensión del dominio debe tener al menos 2 caracteres
+                                    </div>
+                                    <div *ngIf="getFieldErrors('email')?.['domainExtensionTooLong']">
+                                        La extensión del dominio no debe exceder los 6 caracteres
+                                    </div>
                                     <div *ngIf="getFieldErrors('email')?.['serverError']">Error en el servidor. No se
                                         puede validar</div>
                                 </div>
@@ -152,7 +201,19 @@
                                 <div class="input-with-icon">
                                     <i class="bi bi-person-badge"></i>
                                     <input type="text" formControlName="firstName" class="form-control" id="firstName"
+                                        [ngClass]="onValidate('firstName')" (blur)="trimField('firstName')"
                                         placeholder="Nombre">
+                                    <div *ngIf="shouldShowError('firstName')" class="invalid-feedback">
+                                        <div *ngIf="getFieldErrors('firstName')?.['minlength']">
+                                            Mínimo 2 caracteres
+                                        </div>
+                                        <div *ngIf="getFieldErrors('firstName')?.['maxlength']">
+                                            Máximo 30 caracteres
+                                        </div>
+                                        <div *ngIf="getFieldErrors('firstName')?.['onlyLetters']">
+                                            Solo se permiten letras
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
                             <div class="col-md-6">
@@ -160,7 +221,19 @@
                                 <div class="input-with-icon">
                                     <i class="bi bi-person-badge-fill"></i>
                                     <input type="text" formControlName="lastName" class="form-control" id="lastName"
+                                        [ngClass]="onValidate('lastName')" (blur)="trimField('lastName')"
                                         placeholder="Apellido">
+                                    <div *ngIf="shouldShowError('lastName')" class="invalid-feedback">
+                                        <div *ngIf="getFieldErrors('lastName')?.['minlength']">
+                                            Mínimo 2 caracteres
+                                        </div>
+                                        <div *ngIf="getFieldErrors('lastName')?.['maxlength']">
+                                            Máximo 30 caracteres
+                                        </div>
+                                        <div *ngIf="getFieldErrors('lastName')?.['onlyLetters']">
+                                            Solo se permiten letras
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
                         </div>

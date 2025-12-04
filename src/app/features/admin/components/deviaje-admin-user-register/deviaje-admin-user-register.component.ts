@@ -42,7 +42,7 @@ export class DeviajeAdminUserRegisterComponent implements OnInit, OnDestroy {
   roleOptions = [
     { value: 'ADMINISTRADOR', label: 'Administrador', id: 1 },
     { value: 'AGENTE', label: 'Agente', id: 2 },
-    { value: 'CLIENTE', label: 'Cliente', id: 3 }, 
+    { value: 'CLIENTE', label: 'Cliente', id: 3 },
   ];
   constructor(
     private formBuilder: FormBuilder,
@@ -59,6 +59,7 @@ export class DeviajeAdminUserRegisterComponent implements OnInit, OnDestroy {
 
   ngOnInit(): void {
     this.buildForm();
+    this.validatorsService.autoLowercaseControl(this.userForm.get('email'));
 
     this.userForm
       .get('password')
@@ -86,13 +87,19 @@ export class DeviajeAdminUserRegisterComponent implements OnInit, OnDestroy {
           validators: [
             Validators.required,
             Validators.minLength(3),
-            Validators.maxLength(50),
+            Validators.maxLength(20),
+            this.validatorsService.validateUsername(),
           ],
           nonNullable: true,
           asyncValidators: [this.validatorsService.validateUniqueUsername()],
         }),
         email: this.formBuilder.control('', {
-          validators: [Validators.required, Validators.email],
+          validators: [
+            Validators.required,
+            Validators.email,
+            this.validatorsService.emailWithDomain(),
+            Validators.maxLength(80),
+          ],
           nonNullable: true,
           asyncValidators: [this.validatorsService.validateUniqueEmail()],
         }),
@@ -109,8 +116,22 @@ export class DeviajeAdminUserRegisterComponent implements OnInit, OnDestroy {
           validators: [Validators.required],
           nonNullable: true,
         }),
-        firstName: this.formBuilder.control<string | null>(null),
-        lastName: this.formBuilder.control<string | null>(null),
+        firstName: this.formBuilder.control<string | null>(null, {
+          validators: [
+            Validators.minLength(2),
+            Validators.maxLength(30),
+            this.validatorsService.onlyLetters(),
+            this.validatorsService.noWhitespaceAround(),
+          ],
+        }),
+        lastName: this.formBuilder.control<string | null>(null, {
+          validators: [
+            Validators.minLength(2),
+            Validators.maxLength(30),
+            this.validatorsService.onlyLetters(),
+            this.validatorsService.noWhitespaceAround(),
+          ],
+        }),
         roles: this.formBuilder.control<string[]>([], {
           validators: [Validators.required],
           nonNullable: true,
@@ -120,6 +141,8 @@ export class DeviajeAdminUserRegisterComponent implements OnInit, OnDestroy {
         validators: this.mustMatch('password', 'confirmPassword'),
       }
     );
+
+    this.validatorsService.autoLowercaseControl(this.userForm.get('email'));
   }
 
   private convertRolesToIds(roleNames: string[]): number[] {
@@ -159,6 +182,16 @@ export class DeviajeAdminUserRegisterComponent implements OnInit, OnDestroy {
       'is-invalid': control?.invalid && (control?.dirty || control?.touched),
       'is-valid': control?.valid,
     };
+  }
+
+  trimField(fieldPath: string): void {
+    const control = this.userForm.get(fieldPath);
+    if (control && control.value && typeof control.value === 'string') {
+      const trimmedValue = control.value.trim(); // ← SOLO inicio/final
+      if (control.value !== trimmedValue) {
+        control.setValue(trimmedValue);
+      }
+    }
   }
 
   // Validaciones copiadas exactamente del signup

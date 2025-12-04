@@ -34,7 +34,7 @@
                         <label for="newEmail" class="form-label fw-semibold">Nuevo email *</label>
                         <div class="position-relative">
                             <input type="text" class="form-control" id="newEmail" formControlName="newEmail"
-                                (blur)="trimField('contact.emailAddress')" inputmode="email" autocomplete="email"
+                                (blur)="trimField('newEmail')" inputmode="newEmail" autocomplete="newEmail"
                                 [ngClass]="onValidate('newEmail')" placeholder="nuevo@email.com"
                                 [disabled]="isSubmitting">
 

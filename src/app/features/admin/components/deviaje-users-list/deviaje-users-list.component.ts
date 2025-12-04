@@ -13,7 +13,7 @@ import {
 @Component({
   selector: 'app-deviaje-users-list',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule],
+  imports: [CommonModule, ReactiveFormsModule, RouterLink],
   templateUrl: './deviaje-users-list.component.html',
   styleUrl: './deviaje-users-list.component.scss',
 })
@@ -24,6 +24,27 @@ export class DeviajeUsersListComponent implements OnInit, OnDestroy {
   loading = true;
   error = '';
   success = '';
+
+  showViewModal = false;
+  showDeactivateModal = false;
+  showActivateModal = false;
+  showResetPasswordModal = false;
+
+  // Usuario seleccionado para modales
+  selectedUser: UserResponse | null = null;
+
+  // Estados de dar de baja
+  deactivateLoading = false;
+  deactivateError = '';
+
+  // Estados de activar
+  activateLoading = false;
+  activateError = '';
+
+  // Estados de resetear contraseña
+  resetPasswordLoading = false;
+  resetPasswordError = '';
+  resetPasswordSuccess = '';
 
   // Paginación (copiado de flight-results)
   currentPage = 1;
@@ -276,5 +297,182 @@ export class DeviajeUsersListComponent implements OnInit, OnDestroy {
   // Método para calcular el número mínimo (para paginación)
   getMinValue(a: number, b: number): number {
     return Math.min(a, b);
+  }
+
+  openViewModal(user: UserResponse): void {
+    this.selectedUser = user;
+    this.showViewModal = true;
+    this.closeDropdown();
+  }
+
+  closeViewModal(): void {
+    this.showViewModal = false;
+    this.selectedUser = null;
+  }
+
+  goToEdit(): void {
+    if (this.selectedUser) {
+      this.closeViewModal();
+      this.router.navigate(['/admin/users', this.selectedUser.id, '/edit']);
+    }
+  }
+
+  // ===== MODAL DAR DE BAJA =====
+
+  openDeactivateModal(user: UserResponse): void {
+    this.selectedUser = user;
+    this.showDeactivateModal = true;
+    this.deactivateError = '';
+    this.closeDropdown();
+  }
+
+  closeDeactivateModal(): void {
+    this.showDeactivateModal = false;
+    this.selectedUser = null;
+    this.deactivateError = '';
+    this.deactivateLoading = false;
+  }
+
+  isCurrentUser(userId: number | undefined): boolean {
+    if (!userId) return false;
+    const currentUser = this.authService.getUser();
+    return currentUser?.id === userId;
+  }
+
+  confirmDeactivate(): void {
+    if (!this.selectedUser) return;
+
+    // Verificar que no sea el mismo usuario
+    if (this.isCurrentUser(this.selectedUser.id)) {
+      this.deactivateError = 'No puedes darte de baja a ti mismo';
+      return;
+    }
+
+    this.deactivateLoading = true;
+    this.deactivateError = '';
+
+    this.subscription.add(
+      this.userService.deactivateUser(this.selectedUser.id).subscribe({
+        next: (response) => {
+          this.success = `Usuario ${this.selectedUser?.username} dado de baja exitosamente`;
+          this.deactivateLoading = false;
+          this.closeDeactivateModal();
+          this.loadUsers(); // Recargar lista
+        },
+        error: (error) => {
+          this.deactivateError =
+            error?.error?.message || 'Error al dar de baja el usuario';
+          this.deactivateLoading = false;
+        },
+      })
+    );
+  }
+
+  // ===== MODAL ACTIVAR USUARIO =====
+
+  openActivateModal(user: UserResponse): void {
+    this.selectedUser = user;
+    this.showActivateModal = true;
+    this.activateError = '';
+    this.closeDropdown();
+  }
+
+  closeActivateModal(): void {
+    this.showActivateModal = false;
+    this.selectedUser = null;
+    this.activateError = '';
+    this.activateLoading = false;
+  }
+
+  confirmActivate(): void {
+    if (!this.selectedUser) return;
+
+    this.activateLoading = true;
+    this.activateError = '';
+
+    this.subscription.add(
+      this.userService.activateUser(this.selectedUser.id).subscribe({
+        next: (response) => {
+          this.success = `Usuario ${this.selectedUser?.username} activado exitosamente`;
+          this.activateLoading = false;
+          this.closeActivateModal();
+          this.loadUsers(); // Recargar lista
+        },
+        error: (error) => {
+          this.activateError =
+            error?.error?.message || 'Error al activar el usuario';
+          this.activateLoading = false;
+        },
+      })
+    );
+  }
+
+  // ===== MODAL RESETEAR CONTRASEÑA =====
+
+  openResetPasswordModal(user: UserResponse): void {
+    this.selectedUser = user;
+    this.showResetPasswordModal = true;
+    this.resetPasswordError = '';
+    this.resetPasswordSuccess = '';
+    this.closeDropdown();
+  }
+
+  closeResetPasswordModal(): void {
+    this.showResetPasswordModal = false;
+    this.selectedUser = null;
+    this.resetPasswordError = '';
+    this.resetPasswordSuccess = '';
+    this.resetPasswordLoading = false;
+  }
+
+  confirmResetPassword(): void {
+    if (!this.selectedUser) return;
+
+    this.resetPasswordLoading = true;
+    this.resetPasswordError = '';
+    this.resetPasswordSuccess = '';
+
+    this.subscription.add(
+      this.userService.adminResetPassword(this.selectedUser.id).subscribe({
+        next: (response) => {
+          this.resetPasswordSuccess =
+            response.message ||
+            'Contraseña reseteada exitosamente. Se envió un email al usuario con la nueva contraseña temporal.';
+          this.resetPasswordLoading = false;
+
+          // Cerrar modal después de 3 segundos
+          setTimeout(() => {
+            this.closeResetPasswordModal();
+          }, 3000);
+        },
+        error: (error) => {
+          this.resetPasswordError =
+            error?.error?.message || 'Error al resetear la contraseña';
+          this.resetPasswordLoading = false;
+        },
+      })
+    );
+  }
+
+  // ===== MÉTODOS DE UTILIDAD =====
+
+  getRoleName(role: string): string {
+    const roleMap: { [key: string]: string } = {
+      ADMINISTRADOR: 'Administrador',
+      AGENTE: 'Agente',
+      CLIENTE: 'Cliente',
+    };
+    return roleMap[role] || role;
+  }
+
+  getGenderLabel(gender: string | null | undefined): string {
+    if (!gender) return '—';
+
+    const genderMap: { [key: string]: string } = {
+      MALE: 'Masculino',
+      FEMALE: 'Femenino',
+      UNSPECIFIED: 'Otro',
+    };
+    return genderMap[gender] || gender;
   }
 }

@@ -2,12 +2,12 @@ import { HttpClient } from '@angular/common/http';
 import { Injectable, inject } from '@angular/core';
 import { Observable } from 'rxjs';
 import { environment } from '../enviroments/enviroment';
+import { ApiResponse, ChangePasswordRequest } from './user.service';
 
 @Injectable({
-  providedIn: 'root'
+  providedIn: 'root',
 })
 export class PasswordResetService {
-
   private readonly http = inject(HttpClient);
   private url = environment.apiDeviajeAuth;
 
@@ -25,11 +25,24 @@ export class PasswordResetService {
    * @param newPassword Nueva contraseña
    * @param confirmPassword Confirmación de la nueva contraseña
    */
-  resetPassword(token: string, newPassword: string, confirmPassword: string): Observable<any> {
+  resetPassword(
+    token: string,
+    newPassword: string,
+    confirmPassword: string
+  ): Observable<any> {
     return this.http.post(`${this.url}/reset-password`, {
       token,
       newPassword,
-      confirmPassword
+      confirmPassword,
     });
+  }
+
+  changePassword(
+    passwordData: ChangePasswordRequest
+  ): Observable<ApiResponse<void>> {
+    return this.http.post<ApiResponse<void>>(
+      `${this.url}/change-password`,
+      passwordData
+    );
   }
 }

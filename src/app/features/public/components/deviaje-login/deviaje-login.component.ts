@@ -1,4 +1,4 @@
-import { Component, inject, OnDestroy, OnInit } from '@angular/core';
+import { Component, inject, OnInit } from '@angular/core';
 import {
   FormBuilder,
   FormGroup,
@@ -8,7 +8,7 @@ import {
 } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { AuthService } from '../../../../core/auth/services/auth.service';
-import { LoginRequest } from '../../../../core/auth/models/jwt-models';
+import { JwtResponse, LoginRequest } from '../../../../core/auth/models/jwt-models';
 import { CommonModule } from '@angular/common';
 import { NavigationService } from '../../../../shared/services/navigation.service';
 
@@ -97,7 +97,15 @@ export class DeviajeLoginComponent implements OnInit {
     };
 
     this.authService.login(loginRequest).subscribe({
-      next: () => {
+      next: (response: JwtResponse) => {
+        
+        if (response.isTemporaryPassword === true) {
+          
+          this.router.navigate(['/user/change-password'], {
+            queryParams: { forced: 'true' }
+          });
+          return;
+        }
         // Navegar a la página de retorno después del login exitoso
         this.router.navigate([this.returnUrl]);
       },
