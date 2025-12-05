@@ -682,6 +682,7 @@ export class DeviajeHotelBookingComponent implements OnInit, OnDestroy {
         }
         this.currentStep++;
         this.saveCurrentStep(); // Guardar el paso actual en
+        this.scrollToSection()
       } else {
         this.errorMessage =
           'Por favor, complete todos los campos requeridos correctamente.';
@@ -693,6 +694,7 @@ export class DeviajeHotelBookingComponent implements OnInit, OnDestroy {
     if (this.currentStep > 1) {
       this.currentStep--;
       this.saveCurrentStep(); // AGREGAR
+      this.scrollToSection();
     }
   }
 
@@ -784,6 +786,7 @@ export class DeviajeHotelBookingComponent implements OnInit, OnDestroy {
       this.errorMessage = 'Complete todos los campos correctamente';
       return;
     }
+    this.scrollToSection();
 
     // Get payment token from component
     const paymentToken = this.mainForm
@@ -815,7 +818,7 @@ export class DeviajeHotelBookingComponent implements OnInit, OnDestroy {
           this.errorMessage = '';
 
           this.clearPersistedState();
-
+          window.scrollTo(0, 0);
           setTimeout(() => {
             const reference = bookingReference.bookingReference;
             this.router.navigate([`/bookings/${reference}/details`]);
@@ -978,5 +981,15 @@ export class DeviajeHotelBookingComponent implements OnInit, OnDestroy {
 
       return null;
     };
+  }
+
+  scrollToSection() {
+    const element = document.getElementById('bookings');
+    if (element) {
+      element.scrollIntoView({
+        behavior: 'smooth', // Scroll suave
+        block: 'start', // Alinea al inicio de la vista
+      });
+    }
   }
 }

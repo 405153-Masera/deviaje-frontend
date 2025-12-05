@@ -23,6 +23,10 @@ import {
 } from '../../dashboard/models/dashboards';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { AuthService } from '../../../../core/auth/services/auth.service';
+import { ChartExportService } from '../../../../shared/services/chart-export.service';
+import jsPDF from 'jspdf';
+import autoTable from 'jspdf-autotable';
+import * as XLSX from 'xlsx';
 
 @Component({
   selector: 'app-dashboard-top-destinations',
@@ -41,6 +45,7 @@ export class DeviajeTopDestinationsComponent implements OnInit, OnDestroy {
   private readonly dashboardService = inject(DashboardService);
   private authService = inject(AuthService);
   private readonly router = inject(Router);
+  private readonly chartExportService = inject(ChartExportService);
 
   currentUser: any = null;
   userRole: string = '';
@@ -237,5 +242,196 @@ export class DeviajeTopDestinationsComponent implements OnInit, OnDestroy {
         this.userRole = role || '';
       })
     );
+  }
+
+  // ========== MÉTODOS DE EXPORTACIÓN ==========
+
+  /**
+   * Exporta el gráfico a PDF
+   */
+  exportChartToPDF(): void {
+    this.chartExportService.exportChartToPDF(
+      'topDestinationsChart',
+      `Top Destinos - ${this.getTypeLabel()}`,
+      'top_destinos'
+    );
+  }
+
+  /**
+   * Exporta el gráfico a PNG
+   */
+  exportChartToPNG(): void {
+    this.chartExportService.exportChartToPNG(
+      'topDestinationsChart',
+      'top_destinos'
+    );
+  }
+
+  /**
+   * Exporta la tabla de datos a PDF
+   */
+  exportTableToPDF(): void {
+    const doc = new jsPDF({
+      orientation: 'portrait',
+      unit: 'mm',
+      format: 'a4',
+    });
+
+    // Título
+    doc.setFontSize(18);
+    doc.setFont('helvetica', 'bold');
+    doc.text(`Top Destinos - ${this.getTypeLabel()} - DeViaje`, 14, 15);
+
+    // Fecha del reporte
+    doc.setFontSize(10);
+    doc.setFont('helvetica', 'normal');
+    const today = new Date().toLocaleDateString('es-AR', {
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit',
+    });
+    doc.text(`Generado: ${today}`, 14, 22);
+    doc.text(`Total de destinos: ${this.destinationsData.length}`, 14, 27);
+
+    // Preparar datos de la tabla
+    const tableData = this.destinationsData.map((dest, index) => [
+      dest.destination,
+      dest.bookingsCount.toString(),
+      this.formatCurrency(dest.revenue),
+      dest.averageNights,
+      this.formatCurrency(dest.averagePrice),
+    ]);
+
+    // Fila de totales
+    const totalBookings = this.destinationsData.reduce(
+      (sum, dest) => sum + dest.bookingsCount,
+      0
+    );
+    const totalRevenue = this.destinationsData.reduce(
+      (sum, dest) => sum + dest.revenue,
+      0
+    );
+
+    const totalRow = [
+      'TOTAL',
+      this.kpis.totalBookings.toString(),
+      this.formatCurrency(this.kpis.totalRevenue),
+      '-',
+      '-',
+    ];
+
+    // Generar tabla
+    autoTable(doc, {
+      startY: 32,
+      head: [
+        [
+          'Destino',
+          'Reservas',
+          'Venta Total',
+          'Promedio Noches',
+          'Precio Promedio',
+        ],
+      ],
+      body: [...tableData, totalRow],
+      styles: {
+        fontSize: 10,
+        cellPadding: 3,
+      },
+      headStyles: {
+        fillColor: [33, 37, 41],
+        textColor: 255,
+        fontStyle: 'bold',
+        halign: 'center',
+      },
+      footStyles: {
+        fillColor: [33, 37, 41],
+        textColor: 255,
+        fontStyle: 'bold',
+      },
+      columnStyles: {
+        0: { cellWidth: 35 },
+        1: { cellWidth: 21, halign: 'right' },
+        2: { cellWidth: 45, halign: 'right' },
+        3: { cellWidth: 21, halign: 'right' },
+        4: { cellWidth: 45, halign: 'right' },
+      },
+      alternateRowStyles: {
+        fillColor: [245, 245, 245],
+      },
+      didDrawPage: (data: any) => {
+        const pageCount = (doc as any).internal.getNumberOfPages();
+        doc.setFontSize(8);
+        doc.text(
+          `Página ${data.pageNumber} de ${pageCount}`,
+          data.settings.margin.left,
+          doc.internal.pageSize.height - 10
+        );
+      },
+    });
+
+    // Guardar PDF
+    const timestamp = new Date().getTime();
+    doc.save(`top_destinos_${timestamp}.pdf`);
+  }
+
+  /**
+   * Exporta la tabla de datos a Excel
+   */
+  exportTableToExcel(): void {
+    // Preparar datos
+    const excelData = this.destinationsData.map((dest, index) => ({
+      Destino: dest.destination,
+      Reservas: dest.bookingsCount,
+      'Venta Total': dest.revenue,
+      'Promedio Noches': dest.averageNights,
+      'Precio Promedio': dest.averagePrice,
+    }));
+
+    // Agregar fila de totales
+    const totalBookings = this.destinationsData.reduce(
+      (sum, dest) => sum + dest.bookingsCount,
+      0
+    );
+    const totalRevenue = this.destinationsData.reduce(
+      (sum, dest) => sum + dest.revenue,
+      0
+    );
+
+    excelData.push({
+      Destino: 'TOTAL',
+      Reservas: this.kpis.totalBookings,
+      'Venta Total': this.kpis.totalRevenue,
+    } as any);
+
+    // Crear worksheet
+    const ws: XLSX.WorkSheet = XLSX.utils.json_to_sheet(excelData);
+
+    // Ajustar anchos de columna
+    ws['!cols'] = [
+      { wch: 40 }, // Destino
+      { wch: 20 }, // Cantidad de Reservas
+      { wch: 20 }, // Ingresos Totales
+      { wch: 20 },
+      { wch: 20 },
+    ];
+
+    // Crear workbook
+    const wb: XLSX.WorkBook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, 'Top Destinos');
+
+    // Guardar archivo
+    const timestamp = new Date().getTime();
+    XLSX.writeFile(wb, `top_destinos_${timestamp}.xlsx`);
+  }
+
+  formatCurrency(value: number): string {
+    return new Intl.NumberFormat('es-AR', {
+      style: 'currency',
+      currency: 'ARS',
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2,
+    }).format(value);
   }
 }

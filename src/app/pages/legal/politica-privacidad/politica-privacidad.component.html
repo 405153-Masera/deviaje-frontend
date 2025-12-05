@@ -13,13 +13,13 @@
                     <a class="nav-link" routerLink="/home">Inicio</a>
                 </li>
                 <li class="nav-item">
-                    <a class="nav-link" routerLink="/legal/terminos-condiciones">Términos</a>
+                    <a class="nav-link" routerLink="/legal/terms-and-conditions">Términos</a>
                 </li>
                 <li class="nav-item">
-                    <a class="nav-link" routerLink="/legal/preguntas-frecuentes">FAQ</a>
+                    <a class="nav-link active" routerLink="/legal/privacy-policy">Privacidad</a>
                 </li>
                 <li class="nav-item">
-                    <a class="nav-link active" routerLink="/legal/politica-privacidad">Privacidad</a>
+                    <a class="nav-link" routerLink="/legal/faq">FAQ</a>
                 </li>
             </ul>
         </div>
@@ -79,7 +79,7 @@
                     </h5>
                     <ul class="list-group list-group-flush">
                         <li class="list-group-item">
-                            <i class="bi bi-id-card text-success me-2"></i>Nombre completo y documento de identidad
+                            <i class="bi bi-card-checklist text-success me-2"></i>Nombre completo y pasaporte
                         </li>
                         <li class="list-group-item">
                             <i class="bi bi-envelope text-success me-2"></i>Dirección de correo electrónico
@@ -89,9 +89,6 @@
                         </li>
                         <li class="list-group-item">
                             <i class="bi bi-calendar text-success me-2"></i>Fecha de nacimiento
-                        </li>
-                        <li class="list-group-item">
-                            <i class="bi bi-geo-alt text-success me-2"></i>Dirección de residencia
                         </li>
                     </ul>
 
@@ -122,9 +119,6 @@
                         </li>
                         <li class="list-group-item">
                             <i class="bi bi-people text-info me-2"></i>Información de acompañantes y huéspedes
-                        </li>
-                        <li class="list-group-item">
-                            <i class="bi bi-star text-info me-2"></i>Reseñas y calificaciones
                         </li>
                     </ul>
                 </div>
@@ -263,39 +257,6 @@
                 </div>
             </div>
 
-            <!-- Cookies -->
-            <div class="card mb-4" id="cookies">
-                <div class="card-header bg-secondary text-white">
-                    <h3 class="card-title mb-0">
-                        <i class="bi bi-cookie me-2"></i>Uso de Cookies
-                    </h3>
-                </div>
-                <div class="card-body">
-                    <p>Utilizamos cookies y tecnologías similares para mejorar su experiencia en nuestro sitio web:</p>
-                    
-                    <div class="table-responsive">
-                        <table class="table table-striped">
-                            <thead>
-                                <tr>
-                                    <th>Tipo de Cookie</th>
-                                    <th>Propósito</th>
-                                    <th>Duración</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <tr *ngFor="let cookie of cookiesData">
-                                    <td><span class="badge" [ngClass]="cookie.badgeClass">{{ cookie.tipo }}</span></td>
-                                    <td>{{ cookie.proposito }}</td>
-                                    <td>{{ cookie.duracion }}</td>
-                                </tr>
-                            </tbody>
-                        </table>
-                    </div>
-
-                    <p class="small text-muted">Puede configurar su navegador para rechazar cookies, aunque esto puede afectar la funcionalidad del sitio.</p>
-                </div>
-            </div>
-
             <!-- Retención de Datos -->
             <div class="card mb-4" id="retencion">
                 <div class="card-header bg-primary text-white">
@@ -367,9 +328,9 @@
                 <p class="mb-0">&copy; 2025 DeViaje. Todos los derechos reservados.</p>
             </div>
             <div class="col-md-6 text-md-end">
-                <a routerLink="/legal/terminos-condiciones" class="text-white me-3">Términos</a>
-                <a routerLink="/legal/politica-privacidad" class="text-white me-3">Privacidad</a>
-                <a routerLink="/legal/preguntas-frecuentes" class="text-white">FAQ</a>
+                <a routerLink="/legal/terms-and-conditions" class="text-white me-3">Términos</a>
+                <a routerLink="/legal/privacy-policy" class="text-white me-3">Privacidad</a>
+                <a routerLink="/legal/faq" class="text-white">FAQ</a>
             </div>
         </div>
     </div>

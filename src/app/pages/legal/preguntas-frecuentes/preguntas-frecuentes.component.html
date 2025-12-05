@@ -13,13 +13,13 @@
                     <a class="nav-link" routerLink="/home">Inicio</a>
                 </li>
                 <li class="nav-item">
-                    <a class="nav-link" routerLink="/legal/terminos-condiciones">Términos</a>
+                    <a class="nav-link" routerLink="/legal/terms-and-conditions">Términos</a>
                 </li>
                 <li class="nav-item">
-                    <a class="nav-link active" routerLink="/legal/preguntas-frecuentes">FAQ</a>
+                    <a class="nav-link" routerLink="/legal/privacy-policy">Privacidad</a>
                 </li>
                 <li class="nav-item">
-                    <a class="nav-link" routerLink="/legal/politica-privacidad">Privacidad</a>
+                    <a class="nav-link active" routerLink="/legal/faq">FAQ</a>
                 </li>
             </ul>
         </div>
@@ -36,45 +36,15 @@
                 </h1>
                 <p class="lead text-muted">Encuentra respuestas rápidas a las dudas más comunes</p>
                 <p class="text-secondary">
-                    ¿No encuentras lo que buscas? 
-                    <button class="btn btn-link p-0 align-baseline" (click)="openContactEmail()">
-                        Contáctanos
-                    </button>
+                    ¿No encuentras lo que buscas? Contáctanos soporte&#64;deviaje.com
                 </p>
             </div>
         </div>
     </div>
 </div>
 
-<!-- Búsqueda -->
-<div class="container py-4">
-    <div class="row justify-content-center">
-        <div class="col-lg-6">
-            <div class="input-group input-group-lg">
-                <span class="input-group-text bg-primary text-white">
-                    <i class="bi bi-search"></i>
-                </span>
-                <input 
-                    type="text" 
-                    class="form-control" 
-                    placeholder="Buscar en preguntas frecuentes..." 
-                    [(ngModel)]="searchTerm"
-                    (input)="onSearch()">
-                <button 
-                    class="btn btn-outline-secondary" 
-                    type="button" 
-                    (click)="clearSearch()"
-                    [disabled]="!searchTerm"
-                    title="Limpiar búsqueda">
-                    <i class="bi bi-x-lg"></i>
-                </button>
-            </div>
-        </div>
-    </div>
-</div>
-
 <!-- Contenido Principal -->
-<div class="container pb-5">
+<div class="container pb-5 py-4">
     <div class="row">
         <div class="col-lg-10 mx-auto">
 
@@ -224,9 +194,9 @@
                 <p class="mb-0">&copy; 2025 DeViaje. Todos los derechos reservados.</p>
             </div>
             <div class="col-md-6 text-md-end">
-                <a routerLink="/legal/terminos-condiciones" class="text-white me-3">Términos</a>
-                <a routerLink="/legal/politica-privacidad" class="text-white me-3">Privacidad</a>
-                <a routerLink="/legal/preguntas-frecuentes" class="text-white">FAQ</a>
+                <a routerLink="/legal/terms-and-conditions" class="text-white me-3">Términos</a>
+                <a routerLink="/legal/privacy-policy" class="text-white me-3">Privacidad</a>
+                <a routerLink="/legal/faq" class="text-white">FAQ</a>
             </div>
         </div>
     </div>

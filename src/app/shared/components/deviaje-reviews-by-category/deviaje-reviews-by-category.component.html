@@ -20,11 +20,8 @@
         </div>
 
         <!-- Botón crear review (solo para usuarios autenticados) -->
-        @if (currentUser) {
-        <button
-          class="btn btn-primary btn-create-review"
-          (click)="openCreateReviewModal()"
-        >
+        @if (canCreateReview()) {
+        <button class="btn btn-primary btn-create-review" (click)="openCreateReviewModal()">
           <i class="bi bi-plus-lg me-2"></i>
           Escribir Review
         </button>
@@ -69,12 +66,7 @@
   @if (!loading && reviews.length > 0) {
   <div class="reviews-list">
     @for (review of paginatedReviews; track review.id) {
-    <div
-      class="review-card"
-      (click)="viewReviewDetail(review.id)"
-      role="button"
-      tabindex="0"
-    >
+    <div class="review-card" (click)="viewReviewDetail(review.id)" role="button" tabindex="0">
       <!-- Header de la review -->
       <div class="review-header">
         <div class="review-user-info">
@@ -85,13 +77,10 @@
         <!-- Rating -->
         <div class="review-rating">
           @for (star of getStars(review.rating); track $index) {
-          <i
-            class="bi"
-            [ngClass]="{
+          <i class="bi" [ngClass]="{
               'bi-star-fill': star.filled,
               'bi-star': !star.filled
-            }"
-          ></i>
+            }"></i>
           }
         </div>
       </div>
@@ -110,12 +99,9 @@
         </span>
 
         <!-- Botón eliminar (solo Admin/Agente) -->
-        @if (canModerate) {
-        <button
-          class="btn btn-danger btn-sm"
-          (click)="deleteReview(review, $event)"
-          title="Eliminar review"
-        >
+        @if (canDeleteReview(review)) {
+        <button class="btn btn-danger btn-sm" (click)="openDeleteModal(review, $event)"
+          [title]="isClient ? 'Eliminar mi review' : 'Eliminar review'">
           <i class="bi bi-trash"></i>
         </button>
         }
@@ -154,3 +140,54 @@
   </nav>
   } }
 </div>
+
+<!-- Modal de confirmación para eliminar review -->
+@if (showDeleteModal && reviewToDelete) {
+<div class="modal fade show d-block" tabindex="-1" style="background-color: rgba(0,0,0,0.5);">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">
+          <i class="bi bi-exclamation-triangle-fill text-warning me-2"></i>
+          Confirmar eliminación
+        </h5>
+        <button type="button" class="btn-close" (click)="closeDeleteModal()" [disabled]="deletingReview"></button>
+      </div>
+      <div class="modal-body">
+        <p class="mb-2">
+          ¿Está seguro que desea eliminar la review de 
+          <strong>{{ getUserDisplayName(reviewToDelete) }}</strong>?
+        </p>
+        <p class="text-muted small mb-0">
+          <i class="bi bi-info-circle me-1"></i>
+          Esto también eliminará todas las respuestas asociadas a esta review.
+        </p>
+      </div>
+      <div class="modal-footer">
+        <button 
+          type="button" 
+          class="btn btn-secondary" 
+          (click)="closeDeleteModal()"
+          [disabled]="deletingReview"
+        >
+          Cancelar
+        </button>
+        <button 
+          type="button" 
+          class="btn btn-danger" 
+          (click)="confirmDeleteReview()"
+          [disabled]="deletingReview"
+        >
+          @if (deletingReview) {
+          <span class="spinner-border spinner-border-sm me-2" role="status"></span>
+          Eliminando...
+          } @else {
+          <i class="bi bi-trash me-2"></i>
+          Eliminar review
+          }
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+}

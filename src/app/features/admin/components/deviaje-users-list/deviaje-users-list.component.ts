@@ -312,8 +312,9 @@ export class DeviajeUsersListComponent implements OnInit, OnDestroy {
 
   goToEdit(): void {
     if (this.selectedUser) {
+      const userId = this.selectedUser.id;
       this.closeViewModal();
-      this.router.navigate(['/admin/users', this.selectedUser.id, '/edit']);
+      this.router.navigate(['/admin/users', userId, 'edit']);
     }
   }
 

@@ -421,8 +421,7 @@ export class DeviajePackageBookingComponent implements OnInit, OnDestroy {
         this.isVerifying = false;
         this.errorVerifyMessage = error.message;
         console.error('Error verificando oferta:', error);
-        this.errorVerifyMessage +=
-          ' Regresando a los resultados...';
+        this.errorVerifyMessage += ' Regresando a los resultados...';
 
         setTimeout(() => {
           this.router.navigate(['/home/packages/results'], {
@@ -568,6 +567,7 @@ export class DeviajePackageBookingComponent implements OnInit, OnDestroy {
         }
         this.currentStep++;
         this.saveCurrentStep(); // Guardar el paso actual en sessionStorage
+        this.scrollToSection();
         console.log('Avanzando al paso:', this.currentStep);
       } else {
         console.log('Validación fallida para el paso:', this.currentStep);
@@ -581,6 +581,7 @@ export class DeviajePackageBookingComponent implements OnInit, OnDestroy {
     if (this.currentStep > 1) {
       this.currentStep--;
       this.saveCurrentStep(); // Guardar el paso actual en sessionStorage
+      this.scrollToSection();
     }
   }
 
@@ -629,6 +630,7 @@ export class DeviajePackageBookingComponent implements OnInit, OnDestroy {
       this.errorMessage = 'Complete todos los campos correctamente';
       return;
     }
+    this.scrollToSection();
 
     const paymentToken = this.mainForm
       .get('payment')
@@ -700,6 +702,7 @@ export class DeviajePackageBookingComponent implements OnInit, OnDestroy {
 
           this.clearPersistedState();
 
+          window.scrollTo(0, 0);
           setTimeout(() => {
             const reference = bookingReference.bookingReference;
             this.router.navigate([`/bookings/${reference}/details`]);
@@ -1092,6 +1095,8 @@ export class DeviajePackageBookingComponent implements OnInit, OnDestroy {
     const emailAddress = contactInfo.emailAddress || '';
     const phoneNumber = contactInfo.phones?.[0]?.number || '';
     const countryName = this.hotelDetails?.country?.name;
+    const countryCallingCode =
+      contactInfo.phones?.[0]?.countryCallingCode || '';
 
     const paxes = this.travelers.controls.map((travelerControl, index) => {
       const traveler = travelerControl.value;
@@ -1120,6 +1125,7 @@ export class DeviajePackageBookingComponent implements OnInit, OnDestroy {
         surname: travelerData.lastName,
         email: emailAddress,
         phone: phoneNumber,
+        countryCallingCode: countryCallingCode,
       },
       countryName: countryName || '',
       rooms: [
@@ -1168,11 +1174,8 @@ export class DeviajePackageBookingComponent implements OnInit, OnDestroy {
                 );
 
                 // Actualizar el rate en packageData
-                this.rate = {
-                  ...this.rate,
-                  net: newPrice,
-                  rateKey: newRate.rateKey,
-                };
+                this.hotel = response.hotel;
+                this.rate = response.hotel.rooms[0].rates[0];
               } else {
                 console.log('Hotel price confirmed:', newPrice);
               }
@@ -1228,5 +1231,15 @@ export class DeviajePackageBookingComponent implements OnInit, OnDestroy {
 
       return null;
     };
+  }
+
+  scrollToSection() {
+    const element = document.getElementById('bookings');
+    if (element) {
+      element.scrollIntoView({
+        behavior: 'smooth', // Scroll suave
+        block: 'start', // Alinea al inicio de la vista
+      });
+    }
   }
 }

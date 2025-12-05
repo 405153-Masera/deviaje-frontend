@@ -161,7 +161,7 @@
 
                                     <td class="text-center">
                                         <div class="dropdown" (clickOutside)="closeDropdown()">
-                                            <button class="btn btn-sm btn-link text-dark" type="button"
+                                            <button class="btn btn-sm btn-outline-secondary text-dark" type="button"
                                                 [id]="'dropdownUser' + user.id"
                                                 (click)="toggleDropdown(user.id, $event)">
                                                 <i class="bi bi-three-dots-vertical"></i>
@@ -199,7 +199,6 @@
                                                     <hr class="dropdown-divider" />
                                                 </li>
 
-                                                <!-- 👇 CONDICIONAL: Activar O Dar de baja según estado -->
                                                 <li *ngIf="!user.active">
                                                     <!-- Si está inactivo → Mostrar ACTIVAR -->
                                                     <a class="dropdown-item text-success" href="#"

@@ -122,34 +122,31 @@ export class DeviajePackagesResultsComponent implements OnInit {
       this.initHotelDatesForm();
 
       localStorage.setItem(
-                'flightSearchRequest',
-                JSON.stringify(this.flightSearchRequest)
-              );
+        'flightSearchRequest',
+        JSON.stringify(this.flightSearchRequest)
+      );
       localStorage.setItem(
-                'hotelSearchRequest',
-                JSON.stringify(this.hotelSearchRequest )
-              );
+        'hotelSearchRequest',
+        JSON.stringify(this.hotelSearchRequest)
+      );
       localStorage.setItem(
-                'originCityPackage',
-                JSON.stringify(this.originCity)
-              );
+        'originCityPackage',
+        JSON.stringify(this.originCity)
+      );
       localStorage.setItem(
-                'destinationCityPackage',
-                JSON.stringify(this.destinationCity)
-              );
+        'destinationCityPackage',
+        JSON.stringify(this.destinationCity)
+      );
       localStorage.setItem(
-                'hotelDestinationCity',
-                JSON.stringify(this.hotelDestinationCity)
-              );
-      localStorage.setItem(
-                'packageInfo',
-                JSON.stringify(this.packageInfo)
-              );
+        'hotelDestinationCity',
+        JSON.stringify(this.hotelDestinationCity)
+      );
+      localStorage.setItem('packageInfo', JSON.stringify(this.packageInfo));
       this.isHotelTabEnabled = false;
     } else {
       this.tryLoadFromStorage();
       this.isHotelTabEnabled = false;
-    } 
+    }
   }
 
   private tryLoadFromStorage(): void {
@@ -157,30 +154,29 @@ export class DeviajePackagesResultsComponent implements OnInit {
       const flightSearchRequest = localStorage.getItem('flightSearchRequest');
       const hotelSearchRequest = localStorage.getItem('hotelSearchRequest');
       const originCityPackage = localStorage.getItem('originCityPackage');
-      const destinationCityPackage = localStorage.getItem('destinationCityPackage');
+      const destinationCityPackage = localStorage.getItem(
+        'destinationCityPackage'
+      );
       const hotelDestinationCity = localStorage.getItem('hotelDestinationCity');
       const packageInfo = localStorage.getItem('packageInfo');
 
       this.flightSearchRequest = flightSearchRequest
-                ? JSON.parse(flightSearchRequest)
-                : null;
+        ? JSON.parse(flightSearchRequest)
+        : null;
       this.hotelSearchRequest = hotelSearchRequest
-                ? JSON.parse(hotelSearchRequest)
-                : null;
+        ? JSON.parse(hotelSearchRequest)
+        : null;
       this.originCity = originCityPackage
-                ? JSON.parse(originCityPackage)
-                : null;
+        ? JSON.parse(originCityPackage)
+        : null;
       this.destinationCity = destinationCityPackage
-                ? JSON.parse(destinationCityPackage)
-                : null;
+        ? JSON.parse(destinationCityPackage)
+        : null;
       this.hotelDestinationCity = hotelDestinationCity
-                ? JSON.parse(hotelDestinationCity)
-                : null;
-      this.packageInfo = packageInfo
-                ? JSON.parse(packageInfo)
-                : null;
+        ? JSON.parse(hotelDestinationCity)
+        : null;
+      this.packageInfo = packageInfo ? JSON.parse(packageInfo) : null;
       this.initHotelDatesForm();
-
     } catch (e) {
       console.error('No se encontraron datos de búsqueda de paquetes');
       this.router.navigate(['/home/packages/search']);
@@ -222,6 +218,7 @@ export class DeviajePackagesResultsComponent implements OnInit {
 
     // Cambiar automáticamente a la pestaña de hoteles
     this.switchToHotelsTab();
+    this.scrollToSection();
   }
 
   onHotelSelected(hotelData: {
@@ -234,6 +231,7 @@ export class DeviajePackagesResultsComponent implements OnInit {
     searchParams: HotelSearchRequest;
   }): void {
     this.selectedHotel = hotelData;
+    this.scrollToSection();
   }
 
   // ========== LÓGICA DEL CARRITO ==========
@@ -397,8 +395,8 @@ export class DeviajePackagesResultsComponent implements OnInit {
     //   //this.suggestedCheckOut.setDate(this.suggestedCheckOut.getDate() - 1);
     //   this.suggestionReason.checkOut =
     //     'Tu vuelo sale muy temprano (antes de las 10:00)';
-    // }  
-      
+    // }
+
     if (departureHour < 12) {
       // Sale temprano pero no tanto
       this.suggestionReason.checkOut = 'Tu vuelo sale en horario matutino';
@@ -494,6 +492,15 @@ export class DeviajePackagesResultsComponent implements OnInit {
   formatDateForInput(date: Date): string {
     if (!date) return '';
     return date.toISOString().split('T')[0]; // "2025-11-20"
+  }
+
+  scrollToSection() {
+    const element = document.getElementById('packages');
+    if (element) {
+      element.scrollIntoView({
+        behavior: 'smooth', // Scroll suave
+      });
+    }
   }
 }
 

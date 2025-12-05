@@ -35,7 +35,7 @@
       </div>
     </div>
   </header>
-
+  
   <!-- Carrito de selecciones (fijo arriba cuando hay selecciones) -->
   @if (selectedFlight || selectedHotel) {
   <div class="package-cart">
@@ -118,7 +118,7 @@
   </div>
   }
 
-  <div class="container my-4">
+  <div class="container my-4" id="packages">
     <!-- Instrucciones -->
     @if (!selectedFlight && !selectedHotel) {
     <div class="instructions-banner">

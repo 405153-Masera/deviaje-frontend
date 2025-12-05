@@ -53,16 +53,6 @@
       }
     }
 
-    .review-rating {
-      i {
-        font-size: 1rem;
-        margin-left: 0.2rem;
-
-        &.bi-star {
-          color: $gray-300;
-        }
-      }
-    }
   }
 
   .review-comment {
@@ -96,14 +86,6 @@
       }
     }
 
-    .btn-danger {
-      opacity: 0;
-      transition: opacity 0.2s ease;
-    }
-  }
-
-  &:hover .review-footer .btn-danger {
-    opacity: 1;
   }
 }
 
@@ -189,10 +171,6 @@
       flex-direction: column;
       gap: 0.75rem;
       align-items: flex-start;
-
-      .btn-danger {
-        opacity: 1;
-      }
     }
   }
 

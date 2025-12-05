@@ -24,6 +24,10 @@ import {
 import { AuthService } from '../../../../core/auth/services/auth.service';
 import { UserService } from '../../../../shared/services/user.service';
 import { MatTooltipModule } from '@angular/material/tooltip';
+import { ChartExportService } from '../../../../shared/services/chart-export.service';
+import jsPDF from 'jspdf';
+import autoTable from 'jspdf-autotable';
+import * as XLSX from 'xlsx';
 
 @Component({
   selector: 'app-dashboard-revenue-over-time',
@@ -37,6 +41,7 @@ export class DeviajeRevenueOverTimeComponent implements OnInit, OnDestroy {
   private readonly authService = inject(AuthService);
   private readonly userService = inject(UserService);
   private readonly router = inject(Router);
+  private readonly chartExportService = inject(ChartExportService);
 
   private subscriptions = new Subscription();
 
@@ -260,5 +265,157 @@ export class DeviajeRevenueOverTimeComponent implements OnInit, OnDestroy {
       YEARLY: 'Anual',
     };
     return labels[this.currentGranularity] || this.currentGranularity;
+  }
+
+  //  MÉTODOS DE EXPORTACIÓN 
+
+  /**
+   * Exporta el gráfico a PDF
+   */
+  exportChartToPDF(): void {
+    this.chartExportService.exportChartToPDF(
+      'revenueChart',
+      'Ventas y Comisiones a lo Largo del Tiempo',
+      'ventas_por_periodo'
+    );
+  }
+
+  /**
+   * Exporta el gráfico a PNG
+   */
+  exportChartToPNG(): void {
+    this.chartExportService.exportChartToPNG(
+      'revenueChart',
+      'ventas_por_periodo'
+    );
+  }
+
+  /**
+   * Exporta la tabla de datos a PDF
+   */
+  exportTableToPDF(): void {
+    const doc = new jsPDF({
+      orientation: 'portrait',
+      unit: 'mm',
+      format: 'a4'
+    });
+
+    // Título
+    doc.setFontSize(18);
+    doc.setFont('helvetica', 'bold');
+    doc.text('Datos Detallados por Período - DeViaje', 14, 15);
+
+    // Fecha del reporte
+    doc.setFontSize(10);
+    doc.setFont('helvetica', 'normal');
+    const today = new Date().toLocaleDateString('es-AR', {
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit'
+    });
+    doc.text(`Generado: ${today}`, 14, 22);
+    doc.text(`Granularidad: ${this.getGranularityLabel()}`, 14, 27);
+
+    // Preparar datos de la tabla
+    const tableData = this.revenueData.map(item => [
+      item.period,
+      this.formatCurrency(item.revenue),
+      this.formatCurrency(item.commission),
+      this.formatCurrency(item.revenue - item.commission)
+    ]);
+
+    // Fila de totales
+    const totalRow = [
+      'TOTAL',
+      this.formatCurrency(this.kpis.totalRevenue),
+      this.formatCurrency(this.kpis.totalCommission),
+      this.formatCurrency(this.kpis.totalRevenue - this.kpis.totalCommission)
+    ];
+
+    // Generar tabla
+    autoTable(doc, {
+      startY: 32,
+      head: [['Período', 'Venta Total', 'Comisión Total', 'Venta Neta']],
+      body: [...tableData, totalRow],
+      styles: {
+        fontSize: 10,
+        cellPadding: 3,
+      },
+      headStyles: {
+        fillColor: [33, 37, 41],
+        textColor: 255,
+        fontStyle: 'bold',
+        halign: 'center',
+      },
+      footStyles: {
+        fillColor: [33, 37, 41],
+        textColor: 255,
+        fontStyle: 'bold',
+      },
+      columnStyles: {
+        0: { cellWidth: 40 },
+        1: { cellWidth: 45, halign: 'right' },
+        2: { cellWidth: 45, halign: 'right' },
+        3: { cellWidth: 45, halign: 'right' },
+      },
+      alternateRowStyles: {
+        fillColor: [245, 245, 245],
+      },
+      didDrawPage: (data: any) => {
+        const pageCount = (doc as any).internal.getNumberOfPages();
+        doc.setFontSize(8);
+        doc.text(
+          `Página ${data.pageNumber} de ${pageCount}`,
+          data.settings.margin.left,
+          doc.internal.pageSize.height - 10
+        );
+      }
+    });
+
+    // Guardar PDF
+    const timestamp = new Date().getTime();
+    doc.save(`datos_detallados_${timestamp}.pdf`);
+  }
+
+  /**
+   * Exporta la tabla de datos a Excel
+   */
+  exportTableToExcel(): void {
+    // Preparar datos
+    const excelData = this.revenueData.map(item => ({
+      'Período': item.period,
+      'Venta Total': item.revenue,
+      'Comisión Total': item.commission,
+      'Venta Neta': item.revenue - item.commission
+    }));
+
+    // Agregar fila de totales
+    excelData.push({
+      'Período': 'TOTAL',
+      'Venta Total': this.kpis.totalRevenue,
+      'Comisión Total': this.kpis.totalCommission,
+      'Venta Neta': this.kpis.totalRevenue - this.kpis.totalCommission
+    });
+
+    // Crear worksheet
+    const ws: XLSX.WorkSheet = XLSX.utils.json_to_sheet(excelData);
+
+    // Ajustar anchos de columna
+    ws['!cols'] = [
+      { wch: 20 }, // Período
+      { wch: 18 }, // Venta Total
+      { wch: 18 }, // Comisión Total
+      { wch: 18 }, // Venta Neta
+    ];
+
+    // Crear workbook
+    const wb: XLSX.WorkBook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, 'Datos Detallados');
+
+    // Guardar archivo
+    const timestamp = new Date().getTime();
+    XLSX.writeFile(wb, `datos_detallados_${timestamp}.xlsx`);
   }
 }

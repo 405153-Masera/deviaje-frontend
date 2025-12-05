@@ -10,11 +10,13 @@ import { ActivatedRoute, Router } from '@angular/router';
 import { Subscription } from 'rxjs';
 import { ReviewService } from '../../services/review.service';
 import { AuthService } from '../../../core/auth/services/auth.service';
-import { getCategoryIcon, getCategoryName, Review, ReviewResponse } from '../../models/reviews';
-/**
- * Componente que muestra el detalle de una review con todas sus respuestas
- * Incluye paginación de respuestas y formulario para responder
- */
+import {
+  getCategoryIcon,
+  getCategoryName,
+  Review,
+  ReviewResponse,
+} from '../../models/reviews';
+
 @Component({
   selector: 'app-deviaje-review-detail',
   standalone: true,
@@ -46,26 +48,38 @@ export class DeviajeReviewDetailComponent implements OnInit, OnDestroy {
 
   // Paginación de respuestas
   currentPage = 1;
-  itemsPerPage = 10;
+  itemsPerPage = 5;
 
   // Usuario actual y roles
   currentUser: any = null;
   isAdmin = false;
   isAgent = false;
-  canModerate = false;
+  isClient = false;
+
+  // Modales de confirmación
+  showDeleteReviewModal = false;
+  deletingReview = false;
+  showDeleteResponseModal = false;
+  responseToDelete: ReviewResponse | null = null;
+  deletingResponse = false;
 
   ngOnInit(): void {
-    this.initResponseForm();
 
-    // Obtener usuario y roles
     this.subscriptions.add(
       this.authService.currentUser$.subscribe((user) => {
         this.currentUser = user;
-        this.isAdmin = this.authService.hasRole('ADMINISTRADOR');
-        this.isAgent = this.authService.hasRole('AGENTE');
-        this.canModerate = this.isAdmin || this.isAgent;
       })
     );
+
+    this.subscriptions.add(
+      this.authService.activeRole$.subscribe((activeRole) => {
+        this.isAdmin = activeRole === 'ADMINISTRADOR';
+        this.isAgent = activeRole === 'AGENTE';
+        this.isClient = activeRole === 'CLIENTE';
+      })
+    );
+
+    this.initResponseForm();
 
     // Obtener ID de review de la ruta
     this.subscriptions.add(
@@ -116,6 +130,48 @@ export class DeviajeReviewDetailComponent implements OnInit, OnDestroy {
         },
       })
     );
+  }
+
+   /**
+   * Verifica si el usuario puede eliminar la review principal
+   * - Admin/Agente: pueden eliminar cualquier review (moderación)
+   * - Cliente: solo puede eliminar SU PROPIA review
+   */
+  canDeleteReview(): boolean {
+    if (!this.currentUser || !this.review) return false;
+
+    // Admin y Agente pueden eliminar cualquier review
+    if (this.isAdmin || this.isAgent) {
+      return true;
+    }
+
+    // Cliente solo puede eliminar su propia review
+    if (this.isClient) {
+      return this.review.userId === this.currentUser.id;
+    }
+
+    return false;
+  }
+
+  /**
+   * Verifica si el usuario puede eliminar una respuesta específica
+   * - Admin/Agente: pueden eliminar cualquier respuesta (moderación)
+   * - Cliente: solo puede eliminar SUS PROPIAS respuestas
+   */
+  canDeleteResponse(response: ReviewResponse): boolean {
+    if (!this.currentUser) return false;
+
+    // Admin y Agente pueden eliminar cualquier respuesta
+    if (this.isAdmin || this.isAgent) {
+      return true;
+    }
+
+    // Cliente solo puede eliminar sus propias respuestas
+    if (this.isClient) {
+      return response.userId === this.currentUser.id;
+    }
+
+    return false;
   }
 
   /**
@@ -172,13 +228,133 @@ export class DeviajeReviewDetailComponent implements OnInit, OnDestroy {
     );
   }
 
+    /**
+   * Abre el modal de confirmación para eliminar la review
+   */
+  openDeleteReviewModal(): void {
+    if (!this.canDeleteReview()) {
+      this.error = 'No tienes permisos para eliminar esta review.';
+      setTimeout(() => {
+        this.error = '';
+      }, 3000);
+      return;
+    }
+
+    this.showDeleteReviewModal = true;
+  }
+
+   /**
+   * Cierra el modal de confirmación
+   */
+  closeDeleteReviewModal(): void {
+    this.showDeleteReviewModal = false;
+  }
+
+  /**
+   * Confirma y elimina la review principal
+   */
+  confirmDeleteReview(): void {
+    if (!this.review) return;
+
+    this.deletingReview = true;
+
+    this.subscriptions.add(
+      this.reviewService.deleteReview(this.review.id).subscribe({
+        next: (response) => {
+          this.success = response.message || 'Review eliminada correctamente';
+          this.deletingReview = false;
+
+          setTimeout(() => {
+            this.backToList();
+          }, 1500);
+        },
+        error: (err) => {
+          console.error('Error al eliminar review:', err);
+          this.error =
+            err?.message || 'Error al eliminar la review. Intente nuevamente.';
+          this.deletingReview = false;
+
+          setTimeout(() => {
+            this.error = '';
+          }, 3000);
+        },
+      })
+    );
+  }
+
+  /**
+   * Abre el modal de confirmación para eliminar respuesta
+   */
+  openDeleteResponseModal(response: ReviewResponse): void {
+    if (!this.canDeleteResponse(response)) {
+      this.error = 'No tienes permisos para eliminar esta respuesta.';
+      setTimeout(() => {
+        this.error = '';
+      }, 3000);
+      return;
+    }
+
+    this.responseToDelete = response;
+    this.showDeleteResponseModal = true;
+  }
+
+  /**
+   * Cierra el modal de confirmación de respuesta
+   */
+  closeDeleteResponseModal(): void {
+    this.showDeleteResponseModal = false;
+    this.responseToDelete = null;
+  }
+
+  /**
+   * Confirma y elimina una respuesta específica
+   */
+  confirmDeleteResponse(): void {
+    if (!this.responseToDelete) return;
+
+    this.deletingResponse = true;
+
+    this.subscriptions.add(
+      this.reviewService.deleteReviewResponse(this.responseToDelete.id).subscribe({
+        next: (result) => {
+          this.success =
+            result.message || 'Respuesta eliminada correctamente';
+          this.deletingResponse = false;
+          this.closeDeleteResponseModal();
+
+          // Recargar la review
+          if (this.review) {
+            this.loadReviewDetail(this.review.id);
+          }
+
+          setTimeout(() => {
+            this.success = '';
+          }, 3000);
+        },
+        error: (err) => {
+          console.error('Error al eliminar respuesta:', err);
+          this.error =
+            err?.message ||
+            'Error al eliminar la respuesta. Intente nuevamente.';
+          this.deletingResponse = false;
+
+          setTimeout(() => {
+            this.error = '';
+          }, 3000);
+        },
+      })
+    );
+  }
+
   /**
    * Elimina una respuesta (solo Admin/Agente)
    */
   deleteResponse(response: ReviewResponse): void {
     if (
       !confirm(
-        `¿Está seguro que desea eliminar la respuesta de ${this.getUserDisplayName(response)}?`
+        `¿Está seguro que desea eliminar la respuesta de ${this.getUserDisplayName(
+          response
+        )}?`
       )
     ) {
       return;
@@ -208,6 +384,7 @@ export class DeviajeReviewDetailComponent implements OnInit, OnDestroy {
     );
   }
 
+
   /**
    * Elimina la review principal y vuelve atrás
    */
@@ -216,7 +393,9 @@ export class DeviajeReviewDetailComponent implements OnInit, OnDestroy {
 
     if (
       !confirm(
-        `¿Está seguro que desea eliminar esta review de ${this.getUserDisplayName(this.review)}?`
+        `¿Está seguro que desea eliminar esta review de ${this.getUserDisplayName(
+          this.review
+        )}?`
       )
     ) {
       return;

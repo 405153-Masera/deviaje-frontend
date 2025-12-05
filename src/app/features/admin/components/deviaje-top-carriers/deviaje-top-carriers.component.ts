@@ -23,6 +23,10 @@ import {
 } from '../../dashboard/models/dashboards';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { AuthService } from '../../../../core/auth/services/auth.service';
+import { ChartExportService } from '../../../../shared/services/chart-export.service';
+import jsPDF from 'jspdf';
+import autoTable from 'jspdf-autotable';
+import * as XLSX from 'xlsx';
 
 @Component({
   selector: 'app-dashboard-top-carriers',
@@ -41,7 +45,8 @@ export class DeviajeTopCarriersComponent implements OnInit, OnDestroy {
   private readonly dashboardService = inject(DashboardService);
   private authService = inject(AuthService);
   private readonly router = inject(Router);
-  
+  private readonly chartExportService = inject(ChartExportService);
+
   currentUser: any = null;
   userRole: string = '';
 
@@ -207,7 +212,7 @@ export class DeviajeTopCarriersComponent implements OnInit, OnDestroy {
       this.router.navigate(['admin/dashboard']);
       return;
     }
-    
+
     if (this.userRole === 'AGENTE') {
       this.router.navigate(['agent/dashboard']);
       return;
@@ -229,5 +234,179 @@ export class DeviajeTopCarriersComponent implements OnInit, OnDestroy {
         this.userRole = role || '';
       })
     );
+  }
+
+  // ========== MÉTODOS DE EXPORTACIÓN ==========
+
+  /**
+   * Exporta el gráfico a PDF
+   */
+  exportChartToPDF(): void {
+    this.chartExportService.exportChartToPDF(
+      'topCarriersChart',
+      'Top Aerolíneas',
+      'top_aerolineas'
+    );
+  }
+
+  /**
+   * Exporta el gráfico a PNG
+   */
+  exportChartToPNG(): void {
+    this.chartExportService.exportChartToPNG(
+      'topCarriersChart',
+      'top_aerolineas'
+    );
+  }
+
+  /**
+   * Exporta la tabla de datos a PDF
+   */
+  exportTableToPDF(): void {
+    const doc = new jsPDF({
+      orientation: 'landscape',
+      unit: 'mm',
+      format: 'a4'
+    });
+
+    // Título
+    doc.setFontSize(18);
+    doc.setFont('helvetica', 'bold');
+    doc.text('Top Aerolíneas - DeViaje', 14, 15);
+
+    // Fecha del reporte
+    doc.setFontSize(10);
+    doc.setFont('helvetica', 'normal');
+    const today = new Date().toLocaleDateString('es-AR', {
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit'
+    });
+    doc.text(`Generado: ${today}`, 14, 22);
+    doc.text(`Total de aerolíneas: ${this.carriersData.length}`, 14, 27);
+
+    // Preparar datos de la tabla (SIN columna #)
+    const tableData = this.carriersData.map((carrier) => [
+      carrier.carrierName,
+      carrier.bookingsCount.toString(),
+      this.formatCurrency(carrier.totalRevenue),
+      carrier.averagePassengers.toFixed(1),
+      this.formatCurrency(carrier.averagePrice)
+    ]);
+
+    // Fila de totales
+    const totalBookings = this.carriersData.reduce((sum, c) => sum + c.bookingsCount, 0);
+    const totalRevenue = this.carriersData.reduce((sum, c) => sum + c.totalRevenue, 0);
+    
+    const totalRow = [
+      'TOTAL',
+      totalBookings.toString(),
+      this.formatCurrency(totalRevenue),
+      '-',
+      '-'
+    ];
+
+    // Generar tabla
+    autoTable(doc, {
+      startY: 32,
+      head: [['Aerolínea', 'Cantidad', 'Venta Total', 'Promedio Pasajeros', 'Precio Promedio']],
+      body: [...tableData, totalRow],
+      styles: {
+        fontSize: 9,
+        cellPadding: 3,
+      },
+      headStyles: {
+        fillColor: [33, 37, 41],
+        textColor: 255,
+        fontStyle: 'bold',
+        halign: 'center',
+      },
+      footStyles: {
+        fillColor: [33, 37, 41],
+        textColor: 255,
+        fontStyle: 'bold',
+      },
+      columnStyles: {
+        0: { cellWidth: 70 },  // Aerolínea
+        1: { cellWidth: 35, halign: 'right' },  // Cantidad
+        2: { cellWidth: 50, halign: 'right' },  // Venta Total
+        3: { cellWidth: 45, halign: 'right' },  // Promedio Pasajeros
+        4: { cellWidth: 50, halign: 'right' },  // Precio Promedio
+      },
+      alternateRowStyles: {
+        fillColor: [245, 245, 245],
+      },
+      didDrawPage: (data: any) => {
+        const pageCount = (doc as any).internal.getNumberOfPages();
+        doc.setFontSize(8);
+        doc.text(
+          `Página ${data.pageNumber} de ${pageCount}`,
+          data.settings.margin.left,
+          doc.internal.pageSize.height - 10
+        );
+      }
+    });
+
+    // Guardar PDF
+    const timestamp = new Date().getTime();
+    doc.save(`top_aerolineas_${timestamp}.pdf`);
+  }
+
+  /**
+   * Exporta la tabla de datos a Excel
+   */
+  exportTableToExcel(): void {
+    // Preparar datos (SIN columna #)
+    const excelData = this.carriersData.map((carrier) => ({
+      'Aerolínea': carrier.carrierName,
+      'Cantidad': carrier.bookingsCount,
+      'Venta Total': carrier.totalRevenue,
+      'Promedio Pasajeros': carrier.averagePassengers,
+      'Precio Promedio': carrier.averagePrice
+    }));
+
+    // Agregar fila de totales
+    const totalBookings = this.carriersData.reduce((sum, c) => sum + c.bookingsCount, 0);
+    const totalRevenue = this.carriersData.reduce((sum, c) => sum + c.totalRevenue, 0);
+    
+    excelData.push({
+      'Aerolínea': 'TOTAL',
+      'Cantidad': totalBookings,
+      'Venta Total': totalRevenue,
+      'Promedio Pasajeros': '-' as any,
+      'Precio Promedio': '-' as any
+    });
+
+    // Crear worksheet
+    const ws: XLSX.WorkSheet = XLSX.utils.json_to_sheet(excelData);
+
+    // Ajustar anchos de columna
+    ws['!cols'] = [
+      { wch: 30 }, // Aerolínea
+      { wch: 15 }, // Cantidad
+      { wch: 20 }, // Venta Total
+      { wch: 20 }, // Promedio Pasajeros
+      { wch: 20 }, // Precio Promedio
+    ];
+
+    // Crear workbook
+    const wb: XLSX.WorkBook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, 'Top Aerolíneas');
+
+    // Guardar archivo
+    const timestamp = new Date().getTime();
+    XLSX.writeFile(wb, `top_aerolineas_${timestamp}.xlsx`);
+  }
+
+
+  formatCurrency(value: number): string {
+    return new Intl.NumberFormat('es-AR', {
+      style: 'currency',
+      currency: 'ARS',
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2,
+    }).format(value);
   }
 }

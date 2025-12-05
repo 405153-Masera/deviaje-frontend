@@ -23,6 +23,10 @@ import {
 } from '../../dashboard/models/dashboards';
 import { UserService } from '../../../../shared/services/user.service';
 import { MatTooltipModule } from '@angular/material/tooltip';
+import { ChartExportService } from '../../../../shared/services/chart-export.service';
+import jsPDF from 'jspdf';
+import autoTable from 'jspdf-autotable';
+import * as XLSX from 'xlsx';
 
 @Component({
   selector: 'app-dashboard-bookings-by-type',
@@ -41,7 +45,7 @@ export class DashboardBookingsByTypeComponent implements OnInit, OnDestroy {
   private readonly dashboardService = inject(DashboardService);
   private readonly userService = inject(UserService);
   private readonly router = inject(Router);
-
+  private readonly chartExportService = inject(ChartExportService);
   private subscriptions = new Subscription();
 
   // Form controls para filtros
@@ -292,5 +296,174 @@ export class DashboardBookingsByTypeComponent implements OnInit, OnDestroy {
       PACKAGE: 'bg-purple',
     };
     return classes[type] || 'bg-secondary';
+  }
+
+  // ========== MÉTODOS DE EXPORTACIÓN ==========
+
+  /**
+   * Exporta el gráfico a PDF
+   */
+  exportChartToPDF(): void {
+    this.chartExportService.exportChartToPDF(
+      'bookingsByTypeChart',
+      'Reservas y Ventas por Tipo',
+      'reservas_por_tipo'
+    );
+  }
+
+  /**
+   * Exporta el gráfico a PNG
+   */
+  exportChartToPNG(): void {
+    this.chartExportService.exportChartToPNG(
+      'bookingsByTypeChart',
+      'reservas_por_tipo'
+    );
+  }
+
+  /**
+   * Exporta la tabla de datos a PDF
+   */
+  exportTableToPDF(): void {
+    const doc = new jsPDF({
+      orientation: 'landscape',
+      unit: 'mm',
+      format: 'a4'
+    });
+
+    // Título
+    doc.setFontSize(18);
+    doc.setFont('helvetica', 'bold');
+    doc.text('Reservas por Tipo - DeViaje', 14, 15);
+
+    // Fecha del reporte
+    doc.setFontSize(10);
+    doc.setFont('helvetica', 'normal');
+    const today = new Date().toLocaleDateString('es-AR', {
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit'
+    });
+    doc.text(`Generado: ${today}`, 14, 22);
+
+    // Preparar datos de la tabla (SIN columna #)
+    const tableData = this.bookingsData.map((item) => [
+      this.translateBookingType(item.bookingType),
+      item.count.toString(),
+      this.formatCurrency(item.totalRevenue),
+      this.formatCurrency(item.totalCommission),
+      this.formatCurrency(item.averageRevenue)
+    ]);
+
+    // Fila de totales
+    const totalRow = [
+      'TOTAL',
+      this.kpis.totalBookings.toString(),
+      this.formatCurrency(this.kpis.totalRevenue),
+      this.formatCurrency(this.kpis.totalCommissions),
+      this.formatCurrency(this.kpis.averageBookingValue)
+    ];
+
+    // Generar tabla
+    autoTable(doc, {
+      startY: 27,
+      head: [['Tipo de Reserva', 'Cantidad', 'Venta Total', 'Comisión Total', 'Venta Promedio']],
+      body: [...tableData, totalRow],
+      styles: {
+        fontSize: 9,
+        cellPadding: 3,
+      },
+      headStyles: {
+        fillColor: [33, 37, 41],
+        textColor: 255,
+        fontStyle: 'bold',
+        halign: 'center',
+      },
+      footStyles: {
+        fillColor: [33, 37, 41],
+        textColor: 255,
+        fontStyle: 'bold',
+      },
+      columnStyles: {
+        0: { cellWidth: 50 },  // Tipo de Reserva
+        1: { cellWidth: 35, halign: 'right' },  // Cantidad
+        2: { cellWidth: 50, halign: 'right' },  // Venta Total
+        3: { cellWidth: 50, halign: 'right' },  // Comisión Total
+        4: { cellWidth: 50, halign: 'right' },  // Venta Promedio
+      },
+      alternateRowStyles: {
+        fillColor: [245, 245, 245],
+      },
+      didDrawPage: (data: any) => {
+        const pageCount = (doc as any).internal.getNumberOfPages();
+        doc.setFontSize(8);
+        doc.text(
+          `Página ${data.pageNumber} de ${pageCount}`,
+          data.settings.margin.left,
+          doc.internal.pageSize.height - 10
+        );
+      }
+    });
+
+    // Guardar PDF
+    const timestamp = new Date().getTime();
+    doc.save(`reservas_por_tipo_${timestamp}.pdf`);
+  }
+
+  /**
+   * Exporta la tabla de datos a Excel
+   */
+  exportTableToExcel(): void {
+    // Preparar datos (SIN columna #)
+    const excelData = this.bookingsData.map((item) => ({
+      'Tipo de Reserva': this.translateBookingType(item.bookingType),
+      'Cantidad': item.count,
+      'Venta Total': item.totalRevenue,
+      'Comisión Total': item.totalCommission,
+      'Venta Promedio': item.averageRevenue
+    }));
+
+    // Agregar fila de totales
+    excelData.push({
+      'Tipo de Reserva': 'TOTAL',
+      'Cantidad': this.kpis.totalBookings,
+      'Venta Total': this.kpis.totalRevenue,
+      'Comisión Total': this.kpis.totalCommissions,
+      'Venta Promedio': this.kpis.averageBookingValue
+    });
+
+    // Crear worksheet
+    const ws: XLSX.WorkSheet = XLSX.utils.json_to_sheet(excelData);
+
+    // Ajustar anchos de columna
+    ws['!cols'] = [
+      { wch: 20 }, // Tipo de Reserva
+      { wch: 15 }, // Cantidad
+      { wch: 20 }, // Venta Total
+      { wch: 20 }, // Comisión Total
+      { wch: 20 }, // Venta Promedio
+    ];
+
+    // Crear workbook
+    const wb: XLSX.WorkBook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, 'Reservas por Tipo');
+
+    // Guardar archivo
+    const timestamp = new Date().getTime();
+    XLSX.writeFile(wb, `reservas_por_tipo_${timestamp}.xlsx`);
+  }
+
+  /**
+   * Helper para formatear moneda
+   */
+  private formatCurrency(value: number): string {
+    return new Intl.NumberFormat('es-AR', {
+      style: 'currency',
+      currency: 'ARS',
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2
+    }).format(value);
   }
 }

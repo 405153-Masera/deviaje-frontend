@@ -46,34 +46,18 @@
         <!-- Rating -->
         <div class="review-rating">
           @for (star of getStars(review.rating); track $index) {
-          <i
-            class="bi"
-            [ngClass]="{
+          <i class="bi" [ngClass]="{
               'bi-star-fill': star.filled,
               'bi-star': !star.filled
-            }"
-          ></i>
+            }"></i>
           }
         </div>
-
-        <!-- Botón eliminar review (solo Admin/Agente) -->
-        @if (canModerate) {
-        <button
-          class="btn btn-danger btn-sm"
-          (click)="deleteReview()"
-          title="Eliminar review"
-        >
-          <i class="bi bi-trash me-1"></i>
-          Eliminar
-        </button>
-        }
       </div>
     </div>
 
     <!-- Categoría -->
     <div class="review-category mb-3">
       <span class="badge bg-primary">
-        <i class="{{ categoryIcon }} me-1"></i>
         {{ categoryName }}
       </span>
     </div>
@@ -83,22 +67,29 @@
       <p>{{ review.comment }}</p>
     </div>
 
-    <!-- Stats -->
-    <div class="review-stats">
-      <i class="bi bi-chat-left-text me-1"></i>
-      {{ responses.length }}
-      {{ responses.length === 1 ? "respuesta" : "respuestas" }}
+    <div class="d-flex justify-content-between">
+      <!-- Stats -->
+      <div class="review-stats">
+        <i class="bi bi-chat-left-text me-1"></i>
+        {{ responses.length }}
+        {{ responses.length === 1 ? "respuesta" : "respuestas" }}
+      </div>
+
+      <!-- Botón eliminar review (solo Admin/Agente) -->
+      @if (canDeleteReview()) {
+      <button class="btn btn-danger btn-sm" (click)="openDeleteReviewModal()"
+        [title]="isClient ? 'Eliminar mi review' : 'Eliminar review'">
+        <i class="bi bi-trash me-1"></i>
+        Eliminar
+      </button>
+      }
     </div>
   </div>
 
   <!-- Botón Responder (solo usuarios autenticados) -->
   @if (currentUser) {
   <div class="response-action-container">
-    <button
-      class="btn btn-primary"
-      (click)="toggleResponseForm()"
-      [disabled]="submittingResponse"
-    >
+    <button class="btn btn-primary" (click)="toggleResponseForm()" [disabled]="submittingResponse">
       <i class="bi bi-reply me-2"></i>
       {{ showResponseForm ? "Cancelar" : "Responder" }}
     </button>
@@ -111,16 +102,11 @@
     <h5 class="mb-3">Tu respuesta</h5>
     <form [formGroup]="responseForm" (ngSubmit)="submitResponse()">
       <div class="mb-3">
-        <textarea
-          class="form-control"
-          formControlName="comment"
-          rows="4"
-          placeholder="Escribe tu respuesta..."
+        <textarea class="form-control" formControlName="comment" rows="4" placeholder="Escribe tu respuesta..."
           [class.is-invalid]="
             responseForm.get('comment')?.invalid &&
             responseForm.get('comment')?.touched
-          "
-        ></textarea>
+          "></textarea>
         @if (responseForm.get('comment')?.invalid &&
         responseForm.get('comment')?.touched) {
         <div class="invalid-feedback">
@@ -130,27 +116,15 @@
       </div>
 
       <div class="d-flex gap-2">
-        <button
-          type="submit"
-          class="btn btn-primary"
-          [disabled]="responseForm.invalid || submittingResponse"
-        >
+        <button type="submit" class="btn btn-primary" [disabled]="responseForm.invalid || submittingResponse">
           @if (submittingResponse) {
-          <span
-            class="spinner-border spinner-border-sm me-2"
-            role="status"
-          ></span>
+          <span class="spinner-border spinner-border-sm me-2" role="status"></span>
           } @else {
           <i class="bi bi-send me-2"></i>
           }
           Publicar respuesta
         </button>
-        <button
-          type="button"
-          class="btn btn-secondary"
-          (click)="toggleResponseForm()"
-          [disabled]="submittingResponse"
-        >
+        <button type="button" class="btn btn-outline-secondary" (click)="toggleResponseForm()" [disabled]="submittingResponse">
           Cancelar
         </button>
       </div>
@@ -174,23 +148,22 @@
           </h6>
           <span class="response-date">{{
             formatDate(response.createdDatetime)
-          }}</span>
+            }}</span>
         </div>
-
-        <!-- Botón eliminar respuesta (solo Admin/Agente) -->
-        @if (canModerate) {
-        <button
-          class="btn btn-danger btn-sm"
-          (click)="deleteResponse(response)"
-          title="Eliminar respuesta"
-        >
-          <i class="bi bi-trash"></i>
-        </button>
-        }
       </div>
 
       <div class="response-comment">
         <p>{{ response.comment }}</p>
+      </div>
+
+      <div class="d-flex justify-content-end mt-2">
+        <!-- Botón eliminar respuesta (solo Admin/Agente) -->
+        @if (canDeleteResponse(response)) {
+        <button class="btn btn-danger btn-sm" (click)="openDeleteResponseModal(response)"
+          [title]="isClient ? 'Eliminar mi respuesta' : 'Eliminar respuesta'">
+          <i class="bi bi-trash"></i>
+        </button>
+        }
       </div>
     </div>
     }
@@ -232,3 +205,83 @@
   </div>
   } }
 </div>
+
+<!-- Modal de confirmación para eliminar review -->
+@if (showDeleteReviewModal && review) {
+<div class="modal fade show d-block" tabindex="-1" style="background-color: rgba(0,0,0,0.5);">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">
+          <i class="bi bi-exclamation-triangle-fill text-warning me-2"></i>
+          Confirmar eliminación
+        </h5>
+        <button type="button" class="btn-close" (click)="closeDeleteReviewModal()" [disabled]="deletingReview"></button>
+      </div>
+      <div class="modal-body">
+        <p class="mb-2">
+          ¿Está seguro que desea eliminar esta review de
+          <strong>{{ getUserDisplayName(review) }}</strong>?
+        </p>
+        <p class="text-muted small mb-0">
+          <i class="bi bi-info-circle me-1"></i>
+          Esto también eliminará todas las respuestas asociadas a esta review.
+        </p>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" (click)="closeDeleteReviewModal()" [disabled]="deletingReview">
+          Cancelar
+        </button>
+        <button type="button" class="btn btn-danger" (click)="confirmDeleteReview()" [disabled]="deletingReview">
+          @if (deletingReview) {
+          <span class="spinner-border spinner-border-sm me-2" role="status"></span>
+          Eliminando...
+          } @else {
+          <i class="bi bi-trash me-2"></i>
+          Eliminar review
+          }
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+}
+
+<!-- Modal de confirmación para eliminar respuesta -->
+@if (showDeleteResponseModal && responseToDelete) {
+<div class="modal fade show d-block" tabindex="-1" style="background-color: rgba(0,0,0,0.5);">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">
+          <i class="bi bi-exclamation-triangle-fill text-warning me-2"></i>
+          Confirmar eliminación
+        </h5>
+        <button type="button" class="btn-close" (click)="closeDeleteResponseModal()"
+          [disabled]="deletingResponse"></button>
+      </div>
+      <div class="modal-body">
+        <p class="mb-0">
+          ¿Está seguro que desea eliminar la respuesta de
+          <strong>{{ getUserDisplayName(responseToDelete) }}</strong>?
+        </p>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" (click)="closeDeleteResponseModal()"
+          [disabled]="deletingResponse">
+          Cancelar
+        </button>
+        <button type="button" class="btn btn-danger" (click)="confirmDeleteResponse()" [disabled]="deletingResponse">
+          @if (deletingResponse) {
+          <span class="spinner-border spinner-border-sm me-2" role="status"></span>
+          Eliminando...
+          } @else {
+          <i class="bi bi-trash me-2"></i>
+          Eliminar respuesta
+          }
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+}

@@ -143,6 +143,25 @@
     <div class="col-12">
       <div class="card border-secondary shadow-sm">
         <div class="card-body">
+          <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap">
+            <h5 class="mb-2 mb-md-o">
+              <i [class]="'bi ' + getTypeIcon() + ' me-2'"></i>
+              Top {{ filterForm.get('limit')?.value }} Destinos
+            </h5>
+            <div class="btn-group" role="group">
+              <button class="btn btn-sm btn-outline-danger" (click)="exportChartToPDF()"
+                [disabled]="loading || destinationsData.length === 0" matTooltip="Exportar gráfico como PDF">
+                <i class="bi bi-file-pdf me-1"></i>
+                PDF
+              </button>
+              <button class="btn btn-sm btn-outline-primary" (click)="exportChartToPNG()"
+                [disabled]="loading || destinationsData.length === 0" matTooltip="Exportar gráfico como imagen">
+                <i class="bi bi-image me-1"></i>
+                PNG
+              </button>
+            </div>
+          </div>
+
           <!-- Loading State -->
           <div *ngIf="loading" class="text-center py-5">
             <div class="spinner-border text-primary" role="status">
@@ -159,7 +178,7 @@
 
           <!-- Chart -->
           <div *ngIf="!loading && !error && chartData.length > 0">
-            <div style="width: 100%; height: 100%;">
+            <div style="width: 100%; height: 100%;" id="topDestinationsChart">
               <google-chart [type]="barChart" [data]="chartData" [options]="chartOptions" [height]="400">
               </google-chart>
             </div>
@@ -173,14 +192,26 @@
   <div class="row" *ngIf="!loading && !error && destinationsData.length > 0">
     <div class="col-12">
       <div class="card border-secondary shadow-sm">
-        <div class="card-header bg-white border-0 d-flex justify-content-between align-items-center">
+        <div class="card-header bg-white border-0 d-flex justify-content-between align-items-center flex-wrap">
           <h5 class="mb-2 mt-2">
             Datos Detallados
           </h5>
-          <button class="btn btn-sm btn-outline-primary" (click)="loadData()">
-            <i class="bi bi-arrow-clockwise me-1"></i>
-            Actualizar
-          </button>
+          <div class="d-flex gap-2">
+            <button class="btn btn-sm btn-danger" (click)="exportTableToPDF()"
+              [disabled]="loading || destinationsData.length === 0">
+              <i class="bi bi-file-pdf me-1"></i>
+              PDF
+            </button>
+            <button class="btn btn-sm btn-success" (click)="exportTableToExcel()"
+              [disabled]="loading || destinationsData.length === 0">
+              <i class="bi bi-file-excel me-1"></i>
+              EXCEL
+            </button>
+            <button class="btn btn-sm btn-outline-primary" (click)="loadData()">
+              <i class="bi bi-arrow-clockwise me-1"></i>
+              Actualizar
+            </button>
+          </div>
         </div>
         <div class="card-body p-0">
           <div class="table-responsive">

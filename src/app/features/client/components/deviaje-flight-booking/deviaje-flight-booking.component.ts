@@ -360,8 +360,7 @@ export class DeviajeFlightBookingComponent implements OnInit, OnDestroy {
         console.error('Error verificando oferta:', error);
         this.errorVerifyMessage = error.message;
         console.error('Error verificando oferta:', error);
-        this.errorVerifyMessage +=
-          ' Regresando a los resultados...';
+        this.errorVerifyMessage += ' Regresando a los resultados...';
 
         setTimeout(() => {
           this.router.navigate(['/home/flight/results'], {
@@ -461,7 +460,6 @@ export class DeviajeFlightBookingComponent implements OnInit, OnDestroy {
         ]),
       });
 
-  
       if (i === 0) {
         this.validatorService.autoLowercaseControl(
           travelerForm.get('contact.emailAddress')
@@ -507,6 +505,7 @@ export class DeviajeFlightBookingComponent implements OnInit, OnDestroy {
         }
         this.currentStep++;
         this.saveCurrentStep(); // Guardar el paso actual en sessionStorage
+        this.scrollToSection();
         console.log('Avanzando al paso:', this.currentStep);
       } else {
         console.log('Validación fallida para el paso:', this.currentStep);
@@ -520,6 +519,7 @@ export class DeviajeFlightBookingComponent implements OnInit, OnDestroy {
     if (this.currentStep > 1) {
       this.currentStep--;
       this.saveCurrentStep(); // Guardar el paso actual en sessionStorage
+      this.scrollToSection();
     }
   }
 
@@ -568,6 +568,7 @@ export class DeviajeFlightBookingComponent implements OnInit, OnDestroy {
       return;
     }
 
+    this.scrollToSection();
     // Validar que el formulario básico esté completo
     if (!this.validateCurrentStep()) {
       this.errorMessage = 'Complete todos los campos correctamente';
@@ -633,6 +634,7 @@ export class DeviajeFlightBookingComponent implements OnInit, OnDestroy {
 
           this.clearPersistedState();
 
+          window.scrollTo(0, 0);
           setTimeout(() => {
             const reference = bookingReference.bookingReference;
             this.router.navigate([`/bookings/${reference}/details`]);
@@ -1013,5 +1015,15 @@ export class DeviajeFlightBookingComponent implements OnInit, OnDestroy {
 
       return null;
     };
+  }
+
+  scrollToSection() {
+    const element = document.getElementById('bookings');
+    if (element) {
+      element.scrollIntoView({
+        behavior: 'smooth', // Scroll suave
+        block: 'start', // Alinea al inicio de la vista
+      });
+    }
   }
 }

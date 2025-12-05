@@ -4,12 +4,13 @@ import { ActivatedRoute, Router } from '@angular/router';
 import { Subscription } from 'rxjs';
 import { ReviewService } from '../../services/review.service';
 import { AuthService } from '../../../core/auth/services/auth.service';
-import { getCategoryIcon, getCategoryName, Review, ReviewCategory } from '../../models/reviews';
+import {
+  getCategoryIcon,
+  getCategoryName,
+  Review,
+  ReviewCategory,
+} from '../../models/reviews';
 
-/**
- * Componente que muestra las reviews de una categoría específica
- * Incluye paginación y opciones de crear/eliminar reviews
- */
 @Component({
   selector: 'app-deviaje-reviews-by-category',
   standalone: true,
@@ -37,22 +38,27 @@ export class DeviajeReviewsByCategoryComponent implements OnInit, OnDestroy {
 
   // Paginación (igual que hoteles)
   currentPage = 1;
-  itemsPerPage = 10;
+  itemsPerPage = 5;
 
   // Usuario actual y roles
   currentUser: any = null;
   isAdmin = false;
   isAgent = false;
-  canModerate = false;
+  isClient = false;
 
   ngOnInit(): void {
     // Obtener usuario y roles
     this.subscriptions.add(
       this.authService.currentUser$.subscribe((user) => {
         this.currentUser = user;
-        this.isAdmin = this.authService.hasRole('ADMINISTRADOR');
-        this.isAgent = this.authService.hasRole('AGENTE');
-        this.canModerate = this.isAdmin || this.isAgent;
+      })
+    );
+
+    this.subscriptions.add(
+      this.authService.activeRole$.subscribe((activeRole) => {
+        this.isAdmin = activeRole === 'ADMINISTRADOR';
+        this.isAgent = activeRole === 'AGENTE';
+        this.isClient = activeRole === 'CLIENTE';
       })
     );
 
@@ -117,23 +123,79 @@ export class DeviajeReviewsByCategoryComponent implements OnInit, OnDestroy {
   }
 
   /**
-   * Elimina una review (solo Admin/Agente)
+   * Verifica si el usuario puede crear reviews
+   * SOLO CLIENTES pueden crear reviews (Admin/Agente solo responden)
    */
-  deleteReview(review: Review, event: Event): void {
+  canCreateReview(): boolean {
+    return this.isClient && !this.isAdmin && !this.isAgent;
+  }
+
+  /**
+   * Verifica si el usuario puede eliminar una review específica
+   * - Admin/Agente: pueden eliminar cualquier review (moderación)
+   * - Cliente: solo puede eliminar SUS PROPIAS reviews
+   */
+  canDeleteReview(review: Review): boolean {
+    if (!this.currentUser) return false;
+
+    // Admin y Agente pueden eliminar cualquier review (moderación)
+    if (this.isAdmin || this.isAgent) {
+      return true;
+    }
+
+    // Cliente solo puede eliminar sus propias reviews
+    if (this.isClient) {
+      return review.userId === this.currentUser.id;
+    }
+
+    return false;
+  }
+
+  showDeleteModal = false;
+  reviewToDelete: Review | null = null;
+  deletingReview = false;
+
+  /**
+   * Abre el modal de confirmación para eliminar
+   */
+  openDeleteModal(review: Review, event: Event): void {
     event.stopPropagation(); // Evitar que navegue al detalle
 
-    if (
-      !confirm(
-        `¿Está seguro que desea eliminar la review de ${this.getUserDisplayName(review)}?`
-      )
-    ) {
+    // Verificar permisos antes de abrir modal
+    if (!this.canDeleteReview(review)) {
+      this.error = 'No tienes permisos para eliminar esta review.';
+      setTimeout(() => {
+        this.error = '';
+      }, 3000);
       return;
     }
 
+    this.reviewToDelete = review;
+    this.showDeleteModal = true;
+  }
+
+  /**
+   * Cierra el modal de confirmación
+   */
+  closeDeleteModal(): void {
+    this.showDeleteModal = false;
+    this.reviewToDelete = null;
+  }
+
+  /**
+   * Confirma y elimina la review
+   */
+  confirmDeleteReview(): void {
+    if (!this.reviewToDelete) return;
+
+    this.deletingReview = true;
+
     this.subscriptions.add(
-      this.reviewService.deleteReview(review.id).subscribe({
+      this.reviewService.deleteReview(this.reviewToDelete.id).subscribe({
         next: (response) => {
           this.success = response.message || 'Review eliminada correctamente';
+          this.deletingReview = false;
+          this.closeDeleteModal();
           this.loadReviews(); // Recargar lista
 
           setTimeout(() => {
@@ -144,6 +206,7 @@ export class DeviajeReviewsByCategoryComponent implements OnInit, OnDestroy {
           console.error('Error al eliminar review:', err);
           this.error =
             err?.message || 'Error al eliminar la review. Intente nuevamente.';
+          this.deletingReview = false;
 
           setTimeout(() => {
             this.error = '';
@@ -174,13 +237,13 @@ export class DeviajeReviewsByCategoryComponent implements OnInit, OnDestroy {
    * Formatea la fecha de creación
    */
   formatDate(dateString: string): string {
-    if (!dateString) return 'Fecha desconocida';
-
     const date = new Date(dateString);
     return date.toLocaleDateString('es-AR', {
       year: 'numeric',
       month: 'long',
       day: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit',
     });
   }
 
